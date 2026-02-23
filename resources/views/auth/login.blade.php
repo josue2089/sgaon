@@ -3,13 +3,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Login SGA ON</title>
+    <title>ON English | Iniciar Sesión</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
 <div class="login-shell">
     <section class="login-brand">
-        <span class="login-badge">ON</span>
+        <span class="login-badge">
+            <img src="{{ asset('images/logo.png') }}" alt="ON English Logo">
+        </span>
         <h1>ON English Academy</h1>
         <p>Portal de gestión académica para seguimiento de alumnos, asistencia y finanzas en una sola plataforma.</p>
         <img src="{{ asset('images/on-brand-login.png') }}" alt="ON English visual" style="max-width:340px;width:100%;border-radius:20px;border:3px solid rgba(255,255,255,.2);box-shadow:0 18px 32px rgba(0,0,0,.3);">

@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SGA ON English</title>
+    <title>ON English | Plataforma Académica</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
@@ -30,7 +31,9 @@
     <header class="fi-header">
         <div class="fi-header-inner">
             <div class="fi-brand">
-                <span class="fi-brand-mark">ON</span>
+                <span class="fi-brand-mark">
+                    <img src="{{ asset('images/logo.png') }}" alt="ON English Logo">
+                </span>
                 <div>
                     <h1>ON English</h1>
                     <p>Academy Portal</p>
