@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AcademicLevel;
 use App\Models\Campus;
 use App\Models\Course;
+use App\Models\Enrollment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -23,8 +24,34 @@ class CourseController extends Controller
             $query->where('campus_id', $this->campusId());
         }
 
+        $coursesCount = (clone $query)->count();
+        $studentsQuery = Enrollment::query()
+            ->join('groups', 'groups.id', '=', 'enrollments.group_id')
+            ->join('courses', 'courses.id', '=', 'groups.course_id');
+        if ($this->campusId()) {
+            $studentsQuery->where('courses.campus_id', $this->campusId());
+        }
+        $totalStudents = (clone $studentsQuery)->count();
+        $occupancy = $coursesCount > 0 ? min(100, (int) round(($totalStudents / ($coursesCount * 20)) * 100)) : 0;
+
+        $levelsQuery = AcademicLevel::query()
+            ->select('academic_levels.id', 'academic_levels.name', 'academic_levels.code')
+            ->selectRaw('COUNT(courses.id) as courses_count')
+            ->leftJoin('courses', 'courses.academic_level_id', '=', 'academic_levels.id')
+            ->groupBy('academic_levels.id', 'academic_levels.name', 'academic_levels.code')
+            ->orderBy('academic_levels.sort_order');
+        if ($this->campusId()) {
+            $levelsQuery->where('academic_levels.campus_id', $this->campusId());
+        }
+
         return view('courses.index', [
             'courses' => $query->paginate(20),
+            'stats' => [
+                'courses' => $coursesCount,
+                'students' => $totalStudents,
+                'occupancy' => $occupancy,
+            ],
+            'levelStats' => $levelsQuery->get(),
         ]);
     }
 

@@ -17,7 +17,7 @@ class StudentController extends Controller
 
     public function index(): View
     {
-        $query = Student::with('campus')->latest();
+        $query = Student::with(['campus', 'enrollments.group.course.level'])->latest();
         if ($this->campusId()) {
             $query->where('campus_id', $this->campusId());
         }

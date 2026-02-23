@@ -1,7 +1,12 @@
 @extends('layouts.app')
 @section('content')
 <div class="card">
-    <h2>Reporte de asistencia</h2>
+    <div class="module-head">
+        <div>
+            <h1 class="page-title">Reporte de asistencia 📋</h1>
+            <p class="page-subtitle">Consulta y exporta asistencia por fecha y grupo</p>
+        </div>
+    </div>
     <form method="GET" action="{{ route('reports.attendance') }}">
         <div class="grid-2">
             <div><label>Desde</label><input type="date" name="from" value="{{ request('from') }}"></div>

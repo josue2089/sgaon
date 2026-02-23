@@ -10,59 +10,51 @@
 @php
     $currentRoute = request()->route()?->getName();
     $user = auth()->user();
-    $todayLabel = now()->locale('es')->isoFormat('dddd, D [de] MMMM YYYY');
+    $nav = [
+        ['name' => 'Dashboard', 'route' => 'dashboard', 'enabled' => true],
+        ['name' => 'Alumnos', 'route' => 'students.index', 'enabled' => $user?->role === 'admin'],
+        ['name' => 'Profesores', 'route' => 'teachers.index', 'enabled' => $user?->role === 'admin'],
+        ['name' => 'Cursos', 'route' => 'courses.index', 'enabled' => $user?->role === 'admin'],
+        ['name' => 'Asistencia', 'route' => 'attendance.index', 'enabled' => in_array($user?->role, ['admin', 'teacher'], true)],
+        ['name' => 'Financiero', 'route' => 'finance.index', 'enabled' => $user?->role === 'admin'],
+        ['name' => 'Reportes', 'route' => 'reports.attendance', 'enabled' => $user?->role === 'admin'],
+    ];
 @endphp
-<div class="app-shell">
-    <aside class="app-sidebar">
-        <div class="brand">
-            <span class="brand-mark">ON</span>
-            <h1>SGA ON English</h1>
-            <p>Gestión académica de alto impacto.</p>
-        </div>
-        <nav class="nav-list">
-            <a class="nav-link {{ $currentRoute === 'dashboard' ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
-        @if(auth()->user()?->role === 'admin')
-            <a class="nav-link {{ str_starts_with((string) $currentRoute, 'students.') ? 'active' : '' }}" href="{{ route('students.index') }}">Alumnos</a>
-            <a class="nav-link {{ str_starts_with((string) $currentRoute, 'teachers.') ? 'active' : '' }}" href="{{ route('teachers.index') }}">Profesores</a>
-            <a class="nav-link {{ str_starts_with((string) $currentRoute, 'courses.') ? 'active' : '' }}" href="{{ route('courses.index') }}">Cursos</a>
-            <a class="nav-link {{ str_starts_with((string) $currentRoute, 'groups.') ? 'active' : '' }}" href="{{ route('groups.index') }}">Grupos</a>
-            <a class="nav-link {{ str_starts_with((string) $currentRoute, 'enrollments.') ? 'active' : '' }}" href="{{ route('enrollments.index') }}">Inscripciones</a>
-            <a class="nav-link {{ str_starts_with((string) $currentRoute, 'sessions.') ? 'active' : '' }}" href="{{ route('sessions.index') }}">Sesiones</a>
-            <a class="nav-link {{ str_starts_with((string) $currentRoute, 'finance.') ? 'active' : '' }}" href="{{ route('finance.index') }}">Financiero</a>
-            <a class="nav-link {{ $currentRoute === 'reports.attendance' ? 'active' : '' }}" href="{{ route('reports.attendance') }}">Rep. Asistencia</a>
-            <a class="nav-link {{ $currentRoute === 'reports.payments' ? 'active' : '' }}" href="{{ route('reports.payments') }}">Rep. Pagos</a>
-            <a class="nav-link {{ $currentRoute === 'reports.audit' ? 'active' : '' }}" href="{{ route('reports.audit') }}">Rep. Auditoría</a>
-        @endif
-        @if(in_array(auth()->user()?->role, ['admin', 'teacher'], true))
-            <a class="nav-link {{ str_starts_with((string) $currentRoute, 'attendance.') ? 'active' : '' }}" href="{{ route('attendance.index') }}">Asistencia</a>
-        @endif
-        @if(auth()->user()?->role === 'student')
-            <a class="nav-link {{ str_starts_with((string) $currentRoute, 'portal.student') ? 'active' : '' }}" href="{{ route('portal.student') }}">Mi Portal</a>
-        @endif
-        @if(auth()->user()?->role === 'representative')
-            <a class="nav-link {{ str_starts_with((string) $currentRoute, 'portal.representative') ? 'active' : '' }}" href="{{ route('portal.representative') }}">Portal Familia</a>
-        @endif
-        </nav>
-        <div class="sidebar-actions">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="btn secondary" type="submit">Salir</button>
-            </form>
-        </div>
-    </aside>
+<div class="fi-shell">
+    <header class="fi-header">
+        <div class="fi-header-inner">
+            <div class="fi-brand">
+                <span class="fi-brand-mark">ON</span>
+                <div>
+                    <h1>ON English</h1>
+                    <p>Academy Portal</p>
+                </div>
+            </div>
 
-    <main class="app-main">
-        <header class="topbar">
-            <div>
-                <h2>Centro Académico</h2>
-                <p>{{ ucfirst($todayLabel) }}</p>
+            <nav class="fi-nav">
+                @foreach($nav as $item)
+                    @if($item['enabled'])
+                        @php($prefix = explode('.', $item['route'])[0])
+                        <a class="fi-nav-item {{ str_starts_with((string) $currentRoute, $prefix) ? 'active' : '' }}" href="{{ route($item['route']) }}">
+                            {{ $item['name'] }}
+                        </a>
+                    @endif
+                @endforeach
+            </nav>
+
+            <div class="fi-header-actions">
+                <span class="fi-icon-badge">🔔</span>
+                <span class="fi-icon-badge">⚙️</span>
+                <div class="fi-user-pill">
+                    <span class="fi-avatar">{{ strtoupper(substr((string) ($user?->name ?? 'A'), 0, 1)) }}</span>
+                    <span>{{ $user?->name ?? 'Admin' }}</span>
+                </div>
             </div>
-            <div class="topbar-pill">
-                <span class="dot" aria-hidden="true"></span>
-                {{ $user?->name ?? 'Usuario' }} ({{ strtoupper((string) $user?->role) }})
-            </div>
-        </header>
-        <div class="page-content">
+        </div>
+    </header>
+
+    <main class="fi-main">
+        <div class="fi-container">
             @if(session('success'))
                 <div class="flash ok">{{ session('success') }}</div>
             @endif
@@ -70,6 +62,11 @@
                 <div class="flash err"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
             @endif
             @yield('content')
+
+            <form method="POST" action="{{ route('logout') }}" class="fi-logout-wrap">
+                @csrf
+                <button class="btn secondary" type="submit">Cerrar sesión</button>
+            </form>
         </div>
     </main>
 </div>

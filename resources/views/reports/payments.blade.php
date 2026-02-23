@@ -3,8 +3,8 @@
 <div class="card">
     <div class="module-head">
         <div>
-            <h2>Reporte de pagos / CxC</h2>
-            <p class="muted">Resumen de cargos y monto efectivamente pagado.</p>
+            <h1 class="page-title">Reporte de pagos / CxC 💰</h1>
+            <p class="page-subtitle">Resumen de cargos y monto efectivamente pagado</p>
         </div>
         <a class="btn secondary" href="{{ route('reports.payments', ['export' => 'csv']) }}">Exportar CSV</a>
     </div>
