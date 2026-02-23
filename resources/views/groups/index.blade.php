@@ -46,5 +46,7 @@
     @endforeach
 </div>
 
-<div class="card">{{ $groups->links() }}</div>
+@if($groups->hasPages())
+    <div class="card">{{ $groups->links() }}</div>
+@endif
 @endsection

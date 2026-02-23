@@ -22,5 +22,9 @@
 @foreach($records as $record)
 <tr><td>{{ $record->classSession->session_date?->format('Y-m-d') }}</td><td>{{ $record->classSession->group->name ?? '' }}</td><td>{{ $record->enrollment->student->full_name ?? '' }}</td><td><span class="status-pill {{ $record->status === 'present' ? 'success' : ($record->status === 'absent' ? 'danger' : 'warn') }}">{{ $record->status }}</span></td></tr>
 @endforeach
-</tbody></table>{{ $records->links() }}</div>
+</tbody></table>
+@if($records->hasPages())
+    {{ $records->links() }}
+@endif
+</div>
 @endsection

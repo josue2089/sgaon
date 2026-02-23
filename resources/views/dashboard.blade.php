@@ -1,11 +1,11 @@
 @extends('layouts.app')
 @section('content')
-<div class="module-head">
+<div class="module-head dashboard-head">
     <div>
         <h1 class="page-title">¡Bienvenido! 👋</h1>
         <p class="page-subtitle">{{ now()->locale('es')->isoFormat('dddd, D [de] MMMM YYYY') }}</p>
     </div>
-    <div class="soft-kpi-grid" style="margin-top:0;">
+    <div class="soft-kpi-grid dashboard-achievements">
         <div class="soft-kpi">
             <div class="label">Mejor Asistencia</div>
             <div class="value">95%</div>

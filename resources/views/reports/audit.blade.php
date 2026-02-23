@@ -18,5 +18,9 @@
 @empty
 <tr><td colspan="5">Sin registros de auditoría.</td></tr>
 @endforelse
-</tbody></table>{{ $logs->links() }}</div>
+</tbody></table>
+@if($logs->hasPages())
+    {{ $logs->links() }}
+@endif
+</div>
 @endsection

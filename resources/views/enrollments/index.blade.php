@@ -43,5 +43,7 @@
     @endforeach
 </div>
 
-<div class="card">{{ $enrollments->links() }}</div>
+@if($enrollments->hasPages())
+    <div class="card">{{ $enrollments->links() }}</div>
+@endif
 @endsection

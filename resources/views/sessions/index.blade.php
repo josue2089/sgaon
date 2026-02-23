@@ -36,5 +36,7 @@
     @endforeach
 </div>
 
-<div class="card">{{ $sessions->links() }}</div>
+@if($sessions->hasPages())
+    <div class="card">{{ $sessions->links() }}</div>
+@endif
 @endsection

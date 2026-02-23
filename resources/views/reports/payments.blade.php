@@ -12,5 +12,9 @@
 @foreach($charges as $charge)
 <tr><td>{{ $charge->student->full_name ?? '' }}</td><td>{{ $charge->concept }}</td><td>${{ number_format($charge->amount,2) }}</td><td><span class="status-pill {{ $charge->status === 'paid' ? 'success' : ($charge->status === 'overdue' ? 'danger' : 'warn') }}">{{ $charge->status }}</span></td><td>${{ number_format($charge->payments->sum('amount'),2) }}</td></tr>
 @endforeach
-</tbody></table>{{ $charges->links() }}</div>
+</tbody></table>
+@if($charges->hasPages())
+    {{ $charges->links() }}
+@endif
+</div>
 @endsection

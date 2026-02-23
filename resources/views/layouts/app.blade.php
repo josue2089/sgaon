@@ -10,6 +10,12 @@
 @php
     $currentRoute = request()->route()?->getName();
     $user = auth()->user();
+    $alertsQuery = \App\Models\Alert::query()->where('status', 'open');
+    if ($user?->campus_id) {
+        $alertsQuery->where('campus_id', $user->campus_id);
+    }
+    $openAlertsCount = (clone $alertsQuery)->count();
+    $openAlerts = (clone $alertsQuery)->latest()->take(5)->get();
     $nav = [
         ['name' => 'Dashboard', 'route' => 'dashboard', 'enabled' => true],
         ['name' => 'Alumnos', 'route' => 'students.index', 'enabled' => $user?->role === 'admin'],
@@ -43,12 +49,60 @@
             </nav>
 
             <div class="fi-header-actions">
-                <span class="fi-icon-badge">🔔</span>
-                <span class="fi-icon-badge">⚙️</span>
-                <div class="fi-user-pill">
-                    <span class="fi-avatar">{{ strtoupper(substr((string) ($user?->name ?? 'A'), 0, 1)) }}</span>
-                    <span>{{ $user?->name ?? 'Admin' }}</span>
-                </div>
+                <details class="fi-menu">
+                    <summary class="fi-icon-badge">
+                        🔔
+                        @if($openAlertsCount > 0)
+                            <span class="fi-icon-dot"></span>
+                        @endif
+                    </summary>
+                    <div class="fi-menu-panel">
+                        <div class="fi-menu-title">Notificaciones</div>
+                        @forelse($openAlerts as $alert)
+                            <a href="{{ route('dashboard') }}" class="fi-menu-link">
+                                <strong>{{ ucfirst($alert->type) }}</strong>
+                                <small>{{ \Illuminate\Support\Str::limit($alert->message, 52) }}</small>
+                            </a>
+                        @empty
+                            <div class="fi-menu-empty">Sin alertas abiertas</div>
+                        @endforelse
+                        <a href="{{ route('reports.attendance') }}" class="fi-menu-footer">Ver reportes</a>
+                    </div>
+                </details>
+
+                <details class="fi-menu">
+                    <summary class="fi-icon-badge">⚙️</summary>
+                    <div class="fi-menu-panel">
+                        <div class="fi-menu-title">Configuración</div>
+                        <a href="{{ route('dashboard') }}" class="fi-menu-link">Panel principal</a>
+                        @if($user?->role === 'admin')
+                            <a href="{{ route('reports.audit') }}" class="fi-menu-link">Auditoría</a>
+                            <a href="{{ route('reports.payments') }}" class="fi-menu-link">Reporte financiero</a>
+                        @endif
+                    </div>
+                </details>
+
+                <details class="fi-menu">
+                    <summary class="fi-user-pill">
+                        <span class="fi-avatar">{{ strtoupper(substr((string) ($user?->name ?? 'A'), 0, 1)) }}</span>
+                        <span>{{ $user?->name ?? 'Admin' }}</span>
+                    </summary>
+                    <div class="fi-menu-panel fi-menu-panel-profile">
+                        <div class="fi-menu-title">{{ $user?->name ?? 'Usuario' }}</div>
+                        <div class="fi-menu-empty">Rol: {{ strtoupper((string) $user?->role) }}</div>
+                        <a href="{{ route('dashboard') }}" class="fi-menu-link">Ir al dashboard</a>
+                        @if($user?->role === 'student')
+                            <a href="{{ route('portal.student') }}" class="fi-menu-link">Mi portal</a>
+                        @endif
+                        @if($user?->role === 'representative')
+                            <a href="{{ route('portal.representative') }}" class="fi-menu-link">Portal familia</a>
+                        @endif
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button class="fi-menu-logout" type="submit">Cerrar sesión</button>
+                        </form>
+                    </div>
+                </details>
             </div>
         </div>
     </header>
@@ -62,11 +116,6 @@
                 <div class="flash err"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
             @endif
             @yield('content')
-
-            <form method="POST" action="{{ route('logout') }}" class="fi-logout-wrap">
-                @csrf
-                <button class="btn secondary" type="submit">Cerrar sesión</button>
-            </form>
         </div>
     </main>
 </div>
