@@ -1,0 +1,61 @@
+<?php
+
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ClassSessionController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\GroupController;
+use App\Http\Controllers\PortalController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TeacherController;
+use Illuminate\Support\Facades\Route;
+
+Route::redirect('/', '/login');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
+});
+
+Route::middleware(['auth', 'campus.access'])->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    Route::middleware('role:admin')->group(function () {
+        Route::resource('students', StudentController::class)->except('show');
+        Route::resource('teachers', TeacherController::class)->except('show');
+        Route::resource('courses', CourseController::class)->except('show');
+        Route::resource('groups', GroupController::class)->except('show');
+        Route::resource('enrollments', EnrollmentController::class)->except('show');
+        Route::resource('sessions', ClassSessionController::class)->except('show');
+        Route::middleware('permission:finance.manage')->group(function () {
+            Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
+            Route::post('/finance/charges', [FinanceController::class, 'storeCharge'])->name('finance.charges.store');
+            Route::post('/finance/payments', [FinanceController::class, 'storePayment'])->name('finance.payments.store');
+        });
+        Route::middleware('permission:reports.view')->group(function () {
+            Route::get('/reports/attendance', [ReportController::class, 'attendance'])->name('reports.attendance');
+            Route::get('/reports/payments', [ReportController::class, 'payments'])->name('reports.payments');
+        });
+        Route::middleware('permission:audit.view')->group(function () {
+            Route::get('/reports/audit', [ReportController::class, 'audit'])->name('reports.audit');
+        });
+    });
+
+    Route::middleware(['role:admin,teacher', 'permission:attendance.manage'])->group(function () {
+        Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+    });
+
+    Route::middleware(['role:student', 'permission:portal.student.view'])->group(function () {
+        Route::get('/portal/student', [PortalController::class, 'student'])->name('portal.student');
+    });
+
+    Route::middleware(['role:representative', 'permission:portal.representative.view'])->group(function () {
+        Route::get('/portal/representative', [PortalController::class, 'representative'])->name('portal.representative');
+    });
+});
