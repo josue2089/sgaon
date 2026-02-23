@@ -10,12 +10,8 @@
 <body>
 <div class="login-shell">
     <section class="login-brand">
-        <span class="login-badge">
-            <img src="{{ asset('images/logo.png') }}" alt="ON English Logo">
-        </span>
-        <h1>ON English Academy</h1>
+        <img class="login-logo" src="{{ asset('images/logo.png') }}" alt="ON English Logo">
         <p>Portal de gestión académica para seguimiento de alumnos, asistencia y finanzas en una sola plataforma.</p>
-        <img src="{{ asset('images/on-brand-login.png') }}" alt="ON English visual" style="max-width:340px;width:100%;border-radius:20px;border:3px solid rgba(255,255,255,.2);box-shadow:0 18px 32px rgba(0,0,0,.3);">
     </section>
 
     <section class="login-panel">

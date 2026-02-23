@@ -722,6 +722,13 @@ a {
     font-size: 1.2rem;
 }
 
+.login-logo {
+    width: auto;
+    max-width: none;
+    height: auto;
+    display: block;
+}
+
 .login-badge {
     width: 5rem;
     height: 5rem;
