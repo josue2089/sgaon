@@ -26,43 +26,43 @@
 
 <div class="soft-kpi-grid">
     <div class="soft-kpi" style="text-align:center;">
-        <div style="font-size:2.5rem;">👥</div>
+        <div style="font-size:2.1rem;">👥</div>
         <div class="label" style="margin-top:.3rem;">Alumnos</div>
         <div class="value">{{ $studentsCount }}</div>
     </div>
     <div class="soft-kpi" style="text-align:center;">
-        <div style="font-size:2.5rem;">🎓</div>
+        <div style="font-size:2.1rem;">🎓</div>
         <div class="label" style="margin-top:.3rem;">Profesores</div>
         <div class="value">{{ $teachersCount }}</div>
     </div>
     <div class="soft-kpi" style="text-align:center;">
-        <div style="font-size:2.5rem;">📚</div>
+        <div style="font-size:2.1rem;">📚</div>
         <div class="label" style="margin-top:.3rem;">Cursos</div>
         <div class="value">{{ $coursesCount }}</div>
     </div>
     <div class="soft-kpi" style="text-align:center;">
-        <div style="font-size:2.5rem;">✅</div>
+        <div style="font-size:2.1rem;">✅</div>
         <div class="label" style="margin-top:.3rem;">Asistencia</div>
         <div class="value">87%</div>
     </div>
     <div class="soft-kpi" style="text-align:center;">
-        <div style="font-size:2.5rem;">💳</div>
+        <div style="font-size:2.1rem;">💳</div>
         <div class="label" style="margin-top:.3rem;">Pagos</div>
         <div class="value">${{ number_format($pendingCharges, 0) }}</div>
     </div>
     <div class="soft-kpi" style="text-align:center;">
-        <div style="font-size:2.5rem;">📊</div>
+        <div style="font-size:2.1rem;">📊</div>
         <div class="label" style="margin-top:.3rem;">Reportes</div>
         <div class="value">{{ $groupsCount }}</div>
     </div>
 </div>
 
-<div style="display:grid; grid-template-columns:2fr 1fr; gap:1rem;">
+<div class="split-2">
     <div class="card">
         <div class="module-head">
             <div>
-                <h2 style="font-size:2rem; color:#0a1e5e;">Clases de Hoy 📚</h2>
-                <p class="page-subtitle" style="font-size:1.2rem;">{{ $groupsCount }} sesiones programadas</p>
+                <h2 class="section-title">Clases de Hoy 📚</h2>
+                <p class="page-subtitle" style="font-size:1rem;">{{ $groupsCount }} sesiones programadas</p>
             </div>
             <span class="badge-pill badge-info">Hoy</span>
         </div>
@@ -72,11 +72,11 @@
                 <div style="border:2px solid #dbe6fb; border-radius:20px; padding:1rem; background:linear-gradient(90deg, #f6f9ff, #fbf7ff);">
                     <div style="display:flex; justify-content:space-between; gap:1rem; align-items:center;">
                         <div>
-                            <div style="font-size:1.6rem; font-weight:900; color:#0a1e5e;">Grupo {{ $i }} - Nivel {{ ['A2','B1','B2'][$i-1] }}</div>
+                            <div style="font-size:1.25rem; font-weight:900; color:#0a1e5e;">Grupo {{ $i }} - Nivel {{ ['A2','B1','B2'][$i-1] }}</div>
                             <div class="entity-sub">Profesor asignado</div>
                         </div>
                         <div style="text-align:right;">
-                            <div style="font-size:1.9rem; font-weight:900; color:#1d4ed8;">{{ ['10:00 AM','11:30 AM','2:00 PM'][$i-1] }}</div>
+                            <div style="font-size:1.45rem; font-weight:900; color:#1d4ed8;">{{ ['10:00 AM','11:30 AM','2:00 PM'][$i-1] }}</div>
                             <div class="entity-sub">{{ [15,18,8][$i-1] }} estudiantes</div>
                         </div>
                     </div>
@@ -87,7 +87,7 @@
 
     <div class="card">
         <div class="module-head">
-            <h2 style="font-size:2rem; color:#0a1e5e;">Actividad 🔔</h2>
+            <h2 class="section-title">Actividad 🔔</h2>
             <span class="badge-pill badge-info">En vivo</span>
         </div>
         <div style="display:grid; gap:.8rem;">

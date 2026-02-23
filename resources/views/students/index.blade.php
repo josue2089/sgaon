@@ -14,10 +14,10 @@
 </div>
 
 <div class="soft-kpi-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">
-    <div class="soft-kpi"><div class="label">Total Alumnos</div><div class="value">{{ $total }}</div></div>
-    <div class="soft-kpi"><div class="label">Activos</div><div class="value" style="color:#16a34a;">{{ $active }}</div></div>
-    <div class="soft-kpi"><div class="label">Inactivos</div><div class="value" style="color:#dc2626;">{{ $inactive }}</div></div>
-    <div class="soft-kpi"><div class="label">Asist. Promedio</div><div class="value" style="color:#7c3aed;">87%</div></div>
+    <div class="soft-kpi"><div class="label">👥 Total Alumnos</div><div class="value">{{ $total }}</div></div>
+    <div class="soft-kpi"><div class="label">✅ Activos</div><div class="value" style="color:#16a34a;">{{ $active }}</div></div>
+    <div class="soft-kpi"><div class="label">⚠️ Inactivos</div><div class="value" style="color:#dc2626;">{{ $inactive }}</div></div>
+    <div class="soft-kpi"><div class="label">📈 Asist. Promedio</div><div class="value" style="color:#7c3aed;">87%</div></div>
 </div>
 
 <div class="card">
@@ -33,11 +33,12 @@
         @php
             $level = optional(optional($student->enrollments->first())->group)->course?->level?->name;
         @endphp
-        <div class="entity-card">
+        <div class="entity-card entity-card--airy">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <span class="entity-avatar">{{ strtoupper(substr($student->first_name, 0, 1)) }}</span>
                 <span class="badge-pill badge-level">{{ $level ? strtoupper(substr($level, 0, 2)) : 'N/A' }}</span>
             </div>
+            <div class="entity-spacer"></div>
             <div class="entity-title">{{ $student->full_name }}</div>
             <div class="entity-sub">{{ $student->email ?: 'Sin email' }}</div>
             <div class="entity-sub">{{ $student->campus->name ?? 'Sin sede' }}</div>

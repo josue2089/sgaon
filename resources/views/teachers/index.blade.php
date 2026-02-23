@@ -13,10 +13,10 @@
 </div>
 
 <div class="metric-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">
-    <div class="metric-card metric-purple"><div class="metric-label">Total Profesores</div><div class="metric-value">{{ $total }}</div></div>
-    <div class="metric-card metric-blue"><div class="metric-label">Total Estudiantes</div><div class="metric-value">270</div></div>
-    <div class="metric-card metric-orange"><div class="metric-label">Rating Promedio</div><div class="metric-value">4.9</div></div>
-    <div class="metric-card metric-green"><div class="metric-label">Docentes Activos</div><div class="metric-value">{{ $active }}</div></div>
+    <div class="metric-card metric-purple"><div class="metric-icon">👨‍🏫</div><div class="metric-label">Total Profesores</div><div class="metric-value">{{ $total }}</div></div>
+    <div class="metric-card metric-blue"><div class="metric-icon">👥</div><div class="metric-label">Total Estudiantes</div><div class="metric-value">270</div></div>
+    <div class="metric-card metric-orange"><div class="metric-icon">⭐</div><div class="metric-label">Rating Promedio</div><div class="metric-value">4.9</div></div>
+    <div class="metric-card metric-green"><div class="metric-icon">📚</div><div class="metric-label">Docentes Activos</div><div class="metric-value">{{ $active }}</div></div>
 </div>
 
 <div class="card">
@@ -29,11 +29,12 @@
 
 <div class="entity-grid">
     @foreach($teachers as $teacher)
-        <div class="entity-card">
+        <div class="entity-card entity-card--airy">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <span class="entity-avatar">{{ strtoupper(substr($teacher->first_name, 0, 1)) }}</span>
                 <span class="badge-pill badge-info">⭐ 4.9</span>
             </div>
+            <div class="entity-spacer"></div>
             <div class="entity-title">Prof. {{ $teacher->full_name }}</div>
             <div class="entity-sub">{{ $teacher->email ?: 'Sin email' }}</div>
             <div class="entity-sub">{{ $teacher->phone ?: 'Sin teléfono' }}</div>

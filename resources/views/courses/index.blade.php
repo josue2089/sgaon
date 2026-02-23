@@ -9,14 +9,14 @@
 </div>
 
 <div class="metric-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">
-    <div class="metric-card metric-blue"><div class="metric-label">Total Cursos</div><div class="metric-value">{{ $stats['courses'] }}</div></div>
-    <div class="metric-card metric-green"><div class="metric-label">Total Estudiantes</div><div class="metric-value">{{ $stats['students'] }}</div></div>
-    <div class="metric-card metric-purple"><div class="metric-label">Ocupación</div><div class="metric-value">{{ $stats['occupancy'] }}%</div></div>
-    <div class="metric-card metric-orange"><div class="metric-label">Niveles CEFR</div><div class="metric-value">{{ $levelStats->count() }}</div></div>
+    <div class="metric-card metric-blue"><div class="metric-icon">📘</div><div class="metric-label">Total Cursos</div><div class="metric-value">{{ $stats['courses'] }}</div></div>
+    <div class="metric-card metric-green"><div class="metric-icon">👥</div><div class="metric-label">Total Estudiantes</div><div class="metric-value">{{ $stats['students'] }}</div></div>
+    <div class="metric-card metric-purple"><div class="metric-icon">📈</div><div class="metric-label">Ocupación</div><div class="metric-value">{{ $stats['occupancy'] }}%</div></div>
+    <div class="metric-card metric-orange"><div class="metric-icon">🏅</div><div class="metric-label">Niveles CEFR</div><div class="metric-value">{{ $levelStats->count() }}</div></div>
 </div>
 
 <div class="card">
-    <h2 style="font-size:2.25rem; color:#0a1e5e; margin-bottom:1rem;">Niveles CEFR 🎓</h2>
+    <h2 class="section-title" style="margin-bottom:1rem;">Niveles CEFR 🎓</h2>
     <div class="entity-grid" style="grid-template-columns:repeat(6,minmax(0,1fr));">
         @foreach($levelStats as $level)
             @php
@@ -43,11 +43,12 @@
 
 <div class="entity-grid">
     @foreach($courses as $course)
-        <div class="entity-card">
+        <div class="entity-card entity-card--airy">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                 <div style="width:62px;height:62px;border-radius:20px;background:linear-gradient(135deg,#3b82f6,#2563eb);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;">📘</div>
                 <span class="badge-pill badge-level">{{ strtoupper($course->level->code ?? substr((string) ($course->level->name ?? 'N/A'), 0, 2)) }}</span>
             </div>
+            <div class="entity-spacer"></div>
             <div class="entity-title">{{ $course->name }}</div>
             <div class="entity-sub">{{ $course->code ?: 'Sin código' }}</div>
             <div class="entity-sub">{{ $course->campus->name ?? 'Sin sede' }}</div>
