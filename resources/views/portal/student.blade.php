@@ -1,9 +1,9 @@
 @extends('layouts.app')
 @section('content')
-<div class="card"><h2>Portal del Alumno</h2><p><strong>{{ $student->full_name }}</strong> | {{ $student->email }}</p></div>
+<div class="card module-head"><div><h2>Portal del Alumno</h2><p><strong>{{ $student->full_name }}</strong> | {{ $student->email }}</p></div></div>
 <div class="card"><h3>Inscripciones</h3><table><thead><tr><th>Curso</th><th>Grupo</th><th>Estado</th><th>Progreso</th></tr></thead><tbody>
 @forelse($enrollments as $enrollment)
-<tr><td>{{ $enrollment->group->course->name ?? '' }}</td><td>{{ $enrollment->group->name ?? '' }}</td><td>{{ $enrollment->status }}</td><td>{{ $enrollment->progress }}%</td></tr>
+<tr><td>{{ $enrollment->group->course->name ?? '' }}</td><td>{{ $enrollment->group->name ?? '' }}</td><td><span class="status-pill {{ $enrollment->status === 'active' ? 'success' : ($enrollment->status === 'completed' ? 'info' : 'warn') }}">{{ $enrollment->status }}</span></td><td>{{ $enrollment->progress }}%</td></tr>
 @empty
 <tr><td colspan="4">Sin inscripciones</td></tr>
 @endforelse

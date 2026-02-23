@@ -1,10 +1,10 @@
 @extends('layouts.app')
 @section('content')
-<div class="card"><h2>Portal del Representante</h2><p><strong>{{ $representative->first_name }} {{ $representative->last_name }}</strong> | {{ $representative->email }}</p></div>
+<div class="card module-head"><div><h2>Portal del Representante</h2><p><strong>{{ $representative->first_name }} {{ $representative->last_name }}</strong> | {{ $representative->email }}</p></div></div>
 @forelse($students as $student)
 <div class="card">
 <h3>{{ $student->full_name }}</h3>
-<p class="muted">Estado: {{ $student->status }}</p>
+<p class="muted">Estado: <span class="status-pill {{ $student->status === 'active' ? 'success' : 'warn' }}">{{ $student->status }}</span></p>
 <div class="grid-2">
 <div>
 <h4>Inscripciones</h4>

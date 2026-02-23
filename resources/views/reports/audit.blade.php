@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-<div class="card"><h2>Reporte de auditoría</h2><p class="muted">Trazabilidad de acciones críticas del sistema.</p></div>
+<div class="card module-head"><div><h2>Reporte de auditoría</h2><p class="muted">Trazabilidad de acciones críticas del sistema.</p></div></div>
 <div class="card"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Payload</th></tr></thead><tbody>
 @forelse($logs as $log)
 <tr>
