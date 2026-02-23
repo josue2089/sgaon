@@ -71,17 +71,15 @@ h5 {
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    min-width: 190px;
+    min-width: auto;
 }
 
 .fi-brand-mark {
     width: 2rem;
     height: 2rem;
-    border-radius: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.18);
     overflow: hidden;
 }
 

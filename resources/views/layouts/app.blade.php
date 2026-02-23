@@ -34,10 +34,6 @@
                 <span class="fi-brand-mark">
                     <img src="{{ asset('images/logo.png') }}" alt="ON English Logo">
                 </span>
-                <div>
-                    <h1>ON English</h1>
-                    <p>Academy Portal</p>
-                </div>
             </div>
 
             <nav class="fi-nav">
