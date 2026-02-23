@@ -723,7 +723,7 @@ a {
 }
 
 .login-logo {
-    width: auto;
+    width: 200px;
     max-width: none;
     height: auto;
     display: block;
