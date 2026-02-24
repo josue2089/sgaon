@@ -30,7 +30,7 @@ class ReportController extends Controller
             return $this->attendanceCsv($query->latest()->get());
         }
 
-        return view('reports.attendance', ['records' => $query->latest()->paginate(40)]);
+        return view('reports.attendance', ['records' => $query->latest()->paginate(40)->withQueryString()]);
     }
 
     public function payments(Request $request): View|StreamedResponse
@@ -44,7 +44,7 @@ class ReportController extends Controller
             return $this->paymentsCsv($query->get());
         }
 
-        return view('reports.payments', ['charges' => $query->paginate(40)]);
+        return view('reports.payments', ['charges' => $query->paginate(40)->withQueryString()]);
     }
 
     public function audit(): View
@@ -55,7 +55,7 @@ class ReportController extends Controller
         }
 
         return view('reports.audit', [
-            'logs' => $query->paginate(50),
+            'logs' => $query->paginate(50)->withQueryString(),
         ]);
     }
 

@@ -111,6 +111,7 @@ h5 {
     background: rgba(255, 255, 255, 0.11);
     backdrop-filter: blur(8px);
     overflow-x: auto;
+    overflow-y: visible;
 }
 
 .fi-nav-item {
@@ -391,6 +392,7 @@ h5 {
 .metric-green { background: linear-gradient(135deg, #00c95b, #04a445); }
 .metric-purple { background: linear-gradient(135deg, #ac4dff, #7f12dc); }
 .metric-orange { background: linear-gradient(135deg, #ff8200, #ee5a00); }
+.metric-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
 
 .soft-kpi-grid {
     display: grid;
@@ -954,5 +956,462 @@ a {
     .fi-menu-panel,
     .fi-menu-panel-profile {
         width: 220px;
+    }
+}
+
+/* Figma/Node parity overrides */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+:root {
+    --bg: #f8fafb;
+    --surface: #ffffff;
+    --line: #d8e1ef;
+    --text: #0a1e5e;
+    --muted: #64748b;
+    --brand: #0a1e5e;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.fi-header {
+    padding: 0.95rem 1.5rem;
+}
+
+.fi-header-inner {
+    gap: 1rem;
+}
+
+.fi-brand-mark {
+    width: 2.75rem;
+    height: 2.75rem;
+}
+
+.fi-brand-mark img {
+    object-fit: contain;
+}
+
+.fi-nav {
+    border-radius: 16px;
+    padding: 0.28rem;
+    gap: 0.25rem;
+}
+
+.fi-nav-item {
+    font-size: 1.01rem;
+    border: 0;
+    font-weight: 700;
+    padding: 0.64rem 1.18rem;
+    border-radius: 999px;
+}
+
+.fi-menu-inline .fi-menu-panel {
+    top: calc(100% + 0.4rem);
+    right: auto;
+    left: 0;
+}
+
+.fi-menu-inline {
+    display: inline-block;
+}
+
+.fi-menu-panel-nav {
+    width: 200px;
+}
+
+.fi-icon-badge,
+.fi-user-pill {
+    min-height: 2.75rem;
+}
+
+.fi-main {
+    padding: 1rem;
+}
+
+.fi-container {
+    gap: 1.15rem;
+}
+
+.module-head {
+    margin-bottom: 0.65rem;
+}
+
+.page-title {
+    font-size: clamp(2.5rem, 3.5vw, 4rem);
+}
+
+.page-subtitle {
+    font-size: clamp(1rem, 1.3vw, 1.85rem);
+}
+
+.card {
+    border-radius: 28px;
+    padding: 1.5rem;
+}
+
+.metric-grid-4,
+.soft-kpi-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.metric-grid {
+    gap: 1.2rem;
+    margin-bottom: 0.2rem;
+}
+
+.metric-card {
+    min-height: 194px;
+    border-radius: 30px;
+    padding: 1.55rem;
+}
+
+.metric-card .metric-label {
+    font-size: 1.1rem;
+    line-height: 1.05;
+}
+
+.metric-card .metric-value {
+    font-size: clamp(2.4rem, 3vw, 3.35rem);
+}
+
+.metric-subtitle {
+    position: relative;
+    z-index: 1;
+    margin-top: 0.55rem;
+    font-size: 0.95rem;
+    opacity: 0.95;
+}
+
+.soft-kpi-grid {
+    gap: 1.2rem;
+    margin-top: 0;
+}
+
+.soft-kpi {
+    border-radius: 30px;
+    padding: 1.45rem;
+    border: 2px solid var(--line);
+}
+
+.soft-kpi-icon {
+    font-size: 1.45rem;
+    margin-bottom: 0.35rem;
+}
+
+.soft-kpi .value {
+    font-size: clamp(2rem, 2.6vw, 3rem);
+    line-height: 1;
+}
+
+.soft-kpi.centered {
+    text-align: center;
+}
+
+.value-ok {
+    color: #16a34a;
+}
+
+.value-danger {
+    color: #dc2626;
+}
+
+.value-purple {
+    color: #7c3aed;
+}
+
+.value-blue {
+    color: #2563eb;
+}
+
+.dashboard-head {
+    align-items: stretch;
+}
+
+.dashboard-achievements {
+    width: min(520px, 100%);
+    align-self: flex-end;
+}
+
+.dashboard-achievements .soft-kpi {
+    min-height: 164px;
+}
+
+.dashboard-quick-grid .soft-kpi {
+    min-height: 210px;
+}
+
+.fi-filter-bar {
+    border-radius: 28px;
+    padding: 0.8rem;
+    display: grid;
+    grid-template-columns: minmax(300px, 1fr) repeat(3, minmax(170px, 230px)) auto;
+}
+
+.fi-filter-bar .search {
+    min-width: 0;
+}
+
+input,
+select,
+textarea {
+    height: 3.15rem;
+    border-radius: 18px;
+    font-size: 1.05rem;
+}
+
+.btn {
+    min-height: 3.1rem;
+    border-radius: 20px;
+    padding: 0.7rem 1.35rem;
+}
+
+.entity-grid {
+    gap: 1.2rem;
+    margin-top: 0.1rem;
+}
+
+.entity-card {
+    border-radius: 30px;
+    padding: 1.6rem;
+}
+
+.entity-card--airy {
+    min-height: 340px;
+}
+
+.entity-card-top,
+.entity-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.entity-bottom {
+    margin-top: 0.9rem;
+}
+
+.entity-status-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.entity-title {
+    font-size: clamp(1.9rem, 2.2vw, 2.7rem);
+}
+
+.entity-icon {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.9rem;
+}
+
+.cefr-grid {
+    display: grid;
+    margin-top: 1.1rem;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.cefr-card {
+    border: 2px solid var(--line);
+    border-radius: 24px;
+    background: #fff;
+    text-align: center;
+    min-height: 250px;
+    padding: 1.2rem;
+    display: grid;
+    align-content: center;
+    gap: 0.55rem;
+}
+
+.cefr-badge {
+    width: 76px;
+    height: 76px;
+    border-radius: 24px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 900;
+}
+
+.cefr-label {
+    font-weight: 900;
+    color: #0a1e5e;
+    font-size: 1.25rem;
+}
+
+.cefr-value {
+    font-size: 2.7rem;
+    color: #5b43dc;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.split-2 {
+    align-items: stretch;
+}
+
+.section-subtitle {
+    font-size: 1.05rem;
+}
+
+.section-title-sm {
+    font-size: 2.45rem;
+    margin-bottom: 0.8rem;
+}
+
+.activity-list {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.session-item {
+    border: 2px solid #dbe6fb;
+    border-radius: 20px;
+    padding: 1rem;
+    background: linear-gradient(90deg, #f6f9ff, #fbf7ff);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.session-title {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #0a1e5e;
+}
+
+.session-meta {
+    text-align: right;
+}
+
+.session-time {
+    color: #1d4ed8;
+    font-size: 1.45rem;
+    font-weight: 900;
+}
+
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    border-bottom: 1px solid #e4ebfb;
+    padding-bottom: 0.55rem;
+}
+
+.activity-title {
+    font-weight: 900;
+    color: #0a1e5e;
+}
+
+.empty-state,
+.empty-state-inline {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.metric-grid-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.fi-filter-bar-attendance {
+    grid-template-columns: 1fr auto;
+}
+
+.attendance-item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.attendance-avatar {
+    width: 2.8rem;
+    height: 2.8rem;
+    font-size: 1rem;
+}
+
+.attendance-student-name {
+    font-size: 1.25rem;
+    color: #0a1e5e;
+    font-weight: 900;
+}
+
+.attendance-field {
+    margin-top: 0.65rem;
+}
+
+@media (max-width: 1360px) {
+    .fi-filter-bar {
+        grid-template-columns: 1fr 190px 180px auto;
+    }
+
+    .fi-filter-bar select[name='payment_status'] {
+        grid-column: 2 / span 2;
+    }
+}
+
+@media (max-width: 1200px) {
+    .metric-grid-4,
+    .metric-grid-5,
+    .soft-kpi-grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cefr-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .dashboard-achievements {
+        width: 100%;
+    }
+}
+
+@media (max-width: 980px) {
+    .fi-header {
+        padding: 0.75rem;
+    }
+
+    .fi-filter-bar {
+        grid-template-columns: 1fr;
+    }
+
+    .fi-nav {
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    .metric-grid-4,
+    .metric-grid-5,
+    .soft-kpi-grid-4 {
+        grid-template-columns: 1fr;
+    }
+
+    .cefr-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .cefr-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .fi-user-pill > span:last-child {
+        display: none;
     }
 }

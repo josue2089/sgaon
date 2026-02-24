@@ -6,6 +6,7 @@ use App\Models\AcademicLevel;
 use App\Models\Campus;
 use App\Models\Course;
 use App\Models\Enrollment;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,14 +18,39 @@ class CourseController extends Controller
         return request()->user()?->campus_id;
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $query = Course::with(['campus', 'level'])->latest();
+        $query = Course::query()->with(['campus', 'level'])->latest();
         if ($this->campusId()) {
             $query->where('campus_id', $this->campusId());
         }
 
-        $coursesCount = (clone $query)->count();
+        $q = trim((string) $request->query('q', ''));
+        if ($q !== '') {
+            $query->where(function (Builder $builder) use ($q) {
+                $builder->where('name', 'like', "%{$q}%")
+                    ->orWhere('code', 'like', "%{$q}%");
+            });
+        }
+
+        $statusFilter = (string) $request->query('status', '');
+        if ($statusFilter !== '') {
+            $query->where('status', $statusFilter);
+        }
+
+        $levelFilter = (string) $request->query('level', '');
+        if ($levelFilter !== '') {
+            $query->whereHas('level', function (Builder $builder) use ($levelFilter) {
+                $builder->where('code', $levelFilter)
+                    ->orWhere('name', $levelFilter);
+            });
+        }
+
+        $courses = $query->paginate(20)->withQueryString();
+
+        $coursesCount = Course::query()
+            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->count();
         $studentsQuery = Enrollment::query()
             ->join('groups', 'groups.id', '=', 'enrollments.group_id')
             ->join('courses', 'courses.id', '=', 'groups.course_id');
@@ -32,7 +58,7 @@ class CourseController extends Controller
             $studentsQuery->where('courses.campus_id', $this->campusId());
         }
         $totalStudents = (clone $studentsQuery)->count();
-        $occupancy = $coursesCount > 0 ? min(100, (int) round(($totalStudents / ($coursesCount * 20)) * 100)) : 0;
+        $occupancy = null;
 
         $levelsQuery = AcademicLevel::query()
             ->select('academic_levels.id', 'academic_levels.name', 'academic_levels.code')
@@ -45,13 +71,23 @@ class CourseController extends Controller
         }
 
         return view('courses.index', [
-            'courses' => $query->paginate(20),
+            'courses' => $courses,
             'stats' => [
                 'courses' => $coursesCount,
                 'students' => $totalStudents,
                 'occupancy' => $occupancy,
             ],
             'levelStats' => $levelsQuery->get(),
+            'filters' => [
+                'q' => $q,
+                'status' => $statusFilter,
+                'level' => $levelFilter,
+            ],
+            'levels' => AcademicLevel::query()
+                ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['code', 'name']),
         ]);
     }
 

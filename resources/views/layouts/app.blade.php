@@ -22,13 +22,17 @@
         ['name' => 'Alumnos', 'route' => 'students.index', 'enabled' => $user?->role === 'admin'],
         ['name' => 'Profesores', 'route' => 'teachers.index', 'enabled' => $user?->role === 'admin'],
         ['name' => 'Cursos', 'route' => 'courses.index', 'enabled' => $user?->role === 'admin'],
-        ['name' => 'Grupos', 'route' => 'groups.index', 'enabled' => $user?->role === 'admin'],
-        ['name' => 'Inscripciones', 'route' => 'enrollments.index', 'enabled' => $user?->role === 'admin'],
-        ['name' => 'Sesiones', 'route' => 'sessions.index', 'enabled' => $user?->role === 'admin'],
         ['name' => 'Asistencia', 'route' => 'attendance.index', 'enabled' => in_array($user?->role, ['admin', 'teacher'], true)],
         ['name' => 'Financiero', 'route' => 'finance.index', 'enabled' => $user?->role === 'admin'],
         ['name' => 'Reportes', 'route' => 'reports.attendance', 'enabled' => $user?->role === 'admin'],
     ];
+    $extraNav = [
+        ['name' => 'Grupos', 'route' => 'groups.index', 'enabled' => $user?->role === 'admin'],
+        ['name' => 'Inscripciones', 'route' => 'enrollments.index', 'enabled' => $user?->role === 'admin'],
+        ['name' => 'Sesiones', 'route' => 'sessions.index', 'enabled' => $user?->role === 'admin'],
+    ];
+    $extraPrefixes = ['groups', 'enrollments', 'sessions'];
+    $extraActive = in_array(explode('.', (string) $currentRoute)[0], $extraPrefixes, true);
 @endphp
 <div class="fi-shell">
     <header class="fi-header">
@@ -48,6 +52,18 @@
                         </a>
                     @endif
                 @endforeach
+                @if($user?->role === 'admin')
+                    <details class="fi-menu fi-menu-inline">
+                        <summary class="fi-nav-item {{ $extraActive ? 'active' : '' }}">Más</summary>
+                        <div class="fi-menu-panel fi-menu-panel-nav">
+                            @foreach($extraNav as $item)
+                                @if($item['enabled'])
+                                    <a href="{{ route($item['route']) }}" class="fi-menu-link">{{ $item['name'] }}</a>
+                                @endif
+                            @endforeach
+                        </div>
+                    </details>
+                @endif
             </nav>
 
             <div class="fi-header-actions">

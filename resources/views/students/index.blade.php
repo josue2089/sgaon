@@ -1,54 +1,86 @@
 @extends('layouts.app')
 @section('content')
-@php
-    $total = $students->total();
-    $active = $students->getCollection()->where('status', 'active')->count();
-    $inactive = $students->getCollection()->where('status', '!=', 'active')->count();
-@endphp
 <div class="module-head">
     <div>
         <h1 class="page-title">Alumnos 👨‍🎓</h1>
         <p class="page-subtitle">Gestiona todos los estudiantes</p>
     </div>
-    <a class="btn" href="{{ route('students.create') }}">Nuevo alumno</a>
+    <a class="btn" href="{{ route('students.create') }}">Nuevo Alumno</a>
 </div>
 
-<div class="soft-kpi-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">
-    <div class="soft-kpi"><div class="label">👥 Total Alumnos</div><div class="value">{{ $total }}</div></div>
-    <div class="soft-kpi"><div class="label">✅ Activos</div><div class="value" style="color:#16a34a;">{{ $active }}</div></div>
-    <div class="soft-kpi"><div class="label">⚠️ Inactivos</div><div class="value" style="color:#dc2626;">{{ $inactive }}</div></div>
-    <div class="soft-kpi"><div class="label">📈 Asist. Promedio</div><div class="value" style="color:#7c3aed;">87%</div></div>
+<div class="soft-kpi-grid soft-kpi-grid-4">
+    @include('partials.ui.soft-kpi', ['icon' => '👥', 'label' => 'Total Alumnos', 'value' => $summary['total']])
+    @include('partials.ui.soft-kpi', ['icon' => '✅', 'label' => 'Activos', 'value' => $summary['active'], 'valueClass' => 'value-ok'])
+    @include('partials.ui.soft-kpi', ['icon' => '⚠️', 'label' => 'Inactivos', 'value' => $summary['inactive'], 'valueClass' => 'value-danger'])
+    @include('partials.ui.soft-kpi', ['icon' => '📈', 'label' => 'Asist. Promedio', 'value' => is_null($summary['attendance_rate']) ? 'N/D' : $summary['attendance_rate'].'%', 'valueClass' => 'value-purple'])
 </div>
 
-<div class="card">
+<form method="GET" action="{{ route('students.index') }}" class="card">
     <div class="fi-filter-bar">
-        <div class="search"><input type="text" placeholder="Buscar por nombre o email..." disabled></div>
-        <select style="max-width:160px;" disabled><option>Todos</option></select>
-        <button class="btn secondary" type="button">Filtros</button>
-    </div>
-</div>
-
-<div class="entity-grid">
-    @foreach($students as $student)
-        @php
-            $level = optional(optional($student->enrollments->first())->group)->course?->level?->name;
-        @endphp
-        <div class="entity-card entity-card--airy">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <span class="entity-avatar">{{ strtoupper(substr($student->first_name, 0, 1)) }}</span>
-                <span class="badge-pill badge-level">{{ $level ? strtoupper(substr($level, 0, 2)) : 'N/A' }}</span>
-            </div>
-            <div class="entity-spacer"></div>
-            <div class="entity-title">{{ $student->full_name }}</div>
-            <div class="entity-sub">{{ $student->email ?: 'Sin email' }}</div>
-            <div class="entity-sub">{{ $student->campus->name ?? 'Sin sede' }}</div>
-            <div style="margin-top:.8rem; display:flex; justify-content:space-between; align-items:center;">
-                <span class="badge-pill {{ $student->status === 'active' ? 'badge-ok' : 'badge-warn' }}">{{ $student->status }}</span>
-                <a href="{{ route('students.edit', $student) }}">Editar</a>
-            </div>
+        <div class="search">
+            <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar por nombre o email...">
         </div>
-    @endforeach
-</div>
+        <select name="level">
+            <option value="">Todos los niveles</option>
+            @foreach($levels as $level)
+                <option value="{{ $level->code }}" @selected($filters['level'] === $level->code)>{{ $level->code }} - {{ $level->name }}</option>
+            @endforeach
+        </select>
+        <select name="status">
+            <option value="">Todos los estados</option>
+            <option value="active" @selected($filters['status'] === 'active')>Activos</option>
+            <option value="inactive" @selected($filters['status'] === 'inactive')>Inactivos</option>
+            <option value="withdrawn" @selected($filters['status'] === 'withdrawn')>Retirados</option>
+            <option value="graduated" @selected($filters['status'] === 'graduated')>Graduados</option>
+        </select>
+        <select name="payment_status">
+            <option value="">Estado de pago</option>
+            <option value="paid" @selected($filters['payment_status'] === 'paid')>Al día</option>
+            <option value="pending" @selected($filters['payment_status'] === 'pending')>Pendiente</option>
+            <option value="overdue" @selected($filters['payment_status'] === 'overdue')>En mora</option>
+            <option value="no_charges" @selected($filters['payment_status'] === 'no_charges')>Sin cargos</option>
+        </select>
+        <button class="btn secondary" type="submit">Filtros</button>
+    </div>
+</form>
+
+@if($students->count() === 0)
+    <div class="card empty-state">No hay alumnos para los filtros seleccionados.</div>
+@else
+    <div class="entity-grid">
+        @foreach($students as $student)
+            @php
+                $level = optional(optional($student->enrollments->first())->group)->course?->level;
+                $levelCode = $level?->code ?: ($level ? strtoupper(substr((string) $level->name, 0, 2)) : 'N/A');
+                $studentPaymentStatus = $paymentStatusByStudent[$student->id] ?? 'no_charges';
+                $paymentBadge = match($studentPaymentStatus) {
+                    'paid' => ['ok', 'Al día'],
+                    'pending' => ['warn', 'Pendiente'],
+                    'overdue' => ['danger', 'En mora'],
+                    default => ['info', 'Sin cargos'],
+                };
+            @endphp
+            <div class="entity-card entity-card--airy">
+                <div class="entity-card-top">
+                    <span class="entity-avatar">{{ strtoupper(substr($student->first_name, 0, 1)) }}</span>
+                    @include('partials.ui.status-badge', ['tone' => 'level', 'text' => $levelCode])
+                </div>
+                <div class="entity-spacer"></div>
+                <div class="entity-title">{{ $student->full_name }}</div>
+                <div class="entity-sub">{{ $student->email ?: 'Sin email' }}</div>
+                <div class="entity-sub">{{ $student->campus->name ?? 'Sin sede' }}</div>
+                <div class="entity-sub">Asistencia: {{ isset($attendanceByStudent[$student->id]) ? ((int) $attendanceByStudent[$student->id]).'%' : 'N/D' }}</div>
+                <div class="entity-bottom">
+                    <div class="entity-status-stack">
+                        @include('partials.ui.status-badge', ['tone' => $student->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($student->status)])
+                        @include('partials.ui.status-badge', ['tone' => $paymentBadge[0], 'text' => $paymentBadge[1]])
+                    </div>
+                    <a href="{{ route('students.edit', $student) }}">Editar</a>
+                </div>
+            </div>
+        @endforeach
+    </div>
+@endif
 
 @if($students->hasPages())
     <div class="card">{{ $students->links() }}</div>

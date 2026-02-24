@@ -18,13 +18,22 @@
         </div>
     </form>
 </div>
-<div class="card"><table><thead><tr><th>Fecha</th><th>Grupo</th><th>Alumno</th><th>Status</th></tr></thead><tbody>
-@foreach($records as $record)
-<tr><td>{{ $record->classSession->session_date?->format('Y-m-d') }}</td><td>{{ $record->classSession->group->name ?? '' }}</td><td>{{ $record->enrollment->student->full_name ?? '' }}</td><td><span class="status-pill {{ $record->status === 'present' ? 'success' : ($record->status === 'absent' ? 'danger' : 'warn') }}">{{ $record->status }}</span></td></tr>
-@endforeach
-</tbody></table>
-@if($records->hasPages())
-    {{ $records->links() }}
-@endif
+<div class="card">
+    <table>
+        <thead><tr><th>Fecha</th><th>Grupo</th><th>Alumno</th><th>Status</th></tr></thead>
+        <tbody>
+        @foreach($records as $record)
+            <tr>
+                <td>{{ $record->classSession->session_date?->format('Y-m-d') }}</td>
+                <td>{{ $record->classSession->group->name ?? '' }}</td>
+                <td>{{ $record->enrollment->student->full_name ?? '' }}</td>
+                <td><span class="status-pill {{ $record->status === 'present' ? 'success' : ($record->status === 'absent' ? 'danger' : 'warn') }}">{{ $record->status }}</span></td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+    @if($records->hasPages())
+        {{ $records->links() }}
+    @endif
 </div>
 @endsection

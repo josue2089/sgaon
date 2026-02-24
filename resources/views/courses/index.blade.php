@@ -5,60 +5,75 @@
         <h1 class="page-title">Cursos 📚</h1>
         <p class="page-subtitle">Gestiona niveles y grupos</p>
     </div>
-    <a class="btn" href="{{ route('courses.create') }}">Nuevo curso</a>
+    <a class="btn" href="{{ route('courses.create') }}">Nuevo Curso</a>
 </div>
 
-<div class="metric-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">
-    <div class="metric-card metric-blue"><div class="metric-icon">📘</div><div class="metric-label">Total Cursos</div><div class="metric-value">{{ $stats['courses'] }}</div></div>
-    <div class="metric-card metric-green"><div class="metric-icon">👥</div><div class="metric-label">Total Estudiantes</div><div class="metric-value">{{ $stats['students'] }}</div></div>
-    <div class="metric-card metric-purple"><div class="metric-icon">📈</div><div class="metric-label">Ocupación</div><div class="metric-value">{{ $stats['occupancy'] }}%</div></div>
-    <div class="metric-card metric-orange"><div class="metric-icon">🏅</div><div class="metric-label">Niveles CEFR</div><div class="metric-value">{{ $levelStats->count() }}</div></div>
+<div class="metric-grid metric-grid-4">
+    @include('partials.ui.metric-card', ['tone' => 'metric-blue', 'icon' => '📘', 'label' => 'Total Cursos', 'value' => $stats['courses']])
+    @include('partials.ui.metric-card', ['tone' => 'metric-green', 'icon' => '👥', 'label' => 'Total Estudiantes', 'value' => $stats['students']])
+    @include('partials.ui.metric-card', ['tone' => 'metric-purple', 'icon' => '📈', 'label' => 'Ocupación', 'value' => is_null($stats['occupancy']) ? 'N/D' : $stats['occupancy'].'%', 'subtitle' => is_null($stats['occupancy']) ? 'Sin capacidad definida' : null])
+    @include('partials.ui.metric-card', ['tone' => 'metric-orange', 'icon' => '🏅', 'label' => 'Niveles CEFR', 'value' => $levelStats->count()])
 </div>
 
 <div class="card">
-    <h2 class="section-title" style="margin-bottom:1rem;">Niveles CEFR 🎓</h2>
-    <div class="entity-grid" style="grid-template-columns:repeat(6,minmax(0,1fr));">
+    <h2 class="section-title">Niveles CEFR 🎓</h2>
+    <div class="cefr-grid">
         @foreach($levelStats as $level)
             @php
                 $code = strtoupper($level->code ?: substr((string) $level->name, 0, 2));
                 $label = trim(preg_replace('/^[A-Z0-9\\- ]+/i', '', (string) $level->name)) ?: $level->name;
             @endphp
-            <div class="entity-card" style="text-align:center;">
-                <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);margin:0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:900;">{{ $code }}</div>
-                <div style="margin-top:.85rem;font-size:1.5rem;font-weight:900;color:#0a1e5e;">{{ $label }}</div>
-                <div style="margin-top:.4rem;font-size:2.25rem;font-weight:900;color:#5b43dc;">{{ $level->courses_count }}</div>
+            <div class="cefr-card">
+                <div class="cefr-badge">{{ $code }}</div>
+                <div class="cefr-label">{{ $label }}</div>
+                <div class="cefr-value">{{ $level->courses_count }}</div>
             </div>
         @endforeach
     </div>
 </div>
 
-<div class="card">
+<form method="GET" action="{{ route('courses.index') }}" class="card">
     <div class="fi-filter-bar">
-        <div class="search"><input type="text" placeholder="Buscar curso o código..." disabled></div>
-        <select style="max-width:200px;" disabled><option>Todos los niveles</option></select>
-        <select style="max-width:180px;" disabled><option>Todos</option></select>
-        <button class="btn secondary" type="button">Filtros</button>
-    </div>
-</div>
-
-<div class="entity-grid">
-    @foreach($courses as $course)
-        <div class="entity-card entity-card--airy">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                <div style="width:62px;height:62px;border-radius:20px;background:linear-gradient(135deg,#3b82f6,#2563eb);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;">📘</div>
-                <span class="badge-pill badge-level">{{ strtoupper($course->level->code ?? substr((string) ($course->level->name ?? 'N/A'), 0, 2)) }}</span>
-            </div>
-            <div class="entity-spacer"></div>
-            <div class="entity-title">{{ $course->name }}</div>
-            <div class="entity-sub">{{ $course->code ?: 'Sin código' }}</div>
-            <div class="entity-sub">{{ $course->campus->name ?? 'Sin sede' }}</div>
-            <div style="margin-top:.85rem; display:flex; justify-content:space-between; align-items:center;">
-                <span class="badge-pill {{ $course->status === 'active' ? 'badge-ok' : 'badge-warn' }}">{{ $course->status }}</span>
-                <a href="{{ route('courses.edit',$course) }}">Editar</a>
-            </div>
+        <div class="search">
+            <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar curso o código...">
         </div>
-    @endforeach
-</div>
+        <select name="level">
+            <option value="">Todos los niveles</option>
+            @foreach($levels as $level)
+                <option value="{{ $level->code }}" @selected($filters['level'] === $level->code)>{{ $level->code }} - {{ $level->name }}</option>
+            @endforeach
+        </select>
+        <select name="status">
+            <option value="">Todos</option>
+            <option value="active" @selected($filters['status'] === 'active')>Activos</option>
+            <option value="inactive" @selected($filters['status'] === 'inactive')>Inactivos</option>
+        </select>
+        <button class="btn secondary" type="submit">Filtros</button>
+    </div>
+</form>
+
+@if($courses->count() === 0)
+    <div class="card empty-state">No hay cursos para los filtros seleccionados.</div>
+@else
+    <div class="entity-grid">
+        @foreach($courses as $course)
+            <div class="entity-card entity-card--airy">
+                <div class="entity-card-top">
+                    <div class="entity-icon">📘</div>
+                    @include('partials.ui.status-badge', ['tone' => 'level', 'text' => strtoupper($course->level->code ?? substr((string) ($course->level->name ?? 'N/A'), 0, 2))])
+                </div>
+                <div class="entity-spacer"></div>
+                <div class="entity-title">{{ $course->name }}</div>
+                <div class="entity-sub">{{ $course->code ?: 'Sin código' }}</div>
+                <div class="entity-sub">{{ $course->campus->name ?? 'Sin sede' }}</div>
+                <div class="entity-bottom">
+                    @include('partials.ui.status-badge', ['tone' => $course->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($course->status)])
+                    <a href="{{ route('courses.edit',$course) }}">Editar</a>
+                </div>
+            </div>
+        @endforeach
+    </div>
+@endif
 
 @if($courses->hasPages())
     <div class="card">{{ $courses->links() }}</div>
