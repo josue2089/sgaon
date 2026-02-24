@@ -969,6 +969,11 @@ a {
     --text: #0a1e5e;
     --muted: #64748b;
     --brand: #0a1e5e;
+    --icon-xs: 0.78rem;
+    --icon-sm: 0.9rem;
+    --icon-md: 1rem;
+    --icon-lg: 1.08rem;
+    --icon-xl: 1.2rem;
 }
 
 body {
@@ -1011,9 +1016,10 @@ body {
 }
 
 .fi-nav-icon {
-    width: 1.05rem;
-    height: 1.05rem;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
     display: inline-flex;
+    flex-shrink: 0;
 }
 
 .fi-nav-icon svg,
@@ -1024,13 +1030,17 @@ body {
 
 .ui-icon {
     display: inline-flex;
-    width: 1.2rem;
-    height: 1.2rem;
+    width: var(--icon-lg);
+    height: var(--icon-lg);
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .ui-icon svg {
     width: 100%;
     height: 100%;
+    display: block;
 }
 
 .fi-menu-inline .fi-menu-panel {
@@ -1055,6 +1065,11 @@ body {
 .fi-icon-badge {
     width: 2.75rem;
     height: 2.75rem;
+}
+
+.fi-icon-badge svg {
+    width: var(--icon-md);
+    height: var(--icon-md);
 }
 
 .fi-main {
@@ -1108,8 +1123,8 @@ body {
 }
 
 .metric-icon .ui-icon {
-    width: 1.55rem;
-    height: 1.55rem;
+    width: var(--icon-xl);
+    height: var(--icon-xl);
 }
 
 .metric-subtitle {
@@ -1136,11 +1151,15 @@ body {
     margin-bottom: 0.35rem;
     color: #1d4ed8;
     display: inline-flex;
+    width: 1.6rem;
+    height: 1.6rem;
+    align-items: center;
+    justify-content: center;
 }
 
 .soft-kpi-icon .ui-icon {
-    width: 1.3rem;
-    height: 1.3rem;
+    width: var(--icon-lg);
+    height: var(--icon-lg);
 }
 
 .soft-kpi .value {
@@ -1259,8 +1278,8 @@ textarea {
 }
 
 .entity-icon .ui-icon {
-    width: 1.9rem;
-    height: 1.9rem;
+    width: var(--icon-xl);
+    height: var(--icon-xl);
 }
 
 .cefr-grid {
@@ -1415,6 +1434,13 @@ textarea {
 }
 
 @media (max-width: 1200px) {
+    :root {
+        --icon-sm: 0.84rem;
+        --icon-md: 0.92rem;
+        --icon-lg: 1rem;
+        --icon-xl: 1.1rem;
+    }
+
     .metric-grid-4,
     .metric-grid-5,
     .soft-kpi-grid-4 {
@@ -1431,6 +1457,13 @@ textarea {
 }
 
 @media (max-width: 980px) {
+    :root {
+        --icon-sm: 0.8rem;
+        --icon-md: 0.88rem;
+        --icon-lg: 0.95rem;
+        --icon-xl: 1.02rem;
+    }
+
     .fi-header {
         padding: 0.75rem;
     }
@@ -1452,6 +1485,11 @@ textarea {
 
     .cefr-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .fi-icon-badge {
+        width: 2.4rem;
+        height: 2.4rem;
     }
 }
 
