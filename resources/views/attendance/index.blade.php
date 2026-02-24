@@ -9,7 +9,7 @@
 @endphp
 <div class="module-head">
     <div>
-        <h1 class="page-title">Asistencia ✓</h1>
+        <h1 class="page-title">Asistencia</h1>
         <p class="page-subtitle">Registra la asistencia por sesión</p>
     </div>
     @if($selectedSession)
@@ -18,11 +18,11 @@
 </div>
 
 <div class="metric-grid metric-grid-5">
-    @include('partials.ui.metric-card', ['tone' => 'metric-blue', 'label' => 'Total', 'value' => $total])
-    @include('partials.ui.metric-card', ['tone' => 'metric-green', 'label' => 'Presentes', 'value' => $present])
-    @include('partials.ui.metric-card', ['tone' => 'metric-red', 'label' => 'Ausentes', 'value' => $absent])
-    @include('partials.ui.metric-card', ['tone' => 'metric-orange', 'label' => 'Tarde', 'value' => $late])
-    @include('partials.ui.metric-card', ['tone' => 'metric-purple', 'label' => 'Justificadas', 'value' => $justified])
+    @include('partials.ui.metric-card', ['tone' => 'metric-blue', 'iconName' => 'users', 'label' => 'Total', 'value' => $total])
+    @include('partials.ui.metric-card', ['tone' => 'metric-green', 'iconName' => 'check', 'label' => 'Presentes', 'value' => $present])
+    @include('partials.ui.metric-card', ['tone' => 'metric-red', 'iconName' => 'warning', 'label' => 'Ausentes', 'value' => $absent])
+    @include('partials.ui.metric-card', ['tone' => 'metric-orange', 'iconName' => 'trend', 'label' => 'Tarde', 'value' => $late])
+    @include('partials.ui.metric-card', ['tone' => 'metric-purple', 'iconName' => 'calendar', 'label' => 'Justificadas', 'value' => $justified])
 </div>
 
 <div class="card">

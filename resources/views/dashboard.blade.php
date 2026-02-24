@@ -2,7 +2,7 @@
 @section('content')
 <div class="module-head dashboard-head">
     <div>
-        <h1 class="page-title">¡Bienvenido! 👋</h1>
+        <h1 class="page-title">¡Bienvenido!</h1>
         <p class="page-subtitle">{{ now()->locale('es')->isoFormat('dddd, D [de] MMMM YYYY') }}</p>
     </div>
     <div class="soft-kpi-grid dashboard-achievements">
@@ -13,19 +13,19 @@
 </div>
 
 <div class="soft-kpi-grid dashboard-quick-grid">
-    @include('partials.ui.soft-kpi', ['class' => 'centered', 'icon' => '👥', 'label' => 'Alumnos', 'value' => $studentsCount])
-    @include('partials.ui.soft-kpi', ['class' => 'centered', 'icon' => '🎓', 'label' => 'Profesores', 'value' => $teachersCount])
-    @include('partials.ui.soft-kpi', ['class' => 'centered', 'icon' => '📚', 'label' => 'Cursos', 'value' => $coursesCount])
-    @include('partials.ui.soft-kpi', ['class' => 'centered', 'icon' => '✅', 'label' => 'Asistencia', 'value' => is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%'])
-    @include('partials.ui.soft-kpi', ['class' => 'centered', 'icon' => '💳', 'label' => 'Pagos Mes', 'value' => '$'.number_format($paymentsMonthAmount, 0)])
-    @include('partials.ui.soft-kpi', ['class' => 'centered', 'icon' => '🚨', 'label' => 'Alertas', 'value' => $openAlertsCount])
+    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'users', 'label' => 'Alumnos', 'value' => $studentsCount])
+    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'teacher', 'label' => 'Profesores', 'value' => $teachersCount])
+    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'book', 'label' => 'Cursos', 'value' => $coursesCount])
+    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'check', 'label' => 'Asistencia', 'value' => is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%'])
+    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'payment', 'label' => 'Pagos Mes', 'value' => '$'.number_format($paymentsMonthAmount, 0)])
+    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'alert', 'label' => 'Alertas', 'value' => $openAlertsCount])
 </div>
 
 <div class="split-2">
     <div class="card">
         <div class="module-head">
             <div>
-                <h2 class="section-title">Clases de Hoy 📚</h2>
+                <h2 class="section-title">Clases de Hoy</h2>
                 <p class="page-subtitle section-subtitle">{{ $todaySessions->count() }} sesiones programadas</p>
             </div>
             @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Hoy'])
@@ -51,7 +51,7 @@
 
     <div class="card">
         <div class="module-head">
-            <h2 class="section-title">Actividad 🔔</h2>
+            <h2 class="section-title">Actividad</h2>
             @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'En vivo'])
         </div>
         <div class="activity-list">

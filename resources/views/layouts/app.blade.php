@@ -48,13 +48,43 @@
                     @if($item['enabled'])
                         @php($prefix = explode('.', $item['route'])[0])
                         <a class="fi-nav-item {{ str_starts_with((string) $currentRoute, $prefix) ? 'active' : '' }}" href="{{ route($item['route']) }}">
+                            <span class="fi-nav-icon" aria-hidden="true">
+                                @switch($item['name'])
+                                    @case('Dashboard')
+                                        <svg viewBox="0 0 24 24" fill="none"><path d="M4 4h7v7H4zM13 4h7v5h-7zM13 11h7v9h-7zM4 13h7v7H4z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                                        @break
+                                    @case('Alumnos')
+                                        <svg viewBox="0 0 24 24" fill="none"><path d="M16 19a4 4 0 0 0-8 0M15 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM20 18a3 3 0 0 0-3-3M4 18a3 3 0 0 1 3-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                                        @break
+                                    @case('Profesores')
+                                        <svg viewBox="0 0 24 24" fill="none"><path d="M3 8l9-4 9 4-9 4-9-4Zm3 3.5V16c0 2.2 2.7 4 6 4s6-1.8 6-4v-4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        @break
+                                    @case('Cursos')
+                                        <svg viewBox="0 0 24 24" fill="none"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v14H6.5A2.5 2.5 0 0 0 4 20V6.5ZM4 20V8a2 2 0 0 1 2-2h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        @break
+                                    @case('Asistencia')
+                                        <svg viewBox="0 0 24 24" fill="none"><path d="M8 4v3M16 4v3M4 10h16M7 14l2 2 5-5M6 6h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        @break
+                                    @case('Financiero')
+                                        <svg viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9ZM3 10h18" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                                        @break
+                                    @case('Reportes')
+                                        <svg viewBox="0 0 24 24" fill="none"><path d="M5 19V9M12 19V5M19 19v-7M4 19h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                                        @break
+                                @endswitch
+                            </span>
                             {{ $item['name'] }}
                         </a>
                     @endif
                 @endforeach
                 @if($user?->role === 'admin')
                     <details class="fi-menu fi-menu-inline">
-                        <summary class="fi-nav-item {{ $extraActive ? 'active' : '' }}">Más</summary>
+                        <summary class="fi-nav-item {{ $extraActive ? 'active' : '' }}">
+                            <span class="fi-nav-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                            </span>
+                            Más
+                        </summary>
                         <div class="fi-menu-panel fi-menu-panel-nav">
                             @foreach($extraNav as $item)
                                 @if($item['enabled'])
@@ -69,7 +99,7 @@
             <div class="fi-header-actions">
                 <details class="fi-menu">
                     <summary class="fi-icon-badge">
-                        🔔
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M15 17H5.8a.8.8 0 0 1-.65-1.27c1.06-1.45 1.85-3 1.85-5.18a5 5 0 0 1 10 0c0 2.17.8 3.73 1.85 5.18A.8.8 0 0 1 18.2 17H15Zm0 0a3 3 0 0 1-6 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
                         @if($openAlertsCount > 0)
                             <span class="fi-icon-dot"></span>
                         @endif
@@ -89,7 +119,9 @@
                 </details>
 
                 <details class="fi-menu">
-                    <summary class="fi-icon-badge">⚙️</summary>
+                    <summary class="fi-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="m12 8.5 1.1-2.8 2.1 1 2.4-1.3 1.3 2.4-1 2.1 1.8 1.6-1.8 1.6 1 2.1-1.3 2.4-2.4-1.3-2.1 1L12 15.5l-1.1 2.8-2.1-1-2.4 1.3-1.3-2.4 1-2.1L4.3 12l1.8-1.6-1-2.1 1.3-2.4 2.4 1.3 2.1-1L12 8.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.3" stroke="currentColor" stroke-width="1.7"/></svg>
+                    </summary>
                     <div class="fi-menu-panel">
                         <div class="fi-menu-title">Configuración</div>
                         <a href="{{ route('dashboard') }}" class="fi-menu-link">Panel principal</a>

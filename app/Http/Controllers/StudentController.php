@@ -109,7 +109,7 @@ class StudentController extends Controller
 
         $attendanceRate = Enrollment::query()
             ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
-            ->where('status', 'active')
+            ->where('enrollments.status', 'active')
             ->join('attendance_records', 'attendance_records.enrollment_id', '=', 'enrollments.id')
             ->selectRaw(
                 "ROUND((SUM(CASE WHEN attendance_records.status = 'present' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100) as attendance_rate"

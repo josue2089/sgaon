@@ -7,16 +7,16 @@
 @endphp
 <div class="module-head">
     <div>
-        <h1 class="page-title">Financiero 💳</h1>
+        <h1 class="page-title">Financiero</h1>
         <p class="page-subtitle">Control de cargos, pagos y cobranza</p>
     </div>
 </div>
 
 <div class="soft-kpi-grid soft-kpi-grid-4">
-    @include('partials.ui.soft-kpi', ['label' => 'Cargos (página)', 'value' => '$'.number_format($chargesTotal, 0)])
-    @include('partials.ui.soft-kpi', ['label' => 'Pagos recientes', 'value' => '$'.number_format($paymentsTotal, 0)])
-    @include('partials.ui.soft-kpi', ['label' => 'Cuentas en mora', 'value' => $overdueCount, 'valueClass' => 'value-danger'])
-    @include('partials.ui.soft-kpi', ['label' => 'Cobertura', 'value' => ($chargesTotal > 0 ? round(($paymentsTotal / $chargesTotal) * 100) : 0).'%', 'valueClass' => 'value-blue'])
+    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Cargos (página)', 'value' => '$'.number_format($chargesTotal, 0)])
+    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Pagos recientes', 'value' => '$'.number_format($paymentsTotal, 0)])
+    @include('partials.ui.soft-kpi', ['iconName' => 'warning', 'label' => 'Cuentas en mora', 'value' => $overdueCount, 'valueClass' => 'value-danger'])
+    @include('partials.ui.soft-kpi', ['iconName' => 'trend', 'label' => 'Cobertura', 'value' => ($chargesTotal > 0 ? round(($paymentsTotal / $chargesTotal) * 100) : 0).'%', 'valueClass' => 'value-blue'])
 </div>
 
 <div class="grid-2">

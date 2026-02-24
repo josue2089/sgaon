@@ -2,17 +2,17 @@
 @section('content')
 <div class="module-head">
     <div>
-        <h1 class="page-title">Profesores 👨‍🏫</h1>
+        <h1 class="page-title">Profesores</h1>
         <p class="page-subtitle">Gestiona tu equipo docente</p>
     </div>
     <a class="btn" href="{{ route('teachers.create') }}">Nuevo Profesor</a>
 </div>
 
 <div class="metric-grid metric-grid-4">
-    @include('partials.ui.metric-card', ['tone' => 'metric-purple', 'icon' => '👥', 'label' => 'Total Profesores', 'value' => $summary['total']])
-    @include('partials.ui.metric-card', ['tone' => 'metric-blue', 'icon' => '🎓', 'label' => 'Total Estudiantes', 'value' => $summary['students_total']])
-    @include('partials.ui.metric-card', ['tone' => 'metric-orange', 'icon' => '⭐', 'label' => 'Rating Promedio', 'value' => 'N/D', 'subtitle' => 'Sin módulo de evaluación'])
-    @include('partials.ui.metric-card', ['tone' => 'metric-green', 'icon' => '📚', 'label' => 'Docentes Activos', 'value' => $summary['active']])
+    @include('partials.ui.metric-card', ['tone' => 'metric-purple', 'iconName' => 'users', 'label' => 'Total Profesores', 'value' => $summary['total']])
+    @include('partials.ui.metric-card', ['tone' => 'metric-blue', 'iconName' => 'teacher', 'label' => 'Total Estudiantes', 'value' => $summary['students_total']])
+    @include('partials.ui.metric-card', ['tone' => 'metric-orange', 'iconName' => 'award', 'label' => 'Rating Promedio', 'value' => 'N/D', 'subtitle' => 'Sin módulo de evaluación'])
+    @include('partials.ui.metric-card', ['tone' => 'metric-green', 'iconName' => 'book', 'label' => 'Docentes Activos', 'value' => $summary['active']])
 </div>
 
 <form method="GET" action="{{ route('teachers.index') }}" class="card">

@@ -2,21 +2,21 @@
 @section('content')
 <div class="module-head">
     <div>
-        <h1 class="page-title">Cursos 📚</h1>
+        <h1 class="page-title">Cursos</h1>
         <p class="page-subtitle">Gestiona niveles y grupos</p>
     </div>
     <a class="btn" href="{{ route('courses.create') }}">Nuevo Curso</a>
 </div>
 
 <div class="metric-grid metric-grid-4">
-    @include('partials.ui.metric-card', ['tone' => 'metric-blue', 'icon' => '📘', 'label' => 'Total Cursos', 'value' => $stats['courses']])
-    @include('partials.ui.metric-card', ['tone' => 'metric-green', 'icon' => '👥', 'label' => 'Total Estudiantes', 'value' => $stats['students']])
-    @include('partials.ui.metric-card', ['tone' => 'metric-purple', 'icon' => '📈', 'label' => 'Ocupación', 'value' => is_null($stats['occupancy']) ? 'N/D' : $stats['occupancy'].'%', 'subtitle' => is_null($stats['occupancy']) ? 'Sin capacidad definida' : null])
-    @include('partials.ui.metric-card', ['tone' => 'metric-orange', 'icon' => '🏅', 'label' => 'Niveles CEFR', 'value' => $levelStats->count()])
+    @include('partials.ui.metric-card', ['tone' => 'metric-blue', 'iconName' => 'book', 'label' => 'Total Cursos', 'value' => $stats['courses']])
+    @include('partials.ui.metric-card', ['tone' => 'metric-green', 'iconName' => 'users', 'label' => 'Total Estudiantes', 'value' => $stats['students']])
+    @include('partials.ui.metric-card', ['tone' => 'metric-purple', 'iconName' => 'trend', 'label' => 'Ocupación', 'value' => is_null($stats['occupancy']) ? 'N/D' : $stats['occupancy'].'%', 'subtitle' => is_null($stats['occupancy']) ? 'Sin capacidad definida' : null])
+    @include('partials.ui.metric-card', ['tone' => 'metric-orange', 'iconName' => 'award', 'label' => 'Niveles CEFR', 'value' => $levelStats->count()])
 </div>
 
 <div class="card">
-    <h2 class="section-title">Niveles CEFR 🎓</h2>
+    <h2 class="section-title">Niveles CEFR</h2>
     <div class="cefr-grid">
         @foreach($levelStats as $level)
             @php
@@ -59,7 +59,7 @@
         @foreach($courses as $course)
             <div class="entity-card entity-card--airy">
                 <div class="entity-card-top">
-                    <div class="entity-icon">📘</div>
+                    <div class="entity-icon">@include('partials.ui.icon', ['name' => 'book'])</div>
                     @include('partials.ui.status-badge', ['tone' => 'level', 'text' => strtoupper($course->level->code ?? substr((string) ($course->level->name ?? 'N/A'), 0, 2))])
                 </div>
                 <div class="entity-spacer"></div>

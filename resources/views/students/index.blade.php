@@ -2,17 +2,17 @@
 @section('content')
 <div class="module-head">
     <div>
-        <h1 class="page-title">Alumnos 👨‍🎓</h1>
+        <h1 class="page-title">Alumnos</h1>
         <p class="page-subtitle">Gestiona todos los estudiantes</p>
     </div>
     <a class="btn" href="{{ route('students.create') }}">Nuevo Alumno</a>
 </div>
 
 <div class="soft-kpi-grid soft-kpi-grid-4">
-    @include('partials.ui.soft-kpi', ['icon' => '👥', 'label' => 'Total Alumnos', 'value' => $summary['total']])
-    @include('partials.ui.soft-kpi', ['icon' => '✅', 'label' => 'Activos', 'value' => $summary['active'], 'valueClass' => 'value-ok'])
-    @include('partials.ui.soft-kpi', ['icon' => '⚠️', 'label' => 'Inactivos', 'value' => $summary['inactive'], 'valueClass' => 'value-danger'])
-    @include('partials.ui.soft-kpi', ['icon' => '📈', 'label' => 'Asist. Promedio', 'value' => is_null($summary['attendance_rate']) ? 'N/D' : $summary['attendance_rate'].'%', 'valueClass' => 'value-purple'])
+    @include('partials.ui.soft-kpi', ['iconName' => 'users', 'label' => 'Total Alumnos', 'value' => $summary['total']])
+    @include('partials.ui.soft-kpi', ['iconName' => 'check', 'label' => 'Activos', 'value' => $summary['active'], 'valueClass' => 'value-ok'])
+    @include('partials.ui.soft-kpi', ['iconName' => 'warning', 'label' => 'Inactivos', 'value' => $summary['inactive'], 'valueClass' => 'value-danger'])
+    @include('partials.ui.soft-kpi', ['iconName' => 'trend', 'label' => 'Asist. Promedio', 'value' => is_null($summary['attendance_rate']) ? 'N/D' : $summary['attendance_rate'].'%', 'valueClass' => 'value-purple'])
 </div>
 
 <form method="GET" action="{{ route('students.index') }}" class="card">
