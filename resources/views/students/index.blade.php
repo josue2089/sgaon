@@ -62,7 +62,13 @@
             @endphp
             <div class="entity-card entity-card--airy">
                 <div class="entity-card-top">
-                    <span class="entity-avatar">{{ strtoupper(substr($student->first_name, 0, 1)) }}</span>
+                    <span class="entity-avatar">
+                        @if($student->profile_photo_path)
+                            <img src="{{ \Illuminate\Support\Facades\Storage::url($student->profile_photo_path) }}" alt="{{ $student->full_name }}">
+                        @else
+                            {{ strtoupper(substr($student->first_name, 0, 1)) }}
+                        @endif
+                    </span>
                     @include('partials.ui.status-badge', ['tone' => 'level', 'text' => $levelCode])
                 </div>
                 <div class="entity-spacer"></div>

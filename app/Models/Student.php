@@ -21,6 +21,7 @@ class Student extends Model
         'address',
         'status',
         'enrollment_date',
+        'profile_photo_path',
     ];
 
     protected function casts(): array

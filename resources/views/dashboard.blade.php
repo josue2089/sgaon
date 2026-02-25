@@ -25,10 +25,16 @@
     <div class="card">
         <div class="module-head">
             <div>
-                <h2 class="section-title">Clases de Hoy</h2>
-                <p class="page-subtitle section-subtitle">{{ $todaySessions->count() }} sesiones programadas</p>
+                <h2 class="section-title">Clases del día</h2>
+                <p class="page-subtitle section-subtitle">{{ $selectedDate->locale('es')->isoFormat('dddd, D [de] MMMM YYYY') }} · {{ $todaySessions->count() }} sesiones</p>
             </div>
-            @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Hoy'])
+            <form method="GET" action="{{ route('dashboard') }}" class="dashboard-date-filter">
+                <a class="date-nav-btn" href="{{ route('dashboard', ['date' => $previousDate->toDateString()]) }}">←</a>
+                <input type="date" name="date" value="{{ $selectedDate->toDateString() }}">
+                <button class="date-nav-btn" type="submit">Ir</button>
+                <a class="date-nav-btn" href="{{ route('dashboard', ['date' => now()->toDateString()]) }}">Hoy</a>
+                <a class="date-nav-btn" href="{{ route('dashboard', ['date' => $nextDate->toDateString()]) }}">→</a>
+            </form>
         </div>
 
         <div class="activity-list">

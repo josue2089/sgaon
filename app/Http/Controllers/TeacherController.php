@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class TeacherController extends Controller
@@ -109,10 +110,15 @@ class TeacherController extends Controller
             'email' => ['nullable', 'email'],
             'phone' => ['nullable', 'string', 'max:40'],
             'status' => ['required', 'string'],
+            'profile_photo' => ['nullable', 'image', 'max:5120'],
         ]);
 
         if ($this->campusId()) {
             $data['campus_id'] = $this->campusId();
+        }
+
+        if ($request->hasFile('profile_photo')) {
+            $data['profile_photo_path'] = $request->file('profile_photo')->store('profiles/teachers', 'public');
         }
 
         Teacher::create($data);
@@ -143,10 +149,18 @@ class TeacherController extends Controller
             'email' => ['nullable', 'email'],
             'phone' => ['nullable', 'string', 'max:40'],
             'status' => ['required', 'string'],
+            'profile_photo' => ['nullable', 'image', 'max:5120'],
         ]);
 
         if ($this->campusId()) {
             $data['campus_id'] = $this->campusId();
+        }
+
+        if ($request->hasFile('profile_photo')) {
+            if ($teacher->profile_photo_path) {
+                Storage::disk('public')->delete($teacher->profile_photo_path);
+            }
+            $data['profile_photo_path'] = $request->file('profile_photo')->store('profiles/teachers', 'public');
         }
 
         $teacher->update($data);
@@ -156,6 +170,9 @@ class TeacherController extends Controller
 
     public function destroy(Teacher $teacher): RedirectResponse
     {
+        if ($teacher->profile_photo_path) {
+            Storage::disk('public')->delete($teacher->profile_photo_path);
+        }
         $teacher->delete();
 
         return redirect()->route('teachers.index')->with('success', 'Profesor eliminado.');

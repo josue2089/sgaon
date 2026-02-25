@@ -11,6 +11,7 @@ use App\Models\Student;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class StudentController extends Controller
@@ -165,10 +166,15 @@ class StudentController extends Controller
             'address' => ['nullable', 'string'],
             'status' => ['required', 'string'],
             'enrollment_date' => ['nullable', 'date'],
+            'profile_photo' => ['nullable', 'image', 'max:5120'],
         ]);
 
         if ($this->campusId()) {
             $data['campus_id'] = $this->campusId();
+        }
+
+        if ($request->hasFile('profile_photo')) {
+            $data['profile_photo_path'] = $request->file('profile_photo')->store('profiles/students', 'public');
         }
 
         Student::create($data);
@@ -202,10 +208,18 @@ class StudentController extends Controller
             'address' => ['nullable', 'string'],
             'status' => ['required', 'string'],
             'enrollment_date' => ['nullable', 'date'],
+            'profile_photo' => ['nullable', 'image', 'max:5120'],
         ]);
 
         if ($this->campusId()) {
             $data['campus_id'] = $this->campusId();
+        }
+
+        if ($request->hasFile('profile_photo')) {
+            if ($student->profile_photo_path) {
+                Storage::disk('public')->delete($student->profile_photo_path);
+            }
+            $data['profile_photo_path'] = $request->file('profile_photo')->store('profiles/students', 'public');
         }
 
         $student->update($data);
@@ -215,6 +229,9 @@ class StudentController extends Controller
 
     public function destroy(Student $student): RedirectResponse
     {
+        if ($student->profile_photo_path) {
+            Storage::disk('public')->delete($student->profile_photo_path);
+        }
         $student->delete();
 
         return redirect()->route('students.index')->with('success', 'Alumno eliminado.');

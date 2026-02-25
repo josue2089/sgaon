@@ -18,6 +18,7 @@ class Teacher extends Model
         'email',
         'phone',
         'status',
+        'profile_photo_path',
     ];
 
     public function campus()

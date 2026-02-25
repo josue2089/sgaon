@@ -12,6 +12,7 @@ use App\Models\Group;
 use App\Models\Payment;
 use App\Models\Student;
 use App\Models\Teacher;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -38,8 +39,15 @@ class DashboardController extends Controller
         $attendanceQuery = AttendanceRecord::query();
         $paymentsQuery = Payment::query();
         $monthChargesQuery = Charge::query()->whereBetween('due_date', [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()]);
+        $selectedDate = request()->query('date');
+        try {
+            $selectedDate = $selectedDate ? Carbon::parse((string) $selectedDate)->startOfDay() : now()->startOfDay();
+        } catch (\Throwable $e) {
+            $selectedDate = now()->startOfDay();
+        }
+
         $sessionsTodayQuery = ClassSession::with(['group.course', 'group.teacher'])
-            ->whereDate('session_date', now()->toDateString())
+            ->whereDate('session_date', $selectedDate->toDateString())
             ->orderBy('starts_at');
 
         if ($campusId) {
@@ -111,6 +119,9 @@ class DashboardController extends Controller
             'paymentsRate' => $paymentsRate,
             'paymentsMonthAmount' => $paymentsMonthAmount,
             'todaySessions' => $todaySessions,
+            'selectedDate' => $selectedDate,
+            'previousDate' => $selectedDate->copy()->subDay(),
+            'nextDate' => $selectedDate->copy()->addDay(),
             'bestGroup' => $bestGroup,
             'bestGroupRate' => $bestGroupRate,
         ]);

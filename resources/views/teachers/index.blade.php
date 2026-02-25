@@ -42,7 +42,13 @@
         @foreach($teachers as $teacher)
             <div class="entity-card entity-card--airy">
                 <div class="entity-card-top">
-                    <span class="entity-avatar">{{ strtoupper(substr($teacher->first_name, 0, 1)) }}</span>
+                    <span class="entity-avatar">
+                        @if($teacher->profile_photo_path)
+                            <img src="{{ \Illuminate\Support\Facades\Storage::url($teacher->profile_photo_path) }}" alt="{{ $teacher->full_name }}">
+                        @else
+                            {{ strtoupper(substr($teacher->first_name, 0, 1)) }}
+                        @endif
+                    </span>
                     @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'N/D'])
                 </div>
                 <div class="entity-spacer"></div>
