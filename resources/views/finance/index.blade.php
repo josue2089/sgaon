@@ -10,13 +10,17 @@
         <h1 class="page-title">Financiero</h1>
         <p class="page-subtitle">Control de cargos, pagos y cobranza</p>
     </div>
+    <a class="btn secondary" href="{{ route('finance.index', array_merge(request()->query(), ['export' => 'mora_csv'])) }}">Exportar mora CSV</a>
+    @if($focusStudentId)
+        @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Enfocado en alumno #'.$focusStudentId])
+    @endif
 </div>
 
 <div class="soft-kpi-grid soft-kpi-grid-4">
     @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Cargos (página)', 'value' => '$'.number_format($chargesTotal, 0)])
     @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Pagos recientes', 'value' => '$'.number_format($paymentsTotal, 0)])
     @include('partials.ui.soft-kpi', ['iconName' => 'warning', 'label' => 'Cuentas en mora', 'value' => $overdueCount, 'valueClass' => 'value-danger'])
-    @include('partials.ui.soft-kpi', ['iconName' => 'trend', 'label' => 'Cobertura', 'value' => ($chargesTotal > 0 ? round(($paymentsTotal / $chargesTotal) * 100) : 0).'%', 'valueClass' => 'value-blue'])
+    @include('partials.ui.soft-kpi', ['iconName' => 'trend', 'label' => 'Mora crítica (30+ días)', 'value' => $criticalOverdueCount, 'valueClass' => 'value-danger'])
 </div>
 
 <div class="grid-2">
@@ -28,7 +32,7 @@
                 <label>Alumno</label>
                 <select name="student_id">
                     @foreach($students as $student)
-                        <option value="{{ $student->id }}">{{ $student->full_name }}</option>
+                        <option value="{{ $student->id }}" @selected((int) old('student_id', $focusStudentId) === (int) $student->id)>{{ $student->full_name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -64,7 +68,7 @@
                 <label>Alumno</label>
                 <select name="student_id">
                     @foreach($students as $student)
-                        <option value="{{ $student->id }}">{{ $student->full_name }}</option>
+                        <option value="{{ $student->id }}" @selected((int) old('student_id', $focusStudentId) === (int) $student->id)>{{ $student->full_name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -102,17 +106,33 @@
     <h3 class="section-title section-title-sm">Cuentas por cobrar</h3>
     <table>
         <thead>
-        <tr><th>Alumno</th><th>Concepto</th><th>Monto</th><th>Status</th></tr>
+        <tr><th>Alumno</th><th>Concepto</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Mora</th><th>Status</th></tr>
         </thead>
         <tbody>
-        @foreach($charges as $charge)
+        @forelse($charges as $charge)
+            @php
+                $daysOverdue = (int) ($charge->days_overdue ?? 0);
+                $moraTone = $daysOverdue >= 30 ? 'danger' : ($daysOverdue >= 10 ? 'warn' : ($daysOverdue > 0 ? 'info' : 'ok'));
+                $moraText = $daysOverdue > 0 ? $daysOverdue.' día(s)' : 'Al día';
+                $paidTotal = (float) $charge->payments->sum('amount');
+                $balance = max(0, (float) $charge->amount - $paidTotal);
+            @endphp
             <tr>
                 <td>{{ $charge->student->full_name ?? '' }}</td>
                 <td>{{ $charge->concept }}</td>
                 <td>${{ number_format($charge->amount,2) }}</td>
+                <td>${{ number_format($paidTotal,2) }}</td>
+                <td>${{ number_format($balance,2) }}</td>
+                <td>@include('partials.ui.status-badge', ['tone' => $moraTone, 'text' => $moraText])</td>
                 <td><span class="status-pill {{ $charge->status === 'paid' ? 'success' : ($charge->status === 'overdue' ? 'danger' : 'warn') }}">{{ $charge->status }}</span></td>
             </tr>
-        @endforeach
+        @empty
+            <tr>
+                <td colspan="7">
+                    <div class="empty-state-inline">No hay cargos para el contexto seleccionado.</div>
+                </td>
+            </tr>
+        @endforelse
         </tbody>
     </table>
     @if($charges->hasPages())
@@ -127,14 +147,20 @@
         <tr><th>Alumno</th><th>Monto</th><th>Fecha</th><th>Recibo</th></tr>
         </thead>
         <tbody>
-        @foreach($payments as $payment)
+        @forelse($payments as $payment)
             <tr>
                 <td>{{ $payment->student->full_name ?? '' }}</td>
                 <td>${{ number_format($payment->amount,2) }}</td>
                 <td>{{ $payment->paid_at?->format('Y-m-d') }}</td>
                 <td>{{ $payment->receipt->receipt_number ?? '' }}</td>
             </tr>
-        @endforeach
+        @empty
+            <tr>
+                <td colspan="4">
+                    <div class="empty-state-inline">Aún no hay pagos registrados.</div>
+                </td>
+            </tr>
+        @endforelse
         </tbody>
     </table>
 </div>

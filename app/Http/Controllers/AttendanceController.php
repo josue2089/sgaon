@@ -8,6 +8,7 @@ use App\Models\Enrollment;
 use App\Models\Teacher;
 use App\Support\AlertEngine;
 use App\Support\AuditTrail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -36,11 +37,39 @@ class AttendanceController extends Controller
             ? AttendanceRecord::where('class_session_id', $session->id)->get()->keyBy('enrollment_id')
             : collect();
 
+        $previousSession = null;
+        $previousRecords = collect();
+        if ($session) {
+            $previousSession = ClassSession::query()
+                ->where('group_id', $session->group_id)
+                ->where(function (Builder $builder) use ($session) {
+                    $builder
+                        ->whereDate('session_date', '<', $session->session_date)
+                        ->orWhere(function (Builder $nested) use ($session) {
+                            $nested
+                                ->whereDate('session_date', '=', $session->session_date)
+                                ->where('id', '<', $session->id);
+                        });
+                })
+                ->orderByDesc('session_date')
+                ->orderByDesc('id')
+                ->first();
+
+            if ($previousSession) {
+                $previousRecords = AttendanceRecord::query()
+                    ->where('class_session_id', $previousSession->id)
+                    ->get()
+                    ->keyBy('enrollment_id');
+            }
+        }
+
         return view('attendance.index', [
             'sessions' => $sessionsQuery->latest('session_date')->take(100)->get(),
             'selectedSession' => $session,
             'enrollments' => $enrollments,
             'records' => $records,
+            'previousSession' => $previousSession,
+            'previousRecords' => $previousRecords,
             'statuses' => [
                 AttendanceRecord::STATUS_PRESENT,
                 AttendanceRecord::STATUS_ABSENT,

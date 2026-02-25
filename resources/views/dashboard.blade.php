@@ -38,6 +38,15 @@
         </div>
 
         <div class="activity-list">
+            <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:.5rem;margin-bottom:1rem;">
+                @foreach($weekDays as $day)
+                    <a href="{{ route('dashboard', ['date' => $day['date']->toDateString()]) }}" style="text-decoration:none;border:2px solid var(--line);border-radius:14px;padding:.45rem .4rem;background:{{ $day['selected'] ? '#eef4ff' : '#fff' }};text-align:center;color:var(--text);">
+                        <div style="font-weight:800;font-size:.82rem;">{{ strtoupper($day['date']->locale('es')->isoFormat('ddd')) }}</div>
+                        <div style="font-size:.78rem;">{{ $day['date']->format('d/m') }}</div>
+                        <div style="font-weight:900;margin-top:.15rem;">{{ $day['count'] }}</div>
+                    </a>
+                @endforeach
+            </div>
             @forelse($todaySessions as $session)
                 <div class="session-item">
                     <div class="session-main">
@@ -72,6 +81,65 @@
             @empty
                 <div class="empty-state-inline">Sin alertas abiertas.</div>
             @endforelse
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top:1rem;">
+    <div class="module-head">
+        <div>
+            <h2 class="section-title">KPIs Académicos</h2>
+            <p class="page-subtitle section-subtitle">Asistencia real por nivel, docente y grupo</p>
+        </div>
+    </div>
+    <div class="split-3">
+        <div>
+            <h3 class="section-title section-title-sm">Por nivel</h3>
+            <div class="stack-sm">
+                @forelse($attendanceByLevel as $item)
+                    <div class="activity-item">
+                        <div>
+                            <div class="activity-title">{{ $item->label }}</div>
+                            <div class="entity-sub">{{ (int) $item->total }} registros</div>
+                        </div>
+                        @include('partials.ui.status-badge', ['tone' => 'info', 'text' => (is_null($item->rate) ? 'N/D' : ((int) $item->rate).'%')])
+                    </div>
+                @empty
+                    <div class="empty-state-inline">N/D</div>
+                @endforelse
+            </div>
+        </div>
+        <div>
+            <h3 class="section-title section-title-sm">Por docente</h3>
+            <div class="stack-sm">
+                @forelse($attendanceByTeacher as $item)
+                    <div class="activity-item">
+                        <div>
+                            <div class="activity-title">{{ $item->label }}</div>
+                            <div class="entity-sub">{{ (int) $item->total }} registros</div>
+                        </div>
+                        @include('partials.ui.status-badge', ['tone' => 'info', 'text' => (is_null($item->rate) ? 'N/D' : ((int) $item->rate).'%')])
+                    </div>
+                @empty
+                    <div class="empty-state-inline">N/D</div>
+                @endforelse
+            </div>
+        </div>
+        <div>
+            <h3 class="section-title section-title-sm">Por grupo</h3>
+            <div class="stack-sm">
+                @forelse($attendanceByGroup as $item)
+                    <div class="activity-item">
+                        <div>
+                            <div class="activity-title">{{ $item->label }}</div>
+                            <div class="entity-sub">{{ (int) $item->total }} registros</div>
+                        </div>
+                        @include('partials.ui.status-badge', ['tone' => 'info', 'text' => (is_null($item->rate) ? 'N/D' : ((int) $item->rate).'%')])
+                    </div>
+                @empty
+                    <div class="empty-state-inline">N/D</div>
+                @endforelse
+            </div>
         </div>
     </div>
 </div>

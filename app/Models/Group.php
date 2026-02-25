@@ -19,6 +19,7 @@ class Group extends Model
         'start_date',
         'end_date',
         'status',
+        'capacity',
     ];
 
     protected function casts(): array

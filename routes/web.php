@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\OperationWizardController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StudentController;
@@ -32,6 +33,11 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::resource('groups', GroupController::class)->except('show');
         Route::resource('enrollments', EnrollmentController::class)->except('show');
         Route::resource('sessions', ClassSessionController::class)->except('show');
+        Route::get('/operations/wizard', [OperationWizardController::class, 'index'])->name('operations.wizard');
+        Route::post('/operations/wizard/course', [OperationWizardController::class, 'storeCourse'])->name('operations.wizard.course');
+        Route::post('/operations/wizard/group', [OperationWizardController::class, 'storeGroup'])->name('operations.wizard.group');
+        Route::post('/operations/wizard/session', [OperationWizardController::class, 'storeSession'])->name('operations.wizard.session');
+        Route::post('/operations/wizard/enrollment', [OperationWizardController::class, 'storeEnrollment'])->name('operations.wizard.enrollment');
         Route::middleware('permission:finance.manage')->group(function () {
             Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
             Route::post('/finance/charges', [FinanceController::class, 'storeCharge'])->name('finance.charges.store');
@@ -40,6 +46,10 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::middleware('permission:reports.view')->group(function () {
             Route::get('/reports/attendance', [ReportController::class, 'attendance'])->name('reports.attendance');
             Route::get('/reports/payments', [ReportController::class, 'payments'])->name('reports.payments');
+            Route::post('/reports/presets', [ReportController::class, 'storePreset'])->name('reports.presets.store');
+            Route::delete('/reports/presets/{preset}', [ReportController::class, 'destroyPreset'])->name('reports.presets.destroy');
+            Route::post('/reports/exports', [ReportController::class, 'queueExport'])->name('reports.exports.queue');
+            Route::get('/reports/exports/{export}/download', [ReportController::class, 'downloadExport'])->name('reports.exports.download');
         });
         Route::middleware('permission:audit.view')->group(function () {
             Route::get('/reports/audit', [ReportController::class, 'audit'])->name('reports.audit');

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Campus;
+use App\Models\AuditLog;
 use App\Models\Teacher;
+use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
@@ -121,7 +123,8 @@ class TeacherController extends Controller
             $data['profile_photo_path'] = $request->file('profile_photo')->store('profiles/teachers', 'public');
         }
 
-        Teacher::create($data);
+        $teacher = Teacher::create($data);
+        AuditTrail::log($request, 'teacher.create', $teacher, $data);
 
         return redirect()->route('teachers.index')->with('success', 'Profesor creado.');
     }
@@ -136,6 +139,13 @@ class TeacherController extends Controller
         return view('teachers.edit', [
             'teacher' => $teacher,
             'campuses' => $campuses->get(),
+            'auditLogs' => AuditLog::query()
+                ->with('user')
+                ->where('auditable_type', Teacher::class)
+                ->where('auditable_id', $teacher->id)
+                ->latest()
+                ->limit(12)
+                ->get(),
         ]);
     }
 
@@ -164,15 +174,21 @@ class TeacherController extends Controller
         }
 
         $teacher->update($data);
+        AuditTrail::log($request, 'teacher.update', $teacher, $data);
 
         return redirect()->route('teachers.index')->with('success', 'Profesor actualizado.');
     }
 
-    public function destroy(Teacher $teacher): RedirectResponse
+    public function destroy(Request $request, Teacher $teacher): RedirectResponse
     {
         if ($teacher->profile_photo_path) {
             Storage::disk('public')->delete($teacher->profile_photo_path);
         }
+        AuditTrail::log($request, 'teacher.delete', $teacher, [
+            'first_name' => $teacher->first_name,
+            'last_name' => $teacher->last_name,
+            'email' => $teacher->email,
+        ]);
         $teacher->delete();
 
         return redirect()->route('teachers.index')->with('success', 'Profesor eliminado.');

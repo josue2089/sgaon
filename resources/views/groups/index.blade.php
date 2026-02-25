@@ -20,31 +20,57 @@
     <div class="metric-card metric-orange"><div class="metric-label">Cobertura</div><div class="metric-value">{{ $total ? round(($active / $total) * 100) : 0 }}%</div></div>
 </div>
 
-<div class="card">
+<form method="GET" action="{{ route('groups.index') }}" class="card">
     <div class="fi-filter-bar">
-        <div class="search"><input type="text" placeholder="Buscar grupo..." disabled></div>
-        <select style="max-width:220px;" disabled><option>Todos los cursos</option></select>
-        <button class="btn secondary" type="button">Filtros</button>
-    </div>
-</div>
-
-<div class="entity-grid">
-    @foreach($groups as $group)
-        <div class="entity-card">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.9rem;">👥</div>
-                <span class="badge-pill {{ $group->status === 'active' ? 'badge-ok' : 'badge-warn' }}">{{ $group->status }}</span>
-            </div>
-            <div class="entity-title">{{ $group->name }}</div>
-            <div class="entity-sub">{{ $group->course->name ?? 'Sin curso' }}</div>
-            <div class="entity-sub">{{ $group->teacher->full_name ?? 'Sin asignar' }}</div>
-            <div class="entity-sub">{{ $group->schedule ?: 'Horario pendiente' }}</div>
-            <div style="margin-top:.85rem; display:flex; justify-content:flex-end;">
-                <a href="{{ route('groups.edit',$group) }}">Editar</a>
-            </div>
+        <div class="search">
+            <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar grupo, periodo, horario...">
         </div>
-    @endforeach
-</div>
+        <select name="course_id" style="max-width:220px;">
+            <option value="">Todos los cursos</option>
+            @foreach($courses as $course)
+                <option value="{{ $course->id }}" @selected((string) $filters['course_id'] === (string) $course->id)>{{ $course->name }}</option>
+            @endforeach
+        </select>
+        <select name="teacher_id" style="max-width:220px;">
+            <option value="">Todos los docentes</option>
+            <option value="unassigned" @selected($filters['teacher_id'] === 'unassigned')>Sin asignar</option>
+            @foreach($teachers as $teacher)
+                <option value="{{ $teacher->id }}" @selected((string) $filters['teacher_id'] === (string) $teacher->id)>{{ trim($teacher->first_name.' '.$teacher->last_name) }}</option>
+            @endforeach
+        </select>
+        <select name="status" style="max-width:180px;">
+            <option value="">Todos los estados</option>
+            <option value="active" @selected($filters['status'] === 'active')>Activos</option>
+            <option value="inactive" @selected($filters['status'] === 'inactive')>Inactivos</option>
+            <option value="completed" @selected($filters['status'] === 'completed')>Completados</option>
+        </select>
+        <button class="btn secondary" type="submit">Filtros</button>
+        <a class="btn secondary" href="{{ route('groups.index', array_merge($filters, ['export' => 'csv'])) }}">Exportar CSV</a>
+    </div>
+</form>
+
+@if($groups->count() === 0)
+    <div class="card empty-state">No hay grupos para los filtros seleccionados.</div>
+@else
+    <div class="entity-grid">
+        @foreach($groups as $group)
+            <div class="entity-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.9rem;">👥</div>
+                    <span class="badge-pill {{ $group->status === 'active' ? 'badge-ok' : 'badge-warn' }}">{{ $group->status }}</span>
+                </div>
+                <div class="entity-title">{{ $group->name }}</div>
+                <div class="entity-sub">{{ $group->course->name ?? 'Sin curso' }}</div>
+                <div class="entity-sub">{{ $group->teacher->full_name ?? 'Sin asignar' }}</div>
+                <div class="entity-sub">{{ $group->schedule ?: 'Horario pendiente' }}</div>
+                <div class="entity-sub">Cupo: {{ $group->enrollments_count }}/{{ $group->capacity ?: 'N/D' }}</div>
+                <div style="margin-top:.85rem; display:flex; justify-content:flex-end;">
+                    <a href="{{ route('groups.edit',$group) }}">Editar</a>
+                </div>
+            </div>
+        @endforeach
+    </div>
+@endif
 
 @if($groups->hasPages())
     <div class="card">{{ $groups->links() }}</div>

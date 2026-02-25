@@ -58,7 +58,12 @@ class CourseController extends Controller
             $studentsQuery->where('courses.campus_id', $this->campusId());
         }
         $totalStudents = (clone $studentsQuery)->count();
-        $occupancy = null;
+        $capacityQuery = \App\Models\Group::query();
+        if ($this->campusId()) {
+            $capacityQuery->where('campus_id', $this->campusId());
+        }
+        $totalCapacity = (int) $capacityQuery->sum('capacity');
+        $occupancy = $totalCapacity > 0 ? (int) round(($totalStudents / $totalCapacity) * 100) : null;
 
         $levelsQuery = AcademicLevel::query()
             ->select('academic_levels.id', 'academic_levels.name', 'academic_levels.code')

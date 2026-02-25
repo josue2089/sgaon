@@ -92,6 +92,27 @@ class DashboardController extends Controller
             return $session;
         });
 
+        $weekStart = $selectedDate->copy()->startOfWeek(Carbon::MONDAY);
+        $weekEnd = $selectedDate->copy()->endOfWeek(Carbon::SUNDAY);
+        $weekSessionsQuery = ClassSession::query()
+            ->selectRaw('session_date, COUNT(*) as total')
+            ->whereBetween('session_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->groupBy('session_date');
+        if ($campusId) {
+            $weekSessionsQuery->where('campus_id', $campusId);
+        }
+        $weekCounts = (clone $weekSessionsQuery)->pluck('total', 'session_date');
+        $weekDays = collect(range(0, 6))->map(function (int $offset) use ($weekStart, $selectedDate, $weekCounts) {
+            $day = $weekStart->copy()->addDays($offset);
+            $dateKey = $day->toDateString();
+
+            return [
+                'date' => $day,
+                'count' => (int) ($weekCounts[$dateKey] ?? 0),
+                'selected' => $dateKey === $selectedDate->toDateString(),
+            ];
+        });
+
         $bestGroupAttendance = (clone $attendanceQuery)
             ->select('class_sessions.group_id', DB::raw('COUNT(*) as total'), DB::raw("SUM(CASE WHEN attendance_records.status = 'present' THEN 1 ELSE 0 END) as present_count"))
             ->join('class_sessions', 'class_sessions.id', '=', 'attendance_records.class_session_id')
@@ -105,6 +126,45 @@ class DashboardController extends Controller
         if ($bestGroupAttendance) {
             $bestGroup = Group::find($bestGroupAttendance->group_id);
             $bestGroupRate = (int) round((((int) $bestGroupAttendance->present_count) / max(1, (int) $bestGroupAttendance->total)) * 100);
+        }
+
+        $attendanceByLevelQuery = AttendanceRecord::query()
+            ->join('class_sessions', 'class_sessions.id', '=', 'attendance_records.class_session_id')
+            ->join('groups', 'groups.id', '=', 'class_sessions.group_id')
+            ->leftJoin('courses', 'courses.id', '=', 'groups.course_id')
+            ->leftJoin('academic_levels', 'academic_levels.id', '=', 'courses.academic_level_id')
+            ->selectRaw("COALESCE(NULLIF(academic_levels.code, ''), NULLIF(academic_levels.name, ''), 'N/D') as label")
+            ->selectRaw("ROUND((SUM(CASE WHEN attendance_records.status = 'present' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100) as rate")
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('label')
+            ->orderByDesc('rate');
+        if ($campusId) {
+            $attendanceByLevelQuery->where('class_sessions.campus_id', $campusId);
+        }
+
+        $attendanceByTeacherQuery = AttendanceRecord::query()
+            ->join('class_sessions', 'class_sessions.id', '=', 'attendance_records.class_session_id')
+            ->join('groups', 'groups.id', '=', 'class_sessions.group_id')
+            ->leftJoin('teachers', 'teachers.id', '=', 'groups.teacher_id')
+            ->selectRaw("COALESCE(NULLIF(CONCAT(teachers.first_name, ' ', teachers.last_name), ' '), 'Sin asignar') as label")
+            ->selectRaw("ROUND((SUM(CASE WHEN attendance_records.status = 'present' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100) as rate")
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('label')
+            ->orderByDesc('rate');
+        if ($campusId) {
+            $attendanceByTeacherQuery->where('class_sessions.campus_id', $campusId);
+        }
+
+        $attendanceByGroupQuery = AttendanceRecord::query()
+            ->join('class_sessions', 'class_sessions.id', '=', 'attendance_records.class_session_id')
+            ->join('groups', 'groups.id', '=', 'class_sessions.group_id')
+            ->selectRaw("COALESCE(NULLIF(groups.name, ''), 'Sin grupo') as label")
+            ->selectRaw("ROUND((SUM(CASE WHEN attendance_records.status = 'present' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100) as rate")
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('label')
+            ->orderByDesc('rate');
+        if ($campusId) {
+            $attendanceByGroupQuery->where('class_sessions.campus_id', $campusId);
         }
 
         return view('dashboard', [
@@ -122,8 +182,12 @@ class DashboardController extends Controller
             'selectedDate' => $selectedDate,
             'previousDate' => $selectedDate->copy()->subDay(),
             'nextDate' => $selectedDate->copy()->addDay(),
+            'weekDays' => $weekDays,
             'bestGroup' => $bestGroup,
             'bestGroupRate' => $bestGroupRate,
+            'attendanceByLevel' => $attendanceByLevelQuery->take(5)->get(),
+            'attendanceByTeacher' => $attendanceByTeacherQuery->take(5)->get(),
+            'attendanceByGroup' => $attendanceByGroupQuery->take(5)->get(),
         ]);
     }
 }

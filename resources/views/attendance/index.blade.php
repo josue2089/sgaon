@@ -6,6 +6,12 @@
     $late = $records->where('status', 'late')->count();
     $justified = $records->where('status', 'justified')->count();
     $total = $enrollments->count();
+    $previousPayload = $previousRecords->mapWithKeys(fn ($record, $enrollmentId) => [
+        $enrollmentId => [
+            'status' => $record->status,
+            'notes' => $record->notes,
+        ],
+    ]);
 @endphp
 <div class="module-head">
     <div>
@@ -46,6 +52,17 @@
         <form method="POST" action="{{ route('attendance.store') }}">
             @csrf
             <input type="hidden" name="class_session_id" value="{{ $selectedSession->id }}">
+            <div class="form-actions" style="margin-top:0;margin-bottom:1rem;">
+                <button class="btn secondary" type="button" id="btn-mark-all-present">Marcar todos presentes</button>
+                <button class="btn secondary" type="button" id="btn-copy-last" @disabled(!$previousSession)>
+                    Copiar última asistencia
+                </button>
+                @if($previousSession)
+                    @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Base: '.$previousSession->session_date?->format('d M Y')])
+                @else
+                    @include('partials.ui.status-badge', ['tone' => 'warn', 'text' => 'Sin sesión previa'])
+                @endif
+            </div>
             <div class="attendance-grid">
                 @foreach($enrollments as $i => $enrollment)
                     <div class="attendance-item">
@@ -62,7 +79,7 @@
                         </div>
                         <div class="attendance-field">
                             <label>Status</label>
-                            <select name="records[{{ $i }}][status]">
+                            <select name="records[{{ $i }}][status]" class="attendance-status" data-enrollment-id="{{ $enrollment->id }}">
                                 @foreach($statuses as $status)
                                     <option value="{{ $status }}" @selected(($records[$enrollment->id]->status ?? 'present')==$status)>{{ $status }}</option>
                                 @endforeach
@@ -70,7 +87,7 @@
                         </div>
                         <div class="attendance-field">
                             <label>Nota</label>
-                            <input name="records[{{ $i }}][notes]" value="{{ $records[$enrollment->id]->notes ?? '' }}">
+                            <input name="records[{{ $i }}][notes]" class="attendance-notes" data-enrollment-id="{{ $enrollment->id }}" value="{{ $records[$enrollment->id]->notes ?? '' }}">
                         </div>
                     </div>
                 @endforeach
@@ -80,5 +97,47 @@
             </div>
         </form>
     </div>
+@endif
+
+@if(!$selectedSession)
+    <div class="card empty-state">Selecciona una sesión para cargar alumnos y registrar asistencia.</div>
+@endif
+
+@if($selectedSession)
+<script>
+    (() => {
+        const previous = @json($previousPayload);
+        const statusSelects = Array.from(document.querySelectorAll('.attendance-status'));
+        const notesInputs = Array.from(document.querySelectorAll('.attendance-notes'));
+        const markAllButton = document.getElementById('btn-mark-all-present');
+        const copyLastButton = document.getElementById('btn-copy-last');
+
+        if (markAllButton) {
+            markAllButton.addEventListener('click', () => {
+                statusSelects.forEach((select) => {
+                    select.value = 'present';
+                });
+            });
+        }
+
+        if (copyLastButton) {
+            copyLastButton.addEventListener('click', () => {
+                statusSelects.forEach((select) => {
+                    const enrollmentId = String(select.dataset.enrollmentId || '');
+                    const entry = previous[enrollmentId];
+                    if (entry && entry.status) {
+                        select.value = entry.status;
+                    }
+                });
+
+                notesInputs.forEach((input) => {
+                    const enrollmentId = String(input.dataset.enrollmentId || '');
+                    const entry = previous[enrollmentId];
+                    input.value = entry && typeof entry.notes === 'string' ? entry.notes : '';
+                });
+            });
+        }
+    })();
+</script>
 @endif
 @endsection

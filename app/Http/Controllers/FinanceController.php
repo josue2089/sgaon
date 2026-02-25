@@ -8,16 +8,19 @@ use App\Models\Receipt;
 use App\Models\Student;
 use App\Support\AlertEngine;
 use App\Support\AuditTrail;
+use App\Support\FinanceReconcile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FinanceController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View|StreamedResponse
     {
         $campusId = request()->user()?->campus_id;
-        $chargesQuery = Charge::with('student')->latest();
+        $chargesQuery = Charge::with(['student', 'payments'])->latest();
         $paymentsQuery = Payment::with(['student', 'receipt'])->latest();
         $studentsQuery = Student::orderBy('first_name');
 
@@ -27,10 +30,62 @@ class FinanceController extends Controller
             $studentsQuery->where('campus_id', $campusId);
         }
 
+        $focusStudentId = $request->integer('student_id') ?: null;
+        if ($focusStudentId) {
+            $chargesQuery->where('student_id', $focusStudentId);
+            $paymentsQuery->where('student_id', $focusStudentId);
+        }
+
+        $driver = DB::connection()->getDriverName();
+        $daysOverdueExpression = $driver === 'sqlite'
+            ? "CASE WHEN due_date IS NOT NULL AND due_date < DATE('now') AND status IN ('pending','partial','overdue') THEN CAST((julianday('now') - julianday(due_date)) AS INTEGER) ELSE 0 END"
+            : "CASE WHEN due_date IS NOT NULL AND due_date < CURDATE() AND status IN ('pending','partial','overdue') THEN DATEDIFF(CURDATE(), due_date) ELSE 0 END";
+
+        $chargesQuery
+            ->select('charges.*')
+            ->selectRaw($daysOverdueExpression.' as days_overdue')
+            ->orderByDesc('days_overdue')
+            ->orderByDesc('amount');
+
+        if ($request->query('export') === 'mora_csv') {
+            return response()->streamDownload(function () use ($chargesQuery): void {
+                $out = fopen('php://output', 'w');
+                fputcsv($out, ['student', 'concept', 'amount', 'due_date', 'days_overdue', 'status']);
+                foreach ($chargesQuery->whereIn('status', ['pending', 'partial', 'overdue'])->get() as $charge) {
+                    fputcsv($out, [
+                        $charge->student->full_name ?? '',
+                        $charge->concept,
+                        $charge->amount,
+                        optional($charge->due_date)->format('Y-m-d'),
+                        (int) ($charge->days_overdue ?? 0),
+                        $charge->status,
+                    ]);
+                }
+                fclose($out);
+            }, 'mora_report.csv', ['Content-Type' => 'text/csv']);
+        }
+
+        $criticalOverdueQuery = Charge::query();
+        if ($campusId) {
+            $criticalOverdueQuery->where('campus_id', $campusId);
+        }
+        if ($focusStudentId) {
+            $criticalOverdueQuery->where('student_id', $focusStudentId);
+        }
+        $criticalOverdueCondition = $driver === 'sqlite'
+            ? "due_date IS NOT NULL AND due_date < DATE('now') AND status IN ('pending','partial','overdue') AND CAST((julianday('now') - julianday(due_date)) AS INTEGER) >= 30"
+            : "due_date IS NOT NULL AND due_date < CURDATE() AND status IN ('pending','partial','overdue') AND DATEDIFF(CURDATE(), due_date) >= 30";
+
+        $criticalOverdueCount = $criticalOverdueQuery
+            ->whereRaw($criticalOverdueCondition)
+            ->count();
+
         return view('finance.index', [
-            'charges' => $chargesQuery->paginate(20),
+            'charges' => $chargesQuery->paginate(20)->withQueryString(),
             'payments' => $paymentsQuery->take(20)->get(),
             'students' => $studentsQuery->get(),
+            'focusStudentId' => $focusStudentId,
+            'criticalOverdueCount' => (int) $criticalOverdueCount,
         ]);
     }
 
@@ -83,9 +138,10 @@ class FinanceController extends Controller
             if ((int) $charge->campus_id !== (int) $data['campus_id']) {
                 abort(403);
             }
-            $paidTotal = (float) $charge->payments()->sum('amount');
-            $charge->status = $paidTotal >= (float) $charge->amount ? 'paid' : 'partial';
-            $charge->save();
+            if ((int) $charge->student_id !== (int) $data['student_id']) {
+                abort(403);
+            }
+            FinanceReconcile::syncCharge($charge);
         }
 
         Receipt::create([

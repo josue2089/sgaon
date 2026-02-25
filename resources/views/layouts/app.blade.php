@@ -27,11 +27,12 @@
         ['name' => 'Reportes', 'route' => 'reports.attendance', 'enabled' => $user?->role === 'admin'],
     ];
     $extraNav = [
+        ['name' => 'Flujo MVP', 'route' => 'operations.wizard', 'enabled' => $user?->role === 'admin'],
         ['name' => 'Grupos', 'route' => 'groups.index', 'enabled' => $user?->role === 'admin'],
         ['name' => 'Inscripciones', 'route' => 'enrollments.index', 'enabled' => $user?->role === 'admin'],
         ['name' => 'Sesiones', 'route' => 'sessions.index', 'enabled' => $user?->role === 'admin'],
     ];
-    $extraPrefixes = ['groups', 'enrollments', 'sessions'];
+    $extraPrefixes = ['operations', 'groups', 'enrollments', 'sessions'];
     $extraActive = in_array(explode('.', (string) $currentRoute)[0], $extraPrefixes, true);
 @endphp
 <div class="fi-shell">
@@ -46,7 +47,9 @@
             <nav class="fi-nav">
                 @foreach($nav as $item)
                     @if($item['enabled'])
-                        @php($prefix = explode('.', $item['route'])[0])
+                        @php
+                            $prefix = explode('.', $item['route'])[0];
+                        @endphp
                         <a class="fi-nav-item {{ str_starts_with((string) $currentRoute, $prefix) ? 'active' : '' }}" href="{{ route($item['route']) }}">
                             <span class="fi-nav-icon" aria-hidden="true">
                                 @switch($item['name'])
@@ -107,7 +110,17 @@
                     <div class="fi-menu-panel">
                         <div class="fi-menu-title">Notificaciones</div>
                         @forelse($openAlerts as $alert)
-                            <a href="{{ route('dashboard') }}" class="fi-menu-link">
+                            @php
+                                $alertUrl = route('dashboard');
+                                if ($alert->type === 'finance' && $user?->role === 'admin' && $alert->student_id) {
+                                    $alertUrl = route('finance.index', ['student_id' => $alert->student_id]);
+                                } elseif ($alert->type === 'attendance') {
+                                    $alertUrl = ($user?->role === 'admin' && $alert->student_id)
+                                        ? route('students.edit', $alert->student_id)
+                                        : route('attendance.index');
+                                }
+                            @endphp
+                            <a href="{{ $alertUrl }}" class="fi-menu-link">
                                 <strong>{{ ucfirst($alert->type) }}</strong>
                                 <small>{{ \Illuminate\Support\Str::limit($alert->message, 52) }}</small>
                             </a>

@@ -589,6 +589,12 @@ textarea {
     gap: 1rem;
 }
 
+.split-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
 .attendance-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -906,6 +912,10 @@ a {
     }
 
     .split-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .split-3 {
         grid-template-columns: 1fr;
     }
 

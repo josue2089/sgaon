@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\AcademicLevel;
 use App\Models\AttendanceRecord;
+use App\Models\AuditLog;
 use App\Models\Campus;
 use App\Models\Charge;
 use App\Models\Enrollment;
 use App\Models\Student;
+use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -177,7 +179,8 @@ class StudentController extends Controller
             $data['profile_photo_path'] = $request->file('profile_photo')->store('profiles/students', 'public');
         }
 
-        Student::create($data);
+        $student = Student::create($data);
+        AuditTrail::log($request, 'student.create', $student, $data);
 
         return redirect()->route('students.index')->with('success', 'Alumno creado.');
     }
@@ -192,6 +195,13 @@ class StudentController extends Controller
         return view('students.edit', [
             'student' => $student,
             'campuses' => $campuses->get(),
+            'auditLogs' => AuditLog::query()
+                ->with('user')
+                ->where('auditable_type', Student::class)
+                ->where('auditable_id', $student->id)
+                ->latest()
+                ->limit(12)
+                ->get(),
         ]);
     }
 
@@ -223,15 +233,21 @@ class StudentController extends Controller
         }
 
         $student->update($data);
+        AuditTrail::log($request, 'student.update', $student, $data);
 
         return redirect()->route('students.index')->with('success', 'Alumno actualizado.');
     }
 
-    public function destroy(Student $student): RedirectResponse
+    public function destroy(Request $request, Student $student): RedirectResponse
     {
         if ($student->profile_photo_path) {
             Storage::disk('public')->delete($student->profile_photo_path);
         }
+        AuditTrail::log($request, 'student.delete', $student, [
+            'first_name' => $student->first_name,
+            'last_name' => $student->last_name,
+            'email' => $student->email,
+        ]);
         $student->delete();
 
         return redirect()->route('students.index')->with('success', 'Alumno eliminado.');
