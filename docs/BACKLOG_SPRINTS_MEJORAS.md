@@ -34,7 +34,7 @@ Objetivo: reducir clics y tiempo operativo diario.
 - `Estado`: Completado
 - `Responsable`: Codex
 - `Fecha objetivo`: 2026-02-25
-- `Notas`: Agregadas acciones masivas en Asistencia: `Marcar todos presentes` y `Copiar última asistencia` (desde sesión previa del mismo grupo), con aplicación en formulario antes de guardar.
+- `Notas`: Agregadas acciones masivas en Asistencia: `Marcar todos presentes` y `Copiar última asistencia` (desde sesión previa del mismo grupo), con aplicación en formulario antes de guardar. Ajustado además a formato compacto tipo hoja de control para grupos de 20-30 alumnos.
 
 ### S1-03 Filtros operativos en módulos faltantes
 - Alcance: filtros reales en `Grupos`, `Inscripciones`, `Sesiones`.
