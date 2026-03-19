@@ -267,19 +267,19 @@ class StudentController extends Controller
     {
         $student->load([
             'campus',
-            'alerts' => fn (Builder $builder) => $builder->where('status', 'open')->latest(),
-            'enrollments' => fn (Builder $builder) => $builder
+            'alerts' => fn ($builder) => $builder->where('status', 'open')->latest(),
+            'enrollments' => fn ($builder) => $builder
                 ->withCount([
                     'attendanceRecords',
-                    'attendanceRecords as present_attendance_count' => fn (Builder $query) => $query->where('status', 'present'),
+                    'attendanceRecords as present_attendance_count' => fn ($query) => $query->where('status', 'present'),
                 ])
                 ->with(['group.course.courseLevel', 'group.course.level', 'group.course.teacher', 'group.course.period', 'group.course.scheduleTemplate'])
                 ->orderByDesc('enrolled_at')
                 ->orderByDesc('id'),
-            'charges' => fn (Builder $builder) => $builder
+            'charges' => fn ($builder) => $builder
                 ->with(['course.courseLevel', 'group', 'period'])
                 ->latest(),
-            'payments' => fn (Builder $builder) => $builder
+            'payments' => fn ($builder) => $builder
                 ->with(['receipt', 'allocations.charge.course', 'charge.course'])
                 ->orderByDesc('paid_at_datetime')
                 ->orderByDesc('paid_at')
