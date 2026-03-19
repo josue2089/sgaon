@@ -37,16 +37,105 @@
     <div class="card">
         <h2 class="section-title">Agregar estudiantes</h2>
         @if($group)
-            <form method="POST" action="{{ route('courses.students.sync', $course) }}">
+            <form method="POST" action="{{ route('courses.students.sync', $course) }}" data-student-picker>
                 @csrf
-                <div class="stack-sm">
-                    <select name="student_ids[]" multiple size="10" required>
-                        @foreach($availableStudents as $student)
-                            <option value="{{ $student->id }}">{{ $student->full_name }}{{ $student->email ? ' · '.$student->email : '' }}</option>
-                        @endforeach
-                    </select>
+                <div class="stack-sm student-picker">
+                    <div class="student-picker-summary">
+                        <div>
+                            <div class="table-title">Selección de alumnos</div>
+                            <div class="table-sub">
+                                {{ $availableStudents->count() }} disponibles para este curso
+                            </div>
+                        </div>
+                        <div class="student-picker-summary-meta" data-picker-count>0 seleccionados</div>
+                    </div>
                     <div class="form-actions">
+                        <button class="btn secondary" type="button" data-picker-open>Seleccionar estudiantes</button>
                         <button class="btn" type="submit">Agregar estudiantes</button>
+                    </div>
+                    <div class="student-picker-selection" data-picker-selection>Sin alumnos seleccionados.</div>
+                    @error('student_ids')
+                        <div class="flash err">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="student-picker-modal" data-picker-modal hidden>
+                    <div class="student-picker-backdrop" data-picker-close></div>
+                    <div class="student-picker-dialog card">
+                        <div class="student-picker-head">
+                            <div>
+                                <h3 class="section-title">Seleccionar estudiantes</h3>
+                                <p class="page-subtitle">Solo se muestran alumnos activos del campus del curso que aún no están inscritos.</p>
+                            </div>
+                            <button class="btn secondary" type="button" data-picker-close>Cerrar</button>
+                        </div>
+
+                        @if($availableStudents->count() > 0)
+                            <div class="student-picker-toolbar">
+                                <input type="text" placeholder="Buscar por nombre o email" data-picker-search>
+                                <label class="student-picker-toggle">
+                                    <input type="checkbox" data-picker-toggle-all>
+                                    <span>Seleccionar visibles</span>
+                                </label>
+                            </div>
+
+                            <div class="table-wrap">
+                                <table class="data-table">
+                                    <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Alumno</th>
+                                        <th>Email</th>
+                                        <th>Nivel actual</th>
+                                        <th>Estatus</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody data-picker-rows>
+                                    @foreach($availableStudents as $student)
+                                        @php
+                                            $currentEnrollment = $student->enrollments->firstWhere('status', 'active') ?: $student->enrollments->first();
+                                            $currentLevel = $currentEnrollment?->group?->course?->courseLevel;
+                                        @endphp
+                                        <tr data-picker-row data-search="{{ strtolower($student->full_name.' '.$student->email) }}">
+                                            <td>
+                                                <input
+                                                    type="checkbox"
+                                                    name="student_ids[]"
+                                                    value="{{ $student->id }}"
+                                                    data-picker-checkbox
+                                                    @checked(in_array($student->id, old('student_ids', [])))
+                                                >
+                                            </td>
+                                            <td>
+                                                <div class="table-user">
+                                                    <span class="table-avatar">
+                                                        @if($student->profile_photo_path)
+                                                            <img src="{{ asset('storage/'.$student->profile_photo_path) }}" alt="{{ $student->full_name }}">
+                                                        @else
+                                                            {{ strtoupper(substr($student->first_name, 0, 1)) }}
+                                                        @endif
+                                                    </span>
+                                                    <div>
+                                                        <div class="table-title">{{ $student->full_name }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ $student->email ?: 'Sin email' }}</td>
+                                            <td>{{ $currentLevel ? $currentLevel->scale_position.'/'.$currentLevel->scale_total.' · '.$currentLevel->name : 'N/D' }}</td>
+                                            <td>@include('partials.ui.status-badge', ['tone' => $student->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($student->status)])</td>
+                                        </tr>
+                                    @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="btn secondary" type="button" data-picker-close>Listo</button>
+                                <button class="btn" type="submit">Agregar estudiantes</button>
+                            </div>
+                        @else
+                            <div class="empty-state">No hay alumnos activos disponibles para agregar a este curso.</div>
+                        @endif
                     </div>
                 </div>
             </form>
@@ -70,6 +159,7 @@
                     <th>Email</th>
                     <th>Estatus</th>
                     <th>Progreso</th>
+                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -79,6 +169,13 @@
                         <td>{{ $enrollment->student?->email ?: 'Sin email' }}</td>
                         <td>{{ ucfirst($enrollment->status) }}</td>
                         <td>{{ (int) $enrollment->progress }}%</td>
+                        <td class="table-actions">
+                            <form method="POST" action="{{ route('courses.students.remove', [$course, $enrollment]) }}" onsubmit="return confirm('¿Quitar este alumno del curso?');">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn-link-danger" type="submit">Quitar</button>
+                            </form>
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>

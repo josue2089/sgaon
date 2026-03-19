@@ -421,3 +421,11 @@ Objetivo: escalar productividad de análisis y operación.
 - `Responsable`: Codex
 - `Fecha objetivo`: 2026-03-19
 - `Notas`: `CampusController` valida dependencias operativas antes de borrar; vistas índice de catálogos migradas de cards a tablas y menú consolidado en dropdown `Configuración`.
+
+### AO-28 Selección masiva de alumnos en detalle de curso
+- Alcance: reemplazar `select multiple` nativo por modal con tabla, búsqueda y checkboxes para inscribir alumnos en cursos.
+- Criterio de aceptación: el admin puede buscar, seleccionar múltiples alumnos y agregarlos desde el detalle del curso con mejor legibilidad.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-19
+- `Notas`: el listado de candidatos ahora toma alumnos activos del campus del curso, excluye alumnos ya inscritos, muestra nivel actual y la tabla de inscritos permite retirar alumnos sin romper historial si ya tienen asistencia/cargos.

@@ -181,6 +181,23 @@ class CourseController extends Controller
         $sessions = $group?->sessions ?? collect();
         $completedSessions = $sessions->where('attendance_records_count', '>', 0)->count();
         $pendingSessions = max(0, $sessions->count() - $completedSessions);
+        $enrolledStudentIds = $group?->enrollments?->pluck('student_id')->all() ?? [];
+
+        $availableStudents = Student::query()
+            ->when($course->campus_id, fn (Builder $builder) => $builder->where('campus_id', $course->campus_id))
+            ->when(! $course->campus_id && $this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->where('status', 'active')
+            ->when(! empty($enrolledStudentIds), fn (Builder $builder) => $builder->whereNotIn('id', $enrolledStudentIds))
+            ->with([
+                'enrollments' => fn ($builder) => $builder
+                    ->with(['group.course.courseLevel'])
+                    ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
+                    ->orderByDesc('enrolled_at')
+                    ->orderByDesc('id'),
+            ])
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get();
 
         return view('courses.show', [
             'course' => $course,
@@ -188,11 +205,7 @@ class CourseController extends Controller
             'sessions' => $sessions,
             'completedSessions' => $completedSessions,
             'pendingSessions' => $pendingSessions,
-            'availableStudents' => Student::query()
-                ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
-                ->orderBy('first_name')
-                ->orderBy('last_name')
-                ->get(),
+            'availableStudents' => $availableStudents,
         ]);
     }
 
@@ -243,6 +256,38 @@ class CourseController extends Controller
         $this->addStudentsToCourse($course, collect($data['student_ids'])->map(fn ($id) => (int) $id));
 
         return redirect()->route('courses.show', $course)->with('success', 'Estudiantes agregados al curso.');
+    }
+
+    public function removeStudent(Course $course, Enrollment $enrollment): RedirectResponse
+    {
+        $this->authorizeCourse($course);
+
+        $course->load('managedGroup');
+        if (! $course->managedGroup || (int) $enrollment->group_id !== (int) $course->managedGroup->id) {
+            abort(404);
+        }
+
+        $enrollment->loadCount(['attendanceRecords', 'charges']);
+
+        if ($enrollment->attendance_records_count > 0 || $enrollment->charges_count > 0) {
+            $notes = trim((string) $enrollment->notes);
+            $auditNote = 'Retirado desde detalle de curso el '.now()->format('d/m/Y H:i');
+
+            $enrollment->update([
+                'status' => 'withdrawn',
+                'notes' => $notes === '' ? $auditNote : $notes."\n".$auditNote,
+            ]);
+
+            return redirect()
+                ->route('courses.show', $course)
+                ->with('success', 'El alumno fue marcado como retirado para preservar su historial.');
+        }
+
+        $enrollment->delete();
+
+        return redirect()
+            ->route('courses.show', $course)
+            ->with('success', 'Alumno retirado del curso.');
     }
 
     public function destroy(Course $course): RedirectResponse

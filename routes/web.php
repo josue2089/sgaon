@@ -36,6 +36,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
         Route::resource('teachers', TeacherController::class)->except('show');
         Route::post('/courses/{course}/students', [CourseController::class, 'syncStudents'])->name('courses.students.sync');
+        Route::delete('/courses/{course}/students/{enrollment}', [CourseController::class, 'removeStudent'])->name('courses.students.remove');
         Route::resource('courses', CourseController::class);
         Route::resource('groups', GroupController::class)->except('show');
         Route::resource('enrollments', EnrollmentController::class)->except('show');
