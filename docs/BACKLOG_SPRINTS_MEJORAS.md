@@ -429,3 +429,11 @@ Objetivo: escalar productividad de análisis y operación.
 - `Responsable`: Codex
 - `Fecha objetivo`: 2026-03-19
 - `Notas`: el listado de candidatos ahora toma alumnos activos del campus del curso, excluye alumnos ya inscritos, muestra nivel actual y la tabla de inscritos permite retirar alumnos sin romper historial si ya tienen asistencia/cargos.
+
+### AO-29 Vista operativa de profesores
+- Alcance: convertir el listado de profesores a tabla y crear ficha de detalle con cursos, estudiantes y progreso operativo.
+- Criterio de aceptación: el admin ve el listado de docentes en tabla y puede abrir una ficha con métricas reales, cursos asignados, alumnos vinculados y auditoría.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-19
+- `Notas`: se agregó `teachers.show`, tabla de docentes y ficha con métricas de sesiones, asistencia promedio, cursos y estudiantes relacionados.

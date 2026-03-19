@@ -433,6 +433,48 @@ h5 {
     color: var(--text);
 }
 
+.teacher-section-nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.teacher-section-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.6rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 800;
+}
+
+.teacher-detail-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+}
+
+.teacher-filter-chip {
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: #fff;
+}
+
+.teacher-filter-chip strong {
+    display: block;
+    color: var(--text);
+    font-size: 0.95rem;
+}
+
 .section-head {
     display: flex;
     justify-content: space-between;

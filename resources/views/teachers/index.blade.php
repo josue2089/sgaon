@@ -38,30 +38,55 @@
 @if($teachers->count() === 0)
     <div class="card empty-state">No hay profesores para los filtros seleccionados.</div>
 @else
-    <div class="entity-grid">
-        @foreach($teachers as $teacher)
-            <div class="entity-card entity-card--airy">
-                <div class="entity-card-top">
-                    <span class="entity-avatar">
-                        @if($teacher->profile_photo_path)
-                            <img src="{{ \Illuminate\Support\Facades\Storage::url($teacher->profile_photo_path) }}" alt="{{ $teacher->full_name }}">
-                        @else
-                            {{ strtoupper(substr($teacher->first_name, 0, 1)) }}
-                        @endif
-                    </span>
-                    @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'N/D'])
-                </div>
-                <div class="entity-spacer"></div>
-                <div class="entity-title">Prof. {{ $teacher->full_name }}</div>
-                <div class="entity-sub">{{ $teacher->email ?: 'Sin email' }}</div>
-                <div class="entity-sub">{{ $teacher->phone ?: 'Sin teléfono' }}</div>
-                <div class="entity-sub">{{ (int) ($studentsByTeacher[$teacher->id] ?? 0) }} estudiantes asignados</div>
-                <div class="entity-bottom">
-                    @include('partials.ui.status-badge', ['tone' => $teacher->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($teacher->status)])
-                    <a href="{{ route('teachers.edit', $teacher) }}">Editar</a>
-                </div>
-            </div>
-        @endforeach
+    <div class="card table-card">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Profesor</th>
+                    <th>Contacto</th>
+                    <th>Campus</th>
+                    <th>Cursos</th>
+                    <th>Estudiantes</th>
+                    <th>Estatus</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($teachers as $teacher)
+                    <tr>
+                        <td>
+                            <div class="table-user">
+                                <span class="table-avatar">
+                                    @if($teacher->profile_photo_path)
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::url($teacher->profile_photo_path) }}" alt="{{ $teacher->full_name }}">
+                                    @else
+                                        {{ strtoupper(substr($teacher->first_name, 0, 1)) }}
+                                    @endif
+                                </span>
+                                <div>
+                                    <div class="table-title">Prof. {{ $teacher->full_name }}</div>
+                                    <div class="table-sub">{{ $teacher->document_id ?: 'Sin documento' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>{{ $teacher->email ?: 'Sin email' }}</div>
+                            <div class="table-sub">{{ $teacher->phone ?: 'Sin teléfono' }}</div>
+                        </td>
+                        <td>{{ $teacher->campus?->name ?? 'N/D' }}</td>
+                        <td>{{ (int) ($coursesByTeacher[$teacher->id] ?? 0) }}</td>
+                        <td>{{ (int) ($studentsByTeacher[$teacher->id] ?? 0) }}</td>
+                        <td>@include('partials.ui.status-badge', ['tone' => $teacher->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($teacher->status)])</td>
+                        <td class="table-actions">
+                            <a href="{{ route('teachers.show', $teacher) }}">Ver detalle</a>
+                            <a href="{{ route('teachers.edit', $teacher) }}">Editar</a>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 @endif
 

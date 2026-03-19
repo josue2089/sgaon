@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Campus;
+use App\Models\Charge;
+use App\Models\ClassSession;
+use App\Models\Course;
 use App\Models\AuditLog;
 use App\Models\Teacher;
 use App\Support\AuditTrail;
@@ -53,6 +56,7 @@ class TeacherController extends Controller
         $teacherIds = $teachers->getCollection()->pluck('id')->values();
 
         $studentsByTeacher = collect();
+        $coursesByTeacher = collect();
         if ($teacherIds->isNotEmpty()) {
             $studentsByTeacher = DB::table('groups')
                 ->join('enrollments', 'enrollments.group_id', '=', 'groups.id')
@@ -60,6 +64,12 @@ class TeacherController extends Controller
                 ->selectRaw('groups.teacher_id, COUNT(DISTINCT enrollments.student_id) as students_count')
                 ->groupBy('groups.teacher_id')
                 ->pluck('students_count', 'groups.teacher_id');
+
+            $coursesByTeacher = Course::query()
+                ->whereIn('teacher_id', $teacherIds)
+                ->selectRaw('teacher_id, COUNT(*) as courses_count')
+                ->groupBy('teacher_id')
+                ->pluck('courses_count', 'teacher_id');
         }
 
         $studentsTotal = DB::table('groups')
@@ -78,6 +88,7 @@ class TeacherController extends Controller
         return view('teachers.index', [
             'teachers' => $teachers,
             'studentsByTeacher' => $studentsByTeacher,
+            'coursesByTeacher' => $coursesByTeacher,
             'specialties' => $specialties,
             'summary' => [
                 'total' => (clone $baseStatsQuery)->count(),
@@ -88,6 +99,120 @@ class TeacherController extends Controller
                 'q' => $q,
                 'status' => $status,
                 'specialty' => $specialty,
+            ],
+        ]);
+    }
+
+    public function show(Request $request, Teacher $teacher): View
+    {
+        $this->authorizeTeacher($teacher);
+
+        $teacher->load(['campus']);
+
+        $courseStatus = (string) $request->query('course_status', '');
+        $studentStatus = (string) $request->query('student_status', '');
+        $auditAction = (string) $request->query('audit_action', '');
+
+        $courses = Course::query()
+            ->with([
+                'level',
+                'courseLevel',
+                'period',
+                'scheduleTemplate',
+                'managedGroup.enrollments.student',
+                'managedGroup.sessions' => fn ($query) => $query->withCount('attendanceRecords')->orderBy('sequence')->orderBy('session_date'),
+            ])
+            ->where('teacher_id', $teacher->id)
+            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->orderByDesc('start_date')
+            ->orderByDesc('id')
+            ->get();
+
+        $filteredCourses = $courses
+            ->when($courseStatus !== '', fn ($collection) => $collection->where('status', $courseStatus))
+            ->values();
+
+        $studentRows = $filteredCourses
+            ->flatMap(fn (Course $course) => ($course->managedGroup?->enrollments ?? collect())->map(function ($enrollment) use ($course) {
+                return [
+                    'student' => $enrollment->student,
+                    'course' => $course,
+                    'enrollment' => $enrollment,
+                ];
+            }))
+            ->filter(fn (array $row) => $row['student'] !== null)
+            ->when($studentStatus !== '', fn ($collection) => $collection->where('enrollment.status', $studentStatus))
+            ->unique(fn (array $row) => $row['student']->id.'-'.$row['course']->id)
+            ->values();
+
+        $distinctStudentCount = $studentRows
+            ->pluck('student.id')
+            ->unique()
+            ->count();
+
+        $plannedSessions = $courses->sum(fn (Course $course) => $course->managedGroup?->sessions?->count() ?? 0);
+        $completedSessions = $courses->sum(
+            fn (Course $course) => ($course->managedGroup?->sessions ?? collect())->where('attendance_records_count', '>', 0)->count()
+        );
+
+        $attendanceStats = ClassSession::query()
+            ->join('groups', 'groups.id', '=', 'class_sessions.group_id')
+            ->join('attendance_records', 'attendance_records.class_session_id', '=', 'class_sessions.id')
+            ->where('groups.teacher_id', $teacher->id)
+            ->when($this->campusId(), fn ($builder) => $builder->where('groups.campus_id', $this->campusId()))
+            ->selectRaw(
+                "ROUND((SUM(CASE WHEN attendance_records.status = 'present' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100) as attendance_rate"
+            )
+            ->value('attendance_rate');
+
+        $financeTotal = Charge::query()
+            ->whereHas('course', fn (Builder $builder) => $builder->where('teacher_id', $teacher->id))
+            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->sum('amount');
+
+        $upcomingSessions = ClassSession::query()
+            ->with(['group.course.courseLevel'])
+            ->whereHas('group', function (Builder $builder) use ($teacher): void {
+                $builder->where('teacher_id', $teacher->id);
+                if ($this->campusId()) {
+                    $builder->where('campus_id', $this->campusId());
+                }
+            })
+            ->whereDate('session_date', '>=', now()->toDateString())
+            ->orderBy('session_date')
+            ->orderBy('starts_at')
+            ->limit(8)
+            ->get();
+
+        $auditLogs = AuditLog::query()
+            ->with('user')
+            ->where('auditable_type', Teacher::class)
+            ->where('auditable_id', $teacher->id)
+            ->when($auditAction !== '', fn (Builder $builder) => $builder->where('event', 'like', 'teacher.'.$auditAction.'%'))
+            ->latest()
+            ->limit(12)
+            ->get();
+
+        return view('teachers.show', [
+            'teacher' => $teacher,
+            'courses' => $filteredCourses,
+            'allCoursesCount' => $courses->count(),
+            'studentRows' => $studentRows,
+            'upcomingSessions' => $upcomingSessions,
+            'summary' => [
+                'courses_total' => $courses->count(),
+                'active_courses' => $courses->where('status', 'active')->count(),
+                'students_total' => $distinctStudentCount,
+                'planned_sessions' => $plannedSessions,
+                'completed_sessions' => $completedSessions,
+                'attendance_rate' => is_null($attendanceStats) ? null : (int) $attendanceStats,
+                'finance_total' => (float) $financeTotal,
+            ],
+            'auditLogs' => $auditLogs,
+            'filters' => [
+                'course_status' => $courseStatus,
+                'student_status' => $studentStatus,
+                'audit_action' => $auditAction,
             ],
         ]);
     }
@@ -131,6 +256,8 @@ class TeacherController extends Controller
 
     public function edit(Teacher $teacher): View
     {
+        $this->authorizeTeacher($teacher);
+
         $campuses = Campus::orderBy('name');
         if ($this->campusId()) {
             $campuses->where('id', $this->campusId());
@@ -151,6 +278,8 @@ class TeacherController extends Controller
 
     public function update(Request $request, Teacher $teacher): RedirectResponse
     {
+        $this->authorizeTeacher($teacher);
+
         $data = $request->validate([
             'campus_id' => ['required', 'exists:campuses,id'],
             'first_name' => ['required', 'string', 'max:120'],
@@ -181,6 +310,8 @@ class TeacherController extends Controller
 
     public function destroy(Request $request, Teacher $teacher): RedirectResponse
     {
+        $this->authorizeTeacher($teacher);
+
         if ($teacher->profile_photo_path) {
             Storage::disk('public')->delete($teacher->profile_photo_path);
         }
@@ -192,5 +323,12 @@ class TeacherController extends Controller
         $teacher->delete();
 
         return redirect()->route('teachers.index')->with('success', 'Profesor eliminado.');
+    }
+
+    private function authorizeTeacher(Teacher $teacher): void
+    {
+        if ($this->campusId() && (int) $teacher->campus_id !== (int) $this->campusId()) {
+            abort(403);
+        }
     }
 }

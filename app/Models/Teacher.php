@@ -36,6 +36,11 @@ class Teacher extends Model
         return $this->hasMany(Group::class);
     }
 
+    public function courses()
+    {
+        return $this->hasMany(Course::class);
+    }
+
     public function getFullNameAttribute(): string
     {
         return trim($this->first_name.' '.$this->last_name);
