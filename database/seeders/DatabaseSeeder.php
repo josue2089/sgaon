@@ -7,6 +7,8 @@ use App\Models\Campus;
 use App\Models\Permission;
 use App\Models\Representative;
 use App\Models\Role;
+use App\Models\ScheduleTemplate;
+use App\Models\Period;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
@@ -78,6 +80,7 @@ class DatabaseSeeder extends Seeder
                 'status' => 'active',
             ],
         );
+        $adminUser->forceFill(['is_master' => true])->save();
 
         $teacherUser = User::firstOrCreate(
             ['email' => 'teacher@onenglish.test'],
@@ -154,5 +157,22 @@ class DatabaseSeeder extends Seeder
         $teacherUser->roles()->syncWithoutDetaching([$roleTeacher->id]);
         $studentUser->roles()->syncWithoutDetaching([$roleStudent->id]);
         $repUser->roles()->syncWithoutDetaching([$roleRepresentative->id]);
+
+        foreach (['2026-Q1', '2026-Q2'] as $periodCode) {
+            Period::firstOrCreate(
+                ['campus_id' => $campus->id, 'code' => $periodCode],
+                ['status' => 'active'],
+            );
+        }
+
+        foreach ([
+            [['mon', 'wed', 'fri'], '08:00', '10:00'],
+            [['tue', 'thu'], '14:00', '16:00'],
+        ] as [$days, $startsAt, $endsAt]) {
+            ScheduleTemplate::updateOrCreate(
+                ['campus_id' => $campus->id, 'starts_at' => $startsAt, 'ends_at' => $endsAt],
+                ['days' => $days, 'status' => 'active'],
+            );
+        }
     }
 }

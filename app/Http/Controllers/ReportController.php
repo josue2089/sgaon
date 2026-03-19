@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\GenerateReportExportJob;
+use App\Models\Alert;
 use App\Models\AuditLog;
 use App\Models\AttendanceRecord;
 use App\Models\Charge;
 use App\Models\ReportExport;
 use App\Models\ReportPreset;
+use App\Support\FinanceReconcile;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
@@ -62,7 +64,7 @@ class ReportController extends Controller
 
     public function payments(Request $request): View|StreamedResponse
     {
-        $query = Charge::with(['student', 'payments'])->latest();
+        $query = Charge::with(['student', 'payments', 'course', 'group', 'period'])->latest();
         if ($request->user()?->campus_id) {
             $query->where('campus_id', $request->user()->campus_id);
         }
@@ -75,12 +77,24 @@ class ReportController extends Controller
             $query->where('status', 'overdue');
         }
 
+        if ($request->filled('period_id')) {
+            $query->where('period_id', (int) $request->query('period_id'));
+        }
+
+        if ($request->filled('charge_type')) {
+            $query->where('charge_type', (string) $request->query('charge_type'));
+        }
+
         if ($request->query('export') === 'csv') {
             return $this->paymentsCsv($query->get());
         }
 
         return view('reports.payments', [
             'charges' => $query->paginate(40)->withQueryString(),
+            'periods' => \App\Models\Period::query()
+                ->when($request->user()?->campus_id, fn ($builder) => $builder->where('campus_id', $request->user()->campus_id))
+                ->orderBy('code')
+                ->get(['id', 'code']),
             'presets' => ReportPreset::query()
                 ->where('user_id', $request->user()->id)
                 ->where('route_name', 'reports.payments')
@@ -104,6 +118,55 @@ class ReportController extends Controller
 
         return view('reports.audit', [
             'logs' => $query->paginate(50)->withQueryString(),
+        ]);
+    }
+
+    public function levelRenewals(Request $request): View
+    {
+        $query = Alert::query()
+            ->with('student')
+            ->where('type', 'level_renewal')
+            ->latest();
+
+        if ($request->user()?->campus_id) {
+            $query->where('campus_id', $request->user()->campus_id);
+        }
+
+        $status = (string) $request->query('status', '');
+        if ($status !== '') {
+            $query->where('status', $status);
+        }
+
+        $emailStatus = (string) $request->query('email_status', '');
+        if ($emailStatus === 'sent') {
+            $query->whereNotNull('emailed_at');
+        } elseif ($emailStatus === 'pending') {
+            $query->whereNull('emailed_at');
+        }
+
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->date('from'));
+        }
+
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->date('to'));
+        }
+
+        $alerts = $query->paginate(40)->withQueryString();
+
+        $summaryQuery = Alert::query()->where('type', 'level_renewal');
+        if ($request->user()?->campus_id) {
+            $summaryQuery->where('campus_id', $request->user()->campus_id);
+        }
+
+        return view('reports.level-renewals', [
+            'alerts' => $alerts,
+            'summary' => [
+                'total' => (clone $summaryQuery)->count(),
+                'sent' => (clone $summaryQuery)->whereNotNull('emailed_at')->count(),
+                'pending' => (clone $summaryQuery)->whereNull('emailed_at')->count(),
+                'open' => (clone $summaryQuery)->where('status', 'open')->count(),
+            ],
         ]);
     }
 
@@ -194,16 +257,20 @@ class ReportController extends Controller
     {
         return response()->streamDownload(function () use ($charges) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['student', 'concept', 'amount', 'status', 'paid', 'balance']);
+            fputcsv($out, ['student', 'course', 'group', 'period', 'type', 'concept', 'amount', 'status', 'paid', 'balance']);
             foreach ($charges as $charge) {
-                $paid = (float) $charge->payments->sum('amount');
+                $paid = FinanceReconcile::paidTotalForCharge($charge);
                 fputcsv($out, [
                     $charge->student->full_name ?? '',
+                    $charge->course->name ?? '',
+                    $charge->group->name ?? '',
+                    $charge->period->code ?? '',
+                    $charge->charge_type ?? '',
                     $charge->concept,
                     $charge->amount,
                     $charge->status,
                     $paid,
-                    max(0, (float) $charge->amount - $paid),
+                    FinanceReconcile::outstandingForCharge($charge),
                 ]);
             }
             fclose($out);

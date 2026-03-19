@@ -12,11 +12,19 @@ class Charge extends Model
     protected $fillable = [
         'campus_id',
         'student_id',
+        'enrollment_id',
+        'course_id',
+        'group_id',
+        'period_id',
         'concept',
+        'charge_type',
+        'billing_period_label',
+        'origin',
         'amount',
         'due_date',
         'status',
         'notes',
+        'voided_at',
     ];
 
     protected function casts(): array
@@ -24,6 +32,7 @@ class Charge extends Model
         return [
             'due_date' => 'date',
             'amount' => 'float',
+            'voided_at' => 'datetime',
         ];
     }
 
@@ -32,8 +41,33 @@ class Charge extends Model
         return $this->belongsTo(Student::class);
     }
 
+    public function enrollment()
+    {
+        return $this->belongsTo(Enrollment::class);
+    }
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function group()
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    public function period()
+    {
+        return $this->belongsTo(Period::class);
+    }
+
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function paymentAllocations()
+    {
+        return $this->hasMany(PaymentAllocation::class);
     }
 }

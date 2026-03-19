@@ -9,11 +9,40 @@ class Course extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['campus_id', 'academic_level_id', 'name', 'code', 'description', 'status'];
+    protected $fillable = [
+        'campus_id',
+        'academic_level_id',
+        'course_level_id',
+        'teacher_id',
+        'period_id',
+        'schedule_template_id',
+        'managed_group_id',
+        'name',
+        'code',
+        'description',
+        'start_date',
+        'end_date',
+        'academic_hours',
+        'status',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'end_date' => 'date',
+            'academic_hours' => 'integer',
+        ];
+    }
 
     public function level()
     {
         return $this->belongsTo(AcademicLevel::class, 'academic_level_id');
+    }
+
+    public function courseLevel()
+    {
+        return $this->belongsTo(CourseLevel::class);
     }
 
     public function campus()
@@ -21,8 +50,38 @@ class Course extends Model
         return $this->belongsTo(Campus::class);
     }
 
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class);
+    }
+
+    public function period()
+    {
+        return $this->belongsTo(Period::class);
+    }
+
+    public function scheduleTemplate()
+    {
+        return $this->belongsTo(ScheduleTemplate::class);
+    }
+
+    public function managedGroup()
+    {
+        return $this->belongsTo(Group::class, 'managed_group_id');
+    }
+
     public function groups()
     {
         return $this->hasMany(Group::class);
+    }
+
+    public function classSessions()
+    {
+        return $this->hasManyThrough(ClassSession::class, Group::class);
+    }
+
+    public function enrollments()
+    {
+        return $this->hasManyThrough(Enrollment::class, Group::class);
     }
 }

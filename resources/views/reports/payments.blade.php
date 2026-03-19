@@ -20,6 +20,26 @@
                 </select>
             </div>
             <div>
+                <label>Período</label>
+                <select name="period_id">
+                    <option value="">Todos</option>
+                    @foreach(($periods ?? collect()) as $period)
+                        <option value="{{ $period->id }}" @selected((string) request('period_id') === (string) $period->id)>{{ $period->code }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label>Tipo de cargo</label>
+                <select name="charge_type">
+                    <option value="">Todos</option>
+                    <option value="tuition" @selected(request('charge_type') === 'tuition')>Mensualidad</option>
+                    <option value="materials" @selected(request('charge_type') === 'materials')>Materiales</option>
+                    <option value="registration" @selected(request('charge_type') === 'registration')>Inscripción</option>
+                    <option value="makeup" @selected(request('charge_type') === 'makeup')>Recuperación</option>
+                    <option value="other" @selected(request('charge_type') === 'other')>Otro</option>
+                </select>
+            </div>
+            <div>
                 <label>
                     <input type="checkbox" name="only_overdue" value="1" @checked(request()->boolean('only_overdue')) style="width:auto;margin-right:.4rem;">
                     Solo en mora
@@ -77,15 +97,19 @@
 
 <div class="card">
     <table>
-        <thead><tr><th>Alumno</th><th>Concepto</th><th>Monto</th><th>Status</th><th>Pagado</th><th>Saldo</th></tr></thead>
+        <thead><tr><th>Alumno</th><th>Curso</th><th>Grupo</th><th>Período</th><th>Tipo</th><th>Concepto</th><th>Monto</th><th>Status</th><th>Pagado</th><th>Saldo</th></tr></thead>
         <tbody>
         @forelse($charges as $charge)
             @php
-                $paidTotal = (float) $charge->payments->sum('amount');
-                $balance = max(0, (float) $charge->amount - $paidTotal);
+                $paidTotal = \App\Support\FinanceReconcile::paidTotalForCharge($charge);
+                $balance = \App\Support\FinanceReconcile::outstandingForCharge($charge);
             @endphp
             <tr>
                 <td>{{ $charge->student->full_name ?? '' }}</td>
+                <td>{{ $charge->course->name ?? 'Sin curso' }}</td>
+                <td>{{ $charge->group->name ?? 'Sin grupo' }}</td>
+                <td>{{ $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período') }}</td>
+                <td>{{ $charge->charge_type ?: 'N/D' }}</td>
                 <td>{{ $charge->concept }}</td>
                 <td>${{ number_format($charge->amount,2) }}</td>
                 <td><span class="status-pill {{ $charge->status === 'paid' ? 'success' : ($charge->status === 'overdue' ? 'danger' : 'warn') }}">{{ $charge->status }}</span></td>
@@ -94,7 +118,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="6">
+                <td colspan="10">
                     <div class="empty-state-inline">No hay cargos registrados para reportar.</div>
                 </td>
             </tr>

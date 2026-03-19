@@ -62,6 +62,11 @@ class Student extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function alerts()
+    {
+        return $this->hasMany(Alert::class);
+    }
+
     public function getFullNameAttribute(): string
     {
         return trim($this->first_name.' '.$this->last_name);

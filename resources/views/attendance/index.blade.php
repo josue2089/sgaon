@@ -54,6 +54,30 @@
         <form method="POST" action="{{ route('attendance.store') }}">
             @csrf
             <input type="hidden" name="class_session_id" value="{{ $selectedSession->id }}">
+            <div class="attendance-program-card">
+                <div class="section-head">
+                    <h2 class="section-title">Programa de la sesión</h2>
+                    <div class="entity-sub">Indica el contenido visto y si el profesor va al día.</div>
+                </div>
+                <div class="grid-3">
+                    <div>
+                        <label>Programa / tema</label>
+                        <input type="text" name="topic" value="{{ old('topic', $selectedSession->topic ?? '') }}" placeholder="Ej. Verbo to be">
+                    </div>
+                    <div>
+                        <label>Avance del programa</label>
+                        <select name="program_status">
+                            <option value="">Sin indicar</option>
+                            <option value="on_track" @selected(old('program_status', $selectedSession->program_status ?? '') === 'on_track')>Al día</option>
+                            <option value="delayed" @selected(old('program_status', $selectedSession->program_status ?? '') === 'delayed')>Con retraso</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Observación</label>
+                        <input type="text" name="program_notes" value="{{ old('program_notes', $selectedSession->program_notes ?? '') }}" placeholder="Observación del avance">
+                    </div>
+                </div>
+            </div>
             <div class="attendance-toolbar">
                 <div class="attendance-toolbar-main">
                     <div class="search attendance-search">

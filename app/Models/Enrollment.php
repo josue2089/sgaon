@@ -41,4 +41,9 @@ class Enrollment extends Model
     {
         return $this->hasMany(AttendanceRecord::class);
     }
+
+    public function charges()
+    {
+        return $this->hasMany(Charge::class);
+    }
 }

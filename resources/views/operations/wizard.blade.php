@@ -138,6 +138,9 @@
                     <input type="number" min="1" max="200" name="capacity" placeholder="Ej. 20">
                 </div>
             </div>
+            @if(empty($periodOptions) || empty($scheduleOptions))
+                <p class="form-hint">Si faltan opciones en período u horario, deben crearse primero en los catálogos de admin master.</p>
+            @endif
             <div class="form-actions">
                 <button class="btn" type="submit">Guardar grupo</button>
             </div>
@@ -242,13 +245,11 @@
     </div>
     <div class="form-actions">
         @if($selectedCourse)
+            <a class="btn secondary" href="{{ route('courses.show', $selectedCourse) }}">Ver curso</a>
             <a class="btn secondary" href="{{ route('courses.edit', $selectedCourse) }}">Editar curso</a>
         @endif
-        @if($selectedGroup)
-            <a class="btn secondary" href="{{ route('groups.edit', $selectedGroup) }}">Editar grupo</a>
-        @endif
         @if($selectedSession)
-            <a class="btn secondary" href="{{ route('sessions.edit', $selectedSession) }}">Editar sesión</a>
+            <a class="btn secondary" href="{{ route('attendance.index', ['class_session_id' => $selectedSession->id]) }}">Abrir asistencia</a>
         @endif
         @if($selectedGroup)
             <a class="btn secondary" href="{{ route('enrollments.index', ['group_id' => $selectedGroup->id]) }}">Ver inscripciones</a>

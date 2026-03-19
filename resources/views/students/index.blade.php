@@ -47,44 +47,64 @@
 @if($students->count() === 0)
     <div class="card empty-state">No hay alumnos para los filtros seleccionados.</div>
 @else
-    <div class="entity-grid">
-        @foreach($students as $student)
-            @php
-                $level = optional(optional($student->enrollments->first())->group)->course?->level;
-                $levelCode = $level?->code ?: ($level ? strtoupper(substr((string) $level->name, 0, 2)) : 'N/A');
-                $studentPaymentStatus = $paymentStatusByStudent[$student->id] ?? 'no_charges';
-                $paymentBadge = match($studentPaymentStatus) {
-                    'paid' => ['ok', 'Al día'],
-                    'pending' => ['warn', 'Pendiente'],
-                    'overdue' => ['danger', 'En mora'],
-                    default => ['info', 'Sin cargos'],
-                };
-            @endphp
-            <div class="entity-card entity-card--airy">
-                <div class="entity-card-top">
-                    <span class="entity-avatar">
-                        @if($student->profile_photo_path)
-                            <img src="{{ \Illuminate\Support\Facades\Storage::url($student->profile_photo_path) }}" alt="{{ $student->full_name }}">
-                        @else
-                            {{ strtoupper(substr($student->first_name, 0, 1)) }}
-                        @endif
-                    </span>
-                    @include('partials.ui.status-badge', ['tone' => 'level', 'text' => $levelCode])
-                </div>
-                <div class="entity-spacer"></div>
-                <div class="entity-title">{{ $student->full_name }}</div>
-                <div class="entity-sub">{{ $student->email ?: 'Sin email' }}</div>
-                <div class="entity-sub">{{ $student->campus->name ?? 'Sin sede' }}</div>
-                <div class="entity-sub">Asistencia: {{ isset($attendanceByStudent[$student->id]) ? ((int) $attendanceByStudent[$student->id]).'%' : 'N/D' }}</div>
-                <div class="entity-bottom">
-                    <div class="entity-status-stack">
-                        @include('partials.ui.status-badge', ['tone' => $student->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($student->status)])
-                        @include('partials.ui.status-badge', ['tone' => $paymentBadge[0], 'text' => $paymentBadge[1]])
-                    </div>
-                    <a href="{{ route('students.edit', $student) }}">Editar</a>
-                </div>
-            </div>
-        @endforeach
+    <div class="card table-card">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Email</th>
+                    <th>Sede</th>
+                    <th>Nivel</th>
+                    <th>Asistencia</th>
+                    <th>Pago</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($students as $student)
+                    @php
+                        $level = optional(optional($student->enrollments->first())->group)->course?->level;
+                        $levelCode = $level?->code ?: ($level ? strtoupper(substr((string) $level->name, 0, 2)) : 'N/A');
+                        $studentPaymentStatus = $paymentStatusByStudent[$student->id] ?? 'no_charges';
+                        $paymentBadge = match($studentPaymentStatus) {
+                            'paid' => ['ok', 'Al día'],
+                            'pending' => ['warn', 'Pendiente'],
+                            'overdue' => ['danger', 'En mora'],
+                            default => ['info', 'Sin cargos'],
+                        };
+                    @endphp
+                    <tr>
+                        <td>
+                            <div class="table-user">
+                                <span class="table-avatar">
+                                    @if($student->profile_photo_path)
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::url($student->profile_photo_path) }}" alt="{{ $student->full_name }}">
+                                    @else
+                                        {{ strtoupper(substr($student->first_name, 0, 1)) }}
+                                    @endif
+                                </span>
+                                <div>
+                                    <div class="table-title">{{ $student->full_name }}</div>
+                                    <div class="table-sub">{{ $student->document_id ?: 'Sin documento' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ $student->email ?: 'Sin email' }}</td>
+                        <td>{{ $student->campus->name ?? 'Sin sede' }}</td>
+                        <td>{{ $levelCode }}</td>
+                        <td>{{ isset($attendanceByStudent[$student->id]) ? ((int) $attendanceByStudent[$student->id]).'%' : 'N/D' }}</td>
+                        <td>@include('partials.ui.status-badge', ['tone' => $paymentBadge[0], 'text' => $paymentBadge[1]])</td>
+                        <td>@include('partials.ui.status-badge', ['tone' => $student->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($student->status)])</td>
+                        <td class="table-actions">
+                            <a href="{{ route('students.show', $student) }}">Detalle</a>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 @endif
 

@@ -52,6 +52,9 @@
                     <div class="session-main">
                         <div class="session-title">{{ $session->group->name ?? 'Grupo sin nombre' }} - {{ $session->group->course->name ?? 'Curso sin asignar' }}</div>
                         <div class="entity-sub">{{ $session->group->teacher->full_name ?? 'Profesor sin asignar' }}</div>
+                        @if($session->group?->course)
+                            <div class="entity-sub"><a href="{{ route('courses.show', $session->group->course) }}">Ver detalle del curso</a></div>
+                        @endif
                     </div>
                     <div class="session-meta">
                         <div class="session-time">{{ $session->starts_at ? \Illuminate\Support\Str::of($session->starts_at)->substr(0,5) : '--:--' }}</div>

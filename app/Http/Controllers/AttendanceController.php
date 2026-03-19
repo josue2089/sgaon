@@ -83,6 +83,9 @@ class AttendanceController extends Controller
     {
         $data = $request->validate([
             'class_session_id' => ['required', 'exists:class_sessions,id'],
+            'topic' => ['nullable', 'string'],
+            'program_status' => ['nullable', 'in:on_track,delayed'],
+            'program_notes' => ['nullable', 'string'],
             'records' => ['required', 'array'],
             'records.*.enrollment_id' => ['required', 'exists:enrollments,id'],
             'records.*.status' => ['required', 'in:present,absent,late,justified'],
@@ -108,6 +111,12 @@ class AttendanceController extends Controller
                 abort(403);
             }
         }
+
+        ClassSession::where('id', $data['class_session_id'])->update([
+            'topic' => $data['topic'] ?: null,
+            'program_status' => $data['program_status'] ?: null,
+            'program_notes' => $data['program_notes'] ?: null,
+        ]);
 
         $written = 0;
         foreach ($data['records'] as $entry) {

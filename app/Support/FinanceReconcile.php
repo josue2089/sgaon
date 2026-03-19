@@ -3,12 +3,30 @@
 namespace App\Support;
 
 use App\Models\Charge;
+use App\Models\Payment;
 
 class FinanceReconcile
 {
+    public static function paidTotalForCharge(Charge $charge): float
+    {
+        $directPaid = (float) Payment::query()
+            ->where('charge_id', $charge->id)
+            ->whereDoesntHave('allocations')
+            ->sum('amount');
+
+        $allocatedPaid = (float) $charge->paymentAllocations()->sum('amount_applied');
+
+        return $directPaid + $allocatedPaid;
+    }
+
+    public static function outstandingForCharge(Charge $charge): float
+    {
+        return max(0, (float) $charge->amount - self::paidTotalForCharge($charge));
+    }
+
     public static function syncCharge(Charge $charge): Charge
     {
-        $paidTotal = (float) $charge->payments()->sum('amount');
+        $paidTotal = self::paidTotalForCharge($charge);
         $amount = (float) $charge->amount;
 
         if ($paidTotal >= $amount && $amount > 0) {

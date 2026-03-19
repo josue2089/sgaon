@@ -22,6 +22,7 @@ class User extends Authenticatable
         'phone',
         'password',
         'role',
+        'is_master',
         'status',
     ];
 
@@ -34,6 +35,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'is_master' => 'boolean',
             'password' => 'hashed',
         ];
     }
@@ -98,5 +100,10 @@ class User extends Authenticatable
         }
 
         return false;
+    }
+
+    public function isMasterAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN && $this->is_master;
     }
 }

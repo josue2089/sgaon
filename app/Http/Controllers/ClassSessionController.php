@@ -82,6 +82,8 @@ class ClassSessionController extends Controller
             'starts_at' => ['nullable', 'date_format:H:i'],
             'ends_at' => ['nullable', 'date_format:H:i'],
             'topic' => ['nullable', 'string'],
+            'program_status' => ['nullable', 'in:on_track,delayed'],
+            'program_notes' => ['nullable', 'string'],
         ]);
 
         $group = Group::findOrFail($data['group_id']);
@@ -131,6 +133,8 @@ class ClassSessionController extends Controller
             'starts_at' => ['nullable', 'date_format:H:i'],
             'ends_at' => ['nullable', 'date_format:H:i'],
             'topic' => ['nullable', 'string'],
+            'program_status' => ['nullable', 'in:on_track,delayed'],
+            'program_notes' => ['nullable', 'string'],
         ]);
 
         $group = Group::findOrFail($data['group_id']);

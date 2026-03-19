@@ -49,4 +49,9 @@ class Group extends Model
     {
         return $this->hasMany(Enrollment::class);
     }
+
+    public function sessions()
+    {
+        return $this->hasMany(ClassSession::class);
+    }
 }

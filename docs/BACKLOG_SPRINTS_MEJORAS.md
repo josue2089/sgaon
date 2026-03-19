@@ -1,7 +1,7 @@
 # Backlog de Mejoras por Sprints (SGAON)
 
-Última actualización: `2026-02-25`  
-Estado global: `Completado (implementación)`
+Última actualización: `2026-03-18`  
+Estado global: `Completado (implementación) + ajustes operativos`
 
 ## Convenciones de estado
 - `Pendiente`
@@ -14,6 +14,211 @@ Estado global: `Completado (implementación)`
 - `Responsable`:
 - `Fecha objetivo`:
 - `Notas`:
+
+---
+
+## Ajustes Operativos — Catálogos Base (2026-03-18)
+Objetivo: sacar `períodos` y `horarios` del config estático y pasarlos a CRUD administrable.
+
+### AO-01 Admin master para catálogos
+- Alcance: restringir CRUD de catálogos a `admin master`.
+- Criterio de aceptación: admin normal recibe `403`, admin master accede.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: agregado `is_master` en `users`, helper `isMasterAdmin()` y middleware `master.admin`.
+
+### AO-02 CRUD de períodos
+- Alcance: crear, editar, listar y eliminar períodos informativos.
+- Criterio de aceptación: catálogo usable desde UI con valores tipo `2026-Q1`.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: implementado módulo `Periodos` con tabla `periods`, vistas Blade y navegación en menú `Más` solo para master admin.
+
+### AO-03 CRUD de horarios
+- Alcance: crear horarios con días de semana + hora inicio + hora final.
+- Criterio de aceptación: selección multidía y franja horaria persistida en BD.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: implementado módulo `Horarios` con tabla `schedule_templates`, selección de días, rango horario y listado administrable.
+
+### AO-04 Integración con creación de grupos
+- Alcance: grupos y flujo MVP consumen catálogos desde BD.
+- Criterio de aceptación: `Periodo` y `Horario` ya no salen de `config/academic.php`.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: `GroupController` y `OperationWizardController` ahora cargan opciones activas desde `periods` y `schedule_templates`.
+
+### AO-05 Curso operativo con planificación automática
+- Alcance: `Curso` pasa a manejar profesor, período, horario, fecha inicial, duración y generación automática de sesiones.
+- Criterio de aceptación: al guardar un curso operativo se crea/sincroniza su grupo interno y se planifican sesiones hasta cubrir horas académicas.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: agregados campos operativos a `courses`, servicio `CoursePlanner`, cálculo basado en hora académica de 45 min y fecha final automática.
+
+### AO-06 Panel de detalle de curso
+- Alcance: vista detalle con profesor, estudiantes, sesiones completadas/pendientes, tabla de sesiones y acceso rápido a asistencia.
+- Criterio de aceptación: un admin puede entrar a un curso y operar desde esa vista.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: creada ruta/vista `courses.show` con ficha del curso, alta de estudiantes y tabla de sesiones/programa.
+
+### AO-07 Programa de sesión desde asistencia
+- Alcance: profesor/admin indica tema, avance del programa y observación desde la asistencia del día.
+- Criterio de aceptación: esos datos se guardan en la sesión y se reflejan en detalle de curso.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: `AttendanceController` y `ClassSessionController` ahora persisten `topic`, `program_status` y `program_notes`.
+
+### AO-08 Listados tabulares de cursos y alumnos
+- Alcance: reemplazar cards por tablas más legibles en `Cursos` y `Alumnos`.
+- Criterio de aceptación: lectura horizontal más clara y acceso rápido a acciones.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: vistas `courses.index` y `students.index` convertidas a tablas responsivas.
+
+### AO-09 Cursos como reemplazo operativo de grupos
+- Alcance: el detalle del curso se convierte en la entrada principal de operación y `Grupos`/`Sesiones` salen del header.
+- Criterio de aceptación: navegación superior centrada en `Cursos` sin accesos redundantes a módulos internos.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: eliminados `Grupos` y `Sesiones` del menú `Más` y de accesos visibles en `Flujo MVP`/`Detalle de curso`; se mantienen rutas internas por compatibilidad operativa.
+
+### AO-10 Refactor financiero fase 1
+- Alcance: agregar contexto académico a cargos y mejorar trazabilidad de pagos sin romper conciliación actual.
+- Criterio de aceptación: cargos pueden vincularse a inscripción/curso/grupo/período; reportes muestran ese contexto.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: agregadas migraciones para contexto académico en `charges` y campos operativos en `payments`; creado comando `finance:backfill-charge-context`; `FinanceController` y reportes actualizados para crear y visualizar cargos con `enrollment_id`, curso, grupo y período.
+
+### AO-11 UX financiera por alumno
+- Alcance: filtrar en tiempo real inscripciones y cargos según el alumno seleccionado en formularios financieros.
+- Criterio de aceptación: al elegir alumno, solo aparecen sus inscripciones/cargos; al elegir cargo se autocompleta contexto básico.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: `finance.index` ahora filtra selects en cliente por `student_id`, agrega búsqueda textual en inscripciones/cargos y autocompleta monto sugerido con saldo del cargo seleccionado.
+
+### AO-12 Payment allocations fase 2
+- Alcance: permitir que un pago se aplique a varios cargos sin romper pagos históricos.
+- Criterio de aceptación: registrar un pago con múltiples cargos seleccionados y recalcular saldo/status correctamente.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: creada tabla `payment_allocations`, modelo dedicado y conciliación híbrida (`payments.charge_id` legacy + allocations nuevas); flujo financiero actualizado para distribuir un pago entre varios cargos del mismo alumno.
+
+### AO-13 Detalle de recibo con cargos aplicados
+- Alcance: mostrar en el recibo exactamente a qué cargos se aplicó el pago y por cuánto monto.
+- Criterio de aceptación: desde financiero se puede abrir un recibo y ver tabla de cargos impactados con contexto académico.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: agregado `finance.receipts.show`, vista `finance/receipt.blade.php` y enlaces desde pagos recientes; soporta pagos legacy y pagos con `payment_allocations`.
+
+### AO-14 Historial financiero por alumno
+- Alcance: construir línea de tiempo por alumno con cargos, pagos y aplicaciones relacionadas.
+- Criterio de aceptación: desde financiero se puede abrir el historial del alumno y navegar a sus recibos.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: agregado `finance.students.history`, timeline financiera en `finance/student-history.blade.php` y deep-links desde cuentas por cobrar/pagos recientes.
+
+### AO-15 Impresión y PDF de recibos
+- Alcance: permitir imprimir un recibo y exportarlo como PDF descargable.
+- Criterio de aceptación: desde el detalle del recibo hay acción `Imprimir` y acción `Exportar PDF` con el mismo detalle de cargos aplicados.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: instalada dependencia `barryvdh/laravel-dompdf`, agregada ruta `finance.receipts.pdf`, vista `finance/receipt-pdf.blade.php` y estilos base de impresión.
+
+### AO-16 Resumen acumulado en historial financiero
+- Alcance: mostrar resumen financiero del alumno antes de la línea de tiempo.
+- Criterio de aceptación: el historial presenta total facturado, total cobrado, saldo pendiente y cargos vencidos.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: `FinanceController` ahora calcula resumen acumulado y `finance/student-history.blade.php` lo renderiza en cards superiores.
+
+### AO-17 Branding ON English en PDF de recibo
+- Alcance: incluir logo y marca ON English en la exportación PDF del recibo.
+- Criterio de aceptación: el PDF descargado muestra identidad visual básica de la academia en cabecera.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: el PDF usa `logo.png` embebido como data URI para compatibilidad con DomPDF y cabecera de marca `ON English`.
+
+### AO-18 Filtro por rango en historial financiero
+- Alcance: permitir acotar el historial financiero del alumno por fecha inicial y final.
+- Criterio de aceptación: el rango afecta línea de tiempo y resumen acumulado, con estado persistente en URL.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: `studentHistory()` valida `start_date/end_date`, filtra cargos/pagos en backend y la vista expone formulario GET con limpieza rápida.
+
+### AO-19 Escala general de niveles para cursos
+- Alcance: crear una escala secuencial de 12 niveles relacionada con cursos y utilizable en seguimiento del alumno.
+- Criterio de aceptación: cada curso puede asociarse a un nivel de escala y el sistema reconoce su posicion dentro de 12.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: creada tabla `course_levels`, relacion `courses.course_level_id` y siembra inicial de 12 niveles generales basada en la linea operativa `Primary 1-6 + High School 1-6`.
+
+### AO-20 Ficha integral de alumno
+- Alcance: vista de detalle del alumno con progreso de nivel, curso actual, historico de cursos, pagos, cargos y auditoria.
+- Criterio de aceptación: desde el modulo `Alumnos` se abre una ficha completa con informacion academica y financiera consolidada.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: agregada ruta `students.show`, nueva vista `students/show.blade.php`, resumen de progresion `x/12`, siguiente nivel, fecha fin, historico de cursos y resumen financiero.
+
+### AO-21 Recordatorio automatico de renovacion de nivel
+- Alcance: generar recordatorio 5 dias antes de la finalizacion del curso actual para inscripcion al siguiente nivel.
+- Criterio de aceptación: comando diario detecta alumnos con curso por vencer y abre alerta `level_renewal`.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: agregado comando `levels:send-renewal-reminders` y programacion diaria en `routes/console.php`; las alertas abren la ficha del alumno desde el header.
+
+### AO-22 Backfill de escala para cursos existentes
+- Alcance: asignar `course_level_id` a cursos ya creados usando reglas de matching por nombre/codigo.
+- Criterio de aceptación: existe comando ejecutable con modo `dry-run` para rellenar cursos legacy sin alterar cursos ya mapeados.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: agregado comando `levels:backfill-course-levels` con heuristica para `Primary 1-6` y `HS 1-6`.
+
+### AO-23 Email real para renovacion de nivel
+- Alcance: convertir la alerta `level_renewal` en envio por correo al alumno.
+- Criterio de aceptación: al generarse el recordatorio, si el alumno tiene email, el sistema envia correo y registra fecha de envio para no duplicar.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: agregado `LevelRenewalReminderMail`, vista `emails/level-renewal-reminder.blade.php` y campo `alerts.emailed_at` para control de no duplicacion.
+
+### AO-24 Plantilla de email alineada a ON English
+- Alcance: mejorar el email de renovacion para que refleje branding y jerarquia visual de la academia.
+- Criterio de aceptación: correo con cabecera de marca, jerarquia clara, resumen del nivel actual/siguiente y mensaje de accion.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: rediseñada plantilla `emails/level-renewal-reminder.blade.php` con header azul, logo, cards de progreso y bloque de llamada a la accion.
+
+### AO-25 Panel admin de recordatorios enviados
+- Alcance: vista administrativa para revisar recordatorios de renovacion generados y enviados por email.
+- Criterio de aceptación: listado filtrable por estado, envio y fecha con acceso rapido a la ficha del alumno.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-18
+- `Notas`: agregado reporte `reports.level-renewals`, ruta dedicada, filtros por estado/email/rango y enlace desde configuracion del header.
 
 ---
 

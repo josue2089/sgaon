@@ -16,12 +16,14 @@ class Alert extends Model
         'status',
         'message',
         'resolved_at',
+        'emailed_at',
     ];
 
     protected function casts(): array
     {
         return [
             'resolved_at' => 'datetime',
+            'emailed_at' => 'datetime',
         ];
     }
 

@@ -28,11 +28,11 @@
     ];
     $extraNav = [
         ['name' => 'Flujo MVP', 'route' => 'operations.wizard', 'enabled' => $user?->role === 'admin'],
-        ['name' => 'Grupos', 'route' => 'groups.index', 'enabled' => $user?->role === 'admin'],
         ['name' => 'Inscripciones', 'route' => 'enrollments.index', 'enabled' => $user?->role === 'admin'],
-        ['name' => 'Sesiones', 'route' => 'sessions.index', 'enabled' => $user?->role === 'admin'],
+        ['name' => 'Períodos', 'route' => 'periods.index', 'enabled' => $user?->isMasterAdmin()],
+        ['name' => 'Horarios', 'route' => 'schedules.index', 'enabled' => $user?->isMasterAdmin()],
     ];
-    $extraPrefixes = ['operations', 'groups', 'enrollments', 'sessions'];
+    $extraPrefixes = ['operations', 'enrollments', 'periods', 'schedules'];
     $extraActive = in_array(explode('.', (string) $currentRoute)[0], $extraPrefixes, true);
 @endphp
 <div class="fi-shell">
@@ -116,8 +116,12 @@
                                     $alertUrl = route('finance.index', ['student_id' => $alert->student_id]);
                                 } elseif ($alert->type === 'attendance') {
                                     $alertUrl = ($user?->role === 'admin' && $alert->student_id)
-                                        ? route('students.edit', $alert->student_id)
+                                        ? route('students.show', $alert->student_id)
                                         : route('attendance.index');
+                                } elseif ($alert->type === 'level_renewal' && $user?->role === 'admin' && $alert->student_id) {
+                                    $alertUrl = route('students.show', $alert->student_id);
+                                } else {
+                                    $alertUrl = route('dashboard');
                                 }
                             @endphp
                             <a href="{{ $alertUrl }}" class="fi-menu-link">
@@ -141,6 +145,7 @@
                         @if($user?->role === 'admin')
                             <a href="{{ route('reports.audit') }}" class="fi-menu-link">Auditoría</a>
                             <a href="{{ route('reports.payments') }}" class="fi-menu-link">Reporte financiero</a>
+                            <a href="{{ route('reports.level-renewals') }}" class="fi-menu-link">Renovación de niveles</a>
                         @endif
                     </div>
                 </details>
@@ -152,7 +157,7 @@
                     </summary>
                     <div class="fi-menu-panel fi-menu-panel-profile">
                         <div class="fi-menu-title">{{ $user?->name ?? 'Usuario' }}</div>
-                        <div class="fi-menu-empty">Rol: {{ strtoupper((string) $user?->role) }}</div>
+                        <div class="fi-menu-empty">Rol: {{ strtoupper((string) $user?->role) }}{{ $user?->isMasterAdmin() ? ' · MASTER' : '' }}</div>
                         <a href="{{ route('dashboard') }}" class="fi-menu-link">Ir al dashboard</a>
                         @if($user?->role === 'student')
                             <a href="{{ route('portal.student') }}" class="fi-menu-link">Mi portal</a>
@@ -182,5 +187,6 @@
         </div>
     </main>
 </div>
+@stack('scripts')
 </body>
 </html>

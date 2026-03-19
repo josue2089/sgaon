@@ -10,6 +10,7 @@ use App\Models\Charge;
 use App\Models\Enrollment;
 use App\Models\Student;
 use App\Support\AuditTrail;
+use App\Support\FinanceReconcile;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -155,6 +156,15 @@ class StudentController extends Controller
         return view('students.create', ['campuses' => $campuses->get()]);
     }
 
+    public function show(Student $student): View
+    {
+        if ($this->campusId() && (int) $student->campus_id !== (int) $this->campusId()) {
+            abort(403);
+        }
+
+        return view('students.show', $this->detailData($student));
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -251,5 +261,74 @@ class StudentController extends Controller
         $student->delete();
 
         return redirect()->route('students.index')->with('success', 'Alumno eliminado.');
+    }
+
+    private function detailData(Student $student): array
+    {
+        $student->load([
+            'campus',
+            'alerts' => fn (Builder $builder) => $builder->where('status', 'open')->latest(),
+            'enrollments' => fn (Builder $builder) => $builder
+                ->withCount([
+                    'attendanceRecords',
+                    'attendanceRecords as present_attendance_count' => fn (Builder $query) => $query->where('status', 'present'),
+                ])
+                ->with(['group.course.courseLevel', 'group.course.level', 'group.course.teacher', 'group.course.period', 'group.course.scheduleTemplate'])
+                ->orderByDesc('enrolled_at')
+                ->orderByDesc('id'),
+            'charges' => fn (Builder $builder) => $builder
+                ->with(['course.courseLevel', 'group', 'period'])
+                ->latest(),
+            'payments' => fn (Builder $builder) => $builder
+                ->with(['receipt', 'allocations.charge.course', 'charge.course'])
+                ->orderByDesc('paid_at_datetime')
+                ->orderByDesc('paid_at')
+                ->orderByDesc('id'),
+        ]);
+
+        $currentEnrollment = $student->enrollments->firstWhere('status', 'active') ?: $student->enrollments->first();
+        $currentCourse = $currentEnrollment?->group?->course;
+        $currentCourseLevel = $currentCourse?->courseLevel;
+        $nextCourseLevel = $currentCourseLevel?->nextLevel();
+        $attendanceRate = null;
+
+        if ($currentEnrollment && (int) $currentEnrollment->attendance_records_count > 0) {
+            $attendanceRate = (int) round(($currentEnrollment->present_attendance_count / $currentEnrollment->attendance_records_count) * 100);
+        }
+
+        $summary = [
+            'current_level_label' => $currentCourseLevel
+                ? $currentCourseLevel->scale_position.'/'.$currentCourseLevel->scale_total
+                : 'N/D',
+            'current_level_name' => $currentCourseLevel?->name ?? 'Sin escala asignada',
+            'next_level_name' => $nextCourseLevel?->name ?? 'N/D',
+            'completion_date' => $currentCourse?->end_date,
+            'reminder_date' => ($currentCourse?->end_date && $currentCourseLevel)
+                ? $currentCourse->end_date->copy()->subDays((int) $currentCourseLevel->reminder_days_before)
+                : null,
+            'attendance_rate' => $attendanceRate,
+            'charged_total' => (float) $student->charges->sum('amount'),
+            'paid_total' => (float) $student->payments->sum('amount'),
+            'outstanding_total' => (float) $student->charges->sum(fn (Charge $charge) => FinanceReconcile::outstandingForCharge($charge)),
+        ];
+
+        return [
+            'student' => $student,
+            'currentEnrollment' => $currentEnrollment,
+            'currentCourse' => $currentCourse,
+            'currentCourseLevel' => $currentCourseLevel,
+            'nextCourseLevel' => $nextCourseLevel,
+            'summary' => $summary,
+            'courseHistory' => $student->enrollments,
+            'paymentHistory' => $student->payments->take(15),
+            'chargeHistory' => $student->charges->take(15),
+            'auditLogs' => AuditLog::query()
+                ->with('user')
+                ->where('auditable_type', Student::class)
+                ->where('auditable_id', $student->id)
+                ->latest()
+                ->limit(12)
+                ->get(),
+        ];
     }
 }

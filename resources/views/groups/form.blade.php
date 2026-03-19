@@ -10,3 +10,6 @@
 <div><label>Status</label><select name="status">@foreach($statusOptions as $status)<option value="{{ $status }}" @selected(old('status',$group->status ?? 'active')==$status)>{{ $status }}</option>@endforeach @if(!empty($group->status ?? null) && !in_array($group->status, $statusOptions, true))<option value="{{ $group->status }}" selected>{{ $group->status }} (actual)</option>@endif</select></div>
 <div><label>Capacidad</label><input type="number" min="1" max="200" name="capacity" value="{{ old('capacity',$group->capacity ?? '') }}" placeholder="Ej. 20"></div>
 </div>
+@if(empty($periodOptions) || empty($scheduleOptions))
+    <p class="form-hint">Si no ves opciones disponibles, un admin master debe crear primero los catálogos de períodos y horarios.</p>
+@endif

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Campus;
 use App\Models\Course;
 use App\Models\Group;
+use App\Models\Period;
+use App\Models\ScheduleTemplate;
 use App\Models\Teacher;
 use App\Models\AuditLog;
 use App\Support\AuditTrail;
@@ -19,12 +21,22 @@ class GroupController extends Controller
 {
     private function groupPeriods(): array
     {
-        return config('academic.group_periods', []);
+        return Period::query()
+            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->where('status', 'active')
+            ->orderBy('code')
+            ->pluck('code')
+            ->all();
     }
 
     private function groupSchedules(): array
     {
-        return config('academic.group_schedules', []);
+        return ScheduleTemplate::query()
+            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->where('status', 'active')
+            ->get()
+            ->pluck('display_label')
+            ->all();
     }
 
     private function groupStatuses(): array
