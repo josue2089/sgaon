@@ -28,27 +28,38 @@
 @if($schedules->count() === 0)
     <div class="card empty-state">No hay horarios registrados para los filtros seleccionados.</div>
 @else
-    <div class="entity-grid">
-        @foreach($schedules as $schedule)
-            <div class="entity-card">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;">
-                    <div>
-                        <div class="entity-title">{{ $schedule->days_label }}</div>
-                        <div class="entity-sub">{{ $schedule->time_range_label }}</div>
-                        <div class="entity-sub">{{ $schedule->campus->name ?? 'Sin sede' }}</div>
-                    </div>
-                    <span class="badge-pill {{ $schedule->status === 'active' ? 'badge-ok' : 'badge-warn' }}">{{ $schedule->status }}</span>
-                </div>
-                <div class="form-actions">
-                    <a class="btn secondary" href="{{ route('schedules.edit', $schedule) }}">Editar</a>
-                    <form method="POST" action="{{ route('schedules.destroy', $schedule) }}" onsubmit="return confirm('¿Eliminar este horario?');">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn secondary" type="submit">Eliminar</button>
-                    </form>
-                </div>
-            </div>
-        @endforeach
+    <div class="card table-card">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Días</th>
+                    <th>Horario</th>
+                    <th>Campus</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($schedules as $schedule)
+                    <tr>
+                        <td class="table-title">{{ $schedule->days_label }}</td>
+                        <td>{{ $schedule->time_range_label }}</td>
+                        <td>{{ $schedule->campus->name ?? 'Sin sede' }}</td>
+                        <td>@include('partials.ui.status-badge', ['tone' => $schedule->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($schedule->status)])</td>
+                        <td class="table-actions">
+                            <a href="{{ route('schedules.edit', $schedule) }}">Editar</a>
+                            <form method="POST" action="{{ route('schedules.destroy', $schedule) }}" onsubmit="return confirm('¿Eliminar este horario?');">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn-link-danger" type="submit">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
     @if($schedules->hasPages())
         <div class="card">{{ $schedules->links() }}</div>

@@ -27,13 +27,19 @@
         ['name' => 'Reportes', 'route' => 'reports.attendance', 'enabled' => $user?->role === 'admin'],
     ];
     $extraNav = [
-        ['name' => 'Flujo MVP', 'route' => 'operations.wizard', 'enabled' => $user?->role === 'admin'],
         ['name' => 'Inscripciones', 'route' => 'enrollments.index', 'enabled' => $user?->role === 'admin'],
+    ];
+    $configNav = [
+        ['name' => 'Campus', 'route' => 'campuses.index', 'enabled' => $user?->isMasterAdmin()],
         ['name' => 'Períodos', 'route' => 'periods.index', 'enabled' => $user?->isMasterAdmin()],
         ['name' => 'Horarios', 'route' => 'schedules.index', 'enabled' => $user?->isMasterAdmin()],
+        ['name' => 'Niveles', 'route' => 'academic-levels.index', 'enabled' => $user?->isMasterAdmin()],
+        ['name' => 'Escalas', 'route' => 'course-levels.index', 'enabled' => $user?->isMasterAdmin()],
     ];
-    $extraPrefixes = ['operations', 'enrollments', 'periods', 'schedules'];
+    $extraPrefixes = ['enrollments'];
     $extraActive = in_array(explode('.', (string) $currentRoute)[0], $extraPrefixes, true);
+    $configPrefixes = ['campuses', 'periods', 'schedules', 'academic-levels', 'course-levels'];
+    $configActive = in_array(explode('.', (string) $currentRoute)[0], $configPrefixes, true);
 @endphp
 <div class="fi-shell">
     <header class="fi-header">
@@ -90,6 +96,23 @@
                         </summary>
                         <div class="fi-menu-panel fi-menu-panel-nav">
                             @foreach($extraNav as $item)
+                                @if($item['enabled'])
+                                    <a href="{{ route($item['route']) }}" class="fi-menu-link">{{ $item['name'] }}</a>
+                                @endif
+                            @endforeach
+                        </div>
+                    </details>
+                @endif
+                @if($user?->isMasterAdmin())
+                    <details class="fi-menu fi-menu-inline">
+                        <summary class="fi-nav-item {{ $configActive ? 'active' : '' }}">
+                            <span class="fi-nav-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2 2.2 2.9-.2.7 2.8 2.5 1.4-1.4 2.5 1.4 2.5-2.5 1.4-.7 2.8-2.9-.2L12 21l-2.2-2.2-2.9.2-.7-2.8-2.5-1.4 1.4-2.5-1.4-2.5 2.5-1.4.7-2.8 2.9.2L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
+                            </span>
+                            Configuración
+                        </summary>
+                        <div class="fi-menu-panel fi-menu-panel-nav">
+                            @foreach($configNav as $item)
                                 @if($item['enabled'])
                                     <a href="{{ route($item['route']) }}" class="fi-menu-link">{{ $item['name'] }}</a>
                                 @endif

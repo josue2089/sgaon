@@ -283,7 +283,30 @@ h5 {
 
 .table-actions {
     display: flex;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 0.75rem;
+}
+
+.table-actions form {
+    display: inline;
+    margin: 0;
+}
+
+.btn-link-danger {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: #dc2626;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.btn-link-danger:hover,
+.btn-link-danger:focus-visible {
+    color: #991b1b;
+    text-decoration: underline;
 }
 
 .table-user {

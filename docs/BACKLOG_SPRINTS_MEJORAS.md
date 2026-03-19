@@ -220,6 +220,14 @@ Objetivo: sacar `períodos` y `horarios` del config estático y pasarlos a CRUD 
 - `Fecha objetivo`: 2026-03-18
 - `Notas`: agregado reporte `reports.level-renewals`, ruta dedicada, filtros por estado/email/rango y enlace desde configuracion del header.
 
+### AO-26 Catálogos de configuración y menú admin
+- Alcance: consolidar acceso admin master a `Campus`, `Períodos`, `Horarios`, `Niveles` y `Escalas` dentro de un dropdown `Configuración`.
+- Criterio de aceptación: los cinco CRUD son navegables desde menú y `Flujo MVP` desaparece del header.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-19
+- `Notas`: creados CRUD para `campuses`, `academic-levels`, `course-levels`; `periods` y `schedules` ajustados para no limitar por sede a master admin; menú principal actualizado con dropdown `Configuración`.
+
 ---
 
 ## Sprint 1 — UX Operativa y Velocidad (1 semana)
@@ -401,3 +409,15 @@ Objetivo: escalar productividad de análisis y operación.
 3. Porcentaje de grupos con sobrecupo.
 4. Recuperación de mora en 30 días.
 5. Tiempo promedio de generación de reportes.
+
+---
+
+## Ajustes recientes
+
+### AO-27 Configuración masiva y protección de campus
+- Alcance: proteger eliminación de `Campus` con operación viva y convertir catálogos de configuración a tablas para administración masiva.
+- Criterio de aceptación: un campus con entidades relacionadas no se elimina; `Campus`, `Períodos`, `Horarios`, `Niveles` y `Escalas` se administran en tablas con acciones rápidas.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-03-19
+- `Notas`: `CampusController` valida dependencias operativas antes de borrar; vistas índice de catálogos migradas de cards a tablas y menú consolidado en dropdown `Configuración`.

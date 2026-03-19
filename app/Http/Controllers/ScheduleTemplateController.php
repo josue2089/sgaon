@@ -14,7 +14,7 @@ class ScheduleTemplateController extends Controller
 {
     private function campusId(): ?int
     {
-        return request()->user()?->campus_id;
+        return request()->user()?->isMasterAdmin() ? null : request()->user()?->campus_id;
     }
 
     public function index(Request $request): View

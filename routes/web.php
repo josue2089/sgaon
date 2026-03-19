@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AcademicLevelController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CampusController;
 use App\Http\Controllers\ClassSessionController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CourseLevelController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\FinanceController;
@@ -43,8 +46,11 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/operations/wizard/session', [OperationWizardController::class, 'storeSession'])->name('operations.wizard.session');
         Route::post('/operations/wizard/enrollment', [OperationWizardController::class, 'storeEnrollment'])->name('operations.wizard.enrollment');
         Route::middleware('master.admin')->group(function () {
+            Route::resource('campuses', CampusController::class)->except('show');
             Route::resource('periods', PeriodController::class)->except('show');
             Route::resource('schedules', ScheduleTemplateController::class)->except('show');
+            Route::resource('academic-levels', AcademicLevelController::class)->except('show');
+            Route::resource('course-levels', CourseLevelController::class)->except('show');
         });
         Route::middleware('permission:finance.manage')->group(function () {
             Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
