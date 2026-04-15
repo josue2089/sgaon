@@ -4951,3 +4951,131 @@ _**Agent (default)**_
 <summary>Tool use: **edit_file_v2**</summary>
 
 </details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan view:cache && php artisan route:list --name=password</summary>
+
+```bash
+php artisan view:cache && php artisan route:list --name=password
+```
+
+```
+
+
+   INFO  Blade templates cached successfully.  
+
+
+  GET|HEAD   forgot-password password.request › AuthController@showForgotPass…
+  POST       forgot-password ... password.email › AuthController@sendResetLink
+  POST       reset-password ... password.update › AuthController@resetPassword
+  GET|HEAD   reset-password/{token} password.reset › AuthController@showReset…
+
+                                                            Showing [4] routes
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints">
+<details>
+<summary>Tool use: **read_lints**</summary>
+
+
+Parameters:
+
+```json
+{
+  "paths": [
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Notifications/ResetPasswordNotification.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/User.php"
+  ]
+}
+```
+Result:
+
+```json
+{
+  "linterErrorsByFile": [
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Notifications/ResetPasswordNotification.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/User.php"
+    }
+  ]
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints"><details>
+<summary>Tool use: **read_lints**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Listo, ya quedó personalizado el email de recuperación.
+
+### Qué cambié
+
+- Creé la notificación personalizada:
+  - `app/Notifications/ResetPasswordNotification.php`
+- Conecté esa notificación al usuario:
+  - `app/Models/User.php` ahora sobrescribe `sendPasswordResetNotification($token)`
+
+### Cómo queda el correo
+
+- Asunto: `ON English - Recuperacion de contrasena`
+- Saludo personalizado con nombre del usuario
+- Texto en español orientado a ON English
+- Botón: `Restablecer contrasena`
+- Mensaje de expiración usando minutos de `config/auth.php`
+- Cierre de seguridad si no fue solicitado
+
+### Verificación
+
+- Compilación OK (`view:cache`)
+- Rutas de password reset siguen activas
+- Sin errores de lint
+
+Si quieres, también te lo puedo dejar con plantilla HTML “de marca” (colores/logo), en vez del formato estándar de `MailMessage`.
+
+---
+
+_**User**_
+
+Me da este error
+
+We can't find a user with that email address.
+
+
+Estoy intentando recuperar la contraseña de un estudoamte con el email ramos.josue2089@gmail.com que si existe
+
+---
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>

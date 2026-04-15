@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Representative;
+use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
@@ -30,8 +34,15 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
         ]);
 
+        $user = $this->resolveRecoverableUser($data['email']);
+        if (! $user) {
+            return back()->withErrors([
+                'email' => 'No encontramos una cuenta con ese correo.',
+            ])->onlyInput('email');
+        }
+
         $status = Password::sendResetLink([
-            'email' => $data['email'],
+            'email' => $user->email,
         ]);
 
         if ($status !== Password::RESET_LINK_SENT) {
@@ -78,6 +89,87 @@ class AuthController extends Controller
         }
 
         return redirect()->route('login')->with('success', 'Contraseña actualizada. Ya puedes iniciar sesión.');
+    }
+
+    private function resolveRecoverableUser(string $email): ?User
+    {
+        $normalizedEmail = Str::lower(trim($email));
+
+        $user = User::query()
+            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
+            ->first();
+
+        if ($user) {
+            return $user;
+        }
+
+        $student = Student::query()
+            ->whereNotNull('email')
+            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
+            ->first();
+        if ($student) {
+            $user = User::create([
+                'campus_id' => $student->campus_id,
+                'name' => $student->full_name ?: 'Alumno',
+                'email' => trim((string) $student->email),
+                'phone' => $student->mobile_phone ?: $student->phone,
+                'password' => Hash::make(Str::random(32)),
+                'role' => User::ROLE_STUDENT,
+                'status' => 'active',
+            ]);
+
+            if (! $student->user_id) {
+                $student->forceFill(['user_id' => $user->id])->save();
+            }
+
+            return $user;
+        }
+
+        $teacher = Teacher::query()
+            ->whereNotNull('email')
+            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
+            ->first();
+        if ($teacher) {
+            $user = User::create([
+                'campus_id' => $teacher->campus_id,
+                'name' => $teacher->full_name ?: 'Profesor',
+                'email' => trim((string) $teacher->email),
+                'phone' => $teacher->phone,
+                'password' => Hash::make(Str::random(32)),
+                'role' => User::ROLE_TEACHER,
+                'status' => 'active',
+            ]);
+
+            if (! $teacher->user_id) {
+                $teacher->forceFill(['user_id' => $user->id])->save();
+            }
+
+            return $user;
+        }
+
+        $representative = Representative::query()
+            ->whereNotNull('email')
+            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
+            ->first();
+        if ($representative) {
+            $user = User::create([
+                'campus_id' => $representative->campus_id,
+                'name' => $representative->full_name ?: 'Representante',
+                'email' => trim((string) $representative->email),
+                'phone' => $representative->mobile_phone ?: $representative->phone,
+                'password' => Hash::make(Str::random(32)),
+                'role' => User::ROLE_REPRESENTATIVE,
+                'status' => 'active',
+            ]);
+
+            if (! $representative->user_id) {
+                $representative->forceFill(['user_id' => $user->id])->save();
+            }
+
+            return $user;
+        }
+
+        return null;
     }
 
     public function login(Request $request): RedirectResponse
