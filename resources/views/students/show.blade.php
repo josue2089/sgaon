@@ -320,6 +320,7 @@
                 </tbody>
             </table>
         </div>
+        
     @else
         <div class="empty-state">No hay histórico de cursos para este alumno.</div>
     @endif
