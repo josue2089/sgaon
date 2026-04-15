@@ -75,15 +75,6 @@
                     @endforeach
                 </select>
             </div>
-            <div>
-                <label>Horario base</label>
-                <select name="schedule_template_id">
-                    <option value="">Sin horario base</option>
-                    @foreach($scheduleTemplates as $schedule)
-                        <option value="{{ $schedule->id }}">{{ $schedule->display_label }}</option>
-                    @endforeach
-                </select>
-            </div>
             <div class="grid-3">
                 <div><label>Fecha</label><input type="date" name="session_date" required></div>
                 <div><label>Inicio</label><input type="time" name="starts_at" required></div>
