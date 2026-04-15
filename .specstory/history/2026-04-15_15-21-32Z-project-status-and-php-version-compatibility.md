@@ -4379,8 +4379,12 @@ Necesoit que me ayudes a condensar el menu principal del header, ya que actualme
 
 _**Agent (default)**_
 
+Voy a revisar el `header` y sus estilos para compactar el menú (sin romper accesos), eliminando el scroll horizontal con una versión más condensada y adaptable.
+
+_**Agent (default)**_
+
 <tool-use data-tool-type="read" data-tool-name="read_file_v2">
-<details><summary>Tool use: **read_file_v2** • Read file: </summary>
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/layouts/app.blade.php</summary>
 
 </details>
 </tool-use>
@@ -4393,7 +4397,7 @@ _**Agent (default)**_
 _**Agent (default)**_
 
 <tool-use data-tool-type="read" data-tool-name="read_file_v2">
-<details><summary>Tool use: **read_file_v2** • Read file: </summary>
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
 
 </details>
 </tool-use>
@@ -4409,7 +4413,36 @@ _**Agent (default)**_
 <details>
 <summary>Tool use: **ripgrep_raw_search**</summary>
 
-Status: **loading**
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "header|nav|menu|sidebar|topbar|navbar|primary-nav"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "header|nav|menu|sidebar|topbar|navbar|primary-nav",
+  "topFiles": [
+    {
+      "matchCount": 50,
+      "uri": "resources/css/app.css"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 50
+}
+```
+Status: **completed**
 
 
 </details>
@@ -4422,11 +4455,13 @@ Status: **loading**
 
 _**Agent (default)**_
 
+Ya vi la causa: el menú principal está demasiado “ancho fijo”. Haré dos ajustes combinados: mover opciones secundarias al dropdown `Más` y compactar estilos del nav para que no genere scroll horizontal.
+
+_**Agent (default)**_
+
 <tool-use data-tool-type="write" data-tool-name="edit_file_v2">
 
 <details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/layouts/app.blade.php</summary>
-
-Status: **loading**
 
 </details>
 
@@ -4443,7 +4478,470 @@ _**Agent (default)**_
 
 <details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
 
-Status: **loading**
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan view:cache</summary>
+
+```bash
+php artisan view:cache
+```
+
+```
+
+
+   INFO  Blade templates cached successfully.  
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints">
+<details>
+<summary>Tool use: **read_lints**</summary>
+
+
+Parameters:
+
+```json
+{
+  "paths": [
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/layouts/app.blade.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css"
+  ]
+}
+```
+Result:
+
+```json
+{
+  "linterErrorsByFile": [
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/layouts/app.blade.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css"
+    }
+  ]
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints"><details>
+<summary>Tool use: **read_lints**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Listo, ya lo condensé para eliminar el desborde horizontal del header.
+
+### Cambios que apliqué
+
+- En `resources/views/layouts/app.blade.php`:
+  - Saqué del menú principal: `Profesores`, `Cursos`, `Financiero`.
+  - Esos tres ahora van dentro del dropdown `Más`.
+  - Actualicé el estado activo de `Más` para que también se marque cuando estés en esas secciones.
+
+- En `resources/css/app.css`:
+  - Compacté paddings y tamaño de fuente de `.fi-nav-item`.
+  - Permití que el nav haga `wrap` en desktop para que no empuje layout.
+  - En móviles (`<=980px`) se mantiene scroll horizontal controlado del nav (pero no del layout completo).
+  - Añadí `min-width: 0` y ajuste de `flex` para evitar que el header fuerce ancho extra.
+  - Dejé las acciones de la derecha (`notificaciones/perfil`) con `flex-shrink: 0` para que no colapsen mal.
+
+### Resultado esperado
+- Menú principal más corto y limpio.
+- Sin scroll horizontal general por el header.
+- Opciones secundarias accesibles en `Más` sin perder funcionalidad.
+
+Si quieres, en un segundo ajuste te lo dejo aún más compacto con etiquetas cortas (`Asist.`, `Report.`) o modo “solo íconos” en resoluciones intermedias.
+
+---
+
+_**User**_
+
+Ahora, debemos en la pagina de login crear un flujo de recuperacion de contraseña, para que cualqueir ususario pueda hacer recuperacion de sus contraseña.
+
+---
+
+_**Agent (default)**_
+
+Entendido: voy a implementar el flujo completo de recuperación de contraseña (solicitud por email + enlace + formulario de nueva clave) integrado con tu login actual. Primero reviso tu autenticación actual y si ya existe tabla/token de reset.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/AuthController.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/auth/login.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/web.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/migrations",
+  "pattern": "password_reset|password_resets|password_reset_tokens|Schema::create\\('password"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/migrations",
+  "pattern": "password_reset|password_resets|password_reset_tokens|Schema::create\\('password",
+  "topFiles": [
+    {
+      "matchCount": 2,
+      "uri": "database/migrations/0001_01_01_000000_create_users_table.php"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 2
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/User.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/config/auth.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Ahora voy a aplicar el flujo completo en código: nuevas rutas/métodos en `AuthController`, link desde login, y dos vistas nuevas (`olvide contraseña` + `restablecer`). Luego valido compilación de vistas.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/AuthController.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/web.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/auth/login.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/auth/forgot-password.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/auth/reset-password.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan view:cache && php artisan route:list --name=password</summary>
+
+```bash
+php artisan view:cache && php artisan route:list --name=password
+```
+
+```
+
+
+   INFO  Blade templates cached successfully.  
+
+
+  GET|HEAD   forgot-password password.request › AuthController@showForgotPass…
+  POST       forgot-password ... password.email › AuthController@sendResetLink
+  POST       reset-password ... password.update › AuthController@resetPassword
+  GET|HEAD   reset-password/{token} password.reset › AuthController@showReset…
+
+                                                            Showing [4] routes
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints">
+<details>
+<summary>Tool use: **read_lints**</summary>
+
+
+Parameters:
+
+```json
+{
+  "paths": [
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/AuthController.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/auth/login.blade.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/auth/forgot-password.blade.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/auth/reset-password.blade.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/web.php"
+  ]
+}
+```
+Result:
+
+```json
+{
+  "linterErrorsByFile": [
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/AuthController.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/auth/login.blade.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/auth/forgot-password.blade.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/auth/reset-password.blade.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/web.php"
+    }
+  ]
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints"><details>
+<summary>Tool use: **read_lints**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Perfecto, ya te dejé implementado el flujo completo de recuperación de contraseña para cualquier usuario.
+
+## Qué quedó implementado
+
+- **Rutas nuevas** en `routes/web.php`:
+  - `GET /forgot-password` → `password.request`
+  - `POST /forgot-password` → `password.email`
+  - `GET /reset-password/{token}` → `password.reset`
+  - `POST /reset-password` → `password.update`
+
+- **Lógica nueva** en `AuthController`:
+  - mostrar formulario “olvidé contraseña”
+  - enviar enlace de recuperación por correo
+  - mostrar formulario de nueva contraseña con token
+  - actualizar contraseña y regenerar `remember_token`
+
+- **Vistas nuevas**:
+  - `resources/views/auth/forgot-password.blade.php`
+  - `resources/views/auth/reset-password.blade.php`
+
+- **Login actualizado**:
+  - link `¿Olvidaste tu contraseña?`
+  - mensajes `status/success` para feedback del flujo
+
+## Validación realizada
+
+- Compilación de Blade OK: `php artisan view:cache`
+- Rutas de password presentes: `php artisan route:list --name=password`
+- Sin errores de lint en archivos modificados.
+
+## Qué necesitas en producción
+
+Para que funcione en VPS:
+
+1. Tener variables de mail correctas en `.env` (ya estaban en proceso por Mailgun).
+2. Ejecutar:
+   - `php artisan optimize:clear`
+   - `php artisan config:cache`
+   - `php artisan view:cache`
+
+Si quieres, te preparo también una personalización del email de recuperación (asunto y texto en español de marca ON English).
+
+---
+
+_**User**_
+
+Si, personaliza el email de recuperacion.
+
+---
+
+_**Agent (default)**_
+
+Perfecto, voy a personalizar el correo de recuperación con branding ON English (asunto, contenido y botón en español) creando una notificación propia y conectándola al modelo `User`.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Notifications/ResetPasswordNotification.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/User.php</summary>
 
 </details>
 
