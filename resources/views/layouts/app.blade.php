@@ -21,13 +21,13 @@
     $nav = [
         ['name' => 'Dashboard', 'route' => 'dashboard', 'enabled' => $hasRoute('dashboard')],
         ['name' => 'Alumnos', 'route' => 'students.index', 'enabled' => $user?->role === 'admin' && $hasRoute('students.index')],
-        ['name' => 'Profesores', 'route' => 'teachers.index', 'enabled' => $user?->role === 'admin' && $hasRoute('teachers.index')],
-        ['name' => 'Cursos', 'route' => 'courses.index', 'enabled' => $user?->role === 'admin' && $hasRoute('courses.index')],
         ['name' => 'Asistencia', 'route' => 'attendance.index', 'enabled' => in_array($user?->role, ['admin', 'teacher'], true) && $hasRoute('attendance.index')],
-        ['name' => 'Financiero', 'route' => 'finance.index', 'enabled' => $user?->role === 'admin' && $hasRoute('finance.index')],
         ['name' => 'Reportes', 'route' => 'reports.attendance', 'enabled' => $user?->role === 'admin' && $hasRoute('reports.attendance')],
     ];
     $extraNav = [
+        ['name' => 'Profesores', 'route' => 'teachers.index', 'enabled' => $user?->role === 'admin' && $hasRoute('teachers.index')],
+        ['name' => 'Cursos', 'route' => 'courses.index', 'enabled' => $user?->role === 'admin' && $hasRoute('courses.index')],
+        ['name' => 'Financiero', 'route' => 'finance.index', 'enabled' => $user?->role === 'admin' && $hasRoute('finance.index')],
         ['name' => 'Inscripciones', 'route' => 'enrollments.index', 'enabled' => $user?->role === 'admin' && $hasRoute('enrollments.index')],
         ['name' => 'Recuperativas', 'route' => 'makeups.index', 'enabled' => $user?->role === 'admin' && $hasRoute('makeups.index')],
     ];
@@ -38,7 +38,7 @@
         ['name' => 'Feriados', 'route' => 'holidays.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('holidays.index')],
         ['name' => 'Programas', 'route' => 'programs.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('programs.index')],
     ];
-    $extraPrefixes = ['enrollments', 'makeups'];
+    $extraPrefixes = ['teachers', 'courses', 'finance', 'enrollments', 'makeups'];
     $extraActive = in_array(explode('.', (string) $currentRoute)[0], $extraPrefixes, true);
     $configPrefixes = ['campuses', 'periods', 'schedules', 'holidays', 'programs', 'program-levels', 'program-level-lessons'];
     $configActive = in_array(explode('.', (string) $currentRoute)[0], $configPrefixes, true);
