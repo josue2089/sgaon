@@ -29,6 +29,31 @@ class CourseController extends Controller
         return request()->user()?->campus_id;
     }
 
+    private function resolveAcademicLevelIdFromProgram(?Program $program, int $campusId): int
+    {
+        $programName = trim((string) ($program?->name ?? ''));
+
+        $level = AcademicLevel::query()
+            ->where('campus_id', $campusId)
+            ->where(function (Builder $builder) use ($programName) {
+                $builder->where('name', $programName)
+                    ->orWhere('code', $programName);
+            })
+            ->first();
+
+        if (! $level) {
+            $level = AcademicLevel::query()->create([
+                'campus_id' => $campusId,
+                'name' => $programName !== '' ? $programName : 'Programa',
+                'code' => strtoupper(str_replace([' ', '-'], ['', ''], $programName !== '' ? $programName : 'PROGRAM')),
+                'sort_order' => 999,
+                'status' => 'active',
+            ]);
+        }
+
+        return (int) $level->id;
+    }
+
     public function index(Request $request): View
     {
         $query = Course::query()
@@ -309,7 +334,6 @@ class CourseController extends Controller
     private function formData(Course $course): array
     {
         $campuses = Campus::orderBy('name');
-        $levels = AcademicLevel::orderBy('name');
         $teachers = Teacher::orderBy('first_name')->orderBy('last_name');
         $periods = Period::query()->where('status', 'active')->orderBy('code');
         $schedules = ScheduleTemplate::query()->where('status', 'active')->latest();
@@ -319,7 +343,6 @@ class CourseController extends Controller
 
         if ($this->campusId()) {
             $campuses->where('id', $this->campusId());
-            $levels->where('campus_id', $this->campusId());
             $teachers->where('campus_id', $this->campusId());
             $periods->where('campus_id', $this->campusId());
             $schedules->where('campus_id', $this->campusId());
@@ -329,10 +352,8 @@ class CourseController extends Controller
         return [
             'course' => $course,
             'campuses' => $campuses->get(),
-            'levels' => $levels->get(),
             'programs' => $programs->get(),
             'programLevels' => $programLevels->get(),
-            'courseLevels' => CourseLevel::query()->where('status', 'active')->orderBy('scale_position')->get(),
             'teachers' => $teachers->get(),
             'periods' => $periods->get(),
             'schedules' => $schedules->get(),
@@ -345,10 +366,8 @@ class CourseController extends Controller
     {
         $data = $request->validate([
             'campus_id' => ['required', 'exists:campuses,id'],
-            'academic_level_id' => ['required', 'exists:academic_levels,id'],
             'program_id' => ['required', 'exists:programs,id'],
             'program_level_id' => ['required', 'exists:program_levels,id'],
-            'course_level_id' => ['nullable', 'exists:course_levels,id'],
             'teacher_id' => ['required', 'exists:teachers,id'],
             'period_id' => ['required', 'exists:periods,id'],
             'schedule_template_id' => ['required', 'exists:schedule_templates,id'],
@@ -366,6 +385,10 @@ class CourseController extends Controller
                 'program_level_id' => 'El nivel seleccionado no pertenece al programa indicado.',
             ]);
         }
+
+        $program = Program::query()->find($data['program_id']);
+        $data['academic_level_id'] = $this->resolveAcademicLevelIdFromProgram($program, (int) $data['campus_id']);
+        $data['course_level_id'] = null;
 
         $teacher = Teacher::query()->find($data['teacher_id']);
         $schedule = ScheduleTemplate::query()->find($data['schedule_template_id']);

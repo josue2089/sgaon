@@ -36,13 +36,11 @@
         ['name' => 'Períodos', 'route' => 'periods.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('periods.index')],
         ['name' => 'Horarios', 'route' => 'schedules.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('schedules.index')],
         ['name' => 'Feriados', 'route' => 'holidays.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('holidays.index')],
-        ['name' => 'Niveles', 'route' => 'academic-levels.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('academic-levels.index')],
         ['name' => 'Programas', 'route' => 'programs.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('programs.index')],
-        ['name' => 'Escalas', 'route' => 'course-levels.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('course-levels.index')],
     ];
     $extraPrefixes = ['enrollments', 'makeups'];
     $extraActive = in_array(explode('.', (string) $currentRoute)[0], $extraPrefixes, true);
-    $configPrefixes = ['campuses', 'periods', 'schedules', 'holidays', 'academic-levels', 'programs', 'program-levels', 'program-level-lessons', 'course-levels'];
+    $configPrefixes = ['campuses', 'periods', 'schedules', 'holidays', 'programs', 'program-levels', 'program-level-lessons'];
     $configActive = in_array(explode('.', (string) $currentRoute)[0], $configPrefixes, true);
 @endphp
 <div class="fi-shell">

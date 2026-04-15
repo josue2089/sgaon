@@ -116,6 +116,8 @@ document.querySelectorAll('[data-program-select]').forEach((programSelect) => {
         const programId = programSelect.value;
         let selectedStillVisible = false;
 
+        levelSelect.disabled = programId === '';
+
         allOptions.forEach((option) => {
             if (!option.value) {
                 option.hidden = false;
@@ -124,6 +126,8 @@ document.querySelectorAll('[data-program-select]').forEach((programSelect) => {
 
             const visible = option.dataset.programId === programId;
             option.hidden = !visible;
+            option.disabled = !visible;
+
             if (visible && option.selected) {
                 selectedStillVisible = true;
             }

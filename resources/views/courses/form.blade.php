@@ -8,14 +8,6 @@
         </select>
     </div>
     <div>
-        <label>Nivel</label>
-        <select name="academic_level_id" required>
-            @foreach($levels as $level)
-                <option value="{{ $level->id }}" @selected(old('academic_level_id',$course->academic_level_id ?? '') == $level->id)>{{ $level->name }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div>
         <label>Programa</label>
         <select name="program_id" data-program-select required>
             <option value="">Seleccione</option>
@@ -26,7 +18,7 @@
     </div>
     <div>
         <label>Nivel del programa</label>
-        <select name="program_level_id" data-program-level-select required>
+        <select name="program_level_id" data-program-level-select required disabled>
             <option value="">Seleccione</option>
             @foreach($programLevels as $programLevel)
                 <option
@@ -39,7 +31,7 @@
                 </option>
             @endforeach
         </select>
-        <div class="form-hint">La progresión del alumno y los recordatorios se basan en este nivel.</div>
+        <div class="form-hint">Primero selecciona el programa. Solo verás los niveles que pertenecen a ese programa.</div>
     </div>
     <div>
         <label>Nombre estructurado</label>
