@@ -36,6 +36,7 @@
 
 <div class="card">
     <div class="teacher-section-nav">
+        <a href="#calendario">Calendario</a>
         <a href="#agenda">Agenda</a>
         <a href="#cursos">Cursos</a>
         <a href="#estudiantes">Estudiantes</a>
@@ -98,6 +99,61 @@
     </div>
 </div>
 
+<div class="card table-card" id="calendario">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">Calendario semanal</h2>
+            <div class="entity-sub">Ocupación real del profesor para la semana del {{ $weekStart->format('d/m/Y') }} al {{ $weekEnd->format('d/m/Y') }}</div>
+        </div>
+        <div class="form-actions">
+            <a class="btn secondary" href="{{ route('teachers.show', array_merge(['teacher' => $teacher], request()->except('week_start') + ['week_start' => $weekStart->copy()->subWeek()->toDateString()])) }}">Semana anterior</a>
+            <a class="btn secondary" href="{{ route('teachers.show', array_merge(['teacher' => $teacher], request()->except('week_start') + ['week_start' => now()->startOfWeek(\Carbon\Carbon::MONDAY)->toDateString()])) }}">Semana actual</a>
+            <a class="btn secondary" href="{{ route('teachers.show', array_merge(['teacher' => $teacher], request()->except('week_start') + ['week_start' => $weekStart->copy()->addWeek()->toDateString()])) }}">Semana siguiente</a>
+        </div>
+    </div>
+    @if($calendarRows->count() > 0)
+        <div class="teacher-calendar-wrap">
+            <table class="teacher-calendar-table">
+                <thead>
+                <tr>
+                    <th>Horario</th>
+                    @foreach($weekDays as $day)
+                        <th>{{ $day['label'] }}</th>
+                    @endforeach
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($calendarRows as $row)
+                    <tr>
+                        <td class="teacher-calendar-slot">
+                            <div class="table-title">{{ $row['schedule']->compact_label }}</div>
+                            <div class="table-sub">{{ $row['schedule']->display_label }}</div>
+                        </td>
+                        @foreach($row['cells'] as $cell)
+                            <td class="teacher-calendar-cell {{ $cell['occupied'] ? 'is-occupied' : ($cell['available'] ? 'is-available' : 'is-off') }}">
+                                @if($cell['occupied'])
+                                    <div class="teacher-calendar-badge">Ocupado</div>
+                                    <div class="teacher-calendar-title">{{ $cell['session']->group?->course?->name ?? 'Curso asignado' }}</div>
+                                    <div class="teacher-calendar-sub">{{ $cell['session']->planned_class_label ?: ($cell['session']->topic ?: 'Sesión planificada') }}</div>
+                                    <a class="teacher-calendar-link" href="{{ route('attendance.index', ['class_session_id' => $cell['session']->id]) }}">Asistencia</a>
+                                @elseif($cell['available'])
+                                    <div class="teacher-calendar-badge teacher-calendar-badge--available">Disponible</div>
+                                    <div class="teacher-calendar-sub">Sin curso programado</div>
+                                @else
+                                    <div class="teacher-calendar-sub">No aplica</div>
+                                @endif
+                            </td>
+                        @endforeach
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="empty-state">No hay horarios activos para construir el calendario de este profesor.</div>
+    @endif
+</div>
+
 <div class="card table-card" id="agenda">
     <div class="section-head">
         <h2 class="section-title">Agenda próxima</h2>
@@ -122,7 +178,7 @@
                         <td>{{ $session->session_date?->format('d/m/Y') ?? 'N/D' }}</td>
                         <td>{{ ($session->starts_at && $session->ends_at) ? substr($session->starts_at, 0, 5).' - '.substr($session->ends_at, 0, 5) : 'N/D' }}</td>
                         <td>{{ $session->group?->course?->name ?? 'N/D' }}</td>
-                        <td>{{ $session->group?->course?->courseLevel?->name ?? 'N/D' }}</td>
+                        <td>{{ $session->group?->course?->programLevel?->name ?? $session->group?->course?->courseLevel?->name ?? 'N/D' }}</td>
                         <td>{{ $session->topic ?: 'Pendiente' }}</td>
                         <td class="table-actions">
                             <a href="{{ route('attendance.index', ['class_session_id' => $session->id]) }}">Asistencia</a>
@@ -170,7 +226,7 @@
                             <div class="table-title">{{ $course->name }}</div>
                             <div class="table-sub">{{ $course->code ?: 'Sin código' }}</div>
                         </td>
-                        <td>{{ $course->courseLevel ? $course->courseLevel->scale_position.'/'.$course->courseLevel->scale_total.' · '.$course->courseLevel->name : ($course->level?->name ?? 'N/D') }}</td>
+                        <td>{{ $course->programLevel ? $course->programLevel->sort_order.'/'.$course->programLevel->program_total.' · '.$course->programLevel->name : ($course->courseLevel ? $course->courseLevel->scale_position.'/'.$course->courseLevel->scale_total.' · '.$course->courseLevel->name : ($course->level?->name ?? 'N/D')) }}</td>
                         <td>{{ $course->period?->code ?? 'N/D' }}</td>
                         <td>{{ $course->scheduleTemplate?->display_label ?? 'N/D' }}</td>
                         <td>{{ $students }}</td>

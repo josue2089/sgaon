@@ -100,3 +100,98 @@ document.querySelectorAll('[data-student-picker]').forEach((form) => {
     updateSummary();
     applyFilter();
 });
+
+document.querySelectorAll('[data-program-select]').forEach((programSelect) => {
+    const form = programSelect.closest('form');
+    const levelSelect = form?.querySelector('[data-program-level-select]');
+    const hoursInput = form?.querySelector('[data-academic-hours-input]');
+
+    if (!levelSelect) {
+        return;
+    }
+
+    const allOptions = Array.from(levelSelect.querySelectorAll('option'));
+
+    const syncLevels = () => {
+        const programId = programSelect.value;
+        let selectedStillVisible = false;
+
+        allOptions.forEach((option) => {
+            if (!option.value) {
+                option.hidden = false;
+                return;
+            }
+
+            const visible = option.dataset.programId === programId;
+            option.hidden = !visible;
+            if (visible && option.selected) {
+                selectedStillVisible = true;
+            }
+        });
+
+        if (!selectedStillVisible) {
+            levelSelect.value = '';
+        }
+    };
+
+    const syncHours = () => {
+        const selected = levelSelect.selectedOptions[0];
+        const hours = selected?.dataset?.academicHours;
+        if (hoursInput && hours) {
+            hoursInput.value = hours;
+        }
+    };
+
+    programSelect.addEventListener('change', () => {
+        syncLevels();
+        syncHours();
+    });
+
+    levelSelect.addEventListener('change', syncHours);
+
+    syncLevels();
+    syncHours();
+});
+
+document.querySelectorAll('form').forEach((form) => {
+    const programLevelSelect = form.querySelector('[data-program-level-select]');
+    const teacherSelect = form.querySelector('[data-course-teacher-select]');
+    const scheduleSelect = form.querySelector('[data-course-schedule-select]');
+    const nameInput = form.querySelector('[data-course-name-input]');
+
+    if (!programLevelSelect || !teacherSelect || !scheduleSelect || !nameInput) {
+        return;
+    }
+
+    const updateCourseName = () => {
+        const levelOption = programLevelSelect.selectedOptions[0];
+        const teacherOption = teacherSelect.selectedOptions[0];
+        const scheduleOption = scheduleSelect.selectedOptions[0];
+
+        const levelName = levelOption?.dataset?.levelName?.trim() || '';
+        const teacherLastName = teacherOption?.dataset?.teacherLastName?.trim() || '';
+        const scheduleCompact = scheduleOption?.dataset?.scheduleCompactLabel?.trim() || '';
+
+        const parts = [];
+
+        if (levelName) {
+            parts.push(levelName);
+        }
+
+        if (scheduleCompact) {
+            parts.push(`Horario: ${scheduleCompact}`);
+        }
+
+        if (teacherLastName) {
+            parts.push(`Teacher.${teacherLastName}`);
+        }
+
+        nameInput.value = parts.join(' - ');
+    };
+
+    programLevelSelect.addEventListener('change', updateCourseName);
+    teacherSelect.addEventListener('change', updateCourseName);
+    scheduleSelect.addEventListener('change', updateCourseName);
+
+    updateCourseName();
+});

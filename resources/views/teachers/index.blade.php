@@ -5,7 +5,10 @@
         <h1 class="page-title">Profesores</h1>
         <p class="page-subtitle">Gestiona tu equipo docente</p>
     </div>
-    <a class="btn" href="{{ route('teachers.create') }}">Nuevo Profesor</a>
+    <div class="form-actions">
+        <a class="btn secondary" href="{{ route('teachers.calendar') }}">Calendario docente</a>
+        <a class="btn" href="{{ route('teachers.create') }}">Nuevo Profesor</a>
+    </div>
 </div>
 
 <div class="metric-grid metric-grid-4">

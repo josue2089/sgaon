@@ -12,6 +12,11 @@ class ClassSession extends Model
     protected $fillable = [
         'campus_id',
         'group_id',
+        'program_level_lesson_id',
+        'planned_class_number',
+        'planned_class_label',
+        'planned_unit',
+        'planned_content',
         'sequence',
         'session_date',
         'starts_at',
@@ -33,8 +38,18 @@ class ClassSession extends Model
         return $this->belongsTo(Group::class);
     }
 
+    public function plannedLesson()
+    {
+        return $this->belongsTo(ProgramLevelLesson::class, 'program_level_lesson_id');
+    }
+
     public function attendanceRecords()
     {
         return $this->hasMany(AttendanceRecord::class);
+    }
+
+    public function makeupRequests()
+    {
+        return $this->hasMany(MakeupRequest::class);
     }
 }

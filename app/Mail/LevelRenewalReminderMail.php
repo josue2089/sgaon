@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use App\Models\Course;
-use App\Models\CourseLevel;
 use App\Models\Student;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -18,8 +17,8 @@ class LevelRenewalReminderMail extends Mailable
     public function __construct(
         public Student $student,
         public Course $course,
-        public CourseLevel $currentLevel,
-        public CourseLevel $nextLevel,
+        public $currentLevel,
+        public $nextLevel,
     ) {
     }
 

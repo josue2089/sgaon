@@ -5,6 +5,8 @@ namespace App\Support;
 use App\Models\ClassSession;
 use App\Models\Course;
 use App\Models\Group;
+use App\Models\Holiday;
+use App\Models\ProgramLevelLesson;
 use App\Models\ScheduleTemplate;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -108,12 +110,26 @@ class CoursePlanner
 
         $group->sessions()->delete();
 
-        $dates = self::buildScheduleDates($course->start_date, $schedule, $requiredSessions);
+        $holidays = Holiday::query()
+            ->active()
+            ->forCampus($course->campus_id)
+            ->get();
+
+        $dates = self::buildScheduleDates($course->start_date, $schedule, $requiredSessions, $holidays);
+        $plannedLessons = $course->programLevel?->lessons()->orderBy('sort_order')->get() ?? collect();
+        $distribution = self::distributeLessons($plannedLessons, $requiredSessions);
         $payload = [];
         foreach ($dates as $index => $date) {
+            $assignedLessons = $distribution[$index] ?? collect();
+            $primaryLesson = $assignedLessons->first();
             $payload[] = [
                 'campus_id' => $group->campus_id,
                 'group_id' => $group->id,
+                'program_level_lesson_id' => $primaryLesson?->id,
+                'planned_class_number' => $primaryLesson?->class_number,
+                'planned_class_label' => self::lessonLabel($assignedLessons),
+                'planned_unit' => self::lessonUnit($assignedLessons),
+                'planned_content' => self::lessonContent($assignedLessons),
                 'sequence' => $index + 1,
                 'session_date' => $date->toDateString(),
                 'starts_at' => $schedule->starts_at,
@@ -139,7 +155,7 @@ class CoursePlanner
         return (int) $start->diffInMinutes($end, false);
     }
 
-    private static function buildScheduleDates(Carbon $startDate, ScheduleTemplate $schedule, int $requiredSessions): Collection
+    private static function buildScheduleDates(Carbon $startDate, ScheduleTemplate $schedule, int $requiredSessions, Collection $holidays): Collection
     {
         $isoWeekdays = collect($schedule->days ?? [])
             ->map(fn (string $day) => match ($day) {
@@ -165,7 +181,11 @@ class CoursePlanner
         $cursor = $startDate->copy()->startOfDay();
 
         while ($dates->count() < $requiredSessions) {
-            if ($isoWeekdays->contains($cursor->dayOfWeekIso) && $cursor->greaterThanOrEqualTo($startDate->copy()->startOfDay())) {
+            if (
+                $isoWeekdays->contains($cursor->dayOfWeekIso)
+                && $cursor->greaterThanOrEqualTo($startDate->copy()->startOfDay())
+                && ! self::isHoliday($cursor, $holidays)
+            ) {
                 $dates->push($cursor->copy());
             }
             $cursor->addDay();
@@ -181,5 +201,85 @@ class CoursePlanner
         }
 
         return strlen($time) === 5 ? $time.':00' : $time;
+    }
+
+    private static function isHoliday(Carbon $date, Collection $holidays): bool
+    {
+        return $holidays->contains(fn (Holiday $holiday) => $holiday->occursOn($date));
+    }
+
+    private static function distributeLessons(Collection $lessons, int $requiredSessions): array
+    {
+        if ($requiredSessions <= 0) {
+            return [];
+        }
+
+        if ($lessons->isEmpty()) {
+            return array_fill(0, $requiredSessions, collect());
+        }
+
+        $count = $lessons->count();
+        $distribution = [];
+
+        if ($requiredSessions >= $count) {
+            for ($slot = 0; $slot < $requiredSessions; $slot++) {
+                $lessonIndex = (int) floor(($slot * $count) / $requiredSessions);
+                $distribution[$slot] = collect([$lessons->get(min($count - 1, $lessonIndex))]);
+            }
+
+            return $distribution;
+        }
+
+        for ($slot = 0; $slot < $requiredSessions; $slot++) {
+            $start = (int) floor(($slot * $count) / $requiredSessions);
+            $end = (int) floor((($slot + 1) * $count) / $requiredSessions) - 1;
+            $end = max($start, $end);
+            $distribution[$slot] = $lessons->slice($start, ($end - $start) + 1)->values();
+        }
+
+        return $distribution;
+    }
+
+    private static function lessonLabel(Collection $lessons): ?string
+    {
+        if ($lessons->isEmpty()) {
+            return null;
+        }
+
+        if ($lessons->count() === 1) {
+            return 'Clase '.$lessons->first()->class_number;
+        }
+
+        return 'Clases '.$lessons->first()->class_number.'-'.$lessons->last()->class_number;
+    }
+
+    private static function lessonUnit(Collection $lessons): ?string
+    {
+        if ($lessons->isEmpty()) {
+            return null;
+        }
+
+        return $lessons
+            ->pluck('unit')
+            ->filter()
+            ->unique()
+            ->implode(' / ') ?: null;
+    }
+
+    private static function lessonContent(Collection $lessons): ?string
+    {
+        if ($lessons->isEmpty()) {
+            return null;
+        }
+
+        return $lessons
+            ->map(function (ProgramLevelLesson $lesson) use ($lessons) {
+                if ($lessons->count() > 1) {
+                    return 'Clase '.$lesson->class_number.': '.$lesson->content;
+                }
+
+                return $lesson->content;
+            })
+            ->implode(' | ');
     }
 }

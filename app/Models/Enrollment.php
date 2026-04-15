@@ -46,4 +46,9 @@ class Enrollment extends Model
     {
         return $this->hasMany(Charge::class);
     }
+
+    public function makeupRequests()
+    {
+        return $this->hasMany(MakeupRequest::class);
+    }
 }

@@ -23,8 +23,9 @@
         <h2 class="section-title">Ficha del curso</h2>
         <div class="detail-list">
             <div><strong>Código:</strong> {{ $course->code ?: 'Sin código' }}</div>
-            <div><strong>Nivel:</strong> {{ $course->level?->name ?? 'N/D' }}</div>
-            <div><strong>Escala:</strong> {{ $course->courseLevel ? $course->courseLevel->scale_position.'/'.$course->courseLevel->scale_total.' · '.$course->courseLevel->name : 'N/D' }}</div>
+            <div><strong>Etapa:</strong> {{ $course->level?->name ?? 'N/D' }}</div>
+            <div><strong>Programa:</strong> {{ $course->program?->name ?? 'N/D' }}</div>
+            <div><strong>Nivel real:</strong> {{ $course->programLevel ? $course->programLevel->sort_order.'/'.$course->programLevel->program_total.' · '.$course->programLevel->name : ($course->courseLevel?->name ?? 'N/D') }}</div>
             <div><strong>Período:</strong> {{ $course->period?->code ?? 'N/D' }}</div>
             <div><strong>Horario:</strong> {{ $course->scheduleTemplate?->display_label ?? 'N/D' }}</div>
             <div><strong>Fecha inicio:</strong> {{ $course->start_date?->format('d/m/Y') ?? 'N/D' }}</div>
@@ -94,7 +95,7 @@
                                     @foreach($availableStudents as $student)
                                         @php
                                             $currentEnrollment = $student->enrollments->firstWhere('status', 'active') ?: $student->enrollments->first();
-                                            $currentLevel = $currentEnrollment?->group?->course?->courseLevel;
+                                            $currentLevel = $currentEnrollment?->group?->course?->programLevel ?: $currentEnrollment?->group?->course?->courseLevel;
                                         @endphp
                                         <tr data-picker-row data-search="{{ strtolower($student->full_name.' '.$student->email) }}">
                                             <td>
@@ -121,7 +122,7 @@
                                                 </div>
                                             </td>
                                             <td>{{ $student->email ?: 'Sin email' }}</td>
-                                            <td>{{ $currentLevel ? $currentLevel->scale_position.'/'.$currentLevel->scale_total.' · '.$currentLevel->name : 'N/D' }}</td>
+                                            <td>{{ $currentLevel ? (($currentLevel->sort_order ?? $currentLevel->scale_position).'/'.($currentLevel->program_total ?? $currentLevel->scale_total).' · '.$currentLevel->name) : 'N/D' }}</td>
                                             <td>@include('partials.ui.status-badge', ['tone' => $student->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($student->status)])</td>
                                         </tr>
                                     @endforeach
@@ -199,7 +200,8 @@
                     <th>#</th>
                     <th>Fecha</th>
                     <th>Horario</th>
-                    <th>Programa</th>
+                    <th>Programa planificado</th>
+                    <th>Programa ejecutado</th>
                     <th>Estado programa</th>
                     <th>Observación</th>
                     <th>Asistencia</th>
@@ -211,7 +213,12 @@
                         <td>{{ $session->sequence ?: $loop->iteration }}</td>
                         <td>{{ $session->session_date?->format('d/m/Y') ?? 'N/D' }}</td>
                         <td>{{ ($session->starts_at && $session->ends_at) ? substr($session->starts_at, 0, 5).' - '.substr($session->ends_at, 0, 5) : 'N/D' }}</td>
-                        <td>{{ $session->topic ?: 'Programa pendiente' }}</td>
+                        <td>
+                            <div class="table-title">{{ $session->planned_class_label ?: 'Clase pendiente' }}</div>
+                            <div class="table-sub">{{ $session->planned_unit ?: 'Sin unidad' }}</div>
+                            <div class="table-sub">{{ $session->planned_content ?: 'Sin contenido planificado' }}</div>
+                        </td>
+                        <td>{{ $session->topic ?: 'Sin ejecución cargada' }}</td>
                         <td>
                             @if($session->program_status === 'on_track')
                                 @include('partials.ui.status-badge', ['tone' => 'ok', 'text' => 'Al día'])

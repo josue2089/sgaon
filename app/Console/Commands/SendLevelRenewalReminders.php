@@ -22,13 +22,13 @@ class SendLevelRenewalReminders extends Command
         $processed = 0;
 
         Enrollment::query()
-            ->with(['student', 'group.course.courseLevel'])
+            ->with(['student', 'group.course.program', 'group.course.programLevel', 'group.course.courseLevel'])
             ->where('status', 'active')
             ->get()
             ->each(function (Enrollment $enrollment) use ($today, &$dueStudentIds, &$processed): void {
                 $course = $enrollment->group?->course;
                 $student = $enrollment->student;
-                $courseLevel = $course?->courseLevel;
+                $courseLevel = $course?->programLevel ?: $course?->courseLevel;
 
                 if (! $student || ! $course || ! $courseLevel || ! $course->end_date) {
                     return;

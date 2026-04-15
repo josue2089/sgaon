@@ -437,3 +437,11 @@ Objetivo: escalar productividad de análisis y operación.
 - `Responsable`: Codex
 - `Fecha objetivo`: 2026-03-19
 - `Notas`: se agregó `teachers.show`, tabla de docentes y ficha con métricas de sesiones, asistencia promedio, cursos y estudiantes relacionados.
+
+### AO-30 Programas académicos y plantillas por clase
+- Alcance: introducir `programs`, `program_levels` y `program_level_lessons`, migrar cursos/sesiones/alumno/recordatorios a la nueva estructura y dejar `course_levels` como legado compatible.
+- Criterio de aceptación: el admin puede gestionar programas, niveles y clases base; los cursos se crean con programa+nivel real; las sesiones se generan con contenido planificado y los recordatorios usan el nivel real del programa.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-04-13
+- `Notas`: se agregó módulo `Programas` en configuración, seeds base de Pre-Primary/Primary/HighSchool, planificador de sesiones con contenido distribuido, detalle de curso/alumno actualizado y comando `programs:backfill-course-program-levels`.

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\AcademicLevel;
 use App\Models\Campus;
+use App\Models\Holiday;
 use App\Models\Permission;
 use App\Models\Representative;
 use App\Models\Role;
@@ -166,12 +167,59 @@ class DatabaseSeeder extends Seeder
         }
 
         foreach ([
-            [['mon', 'wed', 'fri'], '08:00', '10:00'],
-            [['tue', 'thu'], '14:00', '16:00'],
+            [['mon', 'wed'], '14:20', '15:50'],
+            [['mon', 'wed'], '16:00', '17:30'],
+            [['mon', 'wed'], '17:40', '19:10'],
+            [['tue', 'thu'], '14:20', '15:50'],
+            [['tue', 'thu'], '16:00', '17:30'],
+            [['tue', 'thu'], '17:40', '19:10'],
+            [['fri'], '14:30', '17:40'],
+            [['sat'], '08:00', '11:30'],
+            [['sat'], '13:00', '16:30'],
+            [['mon', 'tue', 'wed', 'thu'], '19:20', '20:20'],
         ] as [$days, $startsAt, $endsAt]) {
             ScheduleTemplate::updateOrCreate(
-                ['campus_id' => $campus->id, 'starts_at' => $startsAt, 'ends_at' => $endsAt],
+                ['campus_id' => $campus->id, 'days' => $days, 'starts_at' => $startsAt, 'ends_at' => $endsAt],
                 ['days' => $days, 'status' => 'active'],
+            );
+        }
+
+        foreach ([
+            ['name' => 'Año Nuevo', 'is_recurring' => true, 'month' => 1, 'day' => 1],
+            ['name' => 'Carnaval (Lunes)', 'holiday_date' => '2026-02-16'],
+            ['name' => 'Carnaval (Martes)', 'holiday_date' => '2026-02-17'],
+            ['name' => 'Jueves Santo', 'holiday_date' => '2026-04-02'],
+            ['name' => 'Viernes Santo', 'holiday_date' => '2026-04-03'],
+            ['name' => 'Declaración de la Independencia', 'is_recurring' => true, 'month' => 4, 'day' => 19],
+            ['name' => 'Día del Trabajador', 'is_recurring' => true, 'month' => 5, 'day' => 1],
+            ['name' => 'Día de la Familia', 'is_recurring' => true, 'month' => 5, 'day' => 15],
+            ['name' => 'Batalla de Carabobo', 'is_recurring' => true, 'month' => 6, 'day' => 24],
+            ['name' => 'Firma del Acta de la Independencia', 'is_recurring' => true, 'month' => 7, 'day' => 5],
+            ['name' => 'Natalicio de Simón Bolívar', 'is_recurring' => true, 'month' => 7, 'day' => 24],
+            ['name' => 'Día de la Resistencia Indígena', 'is_recurring' => true, 'month' => 10, 'day' => 12],
+            ['name' => 'Nochebuena', 'is_recurring' => true, 'month' => 12, 'day' => 24],
+            ['name' => 'Navidad', 'is_recurring' => true, 'month' => 12, 'day' => 25],
+            ['name' => 'Fin de Año', 'is_recurring' => true, 'month' => 12, 'day' => 31],
+        ] as $holidayData) {
+            $match = [
+                'campus_id' => null,
+                'name' => $holidayData['name'],
+                'is_recurring' => $holidayData['is_recurring'] ?? false,
+            ];
+
+            if ($match['is_recurring']) {
+                $match['month'] = $holidayData['month'];
+                $match['day'] = $holidayData['day'];
+            } else {
+                $match['holiday_date'] = $holidayData['holiday_date'];
+            }
+
+            Holiday::updateOrCreate(
+                $match,
+                [
+                    'status' => 'active',
+                    'description' => 'Feriado base de Venezuela',
+                ],
             );
         }
     }

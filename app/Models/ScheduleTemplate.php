@@ -19,6 +19,16 @@ class ScheduleTemplate extends Model
         'sun' => 'Domingo',
     ];
 
+    public const DAY_SHORT_LABELS = [
+        'mon' => 'L',
+        'tue' => 'M',
+        'wed' => 'M',
+        'thu' => 'J',
+        'fri' => 'V',
+        'sat' => 'S',
+        'sun' => 'D',
+    ];
+
     protected $fillable = [
         'campus_id',
         'days',
@@ -37,6 +47,40 @@ class ScheduleTemplate extends Model
     public function campus()
     {
         return $this->belongsTo(Campus::class);
+    }
+
+
+    public function getDaysShortLabelAttribute(): string
+    {
+        return collect($this->days ?? [])
+            ->map(fn (string $day) => self::DAY_SHORT_LABELS[$day] ?? strtoupper(substr($day, 0, 1)))
+            ->implode('-');
+    }
+
+    public static function formatShortHour(?string $time): string
+    {
+        if (! $time) {
+            return '';
+        }
+
+        [$hours, $minutes] = array_pad(explode(':', $time), 2, '00');
+        $hours = (int) $hours;
+        $displayHours = $hours % 12 ?: 12;
+
+        return $displayHours.'.'.str_pad((string) $minutes, 2, '0', STR_PAD_LEFT);
+    }
+
+    public function getTimeRangeShortLabelAttribute(): string
+    {
+        return trim(self::formatShortHour($this->starts_at).' '.self::formatShortHour($this->ends_at));
+    }
+
+    public function getCompactLabelAttribute(): string
+    {
+        $days = $this->days_short_label;
+        $time = $this->time_range_short_label;
+
+        return trim($days.($days && $time ? ' ' : '').$time);
     }
 
     public function getDaysLabelAttribute(): string

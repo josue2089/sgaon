@@ -38,17 +38,17 @@
                     <td style="width:50%;padding:0 10px 0 0;vertical-align:top;">
                         <div style="background:#f7faff;border:1px solid #d8e1f0;border-radius:18px;padding:18px;min-height:120px;">
                             <div style="font-size:13px;color:#61749b;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Nivel actual</div>
-                            <div style="font-size:30px;line-height:1;font-weight:900;color:#172554;margin:10px 0 8px;">{{ $currentLevel->scale_position }}/{{ $currentLevel->scale_total }}</div>
+                            <div style="font-size:30px;line-height:1;font-weight:900;color:#172554;margin:10px 0 8px;">{{ ($currentLevel->sort_order ?? $currentLevel->scale_position) }}/{{ ($currentLevel->program_total ?? $currentLevel->scale_total) }}</div>
                             <div style="font-size:16px;font-weight:800;">{{ $currentLevel->name }}</div>
-                            <div style="font-size:13px;color:#61749b;margin-top:6px;">{{ $currentLevel->cefr_reference ?: 'Sin referencia CEFR' }}</div>
+                            <div style="font-size:13px;color:#61749b;margin-top:6px;">{{ $course->program?->name ?? ($currentLevel->cefr_reference ?: 'Sin referencia CEFR') }}</div>
                         </div>
                     </td>
                     <td style="width:50%;padding:0 0 0 10px;vertical-align:top;">
                         <div style="background:#f7faff;border:1px solid #d8e1f0;border-radius:18px;padding:18px;min-height:120px;">
                             <div style="font-size:13px;color:#61749b;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Siguiente nivel</div>
-                            <div style="font-size:30px;line-height:1;font-weight:900;color:#172554;margin:10px 0 8px;">{{ $nextLevel->scale_position }}/{{ $nextLevel->scale_total }}</div>
+                            <div style="font-size:30px;line-height:1;font-weight:900;color:#172554;margin:10px 0 8px;">{{ ($nextLevel->sort_order ?? $nextLevel->scale_position) }}/{{ ($nextLevel->program_total ?? $nextLevel->scale_total) }}</div>
                             <div style="font-size:16px;font-weight:800;">{{ $nextLevel->name }}</div>
-                            <div style="font-size:13px;color:#61749b;margin-top:6px;">{{ $nextLevel->cefr_reference ?: 'Sin referencia CEFR' }}</div>
+                            <div style="font-size:13px;color:#61749b;margin-top:6px;">{{ $course->program?->name ?? ($nextLevel->cefr_reference ?: 'Sin referencia CEFR') }}</div>
                         </div>
                     </td>
                 </tr>

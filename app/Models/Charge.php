@@ -13,6 +13,7 @@ class Charge extends Model
         'campus_id',
         'student_id',
         'enrollment_id',
+        'makeup_request_id',
         'course_id',
         'group_id',
         'period_id',
@@ -44,6 +45,11 @@ class Charge extends Model
     public function enrollment()
     {
         return $this->belongsTo(Enrollment::class);
+    }
+
+    public function makeupRequest()
+    {
+        return $this->belongsTo(MakeupRequest::class);
     }
 
     public function course()

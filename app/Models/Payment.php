@@ -13,6 +13,7 @@ class Payment extends Model
         'campus_id',
         'student_id',
         'charge_id',
+        'makeup_request_id',
         'amount',
         'paid_at',
         'paid_at_datetime',
@@ -42,6 +43,11 @@ class Payment extends Model
     public function charge()
     {
         return $this->belongsTo(Charge::class);
+    }
+
+    public function makeupRequest()
+    {
+        return $this->belongsTo(MakeupRequest::class);
     }
 
     public function receivedBy()

@@ -17,8 +17,19 @@ class Representative extends Model
         'document_id',
         'email',
         'phone',
+        'address',
+        'home_phone',
+        'mobile_phone',
         'relation',
+        'work_place',
+        'work_address',
+        'office_phone',
     ];
+
+    public function getFullNameAttribute(): string
+    {
+        return trim(($this->first_name ?? '').' '.($this->last_name ?? ''));
+    }
 
     public function students()
     {

@@ -7,8 +7,10 @@ use App\Models\Charge;
 use App\Models\ClassSession;
 use App\Models\Course;
 use App\Models\AuditLog;
+use App\Models\ScheduleTemplate;
 use App\Models\Teacher;
 use App\Support\AuditTrail;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
@@ -103,11 +105,99 @@ class TeacherController extends Controller
         ]);
     }
 
+    public function calendar(Request $request): View
+    {
+        $weekStart = Carbon::parse((string) $request->query('week_start', now()->toDateString()))->startOfWeek(Carbon::MONDAY);
+        $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
+
+        $teachers = Teacher::query()
+            ->with('campus')
+            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->where('status', 'active')
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get();
+
+        $scheduleTemplates = ScheduleTemplate::query()
+            ->where('status', 'active')
+            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->orderBy('starts_at')
+            ->orderBy('ends_at')
+            ->get();
+
+        $teacherIds = $teachers->pluck('id');
+        $sessions = ClassSession::query()
+            ->with(['group.course.programLevel', 'group.teacher'])
+            ->whereHas('group', function (Builder $builder) use ($teacherIds): void {
+                $builder->whereIn('teacher_id', $teacherIds);
+                if ($this->campusId()) {
+                    $builder->where('campus_id', $this->campusId());
+                }
+            })
+            ->whereBetween('session_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->orderBy('session_date')
+            ->orderBy('starts_at')
+            ->get();
+
+        $weekDays = collect(range(0, 5))->map(function (int $offset) use ($weekStart) {
+            $date = $weekStart->copy()->addDays($offset);
+
+            return [
+                'key' => strtolower($date->format('D')),
+                'label' => $date->translatedFormat('l d/m'),
+                'date' => $date,
+            ];
+        });
+
+        $calendarDays = $weekDays->map(function (array $day) use ($scheduleTemplates, $teachers, $sessions) {
+            $rows = $scheduleTemplates->map(function (ScheduleTemplate $schedule) use ($teachers, $sessions, $day) {
+                $cells = $teachers->map(function (Teacher $teacher) use ($schedule, $sessions, $day) {
+                    $applicable = collect($schedule->days ?? [])->contains($day['key']);
+                    $matches = $sessions->filter(function (ClassSession $session) use ($teacher, $schedule, $day) {
+                        return (int) ($session->group?->teacher_id ?? 0) === (int) $teacher->id
+                            && $session->session_date?->isSameDay($day['date'])
+                            && $session->starts_at === $schedule->starts_at
+                            && $session->ends_at === $schedule->ends_at;
+                    })->values();
+
+                    return [
+                        'teacher' => $teacher,
+                        'applicable' => $applicable,
+                        'sessions' => $matches,
+                        'occupied' => $applicable && $matches->isNotEmpty(),
+                        'conflict' => $matches->count() > 1,
+                        'available' => $applicable && $matches->isEmpty(),
+                    ];
+                });
+
+                return [
+                    'schedule' => $schedule,
+                    'cells' => $cells,
+                ];
+            });
+
+            return [
+                'label' => $day['label'],
+                'date' => $day['date'],
+                'rows' => $rows,
+            ];
+        });
+
+        return view('teachers.calendar', [
+            'teachers' => $teachers,
+            'calendarDays' => $calendarDays,
+            'weekStart' => $weekStart,
+            'weekEnd' => $weekEnd,
+        ]);
+    }
+
     public function show(Request $request, Teacher $teacher): View
     {
         $this->authorizeTeacher($teacher);
 
         $teacher->load(['campus']);
+        $weekStart = Carbon::parse((string) $request->query('week_start', now()->toDateString()))->startOfWeek(Carbon::MONDAY);
+        $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
 
         $courseStatus = (string) $request->query('course_status', '');
         $studentStatus = (string) $request->query('student_status', '');
@@ -116,6 +206,8 @@ class TeacherController extends Controller
         $courses = Course::query()
             ->with([
                 'level',
+                'program',
+                'programLevel',
                 'courseLevel',
                 'period',
                 'scheduleTemplate',
@@ -171,7 +263,7 @@ class TeacherController extends Controller
             ->sum('amount');
 
         $upcomingSessions = ClassSession::query()
-            ->with(['group.course.courseLevel'])
+            ->with(['group.course.programLevel', 'group.course.courseLevel'])
             ->whereHas('group', function (Builder $builder) use ($teacher): void {
                 $builder->where('teacher_id', $teacher->id);
                 if ($this->campusId()) {
@@ -183,6 +275,62 @@ class TeacherController extends Controller
             ->orderBy('starts_at')
             ->limit(8)
             ->get();
+
+        $scheduleTemplates = ScheduleTemplate::query()
+            ->where('status', 'active')
+            ->when($teacher->campus_id, fn (Builder $builder) => $builder->where('campus_id', $teacher->campus_id))
+            ->orderBy('starts_at')
+            ->orderBy('ends_at')
+            ->get();
+
+        $calendarSessions = ClassSession::query()
+            ->with(['group.course.programLevel'])
+            ->whereHas('group', function (Builder $builder) use ($teacher): void {
+                $builder->where('teacher_id', $teacher->id);
+                if ($this->campusId()) {
+                    $builder->where('campus_id', $this->campusId());
+                }
+            })
+            ->whereBetween('session_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->orderBy('session_date')
+            ->orderBy('starts_at')
+            ->get();
+
+        $weekDays = collect(range(0, 5))
+            ->map(function (int $offset) use ($weekStart) {
+                $date = $weekStart->copy()->addDays($offset);
+
+                return [
+                    'key' => strtolower($date->format('D')),
+                    'label' => $date->translatedFormat('D d/m'),
+                    'date' => $date,
+                ];
+            });
+
+        $calendarRows = $scheduleTemplates->map(function (ScheduleTemplate $schedule) use ($weekDays, $calendarSessions) {
+            $cells = $weekDays->map(function (array $day) use ($schedule, $calendarSessions) {
+                $isApplicable = collect($schedule->days ?? [])->contains($day['key']);
+                $session = $calendarSessions->first(function (ClassSession $session) use ($schedule, $day) {
+                    return $session->session_date?->isSameDay($day['date'])
+                        && $session->starts_at === $schedule->starts_at
+                        && $session->ends_at === $schedule->ends_at;
+                });
+
+                return [
+                    'date' => $day['date'],
+                    'label' => $day['label'],
+                    'applicable' => $isApplicable,
+                    'session' => $session,
+                    'occupied' => $isApplicable && $session !== null,
+                    'available' => $isApplicable && $session === null,
+                ];
+            });
+
+            return [
+                'schedule' => $schedule,
+                'cells' => $cells,
+            ];
+        });
 
         $auditLogs = AuditLog::query()
             ->with('user')
@@ -199,6 +347,10 @@ class TeacherController extends Controller
             'allCoursesCount' => $courses->count(),
             'studentRows' => $studentRows,
             'upcomingSessions' => $upcomingSessions,
+            'calendarRows' => $calendarRows,
+            'weekDays' => $weekDays,
+            'weekStart' => $weekStart,
+            'weekEnd' => $weekEnd,
             'summary' => [
                 'courses_total' => $courses->count(),
                 'active_courses' => $courses->where('status', 'active')->count(),

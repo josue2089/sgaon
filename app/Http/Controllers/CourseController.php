@@ -8,6 +8,8 @@ use App\Models\Course;
 use App\Models\CourseLevel;
 use App\Models\Enrollment;
 use App\Models\Period;
+use App\Models\Program;
+use App\Models\ProgramLevel;
 use App\Models\ScheduleTemplate;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -17,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class CourseController extends Controller
@@ -29,7 +32,7 @@ class CourseController extends Controller
     public function index(Request $request): View
     {
         $query = Course::query()
-            ->with(['campus', 'level', 'courseLevel', 'teacher', 'period', 'scheduleTemplate', 'managedGroup'])
+            ->with(['campus', 'level', 'program', 'programLevel', 'courseLevel', 'teacher', 'period', 'scheduleTemplate', 'managedGroup'])
             ->latest();
 
         if ($this->campusId()) {
@@ -119,6 +122,7 @@ class CourseController extends Controller
                 ->where('status', 'active')
                 ->orderBy('scale_position')
                 ->get(),
+            'programs' => Program::query()->where('status', 'active')->orderBy('name')->get(),
             'filters' => [
                 'q' => $q,
                 'status' => $statusFilter,
@@ -165,6 +169,8 @@ class CourseController extends Controller
         $course->load([
             'campus',
             'level',
+            'program',
+            'programLevel.lessons',
             'courseLevel',
             'teacher',
             'period',
@@ -172,6 +178,7 @@ class CourseController extends Controller
             'managedGroup.teacher',
             'managedGroup.enrollments.student',
             'managedGroup.sessions' => fn ($query) => $query
+                ->with('plannedLesson')
                 ->withCount('attendanceRecords')
                 ->orderBy('sequence')
                 ->orderBy('session_date'),
@@ -191,6 +198,7 @@ class CourseController extends Controller
             ->with([
                 'enrollments' => fn ($builder) => $builder
                     ->with(['group.course.courseLevel'])
+                    ->with(['group.course.programLevel'])
                     ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
                     ->orderByDesc('enrolled_at')
                     ->orderByDesc('id'),
@@ -306,6 +314,8 @@ class CourseController extends Controller
         $periods = Period::query()->where('status', 'active')->orderBy('code');
         $schedules = ScheduleTemplate::query()->where('status', 'active')->latest();
         $students = Student::query()->orderBy('first_name')->orderBy('last_name');
+        $programs = Program::query()->where('status', 'active')->orderBy('name');
+        $programLevels = ProgramLevel::query()->where('status', 'active')->with('program')->orderBy('program_id')->orderBy('sort_order');
 
         if ($this->campusId()) {
             $campuses->where('id', $this->campusId());
@@ -320,6 +330,8 @@ class CourseController extends Controller
             'course' => $course,
             'campuses' => $campuses->get(),
             'levels' => $levels->get(),
+            'programs' => $programs->get(),
+            'programLevels' => $programLevels->get(),
             'courseLevels' => CourseLevel::query()->where('status', 'active')->orderBy('scale_position')->get(),
             'teachers' => $teachers->get(),
             'periods' => $periods->get(),
@@ -331,20 +343,42 @@ class CourseController extends Controller
 
     private function validatedData(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'campus_id' => ['required', 'exists:campuses,id'],
             'academic_level_id' => ['required', 'exists:academic_levels,id'],
-            'course_level_id' => ['required', 'exists:course_levels,id'],
+            'program_id' => ['required', 'exists:programs,id'],
+            'program_level_id' => ['required', 'exists:program_levels,id'],
+            'course_level_id' => ['nullable', 'exists:course_levels,id'],
             'teacher_id' => ['required', 'exists:teachers,id'],
             'period_id' => ['required', 'exists:periods,id'],
             'schedule_template_id' => ['required', 'exists:schedule_templates,id'],
-            'name' => ['required', 'string', 'max:150'],
+            'name' => ['nullable', 'string', 'max:150'],
             'code' => ['nullable', 'string', 'max:60'],
             'description' => ['nullable', 'string'],
             'start_date' => ['required', 'date'],
             'academic_hours' => ['required', 'integer', 'min:1', 'max:500'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
+
+        $programLevel = ProgramLevel::query()->find($data['program_level_id']);
+        if (! $programLevel || (int) $programLevel->program_id !== (int) $data['program_id']) {
+            throw ValidationException::withMessages([
+                'program_level_id' => 'El nivel seleccionado no pertenece al programa indicado.',
+            ]);
+        }
+
+        $teacher = Teacher::query()->find($data['teacher_id']);
+        $schedule = ScheduleTemplate::query()->find($data['schedule_template_id']);
+
+        $nameCourse = new Course([
+            'name' => $data['name'] ?? '',
+        ]);
+        $nameCourse->setRelation('programLevel', $programLevel);
+        $nameCourse->setRelation('teacher', $teacher);
+        $nameCourse->setRelation('scheduleTemplate', $schedule);
+        $data['name'] = $nameCourse->buildStructuredName();
+
+        return $data;
     }
 
     private function addStudentsToCourse(Course $course, Collection $studentIds): void

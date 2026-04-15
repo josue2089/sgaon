@@ -28,17 +28,20 @@
     ];
     $extraNav = [
         ['name' => 'Inscripciones', 'route' => 'enrollments.index', 'enabled' => $user?->role === 'admin'],
+        ['name' => 'Recuperativas', 'route' => 'makeups.index', 'enabled' => $user?->role === 'admin'],
     ];
     $configNav = [
         ['name' => 'Campus', 'route' => 'campuses.index', 'enabled' => $user?->isMasterAdmin()],
         ['name' => 'Períodos', 'route' => 'periods.index', 'enabled' => $user?->isMasterAdmin()],
         ['name' => 'Horarios', 'route' => 'schedules.index', 'enabled' => $user?->isMasterAdmin()],
+        ['name' => 'Feriados', 'route' => 'holidays.index', 'enabled' => $user?->isMasterAdmin()],
         ['name' => 'Niveles', 'route' => 'academic-levels.index', 'enabled' => $user?->isMasterAdmin()],
+        ['name' => 'Programas', 'route' => 'programs.index', 'enabled' => $user?->isMasterAdmin()],
         ['name' => 'Escalas', 'route' => 'course-levels.index', 'enabled' => $user?->isMasterAdmin()],
     ];
-    $extraPrefixes = ['enrollments'];
+    $extraPrefixes = ['enrollments', 'makeups'];
     $extraActive = in_array(explode('.', (string) $currentRoute)[0], $extraPrefixes, true);
-    $configPrefixes = ['campuses', 'periods', 'schedules', 'academic-levels', 'course-levels'];
+    $configPrefixes = ['campuses', 'periods', 'schedules', 'holidays', 'academic-levels', 'programs', 'program-levels', 'program-level-lessons', 'course-levels'];
     $configActive = in_array(explode('.', (string) $currentRoute)[0], $configPrefixes, true);
 @endphp
 <div class="fi-shell">
@@ -143,6 +146,10 @@
                                         : route('attendance.index');
                                 } elseif ($alert->type === 'level_renewal' && $user?->role === 'admin' && $alert->student_id) {
                                     $alertUrl = route('students.show', $alert->student_id);
+                                } elseif ($alert->type === 'makeup_recovery') {
+                                    $alertUrl = $user?->role === 'admin'
+                                        ? route('makeups.index', ['student_id' => $alert->student_id])
+                                        : route('portal.student');
                                 } else {
                                     $alertUrl = route('dashboard');
                                 }

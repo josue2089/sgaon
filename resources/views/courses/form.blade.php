@@ -16,18 +16,35 @@
         </select>
     </div>
     <div>
-        <label>Escala del curso</label>
-        <select name="course_level_id" required>
+        <label>Programa</label>
+        <select name="program_id" data-program-select required>
             <option value="">Seleccione</option>
-            @foreach($courseLevels as $courseLevel)
-                <option value="{{ $courseLevel->id }}" @selected(old('course_level_id',$course->course_level_id ?? '') == $courseLevel->id)>{{ $courseLevel->scale_position }}/{{ $courseLevel->scale_total }} · {{ $courseLevel->name }}{{ $courseLevel->cefr_reference ? ' · '.$courseLevel->cefr_reference : '' }}</option>
+            @foreach($programs as $program)
+                <option value="{{ $program->id }}" @selected(old('program_id',$course->program_id ?? '') == $program->id)>{{ $program->name }}</option>
             @endforeach
         </select>
-        <div class="form-hint">Escala general del alumno para seguimiento y renovación.</div>
     </div>
     <div>
-        <label>Nombre</label>
-        <input name="name" value="{{ old('name',$course->name ?? '') }}" required>
+        <label>Nivel del programa</label>
+        <select name="program_level_id" data-program-level-select required>
+            <option value="">Seleccione</option>
+            @foreach($programLevels as $programLevel)
+                <option
+                    value="{{ $programLevel->id }}"
+                    data-program-id="{{ $programLevel->program_id }}"
+                    data-academic-hours="{{ $programLevel->academic_hours }}" data-level-name="{{ $programLevel->name }}"
+                    @selected(old('program_level_id',$course->program_level_id ?? '') == $programLevel->id)
+                >
+                    {{ $programLevel->sort_order }}/{{ $programLevel->program_total }} · {{ $programLevel->name }}
+                </option>
+            @endforeach
+        </select>
+        <div class="form-hint">La progresión del alumno y los recordatorios se basan en este nivel.</div>
+    </div>
+    <div>
+        <label>Nombre estructurado</label>
+        <input name="name" data-course-name-input value="{{ old('name',$course->display_name ?? $course->name ?? '') }}" readonly>
+        <div class="form-hint">Se genera automáticamente con nivel, horario y profesor.</div>
     </div>
     <div>
         <label>Código</label>
@@ -35,10 +52,10 @@
     </div>
     <div>
         <label>Profesor asignado</label>
-        <select name="teacher_id" required>
+        <select name="teacher_id" data-course-teacher-select required>
             <option value="">Seleccione</option>
             @foreach($teachers as $teacher)
-                <option value="{{ $teacher->id }}" @selected((string) old('teacher_id',$course->teacher_id ?? '') === (string) $teacher->id)>{{ $teacher->full_name }}</option>
+                <option value="{{ $teacher->id }}" data-teacher-last-name="{{ $teacher->last_name ?: $teacher->full_name }}" @selected((string) old('teacher_id',$course->teacher_id ?? '') === (string) $teacher->id)>{{ $teacher->full_name }}</option>
             @endforeach
         </select>
     </div>
@@ -53,10 +70,10 @@
     </div>
     <div>
         <label>Horario asignado</label>
-        <select name="schedule_template_id" required>
+        <select name="schedule_template_id" data-course-schedule-select required>
             <option value="">Seleccione</option>
             @foreach($schedules as $schedule)
-                <option value="{{ $schedule->id }}" @selected((string) old('schedule_template_id',$course->schedule_template_id ?? '') === (string) $schedule->id)>{{ $schedule->display_label }}</option>
+                <option value="{{ $schedule->id }}" data-schedule-compact-label="{{ $schedule->compact_label }}" @selected((string) old('schedule_template_id',$course->schedule_template_id ?? '') === (string) $schedule->id)>{{ $schedule->display_label }}</option>
             @endforeach
         </select>
     </div>
@@ -66,7 +83,7 @@
     </div>
     <div>
         <label>Duración del curso</label>
-        <input type="number" name="academic_hours" min="1" max="500" value="{{ old('academic_hours',$course->academic_hours ?? '') }}" placeholder="Ej. 40" required>
+        <input type="number" name="academic_hours" data-academic-hours-input min="1" max="500" value="{{ old('academic_hours',$course->academic_hours ?? '') }}" placeholder="Ej. 40" required>
         <div class="form-hint">Se calcula con hora académica de 45 minutos.</div>
     </div>
     <div>

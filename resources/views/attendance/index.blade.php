@@ -59,9 +59,14 @@
                     <h2 class="section-title">Programa de la sesión</h2>
                     <div class="entity-sub">Indica el contenido visto y si el profesor va al día.</div>
                 </div>
+                <div class="detail-list detail-list-soft">
+                    <div><strong>Clase planificada:</strong> {{ $selectedSession->planned_class_label ?: 'N/D' }}</div>
+                    <div><strong>Unidad:</strong> {{ $selectedSession->planned_unit ?: 'N/D' }}</div>
+                    <div><strong>Contenido esperado:</strong> {{ $selectedSession->planned_content ?: 'Sin contenido planificado' }}</div>
+                </div>
                 <div class="grid-3">
                     <div>
-                        <label>Programa / tema</label>
+                        <label>Programa ejecutado / tema visto</label>
                         <input type="text" name="topic" value="{{ old('topic', $selectedSession->topic ?? '') }}" placeholder="Ej. Verbo to be">
                     </div>
                     <div>

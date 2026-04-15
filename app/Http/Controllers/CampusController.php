@@ -9,6 +9,7 @@ use App\Models\Charge;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Group;
+use App\Models\Holiday;
 use App\Models\Payment;
 use App\Models\Period;
 use App\Models\Receipt;
@@ -125,6 +126,7 @@ class CampusController extends Controller
             'niveles' => AcademicLevel::query()->where('campus_id', $campus->id)->exists(),
             'periodos' => Period::query()->where('campus_id', $campus->id)->exists(),
             'horarios' => ScheduleTemplate::query()->where('campus_id', $campus->id)->exists(),
+            'feriados' => Holiday::query()->where('campus_id', $campus->id)->exists(),
             'cursos' => Course::query()->where('campus_id', $campus->id)->exists(),
             'grupos' => Group::query()->where('campus_id', $campus->id)->exists(),
             'inscripciones' => Enrollment::query()->where('campus_id', $campus->id)->exists(),

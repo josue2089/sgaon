@@ -8,6 +8,7 @@ use App\Models\Enrollment;
 use App\Models\Teacher;
 use App\Support\AlertEngine;
 use App\Support\AuditTrail;
+use App\Support\MakeupRecoveryEngine;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -120,7 +121,7 @@ class AttendanceController extends Controller
 
         $written = 0;
         foreach ($data['records'] as $entry) {
-            AttendanceRecord::updateOrCreate(
+            $record = AttendanceRecord::updateOrCreate(
                 [
                     'class_session_id' => $data['class_session_id'],
                     'enrollment_id' => $entry['enrollment_id'],
@@ -130,6 +131,7 @@ class AttendanceController extends Controller
                     'notes' => $entry['notes'] ?? null,
                 ],
             );
+            MakeupRecoveryEngine::syncForAttendanceRecord($record);
             $written++;
         }
 
