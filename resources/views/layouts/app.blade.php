@@ -17,27 +17,28 @@
     }
     $openAlertsCount = (clone $alertsQuery)->count();
     $openAlerts = (clone $alertsQuery)->latest()->take(5)->get();
+    $hasRoute = static fn (string $name): bool => \Illuminate\Support\Facades\Route::has($name);
     $nav = [
-        ['name' => 'Dashboard', 'route' => 'dashboard', 'enabled' => true],
-        ['name' => 'Alumnos', 'route' => 'students.index', 'enabled' => $user?->role === 'admin'],
-        ['name' => 'Profesores', 'route' => 'teachers.index', 'enabled' => $user?->role === 'admin'],
-        ['name' => 'Cursos', 'route' => 'courses.index', 'enabled' => $user?->role === 'admin'],
-        ['name' => 'Asistencia', 'route' => 'attendance.index', 'enabled' => in_array($user?->role, ['admin', 'teacher'], true)],
-        ['name' => 'Financiero', 'route' => 'finance.index', 'enabled' => $user?->role === 'admin'],
-        ['name' => 'Reportes', 'route' => 'reports.attendance', 'enabled' => $user?->role === 'admin'],
+        ['name' => 'Dashboard', 'route' => 'dashboard', 'enabled' => $hasRoute('dashboard')],
+        ['name' => 'Alumnos', 'route' => 'students.index', 'enabled' => $user?->role === 'admin' && $hasRoute('students.index')],
+        ['name' => 'Profesores', 'route' => 'teachers.index', 'enabled' => $user?->role === 'admin' && $hasRoute('teachers.index')],
+        ['name' => 'Cursos', 'route' => 'courses.index', 'enabled' => $user?->role === 'admin' && $hasRoute('courses.index')],
+        ['name' => 'Asistencia', 'route' => 'attendance.index', 'enabled' => in_array($user?->role, ['admin', 'teacher'], true) && $hasRoute('attendance.index')],
+        ['name' => 'Financiero', 'route' => 'finance.index', 'enabled' => $user?->role === 'admin' && $hasRoute('finance.index')],
+        ['name' => 'Reportes', 'route' => 'reports.attendance', 'enabled' => $user?->role === 'admin' && $hasRoute('reports.attendance')],
     ];
     $extraNav = [
-        ['name' => 'Inscripciones', 'route' => 'enrollments.index', 'enabled' => $user?->role === 'admin'],
-        ['name' => 'Recuperativas', 'route' => 'makeups.index', 'enabled' => $user?->role === 'admin'],
+        ['name' => 'Inscripciones', 'route' => 'enrollments.index', 'enabled' => $user?->role === 'admin' && $hasRoute('enrollments.index')],
+        ['name' => 'Recuperativas', 'route' => 'makeups.index', 'enabled' => $user?->role === 'admin' && $hasRoute('makeups.index')],
     ];
     $configNav = [
-        ['name' => 'Campus', 'route' => 'campuses.index', 'enabled' => $user?->isMasterAdmin()],
-        ['name' => 'Períodos', 'route' => 'periods.index', 'enabled' => $user?->isMasterAdmin()],
-        ['name' => 'Horarios', 'route' => 'schedules.index', 'enabled' => $user?->isMasterAdmin()],
-        ['name' => 'Feriados', 'route' => 'holidays.index', 'enabled' => $user?->isMasterAdmin()],
-        ['name' => 'Niveles', 'route' => 'academic-levels.index', 'enabled' => $user?->isMasterAdmin()],
-        ['name' => 'Programas', 'route' => 'programs.index', 'enabled' => $user?->isMasterAdmin()],
-        ['name' => 'Escalas', 'route' => 'course-levels.index', 'enabled' => $user?->isMasterAdmin()],
+        ['name' => 'Campus', 'route' => 'campuses.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('campuses.index')],
+        ['name' => 'Períodos', 'route' => 'periods.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('periods.index')],
+        ['name' => 'Horarios', 'route' => 'schedules.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('schedules.index')],
+        ['name' => 'Feriados', 'route' => 'holidays.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('holidays.index')],
+        ['name' => 'Niveles', 'route' => 'academic-levels.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('academic-levels.index')],
+        ['name' => 'Programas', 'route' => 'programs.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('programs.index')],
+        ['name' => 'Escalas', 'route' => 'course-levels.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('course-levels.index')],
     ];
     $extraPrefixes = ['enrollments', 'makeups'];
     $extraActive = in_array(explode('.', (string) $currentRoute)[0], $extraPrefixes, true);
@@ -148,7 +149,7 @@
                                     $alertUrl = route('students.show', $alert->student_id);
                                 } elseif ($alert->type === 'makeup_recovery') {
                                     $alertUrl = $user?->role === 'admin'
-                                        ? route('makeups.index', ['student_id' => $alert->student_id])
+                                        ? ($hasRoute('makeups.index') ? route('makeups.index', ['student_id' => $alert->student_id]) : route('dashboard'))
                                         : route('portal.student');
                                 } else {
                                     $alertUrl = route('dashboard');
@@ -161,7 +162,7 @@
                         @empty
                             <div class="fi-menu-empty">Sin alertas abiertas</div>
                         @endforelse
-                        <a href="{{ route('reports.attendance') }}" class="fi-menu-footer">Ver reportes</a>
+                        @if($hasRoute('reports.attendance'))<a href="{{ route('reports.attendance') }}" class="fi-menu-footer">Ver reportes</a>@endif
                     </div>
                 </details>
 
@@ -173,9 +174,9 @@
                         <div class="fi-menu-title">Configuración</div>
                         <a href="{{ route('dashboard') }}" class="fi-menu-link">Panel principal</a>
                         @if($user?->role === 'admin')
-                            <a href="{{ route('reports.audit') }}" class="fi-menu-link">Auditoría</a>
-                            <a href="{{ route('reports.payments') }}" class="fi-menu-link">Reporte financiero</a>
-                            <a href="{{ route('reports.level-renewals') }}" class="fi-menu-link">Renovación de niveles</a>
+                            @if($hasRoute('reports.audit'))<a href="{{ route('reports.audit') }}" class="fi-menu-link">Auditoría</a>@endif
+                            @if($hasRoute('reports.payments'))<a href="{{ route('reports.payments') }}" class="fi-menu-link">Reporte financiero</a>@endif
+                            @if($hasRoute('reports.level-renewals'))<a href="{{ route('reports.level-renewals') }}" class="fi-menu-link">Renovación de niveles</a>@endif
                         @endif
                     </div>
                 </details>
