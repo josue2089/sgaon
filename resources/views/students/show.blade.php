@@ -296,31 +296,11 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach($courseHistory as $enrollment)
-                    @php
-                        $course = $enrollment->group?->course;
-                        $level = $course?->programLevel ?: $course?->courseLevel;
-                        $attendanceRate = (int) $enrollment->attendance_records_count > 0
-                            ? (int) round(($enrollment->present_attendance_count / $enrollment->attendance_records_count) * 100)
-                            : null;
-                    @endphp
-                    <tr>
-                        <td>
-                            <div class="table-title">{{ $course?->name ?? 'N/D' }}</div>
-                            <div class="table-sub">{{ $course?->code ?: 'Sin código' }}</div>
-                        </td>
-                        <td>{{ $level ? (($level->sort_order ?? $level->scale_position).'/'.($level->program_total ?? $level->scale_total).' · '.$level->name) : ($course?->level?->name ?? 'N/D') }}</td>
-                        <td>{{ $course?->teacher?->full_name ?? 'N/D' }}</td>
-                        <td>{{ $course?->period?->code ?? 'N/D' }}</td>
-                        <td>{{ $course?->start_date?->format('d/m/Y') ?? 'N/D' }} - {{ $course?->end_date?->format('d/m/Y') ?? 'N/D' }}</td>
-                        <td>{{ is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%' }}</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $enrollment->status === 'active' ? 'ok' : 'info', 'text' => ucfirst($enrollment->status)])</td>
-                    </tr>
-                @endforeach
+            
                 </tbody>
             </table>
         </div>
-        
+
     @else
         <div class="empty-state">No hay histórico de cursos para este alumno.</div>
     @endif
