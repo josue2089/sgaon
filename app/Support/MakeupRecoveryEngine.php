@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Mail\MakeupRecoveryApprovedMail;
 use App\Mail\MakeupRecoveryBookedMail;
 use App\Mail\MakeupRecoveryCreatedMail;
+use App\Mail\MakeupRecoveryRejectedMail;
 use App\Models\Alert;
 use App\Models\AttendanceRecord;
 use App\Models\Charge;
@@ -164,6 +165,7 @@ class MakeupRecoveryEngine
         ])->save();
 
         self::syncAlertStatus($request->student_id);
+        self::emailRejectedIfNeeded($request->fresh(['student.representatives', 'missedSession.group.course', 'enrollment.group.course.programLevel']));
     }
 
     public static function book(MakeupRequest $request, MakeupSession $session): MakeupBooking
@@ -294,12 +296,32 @@ class MakeupRecoveryEngine
 
     private static function emailApprovedIfNeeded(MakeupRequest $request): void
     {
-        if ($request->approval_emailed_at || empty($request->student?->email)) {
+        if ($request->approval_emailed_at) {
             return;
         }
 
-        Mail::to($request->student->email)->send(new MakeupRecoveryApprovedMail($request));
+        $recipients = self::notificationRecipients($request);
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Mail::to($recipients->all())->send(new MakeupRecoveryApprovedMail($request));
         $request->forceFill(['approval_emailed_at' => now()])->save();
+    }
+
+    private static function emailRejectedIfNeeded(MakeupRequest $request): void
+    {
+        if ($request->rejection_emailed_at) {
+            return;
+        }
+
+        $recipients = self::notificationRecipients($request);
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Mail::to($recipients->all())->send(new MakeupRecoveryRejectedMail($request));
+        $request->forceFill(['rejection_emailed_at' => now()])->save();
     }
 
     private static function emailBookedIfNeeded(MakeupRequest $request): void
@@ -310,5 +332,19 @@ class MakeupRecoveryEngine
 
         Mail::to($request->student->email)->send(new MakeupRecoveryBookedMail($request));
         $request->forceFill(['booking_emailed_at' => now()])->save();
+    }
+
+    private static function notificationRecipients(MakeupRequest $request)
+    {
+        $request->loadMissing(['student.representatives']);
+
+        return collect([
+            $request->student?->email,
+            ...$request->student?->representatives?->pluck('email')->all() ?? [],
+        ])
+            ->filter(fn ($email) => filled($email))
+            ->map(fn ($email) => mb_strtolower(trim((string) $email)))
+            ->unique()
+            ->values();
     }
 }

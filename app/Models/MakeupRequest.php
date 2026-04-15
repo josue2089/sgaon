@@ -37,6 +37,7 @@ class MakeupRequest extends Model
         'rejection_reason',
         'notification_emailed_at',
         'approval_emailed_at',
+        'rejection_emailed_at',
         'booking_emailed_at',
     ];
 
@@ -48,6 +49,7 @@ class MakeupRequest extends Model
             'validated_at' => 'datetime',
             'notification_emailed_at' => 'datetime',
             'approval_emailed_at' => 'datetime',
+            'rejection_emailed_at' => 'datetime',
             'booking_emailed_at' => 'datetime',
         ];
     }

@@ -132,40 +132,29 @@
     </div>
 </div>
 
-<div class="card table-card">
+<div class="card">
     <h3 class="section-title section-title-sm">Solicitudes</h3>
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-            <tr>
-                <th>Alumno</th>
-                <th>Clase perdida</th>
-                <th>Programa</th>
-                <th>Costo</th>
-                <th>Evidencias</th>
-                <th>Estado</th>
-                <th>Reserva</th>
-                <th>Acciones</th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse($requests as $makeupRequest)
-                @php($course = $makeupRequest->enrollment?->group?->course)
-                <tr>
-                    <td>
+    <div class="makeup-admin-list">
+        @forelse($requests as $makeupRequest)
+            @php($course = $makeupRequest->enrollment?->group?->course)
+            <article class="makeup-admin-card">
+                <div class="makeup-admin-head">
+                    <div>
                         <div class="table-title">{{ $makeupRequest->student?->full_name ?? 'N/D' }}</div>
                         <div class="table-sub">{{ $makeupRequest->student?->email ?? 'Sin email' }}</div>
-                    </td>
-                    <td>
-                        <div>{{ $course?->name ?? 'N/D' }}</div>
-                        <div class="table-sub">{{ $makeupRequest->missedSession?->session_date?->format('d/m/Y') ?? 'N/D' }}</div>
-                    </td>
-                    <td>
-                        <div>{{ $course?->program?->name ?? 'N/D' }}</div>
-                        <div class="table-sub">{{ $course?->programLevel?->name ?? 'N/D' }}</div>
-                    </td>
-                    <td>${{ number_format($makeupRequest->price, 2) }}</td>
-                    <td>
+                    </div>
+                    <div>@include('partials.ui.status-badge', ['tone' => in_array($makeupRequest->status, ['completed','approved_for_booking'], true) ? 'ok' : ($makeupRequest->status === 'rejected' ? 'danger' : 'warn'), 'text' => ucfirst(str_replace('_', ' ', $makeupRequest->status))])</div>
+                </div>
+
+                <div class="makeup-admin-meta">
+                    <div><strong>Clase perdida:</strong> {{ $course?->name ?? 'N/D' }} · {{ $makeupRequest->missedSession?->session_date?->format('d/m/Y') ?? 'N/D' }}</div>
+                    <div><strong>Programa:</strong> {{ $course?->program?->name ?? 'N/D' }} · {{ $course?->programLevel?->name ?? 'N/D' }}</div>
+                    <div><strong>Costo:</strong> ${{ number_format($makeupRequest->price, 2) }}</div>
+                </div>
+
+                <div class="grid-3">
+                    <div class="makeup-admin-pane">
+                        <h4>Evidencias</h4>
                         <div class="table-sub">
                             Pago:
                             @if($makeupRequest->payment_proof)
@@ -182,9 +171,10 @@
                                 No
                             @endif
                         </div>
-                    </td>
-                    <td>@include('partials.ui.status-badge', ['tone' => in_array($makeupRequest->status, ['completed','approved_for_booking'], true) ? 'ok' : ($makeupRequest->status === 'rejected' ? 'danger' : 'warn'), 'text' => ucfirst(str_replace('_', ' ', $makeupRequest->status))])</td>
-                    <td>
+                    </div>
+
+                    <div class="makeup-admin-pane">
+                        <h4>Reserva</h4>
                         @if($makeupRequest->booking)
                             <div>{{ $makeupRequest->booking->makeupSession?->session_date?->format('d/m/Y') ?? 'N/D' }}</div>
                             <div class="table-sub">{{ $makeupRequest->booking->makeupSession?->starts_at ?? '' }} - {{ $makeupRequest->booking->makeupSession?->ends_at ?? '' }}</div>
@@ -196,13 +186,15 @@
                                         <option value="{{ $status }}" @selected($makeupRequest->booking->status === $status)>{{ $status }}</option>
                                     @endforeach
                                 </select>
-                                <button class="btn secondary" type="submit">Actualizar</button>
+                                <button class="btn secondary" type="submit">Actualizar reserva</button>
                             </form>
                         @else
                             <span class="table-sub">Sin reserva</span>
                         @endif
-                    </td>
-                    <td>
+                    </div>
+
+                    <div class="makeup-admin-pane">
+                        <h4>Acciones</h4>
                         @if($makeupRequest->status === 'pending_validation')
                             <form method="POST" action="{{ route('makeups.requests.review', $makeupRequest) }}" class="stack-xs">
                                 @csrf
@@ -211,27 +203,26 @@
                                 <input type="date" name="paid_at" value="{{ now()->format('Y-m-d') }}">
                                 <input name="method" placeholder="Método" value="Transferencia">
                                 <input name="reference" placeholder="Referencia">
-                                <button class="btn secondary" type="submit">Aprobar</button>
+                                <button class="btn secondary" type="submit">Aprobar comprobante</button>
                             </form>
                             <form method="POST" action="{{ route('makeups.requests.review', $makeupRequest) }}" class="stack-xs" style="margin-top:.5rem;">
                                 @csrf
                                 @method('PATCH')
                                 <input type="hidden" name="action" value="reject">
                                 <input name="rejection_reason" placeholder="Motivo rechazo">
-                                <button class="btn secondary" type="submit">Rechazar</button>
+                                <button class="btn secondary" type="submit">Rechazar comprobante</button>
                             </form>
                         @elseif($makeupRequest->payment?->receipt)
                             <a href="{{ route('finance.receipts.show', $makeupRequest->payment->receipt) }}">Ver recibo</a>
                         @else
                             <a href="{{ route('students.show', $makeupRequest->student_id) }}">Ver alumno</a>
                         @endif
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="8"><div class="empty-state-inline">No hay solicitudes recuperativas.</div></td></tr>
-            @endforelse
-            </tbody>
-        </table>
+                    </div>
+                </div>
+            </article>
+        @empty
+            <div class="empty-state-inline">No hay solicitudes recuperativas.</div>
+        @endforelse
     </div>
     @if($requests->hasPages())
         {{ $requests->links() }}
