@@ -4234,3 +4234,49 @@ Si vuelve a fallar, revisa el archivo que aparezca en:
 y busca 10-20 líneas antes del `endforeach`: ahí casi siempre está la causa real.
 
 Si me pegas ese bloque, te digo exactamente cuál tag/directiva está rompiendo.
+
+---
+
+_**User**_
+
+El error se mantiene, es en la lien a320, lo que pienso es que algo coryta la carga del archivo y es algo dento de ese foreach, ya actualice el archivo y corri todos lso comados pero se mantiene el problema, si quito este bloque
+
+@show.blade.php (299-319) 
+
+La pagina carga bien.
+
+---
+
+_**Agent (default)**_
+
+Tiene mucho sentido tu hipótesis. Voy a reescribir ese bloque del `foreach` en una forma más simple (sin expresiones complejas en línea) para eliminar cualquier punto de quiebre del compilador Blade/PHP.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/students/show.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/students/show.blade.php</summary>
+
+Status: **loading**
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>

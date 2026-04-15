@@ -296,13 +296,36 @@
                 </tr>
                 </thead>
                 <tbody>
-            
+                @forelse($courseHistory as $enrollment)
+                    @php($course = optional($enrollment->group)->course)
+                    @php($level = $course?->programLevel ?: $course?->courseLevel)
+                    @php($attendanceRate = (int) $enrollment->attendance_records_count > 0
+                        ? (int) round(($enrollment->present_attendance_count / $enrollment->attendance_records_count) * 100)
+                        : null)
+                    @php($levelLabel = $level
+                        ? (($level->sort_order ?? $level->scale_position).'/'.($level->program_total ?? $level->scale_total).' - '.$level->name)
+                        : ($course?->level?->name ?? 'N/D'))
+                    <tr>
+                        <td>
+                            <div class="table-title">{{ $course?->name ?? 'N/D' }}</div>
+                            <div class="table-sub">{{ $course?->code ?: 'Sin codigo' }}</div>
+                        </td>
+                        <td>{{ $levelLabel }}</td>
+                        <td>{{ $course?->teacher?->full_name ?? 'N/D' }}</td>
+                        <td>{{ $course?->period?->code ?? 'N/D' }}</td>
+                        <td>{{ $course?->start_date?->format('d/m/Y') ?? 'N/D' }} - {{ $course?->end_date?->format('d/m/Y') ?? 'N/D' }}</td>
+                        <td>{{ is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%' }}</td>
+                        <td>@include('partials.ui.status-badge', ['tone' => $enrollment->status === 'active' ? 'ok' : 'info', 'text' => ucfirst($enrollment->status)])</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="7"><div class="empty-state-inline">No hay historico de cursos para este alumno.</div></td></tr>
+                @endforelse
                 </tbody>
             </table>
         </div>
 
     @else
-        <div class="empty-state">No hay histórico de cursos para este alumno.</div>
+        <div class="empty-state">No hay historico de cursos para este alumno.</div>
     @endif
 </div>
 
