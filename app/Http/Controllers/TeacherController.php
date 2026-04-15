@@ -107,7 +107,11 @@ class TeacherController extends Controller
 
     public function calendar(Request $request): View
     {
-        $weekStart = Carbon::parse((string) $request->query('week_start', now()->toDateString()))->startOfWeek(Carbon::MONDAY);
+        $mode = in_array((string) $request->query('mode', 'day'), ['day', 'week'], true)
+            ? (string) $request->query('mode', 'day')
+            : 'day';
+        $selectedDate = Carbon::parse((string) $request->query('date', now()->toDateString()))->startOfDay();
+        $weekStart = $selectedDate->copy()->startOfWeek(Carbon::MONDAY);
         $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
 
         $teachers = Teacher::query()
@@ -144,50 +148,85 @@ class TeacherController extends Controller
 
             return [
                 'key' => strtolower($date->format('D')),
+                'short_label' => $date->translatedFormat('D'),
                 'label' => $date->translatedFormat('l d/m'),
                 'date' => $date,
+                'is_today' => $date->isToday(),
             ];
         });
 
-        $calendarDays = $weekDays->map(function (array $day) use ($scheduleTemplates, $teachers, $sessions) {
-            $rows = $scheduleTemplates->map(function (ScheduleTemplate $schedule) use ($teachers, $sessions, $day) {
-                $cells = $teachers->map(function (Teacher $teacher) use ($schedule, $sessions, $day) {
-                    $applicable = collect($schedule->days ?? [])->contains($day['key']);
-                    $matches = $sessions->filter(function (ClassSession $session) use ($teacher, $schedule, $day) {
+        $selectedDayKey = strtolower($selectedDate->format('D'));
+        $selectedDay = [
+            'key' => $selectedDayKey,
+            'short_label' => $selectedDate->translatedFormat('D'),
+            'label' => $selectedDate->translatedFormat('l d/m/Y'),
+            'date' => $selectedDate,
+            'is_today' => $selectedDate->isToday(),
+        ];
+
+        $buildRows = function (Carbon $date, string $dayKey) use ($scheduleTemplates, $teachers, $sessions) {
+            $filteredSchedules = $scheduleTemplates
+                ->filter(fn (ScheduleTemplate $schedule) => collect($schedule->days ?? [])->contains($dayKey))
+                ->unique(fn (ScheduleTemplate $schedule) => $schedule->starts_at.'-'.$schedule->ends_at)
+                ->values();
+
+            return $filteredSchedules->map(function (ScheduleTemplate $schedule) use ($teachers, $sessions, $date) {
+                $cells = $teachers->map(function (Teacher $teacher) use ($schedule, $sessions, $date) {
+                    $matches = $sessions->filter(function (ClassSession $session) use ($teacher, $schedule, $date) {
                         return (int) ($session->group?->teacher_id ?? 0) === (int) $teacher->id
-                            && $session->session_date?->isSameDay($day['date'])
+                            && $session->session_date?->isSameDay($date)
                             && $session->starts_at === $schedule->starts_at
                             && $session->ends_at === $schedule->ends_at;
                     })->values();
 
                     return [
                         'teacher' => $teacher,
-                        'applicable' => $applicable,
                         'sessions' => $matches,
-                        'occupied' => $applicable && $matches->isNotEmpty(),
+                        'occupied' => $matches->isNotEmpty(),
                         'conflict' => $matches->count() > 1,
-                        'available' => $applicable && $matches->isEmpty(),
+                        'available' => $matches->isEmpty(),
                     ];
                 });
 
                 return [
                     'schedule' => $schedule,
+                    'time_label' => Carbon::createFromFormat('H:i:s', $schedule->starts_at)->format('g:i').' - '.Carbon::createFromFormat('H:i:s', $schedule->ends_at)->format('g:i A'),
                     'cells' => $cells,
                 ];
-            });
+            })->values();
+        };
 
+        $dayRows = $buildRows($selectedDate, $selectedDayKey);
+        $calendarDays = $weekDays->map(function (array $day) use ($buildRows) {
             return [
                 'label' => $day['label'],
+                'short_label' => $day['short_label'],
                 'date' => $day['date'],
-                'rows' => $rows,
+                'is_today' => $day['is_today'],
+                'rows' => $buildRows($day['date'], $day['key']),
             ];
         });
 
+        $occupiedCount = $dayRows->sum(fn ($row) => $row['cells']->where('occupied', true)->count());
+        $availableCount = $dayRows->sum(fn ($row) => $row['cells']->where('available', true)->count());
+        $conflictCount = $dayRows->sum(fn ($row) => $row['cells']->where('conflict', true)->count());
+
         return view('teachers.calendar', [
             'teachers' => $teachers,
+            'mode' => $mode,
+            'selectedDate' => $selectedDate,
+            'selectedDay' => $selectedDay,
+            'dayRows' => $dayRows,
             'calendarDays' => $calendarDays,
+            'weekDays' => $weekDays,
             'weekStart' => $weekStart,
             'weekEnd' => $weekEnd,
+            'summary' => [
+                'slots' => $dayRows->count(),
+                'occupied' => $occupiedCount,
+                'available' => $availableCount,
+                'conflicts' => $conflictCount,
+            ],
         ]);
     }
 
