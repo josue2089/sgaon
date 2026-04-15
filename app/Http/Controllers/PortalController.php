@@ -6,6 +6,7 @@ use App\Models\Representative;
 use App\Models\MakeupRequest;
 use App\Models\MakeupSession;
 use App\Models\Student;
+use App\Models\SystemSetting;
 use App\Support\MakeupRecoveryEngine;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -114,7 +115,9 @@ class PortalController extends Controller
             ->sortBy(fn (array $item) => optional($item['date'])->timestamp ?? 0)
             ->values();
 
-        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda'));
+        $makeupPaymentInstructions = SystemSetting::getValue('makeup_payment_instructions', '');
+
+        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions'));
     }
 
     public function submitMakeupPayment(Request $request, MakeupRequest $makeupRequest): RedirectResponse

@@ -2684,3 +2684,71 @@ textarea {
         width: 100%;
     }
 }
+
+.makeup-instructions {
+    border: 1px solid #dbe6f7;
+    border-radius: 16px;
+    background: #f8fbff;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.makeup-instructions h3 {
+    margin: 0 0 0.4rem;
+    font-size: 1.05rem;
+    color: var(--brand);
+}
+
+.makeup-instructions p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.makeup-student-list {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.makeup-student-card {
+    border: 1px solid #dbe6f7;
+    border-radius: 20px;
+    background: #fff;
+    padding: 1rem;
+    display: grid;
+    gap: 0.8rem;
+}
+
+.makeup-student-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.makeup-student-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+.makeup-student-pane {
+    border: 1px solid #e4ebf8;
+    border-radius: 16px;
+    background: #fbfdff;
+    padding: 0.85rem;
+}
+
+.makeup-student-pane h4 {
+    margin: 0 0 0.55rem;
+    font-size: 0.98rem;
+    color: var(--brand);
+}
+
+@media (max-width: 640px) {
+    .makeup-student-meta {
+        grid-template-columns: 1fr;
+    }
+}

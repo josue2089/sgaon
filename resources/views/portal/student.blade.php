@@ -59,44 +59,52 @@
     </div>
 </div>
 
-<div class="card table-card">
-    <div class="section-head">
+<div class="card">
+    <div class="section-head section-head-tight">
         <h2 class="section-title section-title-md">Mis recuperativas</h2>
-        <div class="entity-sub">Carga tu comprobante y reserva horario cuando sea aprobado</div>
+        <div class="entity-sub">Gestiona pago y reserva sin scroll horizontal</div>
     </div>
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-            <tr>
-                <th>Clase perdida</th>
-                <th>Programa</th>
-                <th>Costo</th>
-                <th>Estado</th>
-                <th>Pago / Reposo</th>
-                <th>Reserva</th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse($makeupRequests as $makeupRequest)
-                @php($course = $makeupRequest->enrollment?->group?->course)
-                <tr>
-                    <td>
+
+    @if(filled($makeupPaymentInstructions))
+        <div class="makeup-instructions">
+            <h3>Instrucciones de pago</h3>
+            <p>{!! nl2br(e($makeupPaymentInstructions)) !!}</p>
+        </div>
+    @endif
+
+    <div class="makeup-student-list">
+        @forelse($makeupRequests as $makeupRequest)
+            @php($course = $makeupRequest->enrollment?->group?->course)
+            <article class="makeup-student-card">
+                <div class="makeup-student-head">
+                    <div>
                         <div class="table-title">{{ $course?->name ?? 'N/D' }}</div>
                         <div class="table-sub">{{ $makeupRequest->missedSession?->session_date?->format('d/m/Y') ?? 'N/D' }} · {{ ucfirst($makeupRequest->request_type) }}</div>
-                    </td>
-                    <td>
-                        <div>{{ $course?->program?->name ?? 'N/D' }}</div>
-                        <div class="table-sub">{{ $course?->programLevel?->name ?? 'N/D' }}</div>
-                    </td>
-                    <td>${{ number_format($makeupRequest->price, 2) }}</td>
-                    <td>@include('partials.ui.status-badge', ['tone' => in_array($makeupRequest->status, ['approved_for_booking','completed'], true) ? 'ok' : ($makeupRequest->status === 'rejected' ? 'danger' : 'warn'), 'text' => ucfirst(str_replace('_', ' ', $makeupRequest->status))])</td>
-                    <td>
+                    </div>
+                    <div>@include('partials.ui.status-badge', ['tone' => in_array($makeupRequest->status, ['approved_for_booking','completed'], true) ? 'ok' : ($makeupRequest->status === 'rejected' ? 'danger' : 'warn'), 'text' => ucfirst(str_replace('_', ' ', $makeupRequest->status))])</div>
+                </div>
+
+                <div class="makeup-student-meta">
+                    <div><strong>Programa:</strong> {{ $course?->program?->name ?? 'N/D' }}</div>
+                    <div><strong>Nivel:</strong> {{ $course?->programLevel?->name ?? 'N/D' }}</div>
+                    <div><strong>Monto:</strong> ${{ number_format($makeupRequest->price, 2) }}</div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="makeup-student-pane">
+                        <h4>Pago / Reposo</h4>
                         @if(in_array($makeupRequest->status, ['pending_payment','pending_validation','rejected'], true))
                             <form method="POST" action="{{ route('portal.student.makeups.payment', $makeupRequest) }}" enctype="multipart/form-data" class="stack-xs">
                                 @csrf
-                                <input type="file" name="payment_proof" required>
+                                <div>
+                                    <label>Comprobante</label>
+                                    <input type="file" name="payment_proof" required>
+                                </div>
                                 <label class="checkbox-inline"><input type="checkbox" name="medical_support_required" value="1"> Con reposo ($5)</label>
-                                <input type="file" name="medical_support">
+                                <div>
+                                    <label>Reposo médico (opcional)</label>
+                                    <input type="file" name="medical_support">
+                                </div>
                                 <input name="payment_notes" placeholder="Observación o referencia">
                                 <button class="btn secondary" type="submit">Enviar comprobante</button>
                             </form>
@@ -104,8 +112,10 @@
                             <div class="table-sub">Pago enviado: {{ $makeupRequest->payment_proof ? 'Sí' : 'No' }}</div>
                             <div class="table-sub">Reposo: {{ $makeupRequest->medical_support_attachment ? 'Sí' : 'No' }}</div>
                         @endif
-                    </td>
-                    <td>
+                    </div>
+
+                    <div class="makeup-student-pane">
+                        <h4>Reserva de horario</h4>
                         @if($makeupRequest->status === 'approved_for_booking')
                             <form method="POST" action="{{ route('portal.student.makeups.book', $makeupRequest) }}" class="stack-xs">
                                 @csrf
@@ -120,19 +130,18 @@
                                 <button class="btn secondary" type="submit">Reservar</button>
                             </form>
                         @elseif($makeupRequest->booking)
-                            <div>{{ $makeupRequest->booking->makeupSession?->session_date?->format('d/m/Y') ?? 'N/D' }}</div>
+                            <div><strong>Fecha:</strong> {{ $makeupRequest->booking->makeupSession?->session_date?->format('d/m/Y') ?? 'N/D' }}</div>
                             <div class="table-sub">{{ $makeupRequest->booking->makeupSession?->starts_at ?? '' }} - {{ $makeupRequest->booking->makeupSession?->ends_at ?? '' }}</div>
                             <div class="table-sub">{{ $makeupRequest->booking->makeupSession?->teacher?->full_name ?? 'N/D' }}</div>
                         @else
-                            <div class="table-sub">Aún no disponible</div>
+                            <div class="table-sub">Aún no disponible hasta validar el pago.</div>
                         @endif
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="6"><div class="empty-state-inline">No tienes recuperativas pendientes.</div></td></tr>
-            @endforelse
-            </tbody>
-        </table>
+                    </div>
+                </div>
+            </article>
+        @empty
+            <div class="empty-state-inline">No tienes recuperativas pendientes.</div>
+        @endforelse
     </div>
 </div>
 

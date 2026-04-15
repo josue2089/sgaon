@@ -22,6 +22,7 @@ use App\Http\Controllers\ProgramLevelLessonController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleTemplateController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
 
@@ -74,6 +75,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::resource('academic-levels', AcademicLevelController::class)->except('show');
             Route::resource('course-levels', CourseLevelController::class)->except('show');
             Route::resource('programs', ProgramController::class);
+            Route::get('/settings/makeup-payment-instructions', [SystemSettingController::class, 'editMakeupPaymentInstructions'])->name('settings.makeup-payment-instructions.edit');
+            Route::put('/settings/makeup-payment-instructions', [SystemSettingController::class, 'updateMakeupPaymentInstructions'])->name('settings.makeup-payment-instructions.update');
             Route::get('/programs/{program}/levels/create', [ProgramLevelController::class, 'create'])->name('program-levels.create');
             Route::post('/programs/{program}/levels', [ProgramLevelController::class, 'store'])->name('program-levels.store');
             Route::get('/program-levels/{programLevel}', [ProgramLevelController::class, 'show'])->name('program-levels.show');
