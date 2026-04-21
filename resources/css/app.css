@@ -2842,6 +2842,12 @@ textarea {
     max-height: calc(100vh - 2rem);
     overflow-y: auto;
     box-shadow: 0 24px 48px rgba(7, 18, 53, 0.22);
+    /* UA styles dejan el <dialog> arriba-izquierda; al abrirlo con showModal() hay que centrarlo */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
 }
 
 .charge-pay-dialog::backdrop {

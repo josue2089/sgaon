@@ -8095,7 +8095,7 @@ Convirtiendo la tabla ancha en tarjetas compactas y moviendo el formulario largo
 _**Agent (default)**_
 
 <tool-use data-tool-type="read" data-tool-name="read_file_v2">
-<details><summary>Tool use: **read_file_v2** • Read file: </summary>
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/layouts/app.blade.php</summary>
 
 </details>
 </tool-use>
@@ -8104,3 +8104,561 @@ _**Agent (default)**_
 <summary>Tool use: **read_file_v2**</summary>
 
 </details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+I'll implement:
+- Change the card from `table-card` to a regular card with `charge-pending-list`
+- [No further details provided in this chunk] Each charge will have a card with a header containing the title and status pill, a meta grid showing amount, due date, and status, and an action button.
+
+A modal dialog with ID `charge-pay-modal-{{ $charge->id }}` will contain a form with proper encoding.
+
+The button to open the dialog uses `type="button"` and JavaScript to show the modal.
+
+To close the dialog, a "Cancelar" button with `formmethod="dialog"` will be added to the form, or a simple button with `type="button"` and `onclick="this.closest('dialog').close()"` can be used instead.</details></think>
+
+_**Agent (default)**_
+
+Reemplazando la tabla con formularios en celdas (anchura mínima del `input` + `tableLayout` fija) por tarjetas y un modal con campos a ancho completo.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "\\.btn\\.ghost|btn ghost"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "\\.btn\\.ghost|btn ghost",
+  "topFiles": [],
+  "totalFiles": 0,
+  "totalMatches": 0
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/partials/ui/status-badge.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "^\\.btn"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "^\\.btn",
+  "topFiles": [
+    {
+      "matchCount": 6,
+      "uri": "resources/css/app.css"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 6
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+I'll use `class="btn"` for cancel (default gradient) vs `btn secondary` for submit - that might be wrong UX.
+- Cancel button uses default gradient styling
+- Submit button uses secondary styling
+- This distinction may create confusing user experience</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+- Add CSS styling for the charge-pay-dialog component.
+- Include CSS for list elements within the dialog.</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/layouts/app.blade.php",
+  "pattern": "@stack"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/layouts/app.blade.php",
+  "pattern": "@stack",
+  "topFiles": [
+    {
+      "matchCount": 1,
+      "uri": "resources/views/layouts/app.blade.php"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 1
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "section-head-tight"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "section-head-tight",
+  "topFiles": [
+    {
+      "matchCount": 1,
+      "uri": "resources/css/app.css"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 1
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+Add CSS after the makeup-student media queries block (around line 2801). Add CSS for charge pending payments section after the makeup-student media queries block (around line 2801).
+
+- .charge-pending-list: displays as grid with gap and padding
+- .charge-pending-card: styled with border, rounded corners, white background, and padding
+- .charge-pending-head: uses flexbox for layout with space between items
+- .charge-pending-meta: sets font size and color
+- .charge-pending-actions: wraps elements with gap spacing Add CSS for the charge payment dialog after the makeup-student media queries block (around line 2801).
+
+- .charge-pay-dialog: removes border and radius, adds padding, sets width and max height, enables vertical scrolling, and applies shadow
+- .charge-pay-dialog::backdrop: sets background and backdrop filter
+- .charge-pay-dialog-head: uses flexbox with space between items and gap
+- .charge-pay-dialog-title: removes margin and sets font size and color
+- .charge-pending-list: displays as grid with gap and padding
+- .charge-pending-card: styled with border, rounded corners, white background, and padding
+- .charge-pending-head: uses flexbox for layout with space between items
+- .charge-pending-meta: sets font size and color
+- .charge-pending-actions: wraps elements with gap spacing .charge-pay-dialog-close: removes border and background, sets font size, line height, cursor, and color; adds padding.
+
+.charge-pay-dialog-summary: sets margin, font size, and color.
+
+.charge-pay-form label: displays as block, sets font size, weight, bottom margin, and color.
+
+.charge-pay-form input[type='text'], input[type='number'], input[type='file']: sets width and max-width to 100%.</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/layouts/app.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon && php artisan view:cache 2>&1</summary>
+
+```bash
+cd /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon && php artisan view:cache 2>&1
+```
+
+```
+
+
+   INFO  Blade templates cached successfully.  
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints">
+<details>
+<summary>Tool use: **read_lints**</summary>
+
+
+Parameters:
+
+```json
+{
+  "paths": [
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php"
+  ]
+}
+```
+Result:
+
+```json
+{
+  "linterErrorsByFile": [
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php"
+    }
+  ]
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints"><details>
+<summary>Tool use: **read_lints**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+## Qué pasaba
+
+La tabla metía **todo el formulario en una sola celda**. Los `input` en tablas suelen expandir la columna (ancho mínimo del contenido), así que la vista **crecía más que el contenedor** y aparecía el scroll horizontal.
+
+## Qué hicimos
+
+1. **Lista de tarjetas** (mismo criterio que “Mis recuperativas”): cada cargo muestra concepto, vencimiento, estado, monto y un solo botón **“Enviar comprobante”**.
+2. **Modal con `<dialog>`**: al pulsar, se abre un panel con el formulario, **etiquetas** y campos a **ancho 100%** (`.charge-pay-form`), sin forzar ancho de tabla.
+3. **Solicitudes enviadas** pasó de tabla ancha a **tarjetas** con fecha, monto, estado y motivo de rechazo si aplica.
+4. **Clic en el fondo** cierra el modal (script ligero en `@push('scripts')`).
+5. Estilos nuevos en `resources/css/app.css` (`.charge-pending-*`, `.charge-pay-dialog`, `.charge-request-*`).
+
+Si quieres el mismo patrón en **portal representante** (ahí también hay tabla con formulario largo), lo replicamos igual.
+
+---
+
+_**User**_
+
+El modal aparece alineado a la izquirda y arriba de la pantalla, cuando deberia estar centrado
+
+---
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+The modal dialog is appearing in the top-left corner instead of being centered. The modal dialog appears in the top-left corner instead of being centered due to default styling of HTML `<dialog>` elements.
+
+To fix this, CSS adjustments are needed for `.charge-pay-dialog` to properly center the dialog.
+
+Common solutions include:
+- Using `position: fixed` with `top: 50%`, `left: 50%`, and `transform: translate(-50%, -50%)`
+- Applying `margin: auto` (though dialog elements have special behavior)
+- Using flexbox on the parent container (but dialogs are top-layer elements)
+
+Native `<dialog>` elements require specific CSS to achieve proper centering across browsers.</details></think>
+
+_**Agent (default)**_
+
+Centrando el `<dialog>` nativo: muchos navegadores no lo centran por defecto; añadimos posicionamiento fijo y transformación.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "contextAfter": 25,
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "\\.charge-pay-dialog"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "\\.charge-pay-dialog",
+  "topFiles": [
+    {
+      "matchCount": 97,
+      "uri": "resources/css/app.css"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 9
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+.charge-pay-dialog {</details></think>
+
+_**Agent (default)**_
+
+Añadiendo posicionamiento explícito: Safari y otros navegadores no centran `<dialog>` por defecto.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+If any animation or child uses transform, it could cause conflictsthough this is unlikely here.</details></think>
+
+_**Agent (default)**_
+
+Listo. El elemento nativo `<dialog>` en Safari (y otros) **no se centra solo**: el navegador suele colocarlo arriba a la izquierda si no defines posición.
+
+En `.charge-pay-dialog` quedó así:
+
+- `position: fixed`
+- `top: 50%; left: 50%`
+- `margin: 0` (quita el margen por defecto del UA)
+- `transform: translate(-50%, -50%)` para centrar el propio cuadro
+
+Tras desplegar, recarga con **hard refresh** o vuelve a compilar CSS (`npm run build` / `vite`) para que el VPS sirva el `app.css` nuevo.
