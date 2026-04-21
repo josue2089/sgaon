@@ -76,4 +76,9 @@ class Charge extends Model
     {
         return $this->hasMany(PaymentAllocation::class);
     }
+
+    public function paymentRequests()
+    {
+        return $this->hasMany(ChargePaymentRequest::class)->latest();
+    }
 }

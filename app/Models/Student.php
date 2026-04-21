@@ -104,6 +104,11 @@ class Student extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function chargePaymentRequests()
+    {
+        return $this->hasMany(ChargePaymentRequest::class)->latest();
+    }
+
     public function alerts()
     {
         return $this->hasMany(Alert::class);

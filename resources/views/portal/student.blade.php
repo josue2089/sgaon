@@ -182,6 +182,59 @@
     </div>
 </div>
 
+<div class="card table-card">
+    <div class="section-head">
+        <h3 class="section-title section-title-sm">Pagos pendientes de cargos</h3>
+        <div class="entity-sub">Carga tu comprobante para validación administrativa</div>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Cargo</th><th>Monto</th><th>Estado</th><th>Vence</th><th>Enviar comprobante</th></tr></thead>
+            <tbody>
+            @forelse($pendingCharges as $charge)
+                <tr>
+                    <td>{{ $charge->concept }}</td>
+                    <td>${{ number_format($charge->amount, 2) }}</td>
+                    <td>{{ ucfirst($charge->status) }}</td>
+                    <td>{{ $charge->due_date?->format('d/m/Y') ?? 'N/D' }}</td>
+                    <td>
+                        <form method="POST" action="{{ route('portal.student.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs">
+                            @csrf
+                            <input type="number" step="0.01" min="0.01" max="{{ number_format($charge->amount, 2, '.', '') }}" name="amount" placeholder="Monto" required>
+                            <input name="payment_method" placeholder="Método (Transferencia, Pago móvil, etc.)">
+                            <input name="reference" placeholder="Referencia">
+                            <input type="file" name="payment_proof" required>
+                            <input name="notes" placeholder="Observaciones">
+                            <button class="btn secondary" type="submit">Enviar comprobante</button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="5"><div class="empty-state-inline">No tienes cargos pendientes por pagar.</div></td></tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+    @if($chargePaymentRequests->isNotEmpty())
+        <div class="table-wrap" style="margin-top: 0.75rem;">
+            <table class="data-table">
+                <thead><tr><th>Solicitud enviada</th><th>Cargo</th><th>Monto</th><th>Estado</th><th>Motivo rechazo</th></tr></thead>
+                <tbody>
+                @foreach($chargePaymentRequests as $paymentRequest)
+                    <tr>
+                        <td>{{ $paymentRequest->submitted_at?->format('d/m/Y H:i') ?? 'N/D' }}</td>
+                        <td>{{ $paymentRequest->charge?->concept ?? 'N/D' }}</td>
+                        <td>${{ number_format($paymentRequest->amount, 2) }}</td>
+                        <td>{{ ucfirst(str_replace('_', ' ', $paymentRequest->status)) }}</td>
+                        <td>{{ $paymentRequest->rejection_reason ?: 'N/A' }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+</div>
+
 <div class="grid-2">
     <div class="card table-card"><h3 class="section-title section-title-sm">Cargos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Concepto</th><th>Monto</th><th>Estado</th></tr></thead><tbody>@forelse($charges as $charge)<tr><td>{{ $charge->concept }}</td><td>${{ number_format($charge->amount,2) }}</td><td>{{ $charge->status }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin cargos</div></td></tr>@endforelse</tbody></table></div></div>
     <div class="card table-card"><h3 class="section-title section-title-sm">Pagos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Monto</th><th>Método</th></tr></thead><tbody>@forelse($payments as $payment)<tr><td>{{ $payment->paid_at?->format('Y-m-d') }}</td><td>${{ number_format($payment->amount,2) }}</td><td>{{ $payment->method }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin pagos</div></td></tr>@endforelse</tbody></table></div></div>

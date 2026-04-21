@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Charge;
+use App\Models\ChargePaymentRequest;
 use App\Models\Representative;
 use App\Models\MakeupRequest;
 use App\Models\MakeupSession;
@@ -116,8 +118,16 @@ class PortalController extends Controller
             ->values();
 
         $makeupPaymentInstructions = SystemSetting::getValue('makeup_payment_instructions', '');
+        $pendingChargeStatuses = ['pending', 'partial', 'overdue'];
+        $pendingCharges = $charges
+            ->filter(fn (Charge $charge) => in_array($charge->status, $pendingChargeStatuses, true))
+            ->values();
+        $chargePaymentRequests = $student->chargePaymentRequests()
+            ->with(['charge'])
+            ->latest()
+            ->get();
 
-        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions'));
+        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions', 'pendingCharges', 'chargePaymentRequests'));
     }
 
     public function submitMakeupPayment(Request $request, MakeupRequest $makeupRequest): RedirectResponse
@@ -204,10 +214,33 @@ class PortalController extends Controller
                 'enrollments.group.course',
                 'charges',
                 'payments',
+                'chargePaymentRequests.charge',
             ])
             ->get();
 
         return view('portal.representative', compact('representative', 'students'));
+    }
+
+    public function submitChargePaymentAsStudent(Request $request, Charge $charge): RedirectResponse
+    {
+        $student = $this->resolveStudent($request);
+        abort_if(! $student || (int) $charge->student_id !== (int) $student->id, 403);
+
+        $this->storeChargePaymentRequest($request, $charge, $student, null);
+
+        return back()->with('success', 'Comprobante enviado. Queda pendiente de validación.');
+    }
+
+    public function submitChargePaymentAsRepresentative(Request $request, Charge $charge): RedirectResponse
+    {
+        $representative = $this->resolveRepresentative($request);
+        abort_if(! $representative, 404, 'Perfil de representante no vinculado.');
+        $student = $representative->students()->where('students.id', $charge->student_id)->first();
+        abort_if(! $student, 403);
+
+        $this->storeChargePaymentRequest($request, $charge, $student, $representative);
+
+        return back()->with('success', 'Comprobante enviado. Queda pendiente de validación.');
     }
 
     private function resolveStudent(Request $request): ?Student
@@ -232,5 +265,36 @@ class PortalController extends Controller
         return Representative::where('user_id', $user->id)
             ->orWhere(fn ($q) => $q->whereNull('user_id')->where('email', $user->email))
             ->first();
+    }
+
+    private function storeChargePaymentRequest(Request $request, Charge $charge, Student $student, ?Representative $representative): void
+    {
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'payment_method' => ['nullable', 'string', 'max:80'],
+            'reference' => ['nullable', 'string', 'max:120'],
+            'notes' => ['nullable', 'string'],
+            'payment_proof' => ['required', 'file', 'max:10240'],
+        ]);
+
+        $proof = $request->file('payment_proof');
+        $proofPath = $proof->store('charge-payment-requests/'.$charge->id, 'public');
+
+        ChargePaymentRequest::create([
+            'campus_id' => $charge->campus_id,
+            'student_id' => $student->id,
+            'charge_id' => $charge->id,
+            'representative_id' => $representative?->id,
+            'amount' => $data['amount'],
+            'payment_method' => $data['payment_method'] ?? null,
+            'reference' => $data['reference'] ?? null,
+            'notes' => $data['notes'] ?? null,
+            'proof_path' => $proofPath,
+            'proof_original_name' => $proof->getClientOriginalName(),
+            'proof_mime_type' => $proof->getMimeType(),
+            'proof_file_size' => $proof->getSize(),
+            'status' => ChargePaymentRequest::STATUS_PENDING_VALIDATION,
+            'submitted_at' => now(),
+        ]);
     }
 }

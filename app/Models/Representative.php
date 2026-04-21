@@ -45,4 +45,9 @@ class Representative extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function chargePaymentRequests()
+    {
+        return $this->hasMany(ChargePaymentRequest::class)->latest();
+    }
 }

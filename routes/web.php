@@ -97,6 +97,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::get('/finance/students/{student}/history', [FinanceController::class, 'studentHistory'])->name('finance.students.history');
             Route::post('/finance/charges', [FinanceController::class, 'storeCharge'])->name('finance.charges.store');
             Route::post('/finance/payments', [FinanceController::class, 'storePayment'])->name('finance.payments.store');
+        Route::patch('/finance/payment-requests/{paymentRequest}', [FinanceController::class, 'reviewPaymentRequest'])->name('finance.payment-requests.review');
         });
         Route::middleware('permission:reports.view')->group(function () {
             Route::get('/reports/attendance', [ReportController::class, 'attendance'])->name('reports.attendance');
@@ -121,9 +122,11 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/portal/student', [PortalController::class, 'student'])->name('portal.student');
         Route::post('/portal/student/makeups/{makeupRequest}/payment', [PortalController::class, 'submitMakeupPayment'])->name('portal.student.makeups.payment');
         Route::post('/portal/student/makeups/{makeupRequest}/book', [PortalController::class, 'bookMakeupSession'])->name('portal.student.makeups.book');
+        Route::post('/portal/student/charges/{charge}/payment', [PortalController::class, 'submitChargePaymentAsStudent'])->name('portal.student.charges.payment');
     });
 
     Route::middleware(['role:representative', 'permission:portal.representative.view'])->group(function () {
         Route::get('/portal/representative', [PortalController::class, 'representative'])->name('portal.representative');
+        Route::post('/portal/representative/charges/{charge}/payment', [PortalController::class, 'submitChargePaymentAsRepresentative'])->name('portal.representative.charges.payment');
     });
 });

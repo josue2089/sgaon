@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ChargePaymentApprovedMail;
+use App\Mail\ChargePaymentRejectedMail;
+use App\Mail\ChargePendingMail;
 use App\Models\Charge;
+use App\Models\ChargePaymentRequest;
 use App\Models\Enrollment;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
@@ -18,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -31,6 +36,9 @@ class FinanceController extends Controller
         $studentsQuery = Student::orderBy('first_name');
         $enrollmentsQuery = Enrollment::with(['student', 'group.course'])->latest();
         $periodsQuery = Period::orderBy('code');
+        $paymentRequestsQuery = ChargePaymentRequest::query()
+            ->with(['student', 'representative', 'charge.course', 'validator'])
+            ->latest();
 
         if ($campusId) {
             $chargesQuery->where('campus_id', $campusId);
@@ -38,12 +46,14 @@ class FinanceController extends Controller
             $studentsQuery->where('campus_id', $campusId);
             $enrollmentsQuery->where('campus_id', $campusId);
             $periodsQuery->where('campus_id', $campusId);
+            $paymentRequestsQuery->where('campus_id', $campusId);
         }
 
         $focusStudentId = $request->integer('student_id') ?: null;
         if ($focusStudentId) {
             $chargesQuery->where('student_id', $focusStudentId);
             $paymentsQuery->where('student_id', $focusStudentId);
+            $paymentRequestsQuery->where('student_id', $focusStudentId);
         }
 
         $driver = DB::connection()->getDriverName();
@@ -98,6 +108,7 @@ class FinanceController extends Controller
                 ->whereIn('status', ['active', 'inactive', 'completed', 'withdrawn'])
                 ->get(),
             'periods' => $periodsQuery->get(),
+            'paymentRequests' => $paymentRequestsQuery->take(20)->get(),
             'focusStudentId' => $focusStudentId,
             'criticalOverdueCount' => (int) $criticalOverdueCount,
         ]);
@@ -113,7 +124,7 @@ class FinanceController extends Controller
             'billing_period_label' => ['nullable', 'string', 'max:60'],
             'amount' => ['required', 'numeric', 'min:0'],
             'due_date' => ['nullable', 'date'],
-            'status' => ['required', 'in:pending,partial,paid,overdue'],
+            'status' => ['required', 'in:pending,partial,overdue'],
             'notes' => ['nullable', 'string'],
         ]);
 
@@ -150,6 +161,7 @@ class FinanceController extends Controller
         $charge = Charge::create($data);
         AuditTrail::log($request, 'finance.charge.create', $charge, $data);
         AlertEngine::evaluateFinanceForStudent((int) $data['student_id']);
+        $this->emailChargePendingIfPossible($charge->fresh('student.representatives'));
 
         return back()->with('success', 'Cargo creado.');
     }
@@ -340,6 +352,134 @@ class FinanceController extends Controller
         AlertEngine::evaluateFinanceForStudent((int) $data['student_id']);
 
         return back()->with('success', 'Pago registrado y recibo generado.');
+    }
+
+    public function reviewPaymentRequest(Request $request, ChargePaymentRequest $paymentRequest): RedirectResponse
+    {
+        if ($request->user()?->campus_id && (int) $paymentRequest->campus_id !== (int) $request->user()->campus_id) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'action' => ['required', 'in:approve,reject'],
+            'rejection_reason' => ['nullable', 'string'],
+        ]);
+
+        if ($paymentRequest->status !== ChargePaymentRequest::STATUS_PENDING_VALIDATION) {
+            return back()->withErrors(['action' => 'La solicitud ya fue procesada.']);
+        }
+
+        if ($data['action'] === 'approve') {
+            $charge = Charge::query()
+                ->with(['paymentAllocations', 'payments'])
+                ->findOrFail($paymentRequest->charge_id);
+            $amountToApply = min((float) $paymentRequest->amount, FinanceReconcile::outstandingForCharge($charge));
+
+            if ($amountToApply <= 0) {
+                return back()->withErrors(['action' => 'El cargo seleccionado ya no tiene saldo pendiente.']);
+            }
+
+            $payment = Payment::create([
+                'campus_id' => $paymentRequest->campus_id,
+                'student_id' => $paymentRequest->student_id,
+                'charge_id' => $charge->id,
+                'amount' => $amountToApply,
+                'paid_at' => now()->toDateString(),
+                'paid_at_datetime' => now(),
+                'method' => $paymentRequest->payment_method ?: 'Comprobante portal',
+                'reference' => $paymentRequest->reference,
+                'status' => 'confirmed',
+                'received_by' => $request->user()?->id,
+                'notes' => $paymentRequest->notes,
+            ]);
+
+            PaymentAllocation::create([
+                'payment_id' => $payment->id,
+                'charge_id' => $charge->id,
+                'amount_applied' => $amountToApply,
+            ]);
+            FinanceReconcile::syncCharge($charge);
+
+            Receipt::create([
+                'campus_id' => $paymentRequest->campus_id,
+                'payment_id' => $payment->id,
+                'receipt_number' => 'R-'.str_pad((string) $payment->id, 8, '0', STR_PAD_LEFT),
+                'issued_at' => now()->toDateString(),
+            ]);
+
+            $paymentRequest->forceFill([
+                'status' => ChargePaymentRequest::STATUS_APPROVED,
+                'validated_by' => $request->user()?->id,
+                'validated_at' => now(),
+                'rejection_reason' => null,
+            ])->save();
+
+            AlertEngine::evaluateFinanceForStudent((int) $paymentRequest->student_id);
+            $this->emailPaymentRequestApproved($paymentRequest->fresh(['student.representatives', 'charge']));
+
+            return back()->with('success', 'Solicitud aprobada y pago aplicado.');
+        }
+
+        $paymentRequest->forceFill([
+            'status' => ChargePaymentRequest::STATUS_REJECTED,
+            'validated_by' => $request->user()?->id,
+            'validated_at' => now(),
+            'rejection_reason' => $data['rejection_reason'] ?? 'Comprobante inválido.',
+        ])->save();
+        $this->emailPaymentRequestRejected($paymentRequest->fresh(['student.representatives', 'charge']));
+
+        return back()->with('success', 'Solicitud rechazada.');
+    }
+
+    private function emailChargePendingIfPossible(Charge $charge): void
+    {
+        $recipients = $this->notificationRecipientsForStudent($charge->student);
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Mail::to($recipients->all())->send(new ChargePendingMail($charge));
+    }
+
+    private function emailPaymentRequestApproved(ChargePaymentRequest $paymentRequest): void
+    {
+        if ($paymentRequest->approved_emailed_at) {
+            return;
+        }
+        $recipients = $this->notificationRecipientsForStudent($paymentRequest->student);
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Mail::to($recipients->all())->send(new ChargePaymentApprovedMail($paymentRequest));
+        $paymentRequest->forceFill(['approved_emailed_at' => now()])->save();
+    }
+
+    private function emailPaymentRequestRejected(ChargePaymentRequest $paymentRequest): void
+    {
+        if ($paymentRequest->rejected_emailed_at) {
+            return;
+        }
+        $recipients = $this->notificationRecipientsForStudent($paymentRequest->student);
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Mail::to($recipients->all())->send(new ChargePaymentRejectedMail($paymentRequest));
+        $paymentRequest->forceFill(['rejected_emailed_at' => now()])->save();
+    }
+
+    private function notificationRecipientsForStudent(Student $student)
+    {
+        $student->loadMissing('representatives');
+
+        return collect([
+            $student->email,
+            ...$student->representatives->pluck('email')->all(),
+        ])->filter(fn ($email) => filled($email))
+            ->map(fn ($email) => mb_strtolower(trim((string) $email)))
+            ->unique()
+            ->values();
     }
 
     private function buildStudentFinanceTimeline(Student $student): Collection

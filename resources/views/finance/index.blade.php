@@ -80,7 +80,7 @@
             <div>
                 <label>Status</label>
                 <select name="status">
-                    @foreach(['pending','partial','paid','overdue'] as $status)
+                    @foreach(['pending','partial','overdue'] as $status)
                         <option>{{ $status }}</option>
                     @endforeach
                 </select>
@@ -139,6 +139,51 @@
             <button class="btn" type="submit">Registrar pago</button>
         </form>
     </div>
+</div>
+
+<div class="card">
+    <h3 class="section-title section-title-sm">Solicitudes de pago por validar</h3>
+    <table>
+        <thead>
+        <tr><th>Alumno</th><th>Cargo</th><th>Monto</th><th>Comprobante</th><th>Referencia</th><th>Estado</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+        @forelse($paymentRequests as $paymentRequest)
+            <tr>
+                <td>
+                    <div class="table-title">{{ $paymentRequest->student?->full_name ?? 'N/D' }}</div>
+                    <div class="table-sub">{{ $paymentRequest->representative?->full_name ? 'Enviado por: '.$paymentRequest->representative->full_name : 'Enviado por alumno' }}</div>
+                </td>
+                <td>{{ $paymentRequest->charge?->concept ?? 'N/D' }}</td>
+                <td>${{ number_format($paymentRequest->amount, 2) }}</td>
+                <td><a href="{{ \Illuminate\Support\Facades\Storage::url($paymentRequest->proof_path) }}" target="_blank">Ver archivo</a></td>
+                <td>{{ $paymentRequest->reference ?: 'Sin referencia' }}</td>
+                <td>{{ ucfirst(str_replace('_', ' ', $paymentRequest->status)) }}</td>
+                <td>
+                    @if($paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_PENDING_VALIDATION)
+                        <form method="POST" action="{{ route('finance.payment-requests.review', $paymentRequest) }}" class="stack-xs">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="action" value="approve">
+                            <button class="btn secondary" type="submit">Aprobar</button>
+                        </form>
+                        <form method="POST" action="{{ route('finance.payment-requests.review', $paymentRequest) }}" class="stack-xs" style="margin-top:.4rem;">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="action" value="reject">
+                            <input name="rejection_reason" placeholder="Motivo rechazo">
+                            <button class="btn secondary" type="submit">Rechazar</button>
+                        </form>
+                    @else
+                        <div class="table-sub">{{ $paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_APPROVED ? 'Procesada' : 'Rechazada' }}</div>
+                    @endif
+                </td>
+            </tr>
+        @empty
+            <tr><td colspan="7"><div class="empty-state-inline">No hay solicitudes de pago pendientes.</div></td></tr>
+        @endforelse
+        </tbody>
+    </table>
 </div>
 
 <div class="card">
