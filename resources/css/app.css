@@ -2799,3 +2799,162 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
+
+/* Cargos — portal alumno: tarjetas + modal (evita scroll horizontal) */
+.charge-pending-list {
+    display: grid;
+    gap: 0.9rem;
+    padding: 0 1.2rem 1.2rem;
+}
+
+.charge-pending-card {
+    border: 1px solid #dbe6f7;
+    border-radius: 20px;
+    background: #fff;
+    padding: 1rem;
+    display: grid;
+    gap: 0.65rem;
+}
+
+.charge-pending-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.charge-pending-meta {
+    font-size: 0.92rem;
+    color: var(--muted);
+}
+
+.charge-pending-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.charge-pay-dialog {
+    border: none;
+    border-radius: 20px;
+    padding: 1.15rem 1.25rem;
+    width: min(440px, calc(100vw - 2rem));
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    box-shadow: 0 24px 48px rgba(7, 18, 53, 0.22);
+}
+
+.charge-pay-dialog::backdrop {
+    background: rgba(7, 18, 53, 0.52);
+    backdrop-filter: blur(3px);
+}
+
+.charge-pay-dialog-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.charge-pay-dialog-title {
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--brand);
+}
+
+.charge-pay-dialog-close {
+    border: none;
+    background: transparent;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 0 0.25rem;
+}
+
+.charge-pay-dialog-summary {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    color: var(--muted);
+}
+
+.charge-pay-form label {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    color: var(--text);
+}
+
+.charge-pay-form input[type='text'],
+.charge-pay-form input[type='number'],
+.charge-pay-form input[type='file'] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.charge-pay-dialog-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: flex-end;
+    margin-top: 0.35rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line);
+}
+
+.charge-request-list {
+    display: grid;
+    gap: 0.65rem;
+    padding: 0 1.2rem 1.2rem;
+    margin-top: 0.25rem;
+}
+
+.charge-request-heading {
+    padding: 0 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.charge-request-card {
+    border: 1px solid #e4ebf8;
+    border-radius: 16px;
+    background: #fbfdff;
+    padding: 0.85rem 1rem;
+}
+
+.charge-request-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.charge-request-meta {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+    font-size: 0.92rem;
+    color: var(--muted);
+}
+
+.charge-request-reject {
+    margin-top: 0.55rem;
+    font-size: 0.88rem;
+    color: var(--text);
+}
+
+@media (max-width: 480px) {
+    .charge-pay-dialog-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .charge-pay-dialog-footer .btn {
+        width: 100%;
+    }
+}

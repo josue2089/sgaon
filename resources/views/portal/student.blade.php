@@ -182,55 +182,92 @@
     </div>
 </div>
 
-<div class="card table-card">
-    <div class="section-head">
-        <h3 class="section-title section-title-sm">Pagos pendientes de cargos</h3>
-        <div class="entity-sub">Carga tu comprobante para validación administrativa</div>
+<div class="card">
+    <div class="section-head section-head-tight">
+        <h2 class="section-title section-title-md">Pagos pendientes de cargos</h2>
+        <div class="entity-sub">Toca un cargo y sube el comprobante en el formulario (no hace falta scroll horizontal)</div>
     </div>
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead><tr><th>Cargo</th><th>Monto</th><th>Estado</th><th>Vence</th><th>Enviar comprobante</th></tr></thead>
-            <tbody>
-            @forelse($pendingCharges as $charge)
-                <tr>
-                    <td>{{ $charge->concept }}</td>
-                    <td>${{ number_format($charge->amount, 2) }}</td>
-                    <td>{{ ucfirst($charge->status) }}</td>
-                    <td>{{ $charge->due_date?->format('d/m/Y') ?? 'N/D' }}</td>
-                    <td>
-                        <form method="POST" action="{{ route('portal.student.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs">
-                            @csrf
-                            <input type="number" step="0.01" min="0.01" max="{{ number_format($charge->amount, 2, '.', '') }}" name="amount" placeholder="Monto" required>
-                            <input name="payment_method" placeholder="Método (Transferencia, Pago móvil, etc.)">
-                            <input name="reference" placeholder="Referencia">
-                            <input type="file" name="payment_proof" required>
-                            <input name="notes" placeholder="Observaciones">
-                            <button class="btn secondary" type="submit">Enviar comprobante</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="5"><div class="empty-state-inline">No tienes cargos pendientes por pagar.</div></td></tr>
-            @endforelse
-            </tbody>
-        </table>
+    <div class="charge-pending-list">
+        @forelse($pendingCharges as $charge)
+            <article class="charge-pending-card">
+                <div class="charge-pending-head">
+                    <div>
+                        <div class="table-title">{{ $charge->concept }}</div>
+                        <div class="table-sub">Vence: {{ $charge->due_date?->format('d/m/Y') ?? 'N/D' }}</div>
+                    </div>
+                    <div>
+                        @include('partials.ui.status-badge', [
+                            'tone' => $charge->status === 'overdue' ? 'danger' : 'warn',
+                            'text' => ucfirst($charge->status),
+                        ])
+                    </div>
+                </div>
+                <div class="charge-pending-meta">
+                    <div><strong>Monto cargo:</strong> ${{ number_format($charge->amount, 2) }}</div>
+                </div>
+                <div class="charge-pending-actions">
+                    <button type="button" class="btn secondary" onclick="document.getElementById('charge-pay-dialog-{{ $charge->id }}').showModal()">Enviar comprobante</button>
+                </div>
+            </article>
+            <dialog id="charge-pay-dialog-{{ $charge->id }}" class="charge-pay-dialog">
+                <div class="charge-pay-dialog-head">
+                    <h3 class="charge-pay-dialog-title">Enviar comprobante</h3>
+                    <button type="button" class="charge-pay-dialog-close" onclick="document.getElementById('charge-pay-dialog-{{ $charge->id }}').close()" aria-label="Cerrar">&times;</button>
+                </div>
+                <p class="charge-pay-dialog-summary">{{ $charge->concept }} · <strong>${{ number_format($charge->amount, 2) }}</strong></p>
+                <form method="POST" action="{{ route('portal.student.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs charge-pay-form">
+                    @csrf
+                    <div>
+                        <label for="charge-amount-{{ $charge->id }}">Monto que pagaste</label>
+                        <input id="charge-amount-{{ $charge->id }}" type="number" step="0.01" min="0.01" max="{{ number_format($charge->amount, 2, '.', '') }}" name="amount" placeholder="Ej. {{ number_format($charge->amount, 2, '.', '') }}" required inputmode="decimal">
+                    </div>
+                    <div>
+                        <label for="charge-method-{{ $charge->id }}">Método</label>
+                        <input id="charge-method-{{ $charge->id }}" name="payment_method" placeholder="Transferencia, Pago móvil, etc.">
+                    </div>
+                    <div>
+                        <label for="charge-ref-{{ $charge->id }}">Referencia</label>
+                        <input id="charge-ref-{{ $charge->id }}" name="reference" placeholder="Número de operación o referencia">
+                    </div>
+                    <div>
+                        <label for="charge-file-{{ $charge->id }}">Archivo del comprobante</label>
+                        <input id="charge-file-{{ $charge->id }}" type="file" name="payment_proof" required accept="image/*,.pdf">
+                    </div>
+                    <div>
+                        <label for="charge-notes-{{ $charge->id }}">Observaciones</label>
+                        <input id="charge-notes-{{ $charge->id }}" name="notes" placeholder="Opcional">
+                    </div>
+                    <div class="charge-pay-dialog-footer">
+                        <button type="button" class="btn secondary" onclick="document.getElementById('charge-pay-dialog-{{ $charge->id }}').close()">Cancelar</button>
+                        <button class="btn" type="submit">Enviar comprobante</button>
+                    </div>
+                </form>
+            </dialog>
+        @empty
+            <div class="empty-state-inline">No tienes cargos pendientes por pagar.</div>
+        @endforelse
     </div>
     @if($chargePaymentRequests->isNotEmpty())
-        <div class="table-wrap" style="margin-top: 0.75rem;">
-            <table class="data-table">
-                <thead><tr><th>Solicitud enviada</th><th>Cargo</th><th>Monto</th><th>Estado</th><th>Motivo rechazo</th></tr></thead>
-                <tbody>
-                @foreach($chargePaymentRequests as $paymentRequest)
-                    <tr>
-                        <td>{{ $paymentRequest->submitted_at?->format('d/m/Y H:i') ?? 'N/D' }}</td>
-                        <td>{{ $paymentRequest->charge?->concept ?? 'N/D' }}</td>
-                        <td>${{ number_format($paymentRequest->amount, 2) }}</td>
-                        <td>{{ ucfirst(str_replace('_', ' ', $paymentRequest->status)) }}</td>
-                        <td>{{ $paymentRequest->rejection_reason ?: 'N/A' }}</td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
+        <div class="charge-request-list">
+            <h3 class="section-title section-title-sm charge-request-heading">Solicitudes enviadas</h3>
+            @foreach($chargePaymentRequests as $paymentRequest)
+                <article class="charge-request-card">
+                    <div class="charge-request-line">
+                        <span class="table-title">{{ $paymentRequest->charge?->concept ?? 'N/D' }}</span>
+                        <span>@include('partials.ui.status-badge', [
+                            'tone' => $paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_APPROVED ? 'ok' : ($paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_REJECTED ? 'danger' : 'warn'),
+                            'text' => ucfirst(str_replace('_', ' ', $paymentRequest->status)),
+                        ])</span>
+                    </div>
+                    <div class="charge-request-meta">
+                        <span>{{ $paymentRequest->submitted_at?->format('d/m/Y H:i') ?? 'N/D' }}</span>
+                        <span>${{ number_format($paymentRequest->amount, 2) }}</span>
+                    </div>
+                    @if($paymentRequest->rejection_reason)
+                        <div class="charge-request-reject"><strong>Motivo:</strong> {{ $paymentRequest->rejection_reason }}</div>
+                    @endif
+                </article>
+            @endforeach
         </div>
     @endif
 </div>
@@ -239,4 +276,15 @@
     <div class="card table-card"><h3 class="section-title section-title-sm">Cargos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Concepto</th><th>Monto</th><th>Estado</th></tr></thead><tbody>@forelse($charges as $charge)<tr><td>{{ $charge->concept }}</td><td>${{ number_format($charge->amount,2) }}</td><td>{{ $charge->status }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin cargos</div></td></tr>@endforelse</tbody></table></div></div>
     <div class="card table-card"><h3 class="section-title section-title-sm">Pagos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Monto</th><th>Método</th></tr></thead><tbody>@forelse($payments as $payment)<tr><td>{{ $payment->paid_at?->format('Y-m-d') }}</td><td>${{ number_format($payment->amount,2) }}</td><td>{{ $payment->method }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin pagos</div></td></tr>@endforelse</tbody></table></div></div>
 </div>
+@push('scripts')
+<script>
+document.querySelectorAll('dialog.charge-pay-dialog').forEach(function (dlg) {
+    dlg.addEventListener('click', function (e) {
+        if (e.target === dlg) {
+            dlg.close();
+        }
+    });
+});
+</script>
+@endpush
 @endsection

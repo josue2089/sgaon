@@ -7975,3 +7975,132 @@ Si quieres, en la siguiente iteración te dejo esto más pro con:
 - bloqueo de múltiples solicitudes pendientes por el mismo cargo,
 - botón “ver comprobante” con preview,
 - tabs por estado en financiero (`Pendiente`, `Aprobada`, `Rechazada`).
+
+---
+
+_**User**_
+
+En la vista de alunno, en el aparatdo de pagos pendientes de cargos, se ve ujan tabla con scroll horizontal, lo que hace un mal UX/UI, te dejo screenshot 
+
+Como se pued emejorar? Quizas con Modal?
+
+---
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+The user requests UX/UI enhancements for the "Pagos pendientes de cargos" section in the student portal, specifically addressing a horizontal scrolling problem caused by an excessively wide table containing forms within its cells.</details></think>
+
+_**Agent (default)**_
+
+Revisando la sección actual del portal alumno y los estilos para eliminar el scroll horizontal: pasaremos el formulario largo a un modal (o a tarjetas apiladas) con un diseño coherente.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "modal|dialog|makeup-student"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "modal|dialog|makeup-student",
+  "topFiles": [
+    {
+      "matchCount": 10,
+      "uri": "resources/css/app.css"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 10
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+I'll implement a card-based layout for pending charges instead of a wide table. Each card will display the concept, amount, status, due date, and include an "Enviar comprobante" button that opens a native dialog or div modal similar to the student-picker-modal pattern. For the payment request history, I'll use small cards instead of a wide table to avoid horizontal scrolling, similar to the pending charges layout. I'll implement a dialog using HTML5 `<dialog>` element or reuse existing student-picker-modal classes for consistency. The simplest approach is to create charge-payment-modal variants that inherit styling from existing modal components. Pending charges will use a card-based layout with each charge displayed in a `charge-pending-card` containing a header row, metadata, and an "Enviar comprobante" button that opens a modal dialog. Each dialog will have a unique ID based on charge ID and can be opened using JavaScript's `showModal()` method. The dialog will close when clicking outside its boundaries using an event listener on the dialog element itself. A minimal script will handle opening and closing dialogs using the native HTML5 `<dialog>` element.</details></think>
+
+_**Agent (default)**_
+
+Convirtiendo la tabla ancha en tarjetas compactas y moviendo el formulario largo a un `<dialog>` nativo (overlay + campos apilados a ancho completo), reutilizando el patrón visual del portal.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: </summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
