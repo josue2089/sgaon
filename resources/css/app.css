@@ -2834,6 +2834,12 @@ textarea {
     gap: 0.5rem;
 }
 
+/* Sin esto, reglas como display:flex en el <dialog> rompen dialog:not([open]) y el modal se ve al cargar */
+dialog.charge-pay-dialog:not([open]),
+dialog.finance-proof-dialog:not([open]) {
+    display: none !important;
+}
+
 .charge-pay-dialog {
     border: none;
     border-radius: 20px;
@@ -3067,14 +3073,17 @@ textarea {
     width: min(920px, calc(100vw - 2rem));
     max-height: calc(100vh - 2rem);
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
     box-shadow: 0 24px 48px rgba(7, 18, 53, 0.22);
     position: fixed;
     top: 50%;
     left: 50%;
     margin: 0;
     transform: translate(-50%, -50%);
+}
+
+dialog.finance-proof-dialog[open] {
+    display: flex;
+    flex-direction: column;
 }
 
 .finance-proof-dialog::backdrop {
