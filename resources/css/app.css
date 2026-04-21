@@ -3107,7 +3107,7 @@ dialog.finance-proof-dialog[open] {
 
 .finance-proof-dialog-body {
     flex: 1;
-    min-height: 0;
+    min-height: min(42vh, 420px);
     margin-top: 0.65rem;
     border-radius: 12px;
     overflow: auto;
@@ -3115,9 +3115,23 @@ dialog.finance-proof-dialog[open] {
     border: 1px solid var(--line);
 }
 
+.finance-proof-dialog-body:has(.finance-proof-img) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+}
+
+.finance-proof-dialog-body:has(.finance-proof-iframe) {
+    display: block;
+    padding: 0;
+    min-height: min(50vh, 520px);
+}
+
 .finance-proof-img {
     display: block;
-    width: 100%;
+    width: auto;
+    max-width: 100%;
     height: auto;
     max-height: min(72vh, 640px);
     object-fit: contain;

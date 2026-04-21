@@ -8981,3 +8981,270 @@ Status: **completed**
 <summary>Tool use: **ripgrep_raw_search**</summary>
 
 </details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+The CSS rule `.finance-proof-dialog { display: flex; }` causes the dialog to remain visible when closed, as it overrides the browser's default behavior where closed dialogs should have `display: none`. Fix:
+- Add CSS rules to ensure closed dialogs display as `none` while open dialogs use `flex` layout
+- Remove `display: flex; flex-direction: column;` from the base `.finance-proof-dialog` rule
+- Apply these properties only to open dialogs using `dialog.finance-proof-dialog[open]` selector
+
+The cleanest approach:
+- Remove `display: flex; flex-direction: column;` from `.finance-proof-dialog` base
+- Add a new rule `dialog.finance-proof-dialog[open]` to handle open state styling To fix the dialog visibility issue, use `dialog.finance-proof-dialog:not([open])` with `display: none !important` to hide closed dialogs, and apply `display: flex` and `flex-direction: column` only to open dialogs using `dialog.finance-proof-dialog[open]`.
+
+- Remove `display: flex; flex-direction: column;` from the base `.finance-proof-dialog` rule
+- Add `dialog.finance-proof-dialog:not([open]) { display: none !important; }` to hide closed dialogs
+- Keep full layout styles in `dialog.finance-proof-dialog[open]` selector
+- Ensure `display: flex` is applied only to open dialogs To fix the dialog visibility issue, ensure closed dialogs are hidden by adding a rule for `dialog.finance-proof-dialog:not([open])` with `display: none !important`. Keep `display: flex` and `flex-direction: column` on the base `.finance-proof-dialog` rule, but apply them specifically to open dialogs using `dialog.finance-proof-dialog[open]` selector. The key is ensuring proper specificity and order of CSS rules. The `:not([open])` selector ensures closed dialogs are hidden by overriding `display: flex`, which is crucial for proper dialog behavior. For open dialogs, the `display: flex` rule applies only when `[open]` is present, avoiding conflicts.
+
+- Add `dialog.finance-proof-dialog:not([open]) { display: none !important; }` to properly hide closed dialogs
+- Apply `display: flex` and `flex-direction: column` only to open dialogs using `dialog.finance-proof-dialog[open]`
+- Consider adding similar rules to `charge-pay-dialog` for consistency, even if it defaults to `display: none` for closed state
+- The `finance-proof-dialog` likely uses `display: flex` on open state, while `charge-pay-dialog` may not require explicit display rules since it defaults to `display: none` when closed Adding `dialog.charge-pay-dialog:not([open]) { display: none !important; }` ensures closed dialogs are properly hidden, even with `position: fixed`, `top`, `left`, and `transform` styles. This protects against potential browser inconsistencies and maintains proper dialog behavior.
+
+- Add `dialog.charge-pay-dialog:not([open]) { display: none !important; }` for closed dialog visibility
+- Apply similar rules to other dialog classes for consistency
+- Ensure `display: none !important` takes precedence over positioning styles
+- This prevents unexpected visibility issues with fixed-position dialogs ```css
+dialog.charge-pay-dialog:not([open]),
+dialog.finance-proof-dialog:not([open]) {
+    display: none !important;
+}
+```
+
+- Closed dialogs are hidden using `display: none !important` to override `display: flex` and other styles
+- When open, the `[open]` attribute prevents `:not([open])` from applying, allowing `.finance-proof-dialog` to set `display: flex`
+- This ensures proper dialog visibility behavior without conflicts between CSS rules</details></think>
+
+_**Agent (default)**_
+
+Corrigiendo: `display: flex` en `.finance-proof-dialog` anula el `display: none` del navegador para `<dialog>` cerrados. Forzando `display: none` cuando no tiene `[open]`.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+The display:flex property was removed from finance-proof-dialog, so we now need to apply flex layout to the dialog body with flex:1 and similar properties when the dialog is opened.</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+The .finance-proof-dialog block requires verification to ensure its position remains fixed.</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "^dialog"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "^dialog",
+  "topFiles": [
+    {
+      "matchCount": 3,
+      "uri": "resources/css/app.css"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 3
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+El fallo venía del CSS del modal de comprobante: **`display: flex` en `.finance-proof-dialog`** anulaba lo que el navegador hace por defecto con `<dialog>` (`dialog:not([open]) { display: none }`), así que el cuadro se pintaba **aunque estuviera cerrado**.
+
+**Cambios:**
+
+1. Regla explícita para cerrados: `dialog.charge-pay-dialog:not([open])` y `dialog.finance-proof-dialog:not([open])` con **`display: none !important`**.
+2. **`display: flex`** solo cuando está abierto: `dialog.finance-proof-dialog[open] { display: flex; flex-direction: column; }`.
+
+Vuelve a compilar CSS en producción (`npm run build` o tu flujo Vite) y recarga la página dura; el modal solo debe mostrarse al pulsar **Ver comprobante**.
+
+---
+
+_**User**_
+
+Ahora si abre el modal ciando hago clicm en ver comprobante, pero no se ve la imagen.
+
+---
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+When the user clicks "Ver comprobante," the modal opens, but the image is not visible.</details></think>
+
+_**Agent (default)**_
+
+Investigando cómo se construye la URL del comprobante y cómo se muestra la imagen en el modal.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/finance/index.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/config/filesystems.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+The issue is likely that $isImage is false when proof_mime_type is null or empty in the database.
+
+- This occurs because the code doesn't properly handle null or empty mime type values
+- The image detection logic fails when no mime type is present
+- This leads to incorrect image validation behavior - Missing MIME types cause fallback to file extension detection for image validation.
+- Relative URLs from `Storage::disk('public')->url()` may point to incorrect hosts if `APP_URL` is misconfigured.
+- A better approach uses `asset('storage/')` to ensure correct asset paths. Using `asset('storage/')` ensures correct asset paths and avoids issues with `APP_URL` misconfiguration. Unlike `Storage::disk('public')->url()`, which uses `APP_URL` directly and can cause cross-domain problems if the user accesses the site via a different host, `asset()` generates a relative path that browsers resolve correctly. This prevents potential CORS issues or blocked resources due to domain mismatches. **Fix 1**: Use relative URL for images: `asset('storage/'.$paymentRequest->proof_path)`  generates `/storage/charge-payment-requests/1/file.jpg` using the current host.
+
+**Fix 2**: Expand `$isImage` logic to fallback on file extensions when mime type is empty:
+- Extract file extension and check if it's an image type.
+- Set `$isImage` to true if either the mime type starts with "image/" or the extension matches common image formats and mime type is empty. **Fix 3**: HEIC files from iPhones use the mime type `image/heic`, so using `str_starts_with(image/)` works correctly.
+
+**Fix 4**: CSS issue with `.finance-proof-dialog-body` having `flex: 1` and `min-height: 0` requires the parent container to have an explicit height. Without it, the flex child may collapse to zero height. When the dialog opens with `display: flex` column layout, the bodys `flex: 1` and `min-height: 0` can cause issues if the parent lacks a defined heightespecially when content doesnt set a height, leading to collapsed elements like images with `max-height`. The root cause may be a zero-height body element.</details></think>
+
+_**Agent (default)**_
+
+Corrigiendo la URL del archivo (APP_URL puede no coincidir con el dominio real) y detectando imágenes por extensión cuando falte `proof_mime_type`. Ajustando el CSS del cuerpo del modal para que el área de vista previa tenga altura visible.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/finance/index.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+Update CSS for finance-proof-dialog-body to include min-height,</details></think>

@@ -149,10 +149,15 @@
     <div class="finance-payment-request-list">
         @forelse($paymentRequests as $paymentRequest)
             @php
-                $proofUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($paymentRequest->proof_path);
+                $proofUrl = asset('storage/'.$paymentRequest->proof_path);
                 $proofMime = strtolower((string) ($paymentRequest->proof_mime_type ?? ''));
-                $isImage = str_starts_with($proofMime, 'image/');
-                $isPdf = $proofMime === 'application/pdf' || str_ends_with(strtolower($paymentRequest->proof_path), '.pdf');
+                $proofExt = strtolower(pathinfo((string) $paymentRequest->proof_path, PATHINFO_EXTENSION));
+                $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'svg'];
+                $isImage = str_starts_with($proofMime, 'image/')
+                    || ($proofMime === '' && in_array($proofExt, $imageExtensions, true))
+                    || ($proofMime === 'application/octet-stream' && in_array($proofExt, $imageExtensions, true));
+                $isPdf = $proofMime === 'application/pdf'
+                    || str_ends_with(strtolower($paymentRequest->proof_path), '.pdf');
             @endphp
             <article class="finance-payment-request-card">
                 <div class="finance-payment-request-head">
