@@ -6,6 +6,7 @@
         <p class="page-subtitle">Detalle operativo del curso, sesiones y avance del programa</p>
     </div>
     <div class="form-actions">
+        <a class="btn" href="{{ route('courses.grades.index', $course) }}">Evaluaciones / Notas</a>
         <a class="btn secondary" href="{{ route('courses.edit', $course) }}">Editar curso</a>
         <a class="btn secondary" href="{{ route('courses.index') }}">Volver</a>
     </div>

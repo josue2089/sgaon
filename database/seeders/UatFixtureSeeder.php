@@ -75,8 +75,15 @@ class UatFixtureSeeder extends Seeder
         ]);
 
         $levelA = AcademicLevel::create(['campus_id' => $campusA->id, 'name' => 'Primary UAT']);
-        $courseA = Course::create(['campus_id' => $campusA->id, 'academic_level_id' => $levelA->id, 'name' => 'BP1', 'status' => 'active']);
+        $courseA = Course::create([
+            'campus_id' => $campusA->id,
+            'academic_level_id' => $levelA->id,
+            'name' => 'BP1',
+            'teacher_id' => $teacher->id,
+            'status' => 'active',
+        ]);
         $groupA = Group::create(['campus_id' => $campusA->id, 'course_id' => $courseA->id, 'teacher_id' => $teacher->id, 'name' => 'G-A', 'period' => '2026', 'status' => 'active']);
+        $courseA->update(['managed_group_id' => $groupA->id]);
 
         Enrollment::create([
             'campus_id' => $campusA->id,

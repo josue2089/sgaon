@@ -167,6 +167,20 @@ class DashboardController extends Controller
             $attendanceByGroupQuery->where('class_sessions.campus_id', $campusId);
         }
 
+        $teacherGradeCourses = collect();
+        if ($user?->role === 'teacher' && $campusId) {
+            $teacher = Teacher::query()
+                ->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('email', $user->email))
+                ->first();
+            if ($teacher) {
+                $teacherGradeCourses = Course::query()
+                    ->where('campus_id', $campusId)
+                    ->where('teacher_id', $teacher->id)
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'code']);
+            }
+        }
+
         return view('dashboard', [
             'studentsCount' => $studentsQuery->count(),
             'teachersCount' => $teachersQuery->count(),
@@ -188,6 +202,7 @@ class DashboardController extends Controller
             'attendanceByLevel' => $attendanceByLevelQuery->take(5)->get(),
             'attendanceByTeacher' => $attendanceByTeacherQuery->take(5)->get(),
             'attendanceByGroup' => $attendanceByGroupQuery->take(5)->get(),
+            'teacherGradeCourses' => $teacherGradeCourses,
         ]);
     }
 }

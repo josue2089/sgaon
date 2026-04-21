@@ -51,4 +51,9 @@ class Enrollment extends Model
     {
         return $this->hasMany(MakeupRequest::class);
     }
+
+    public function gradeEntries()
+    {
+        return $this->hasMany(GradeEntry::class);
+    }
 }

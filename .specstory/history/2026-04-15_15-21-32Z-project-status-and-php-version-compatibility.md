@@ -9247,4 +9247,4688 @@ _**Agent (default)**_
 _**Agent (default)**_
 
 <think><details><summary>Thought Process</summary>
-Update CSS for finance-proof-dialog-body to include min-height,</details></think>
+Update CSS for finance-proof-dialog-body to include min-height, preventing layout collapse, and set finance-proof-img with object-fit: contain and min-height on its container. Also add min-height to .finance-proof-dialog-body for stability.
+
+For .finance-proof-dialog, set min-height on body:
+- .finance-proof-dialog-body { min-height: 200px; }</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+The body uses flexbox to center content, making the iframe span the full width available.</details></think>
+
+_**Agent (default)**_
+
+Ajustando el CSS: el `display: flex` en el cuerpo puede afectar al PDF en el iframe. Aplicando estilos distintos según el tipo de contenido.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+`:has()` is supported in Safari 15.</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/finance/index.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+Add a "Abrir en pestaa nueva" option in the footer that is always visible, even without JavaScript support.</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: cd /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon && php artisan view:cache 2>&1</summary>
+
+```bash
+cd /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon && php artisan view:cache 2>&1
+```
+
+```
+
+
+   INFO  Blade templates cached successfully.  
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Esto suele pasar por **dos causas**:
+
+### 1. URL del archivo (`APP_URL`)
+`Storage::disk('public')->url()` arma la URL con **`APP_URL`**. Si en producción el dominio es otro (por ejemplo accedes por `https://sgaon.aerioussport.com` pero `APP_URL` sigue siendo `localhost`), el `<img>` apunta a un host incorrecto y **no carga**.
+
+**Cambio:** la vista usa ahora **`asset('storage/'.$paymentRequest->proof_path)`**, que genera una ruta **relativa al sitio actual** (`/storage/...`), así la imagen siempre se pide al mismo dominio desde el que navegas.
+
+### 2. Tipo MIME vacío o genérico
+Si `proof_mime_type` viene vacío o como `application/octet-stream`, antes **no** entraba en la rama de imagen y el cuerpo quedaba raro o en el fallback.
+
+**Cambio:** además del MIME `image/*`, se considera imagen por **extensión** (jpg, png, webp, heic, svg, etc.) cuando el MIME falta o es genérico.
+
+### 3. CSS del modal
+El área del visor tiene **altura mínima** y las imágenes van centradas para que no queden “en blanco” por un `flex` sin tamaño.
+
+---
+
+Si **aún** no ves la imagen, en el servidor suele faltar el enlace:
+
+`php artisan storage:link`
+
+y que el archivo exista en `storage/app/public/...` y sea accesible por `/storage/...`.
+
+Después despliega CSS compilado (`npm run build` si usas Vite en producción) y recarga fuerte el navegador.
+
+---
+
+_**User**_
+
+Ahora quiero que planifiqeumos el modulo de notas.
+
+Dentro de cada curos se evalua esto:
+Vocabulary, Listening, Speaking, Writting and Grammar
+
+
+Y las notas van en esta escala:
+Outstanding 
+Acceptable
+Regular
+Need Support
+Y se pueden agregar observaciones
+
+Todas las notas deben estraa sociaad a cada curso y alumno, y se debe poder consultar como historicos, tanto en la ficha del alumno como en la ficha del curso
+
+EL profesor es el encargado de cargar las notas correspondientes
+
+Ayudame a crear el modulo correspondiente, con un excelente Ux/UI para que sea facil de cargar y facil de acceder.
+
+
+---
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+The user intends to create a grades/notes module for their Laravel application.</details></think>
+
+_**Agent (default)**_
+
+Explorando el modelo académico (cursos, inscripciones, profesores) y los patrones de permisos/UI del proyecto para planificar el módulo de notas.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="semantic_search_full">
+<details>
+<summary>Tool use: **semantic_search_full**</summary>
+
+
+Parameters:
+
+```json
+{
+  "explanation": "",
+  "includePattern": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models",
+  "query": "Where are enrollments linked to student and course group?",
+  "topK": 10
+}
+```
+Result:
+
+```json
+{
+  "codeResults": [
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class Enrollment extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 13,
+            "text": "        'campus_id',"
+          },
+          {
+            "lineNumber": 14,
+            "text": "        'student_id',"
+          },
+          {
+            "lineNumber": 15,
+            "text": "        'group_id',"
+          },
+          {
+            "lineNumber": 16,
+            "text": "        'enrolled_at',"
+          },
+          {
+            "lineNumber": 17,
+            "text": "        'status',"
+          },
+          {
+            "lineNumber": 18,
+            "text": "        'progress',"
+          },
+          {
+            "lineNumber": 19,
+            "text": "        'notes',"
+          },
+          {
+            "lineNumber": 20,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 21
+          },
+          {
+            "lineNumber": 22,
+            "text": "    protected function casts(): array"
+          },
+          {
+            "lineNumber": 23,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 24,
+            "text": "        return ["
+          },
+          {
+            "lineNumber": 25,
+            "text": "            'enrolled_at' =\u003e 'date',"
+          },
+          {
+            "lineNumber": 26,
+            "text": "            'progress' =\u003e 'float',"
+          },
+          {
+            "lineNumber": 27,
+            "text": "        ];"
+          },
+          {
+            "lineNumber": 28,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 29
+          },
+          {
+            "lineNumber": 30,
+            "text": "    public function student()"
+          },
+          {
+            "lineNumber": 31,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 32,
+            "text": "        return $this-\u003ebelongsTo(Student::class);"
+          },
+          {
+            "lineNumber": 33,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 34
+          },
+          {
+            "lineNumber": 35,
+            "text": "    public function group()"
+          },
+          {
+            "lineNumber": 36,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 37,
+            "text": "        return $this-\u003ebelongsTo(Group::class);"
+          },
+          {
+            "lineNumber": 38,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 39
+          },
+          {
+            "lineNumber": 40,
+            "text": "    public function attendanceRecords()"
+          },
+          {
+            "lineNumber": 41,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 42,
+            "text": "        return $this-\u003ehasMany(AttendanceRecord::class);"
+          },
+          {
+            "lineNumber": 43,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 44
+          },
+          {
+            "lineNumber": 45,
+            "text": "    public function charges()"
+          },
+          {
+            "lineNumber": 46,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 47,
+            "text": "        return $this-\u003ehasMany(Charge::class);"
+          },
+          {
+            "lineNumber": 48,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 49
+          },
+          {
+            "lineNumber": 50,
+            "text": "    public function makeupRequests()"
+          },
+          {
+            "lineNumber": 51,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 52,
+            "text": "        return $this-\u003ehasMany(MakeupRequest::class);"
+          },
+          {
+            "lineNumber": 53,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 54,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 54
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/Enrollment.php",
+        "signatures": {}
+      },
+      "score": 0.5630903244018555
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 80,
+            "text": "    public function courseLevel()"
+          },
+          {
+            "lineNumber": 81,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 82,
+            "text": "        return $this-\u003ebelongsTo(CourseLevel::class);"
+          },
+          {
+            "lineNumber": 83,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 84
+          },
+          {
+            "lineNumber": 85,
+            "text": "    public function campus()"
+          },
+          {
+            "lineNumber": 86,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 87,
+            "text": "        return $this-\u003ebelongsTo(Campus::class);"
+          },
+          {
+            "lineNumber": 88,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 89
+          },
+          {
+            "lineNumber": 90,
+            "text": "    public function teacher()"
+          },
+          {
+            "lineNumber": 91,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 92,
+            "text": "        return $this-\u003ebelongsTo(Teacher::class);"
+          },
+          {
+            "lineNumber": 93,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 94
+          },
+          {
+            "lineNumber": 95,
+            "text": "    public function period()"
+          },
+          {
+            "lineNumber": 96,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 97,
+            "text": "        return $this-\u003ebelongsTo(Period::class);"
+          },
+          {
+            "lineNumber": 98,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 99
+          },
+          {
+            "lineNumber": 100,
+            "text": "    public function scheduleTemplate()"
+          },
+          {
+            "lineNumber": 101,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 102,
+            "text": "        return $this-\u003ebelongsTo(ScheduleTemplate::class);"
+          },
+          {
+            "lineNumber": 103,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 104
+          },
+          {
+            "lineNumber": 105,
+            "text": "    public function managedGroup()"
+          },
+          {
+            "lineNumber": 106,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 107,
+            "text": "        return $this-\u003ebelongsTo(Group::class, 'managed_group_id');"
+          },
+          {
+            "lineNumber": 108,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 109
+          },
+          {
+            "lineNumber": 110,
+            "text": "    public function groups()"
+          },
+          {
+            "lineNumber": 111,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 112,
+            "text": "        return $this-\u003ehasMany(Group::class);"
+          },
+          {
+            "lineNumber": 113,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 114
+          },
+          {
+            "lineNumber": 115,
+            "text": "    public function classSessions()"
+          },
+          {
+            "lineNumber": 116,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 117,
+            "text": "        return $this-\u003ehasManyThrough(ClassSession::class, Group::class);"
+          },
+          {
+            "lineNumber": 118,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 119
+          },
+          {
+            "lineNumber": 120,
+            "text": "    public function enrollments()"
+          },
+          {
+            "lineNumber": 121,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 122,
+            "text": "        return $this-\u003ehasManyThrough(Enrollment::class, Group::class);"
+          },
+          {
+            "lineNumber": 123,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 124,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 124
+          },
+          "startPosition": {
+            "line": 79
+          }
+        },
+        "relativeWorkspacePath": "./app/Models/Course.php",
+        "signatures": {}
+      },
+      "score": 0.4466381072998047
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class Group extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 13,
+            "text": "        'campus_id',"
+          },
+          {
+            "lineNumber": 14,
+            "text": "        'course_id',"
+          },
+          {
+            "lineNumber": 15,
+            "text": "        'teacher_id',"
+          },
+          {
+            "lineNumber": 16,
+            "text": "        'name',"
+          },
+          {
+            "lineNumber": 17,
+            "text": "        'period',"
+          },
+          {
+            "lineNumber": 18,
+            "text": "        'schedule',"
+          },
+          {
+            "lineNumber": 19,
+            "text": "        'start_date',"
+          },
+          {
+            "lineNumber": 20,
+            "text": "        'end_date',"
+          },
+          {
+            "lineNumber": 21,
+            "text": "        'status',"
+          },
+          {
+            "lineNumber": 22,
+            "text": "        'capacity',"
+          },
+          {
+            "lineNumber": 23,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 24
+          },
+          {
+            "lineNumber": 25,
+            "text": "    protected function casts(): array"
+          },
+          {
+            "lineNumber": 26,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 27,
+            "text": "        return ["
+          },
+          {
+            "lineNumber": 28,
+            "text": "            'start_date' =\u003e 'date',"
+          },
+          {
+            "lineNumber": 29,
+            "text": "            'end_date' =\u003e 'date',"
+          },
+          {
+            "lineNumber": 30,
+            "text": "        ];"
+          },
+          {
+            "lineNumber": 31,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 32
+          },
+          {
+            "lineNumber": 33,
+            "text": "    public function course()"
+          },
+          {
+            "lineNumber": 34,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 35,
+            "text": "        return $this-\u003ebelongsTo(Course::class);"
+          },
+          {
+            "lineNumber": 36,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 37
+          },
+          {
+            "lineNumber": 38,
+            "text": "    public function teacher()"
+          },
+          {
+            "lineNumber": 39,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 40,
+            "text": "        return $this-\u003ebelongsTo(Teacher::class);"
+          },
+          {
+            "lineNumber": 41,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 42
+          },
+          {
+            "lineNumber": 43,
+            "text": "    public function campus()"
+          },
+          {
+            "lineNumber": 44,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 45,
+            "text": "        return $this-\u003ebelongsTo(Campus::class);"
+          },
+          {
+            "lineNumber": 46,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 47
+          },
+          {
+            "lineNumber": 48,
+            "text": "    public function enrollments()"
+          },
+          {
+            "lineNumber": 49,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 50,
+            "text": "        return $this-\u003ehasMany(Enrollment::class);"
+          },
+          {
+            "lineNumber": 51,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 52
+          },
+          {
+            "lineNumber": 53,
+            "text": "    public function sessions()"
+          },
+          {
+            "lineNumber": 54,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 55,
+            "text": "        return $this-\u003ehasMany(ClassSession::class);"
+          },
+          {
+            "lineNumber": 56,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 57,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 57
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/Group.php",
+        "signatures": {}
+      },
+      "score": 0.44124776124954224
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class Student extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 13,
+            "text": "        'campus_id',"
+          },
+          {
+            "lineNumber": 14,
+            "text": "        'user_id',"
+          },
+          {
+            "lineNumber": 15,
+            "text": "        'registration_level_id',"
+          },
+          {
+            "lineNumber": 16,
+            "text": "        'contract_number',"
+          },
+          {
+            "lineNumber": 17,
+            "text": "        'first_name',"
+          },
+          {
+            "lineNumber": 18,
+            "text": "        'last_name',"
+          },
+          {
+            "lineNumber": 19,
+            "text": "        'document_id',"
+          },
+          {
+            "lineNumber": 20,
+            "text": "        'birth_date',"
+          },
+          {
+            "lineNumber": 21,
+            "text": "        'email',"
+          },
+          {
+            "lineNumber": 22,
+            "text": "        'phone',"
+          },
+          {
+            "lineNumber": 23,
+            "text": "        'landline_phone',"
+          },
+          {
+            "lineNumber": 24,
+            "text": "        'mobile_phone',"
+          },
+          {
+            "lineNumber": 25,
+            "text": "        'address',"
+          },
+          {
+            "lineNumber": 26,
+            "text": "        'family_in_institution',"
+          },
+          {
+            "lineNumber": 27,
+            "text": "        'family_in_institution_details',"
+          },
+          {
+            "lineNumber": 28,
+            "text": "        'status',"
+          },
+          {
+            "lineNumber": 29,
+            "text": "        'enrollment_date',"
+          },
+          {
+            "lineNumber": 30,
+            "text": "        'profile_photo_path',"
+          },
+          {
+            "lineNumber": 31,
+            "text": "        'medical_has_allergies',"
+          },
+          {
+            "lineNumber": 32,
+            "text": "        'medical_allergy_details',"
+          },
+          {
+            "lineNumber": 33,
+            "text": "        'medical_has_treatment',"
+          },
+          {
+            "lineNumber": 34,
+            "text": "        'medical_treatment_details',"
+          },
+          {
+            "lineNumber": 35,
+            "text": "        'medical_fever_medication',"
+          },
+          {
+            "lineNumber": 36,
+            "text": "        'medical_headache_medication',"
+          },
+          {
+            "lineNumber": 37,
+            "text": "        'medical_notes',"
+          },
+          {
+            "lineNumber": 38,
+            "text": "        'salesperson',"
+          },
+          {
+            "lineNumber": 39,
+            "text": "        'promotion',"
+          },
+          {
+            "lineNumber": 40,
+            "text": "        'payment_method',"
+          },
+          {
+            "lineNumber": 41,
+            "text": "        'installments',"
+          },
+          {
+            "lineNumber": 42,
+            "text": "        'commercial_notes',"
+          },
+          {
+            "lineNumber": 43,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 44
+          },
+          {
+            "lineNumber": 45,
+            "text": "    protected function casts(): array"
+          },
+          {
+            "lineNumber": 46,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 47,
+            "text": "        return ["
+          },
+          {
+            "lineNumber": 48,
+            "text": "            'birth_date' =\u003e 'date',"
+          },
+          {
+            "lineNumber": 49,
+            "text": "            'enrollment_date' =\u003e 'date',"
+          },
+          {
+            "lineNumber": 50,
+            "text": "            'family_in_institution' =\u003e 'boolean',"
+          },
+          {
+            "lineNumber": 51,
+            "text": "            'medical_has_allergies' =\u003e 'boolean',"
+          },
+          {
+            "lineNumber": 52,
+            "text": "            'medical_has_treatment' =\u003e 'boolean',"
+          },
+          {
+            "lineNumber": 53,
+            "text": "            'installments' =\u003e 'integer',"
+          },
+          {
+            "lineNumber": 54,
+            "text": "        ];"
+          },
+          {
+            "lineNumber": 55,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 56
+          },
+          {
+            "lineNumber": 57,
+            "text": "    public function campus()"
+          },
+          {
+            "lineNumber": 58,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 59,
+            "text": "        return $this-\u003ebelongsTo(Campus::class);"
+          },
+          {
+            "lineNumber": 60,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 61
+          },
+          {
+            "lineNumber": 62,
+            "text": "    public function registrationLevel()"
+          },
+          {
+            "lineNumber": 63,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 64,
+            "text": "        return $this-\u003ebelongsTo(AcademicLevel::class, 'registration_level_id');"
+          },
+          {
+            "lineNumber": 65,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 66
+          },
+          {
+            "lineNumber": 67,
+            "text": "    public function user()"
+          },
+          {
+            "lineNumber": 68,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 69,
+            "text": "        return $this-\u003ebelongsTo(User::class);"
+          },
+          {
+            "lineNumber": 70,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 71
+          },
+          {
+            "lineNumber": 72,
+            "text": "    public function representatives()"
+          },
+          {
+            "lineNumber": 73,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 74,
+            "text": "        return $this-\u003ebelongsToMany(Representative::class, 'student_representative');"
+          },
+          {
+            "lineNumber": 75,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 76
+          },
+          {
+            "lineNumber": 77,
+            "text": "    public function authorizedContacts()"
+          },
+          {
+            "lineNumber": 78,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 79,
+            "text": "        return $this-\u003ehasMany(AuthorizedContact::class)-\u003eorderBy('slot');"
+          },
+          {
+            "lineNumber": 80,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 81
+          },
+          {
+            "lineNumber": 82,
+            "text": "    public function attachments()"
+          },
+          {
+            "lineNumber": 83,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 84,
+            "text": "        return $this-\u003ehasMany(StudentAttachment::class)-\u003elatest();"
+          },
+          {
+            "lineNumber": 85,
+            "text": "    }"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 85
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/Student.php",
+        "signatures": {}
+      },
+      "score": 0.43380939960479736
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class Charge extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 13,
+            "text": "        'campus_id',"
+          },
+          {
+            "lineNumber": 14,
+            "text": "        'student_id',"
+          },
+          {
+            "lineNumber": 15,
+            "text": "        'enrollment_id',"
+          },
+          {
+            "lineNumber": 16,
+            "text": "        'makeup_request_id',"
+          },
+          {
+            "lineNumber": 17,
+            "text": "        'course_id',"
+          },
+          {
+            "lineNumber": 18,
+            "text": "        'group_id',"
+          },
+          {
+            "lineNumber": 19,
+            "text": "        'period_id',"
+          },
+          {
+            "lineNumber": 20,
+            "text": "        'concept',"
+          },
+          {
+            "lineNumber": 21,
+            "text": "        'charge_type',"
+          },
+          {
+            "lineNumber": 22,
+            "text": "        'billing_period_label',"
+          },
+          {
+            "lineNumber": 23,
+            "text": "        'origin',"
+          },
+          {
+            "lineNumber": 24,
+            "text": "        'amount',"
+          },
+          {
+            "lineNumber": 25,
+            "text": "        'due_date',"
+          },
+          {
+            "lineNumber": 26,
+            "text": "        'status',"
+          },
+          {
+            "lineNumber": 27,
+            "text": "        'notes',"
+          },
+          {
+            "lineNumber": 28,
+            "text": "        'voided_at',"
+          },
+          {
+            "lineNumber": 29,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 30
+          },
+          {
+            "lineNumber": 31,
+            "text": "    protected function casts(): array"
+          },
+          {
+            "lineNumber": 32,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 33,
+            "text": "        return ["
+          },
+          {
+            "lineNumber": 34,
+            "text": "            'due_date' =\u003e 'date',"
+          },
+          {
+            "lineNumber": 35,
+            "text": "            'amount' =\u003e 'float',"
+          },
+          {
+            "lineNumber": 36,
+            "text": "            'voided_at' =\u003e 'datetime',"
+          },
+          {
+            "lineNumber": 37,
+            "text": "        ];"
+          },
+          {
+            "lineNumber": 38,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 39
+          },
+          {
+            "lineNumber": 40,
+            "text": "    public function student()"
+          },
+          {
+            "lineNumber": 41,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 42,
+            "text": "        return $this-\u003ebelongsTo(Student::class);"
+          },
+          {
+            "lineNumber": 43,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 44
+          },
+          {
+            "lineNumber": 45,
+            "text": "    public function enrollment()"
+          },
+          {
+            "lineNumber": 46,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 47,
+            "text": "        return $this-\u003ebelongsTo(Enrollment::class);"
+          },
+          {
+            "lineNumber": 48,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 49
+          },
+          {
+            "lineNumber": 50,
+            "text": "    public function makeupRequest()"
+          },
+          {
+            "lineNumber": 51,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 52,
+            "text": "        return $this-\u003ebelongsTo(MakeupRequest::class);"
+          },
+          {
+            "lineNumber": 53,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 54
+          },
+          {
+            "lineNumber": 55,
+            "text": "    public function course()"
+          },
+          {
+            "lineNumber": 56,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 57,
+            "text": "        return $this-\u003ebelongsTo(Course::class);"
+          },
+          {
+            "lineNumber": 58,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 59
+          },
+          {
+            "lineNumber": 60,
+            "text": "    public function group()"
+          },
+          {
+            "lineNumber": 61,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 62,
+            "text": "        return $this-\u003ebelongsTo(Group::class);"
+          },
+          {
+            "lineNumber": 63,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 64
+          },
+          {
+            "lineNumber": 65,
+            "text": "    public function period()"
+          },
+          {
+            "lineNumber": 66,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 67,
+            "text": "        return $this-\u003ebelongsTo(Period::class);"
+          },
+          {
+            "lineNumber": 68,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 69
+          },
+          {
+            "lineNumber": 70,
+            "text": "    public function payments()"
+          },
+          {
+            "lineNumber": 71,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 72,
+            "text": "        return $this-\u003ehasMany(Payment::class);"
+          },
+          {
+            "lineNumber": 73,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 74
+          },
+          {
+            "lineNumber": 75,
+            "text": "    public function paymentAllocations()"
+          },
+          {
+            "lineNumber": 76,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 77,
+            "text": "        return $this-\u003ehasMany(PaymentAllocation::class);"
+          },
+          {
+            "lineNumber": 78,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 79
+          },
+          {
+            "lineNumber": 80,
+            "text": "    public function paymentRequests()"
+          },
+          {
+            "lineNumber": 81,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 82,
+            "text": "        return $this-\u003ehasMany(ChargePaymentRequest::class)-\u003elatest();"
+          },
+          {
+            "lineNumber": 83,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 84,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 84
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/Charge.php",
+        "signatures": {}
+      },
+      "score": 0.4044657349586487
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 83,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 84,
+            "text": "        return $this-\u003ehasMany(StudentAttachment::class)-\u003elatest();"
+          },
+          {
+            "lineNumber": 85,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 86
+          },
+          {
+            "lineNumber": 87,
+            "text": "    public function makeupRequests()"
+          },
+          {
+            "lineNumber": 88,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 89,
+            "text": "        return $this-\u003ehasMany(MakeupRequest::class)-\u003elatest();"
+          },
+          {
+            "lineNumber": 90,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 91
+          },
+          {
+            "lineNumber": 92,
+            "text": "    public function enrollments()"
+          },
+          {
+            "lineNumber": 93,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 94,
+            "text": "        return $this-\u003ehasMany(Enrollment::class);"
+          },
+          {
+            "lineNumber": 95,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 96
+          },
+          {
+            "lineNumber": 97,
+            "text": "    public function charges()"
+          },
+          {
+            "lineNumber": 98,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 99,
+            "text": "        return $this-\u003ehasMany(Charge::class);"
+          },
+          {
+            "lineNumber": 100,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 101
+          },
+          {
+            "lineNumber": 102,
+            "text": "    public function payments()"
+          },
+          {
+            "lineNumber": 103,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 104,
+            "text": "        return $this-\u003ehasMany(Payment::class);"
+          },
+          {
+            "lineNumber": 105,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 106
+          },
+          {
+            "lineNumber": 107,
+            "text": "    public function chargePaymentRequests()"
+          },
+          {
+            "lineNumber": 108,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 109,
+            "text": "        return $this-\u003ehasMany(ChargePaymentRequest::class)-\u003elatest();"
+          },
+          {
+            "lineNumber": 110,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 111
+          },
+          {
+            "lineNumber": 112,
+            "text": "    public function alerts()"
+          },
+          {
+            "lineNumber": 113,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 114,
+            "text": "        return $this-\u003ehasMany(Alert::class);"
+          },
+          {
+            "lineNumber": 115,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 116
+          },
+          {
+            "lineNumber": 117,
+            "text": "    public function getFullNameAttribute(): string"
+          },
+          {
+            "lineNumber": 118,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 119,
+            "text": "        return trim($this-\u003efirst_name.' '.$this-\u003elast_name);"
+          },
+          {
+            "lineNumber": 120,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 121
+          },
+          {
+            "lineNumber": 122,
+            "text": "    public function getAgeAttribute(): ?int"
+          },
+          {
+            "lineNumber": 123,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 124,
+            "text": "        return $this-\u003ebirth_date?-\u003eage;"
+          },
+          {
+            "lineNumber": 125,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 126,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 126
+          },
+          "startPosition": {
+            "line": 82
+          }
+        },
+        "relativeWorkspacePath": "./app/Models/Student.php",
+        "signatures": {}
+      },
+      "score": 0.39199256896972656
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class ClassSession extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 13,
+            "text": "        'campus_id',"
+          },
+          {
+            "lineNumber": 14,
+            "text": "        'group_id',"
+          },
+          {
+            "lineNumber": 15,
+            "text": "        'program_level_lesson_id',"
+          },
+          {
+            "lineNumber": 16,
+            "text": "        'planned_class_number',"
+          },
+          {
+            "lineNumber": 17,
+            "text": "        'planned_class_label',"
+          },
+          {
+            "lineNumber": 18,
+            "text": "        'planned_unit',"
+          },
+          {
+            "lineNumber": 19,
+            "text": "        'planned_content',"
+          },
+          {
+            "lineNumber": 20,
+            "text": "        'sequence',"
+          },
+          {
+            "lineNumber": 21,
+            "text": "        'session_date',"
+          },
+          {
+            "lineNumber": 22,
+            "text": "        'starts_at',"
+          },
+          {
+            "lineNumber": 23,
+            "text": "        'ends_at',"
+          },
+          {
+            "lineNumber": 24,
+            "text": "        'topic',"
+          },
+          {
+            "lineNumber": 25,
+            "text": "        'program_status',"
+          },
+          {
+            "lineNumber": 26,
+            "text": "        'program_notes',"
+          },
+          {
+            "lineNumber": 27,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 28
+          },
+          {
+            "lineNumber": 29,
+            "text": "    protected function casts(): array"
+          },
+          {
+            "lineNumber": 30,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 31,
+            "text": "        return ["
+          },
+          {
+            "lineNumber": 32,
+            "text": "            'session_date' =\u003e 'date',"
+          },
+          {
+            "lineNumber": 33,
+            "text": "        ];"
+          },
+          {
+            "lineNumber": 34,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 35
+          },
+          {
+            "lineNumber": 36,
+            "text": "    public function group()"
+          },
+          {
+            "lineNumber": 37,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 38,
+            "text": "        return $this-\u003ebelongsTo(Group::class);"
+          },
+          {
+            "lineNumber": 39,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 40
+          },
+          {
+            "lineNumber": 41,
+            "text": "    public function plannedLesson()"
+          },
+          {
+            "lineNumber": 42,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 43,
+            "text": "        return $this-\u003ebelongsTo(ProgramLevelLesson::class, 'program_level_lesson_id');"
+          },
+          {
+            "lineNumber": 44,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 45
+          },
+          {
+            "lineNumber": 46,
+            "text": "    public function attendanceRecords()"
+          },
+          {
+            "lineNumber": 47,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 48,
+            "text": "        return $this-\u003ehasMany(AttendanceRecord::class);"
+          },
+          {
+            "lineNumber": 49,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 50
+          },
+          {
+            "lineNumber": 51,
+            "text": "    public function makeupRequests()"
+          },
+          {
+            "lineNumber": 52,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 53,
+            "text": "        return $this-\u003ehasMany(MakeupRequest::class);"
+          },
+          {
+            "lineNumber": 54,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 55,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 55
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/ClassSession.php",
+        "signatures": {}
+      },
+      "score": 0.32259708642959595
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class AttendanceRecord extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    public const STATUS_PRESENT = 'present';"
+          },
+          {
+            "lineNumber": 13,
+            "text": "    public const STATUS_ABSENT = 'absent';"
+          },
+          {
+            "lineNumber": 14,
+            "text": "    public const STATUS_LATE = 'late';"
+          },
+          {
+            "lineNumber": 15,
+            "text": "    public const STATUS_JUSTIFIED = 'justified';"
+          },
+          {
+            "lineNumber": 16
+          },
+          {
+            "lineNumber": 17,
+            "text": "    protected $fillable = ['class_session_id', 'enrollment_id', 'status', 'notes'];"
+          },
+          {
+            "lineNumber": 18
+          },
+          {
+            "lineNumber": 19,
+            "text": "    public function classSession()"
+          },
+          {
+            "lineNumber": 20,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 21,
+            "text": "        return $this-\u003ebelongsTo(ClassSession::class);"
+          },
+          {
+            "lineNumber": 22,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 23
+          },
+          {
+            "lineNumber": 24,
+            "text": "    public function enrollment()"
+          },
+          {
+            "lineNumber": 25,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 26,
+            "text": "        return $this-\u003ebelongsTo(Enrollment::class);"
+          },
+          {
+            "lineNumber": 27,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 28,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 28
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/AttendanceRecord.php",
+        "signatures": {}
+      },
+      "score": 0.3141551911830902
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7,
+            "text": "use Illuminate\\Support\\Str;"
+          },
+          {
+            "lineNumber": 8
+          },
+          {
+            "lineNumber": 9,
+            "text": "class Course extends Model"
+          },
+          {
+            "lineNumber": 10,
+            "text": "{"
+          },
+          {
+            "lineNumber": 11,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 12
+          },
+          {
+            "lineNumber": 13,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 14,
+            "text": "        'campus_id',"
+          },
+          {
+            "lineNumber": 15,
+            "text": "        'academic_level_id',"
+          },
+          {
+            "lineNumber": 16,
+            "text": "        'program_id',"
+          },
+          {
+            "lineNumber": 17,
+            "text": "        'program_level_id',"
+          },
+          {
+            "lineNumber": 18,
+            "text": "        'course_level_id',"
+          },
+          {
+            "lineNumber": 19,
+            "text": "        'teacher_id',"
+          },
+          {
+            "lineNumber": 20,
+            "text": "        'period_id',"
+          },
+          {
+            "lineNumber": 21,
+            "text": "        'schedule_template_id',"
+          },
+          {
+            "lineNumber": 22,
+            "text": "        'managed_group_id',"
+          },
+          {
+            "lineNumber": 23,
+            "text": "        'name',"
+          },
+          {
+            "lineNumber": 24,
+            "text": "        'code',"
+          },
+          {
+            "lineNumber": 25,
+            "text": "        'description',"
+          },
+          {
+            "lineNumber": 26,
+            "text": "        'start_date',"
+          },
+          {
+            "lineNumber": 27,
+            "text": "        'end_date',"
+          },
+          {
+            "lineNumber": 28,
+            "text": "        'academic_hours',"
+          },
+          {
+            "lineNumber": 29,
+            "text": "        'status',"
+          },
+          {
+            "lineNumber": 30,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 31
+          },
+          {
+            "lineNumber": 32,
+            "text": "    protected function casts(): array"
+          },
+          {
+            "lineNumber": 33,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 34,
+            "text": "        return ["
+          },
+          {
+            "lineNumber": 35,
+            "text": "            'start_date' =\u003e 'date',"
+          },
+          {
+            "lineNumber": 36,
+            "text": "            'end_date' =\u003e 'date',"
+          },
+          {
+            "lineNumber": 37,
+            "text": "            'academic_hours' =\u003e 'integer',"
+          },
+          {
+            "lineNumber": 38,
+            "text": "        ];"
+          },
+          {
+            "lineNumber": 39,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 40
+          },
+          {
+            "lineNumber": 41
+          },
+          {
+            "lineNumber": 42,
+            "text": "    public function buildStructuredName(): string"
+          },
+          {
+            "lineNumber": 43,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 44,
+            "text": "        $levelName = trim((string) ($this-\u003eprogramLevel?-\u003ename ?? $this-\u003ecourseLevel?-\u003ename ?? $this-\u003ename));"
+          },
+          {
+            "lineNumber": 45,
+            "text": "        $scheduleLabel = $this-\u003escheduleTemplate?-\u003ecompact_label;"
+          },
+          {
+            "lineNumber": 46,
+            "text": "        $teacherLastName = trim((string) ($this-\u003eteacher?-\u003elast_name ?? ''));"
+          },
+          {
+            "lineNumber": 47,
+            "text": "        $teacherLabel = $teacherLastName !== ''"
+          },
+          {
+            "lineNumber": 48,
+            "text": "            ? 'Teacher.'.Str::title(Str::lower($teacherLastName))"
+          },
+          {
+            "lineNumber": 49,
+            "text": "            : 'Teacher.'.Str::title(Str::lower(trim((string) ($this-\u003eteacher?-\u003efull_name ?? 'SinAsignar'))));"
+          },
+          {
+            "lineNumber": 50
+          },
+          {
+            "lineNumber": 51,
+            "text": "        $segments = array_filter(["
+          },
+          {
+            "lineNumber": 52,
+            "text": "            $levelName,"
+          },
+          {
+            "lineNumber": 53,
+            "text": "            $scheduleLabel ? 'Horario: '.$scheduleLabel : null,"
+          },
+          {
+            "lineNumber": 54,
+            "text": "            $teacherLabel,"
+          },
+          {
+            "lineNumber": 55,
+            "text": "        ]);"
+          },
+          {
+            "lineNumber": 56
+          },
+          {
+            "lineNumber": 57,
+            "text": "        return implode(' - ', $segments);"
+          },
+          {
+            "lineNumber": 58,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 59
+          },
+          {
+            "lineNumber": 60,
+            "text": "    public function getDisplayNameAttribute(): string"
+          },
+          {
+            "lineNumber": 61,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 62,
+            "text": "        return $this-\u003ebuildStructuredName();"
+          },
+          {
+            "lineNumber": 63,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 64
+          },
+          {
+            "lineNumber": 65,
+            "text": "    public function level()"
+          },
+          {
+            "lineNumber": 66,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 67,
+            "text": "        return $this-\u003ebelongsTo(AcademicLevel::class, 'academic_level_id');"
+          },
+          {
+            "lineNumber": 68,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 69
+          },
+          {
+            "lineNumber": 70,
+            "text": "    public function program()"
+          },
+          {
+            "lineNumber": 71,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 72,
+            "text": "        return $this-\u003ebelongsTo(Program::class);"
+          },
+          {
+            "lineNumber": 73,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 74
+          },
+          {
+            "lineNumber": 75,
+            "text": "    public function programLevel()"
+          },
+          {
+            "lineNumber": 76,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 77,
+            "text": "        return $this-\u003ebelongsTo(ProgramLevel::class);"
+          },
+          {
+            "lineNumber": 78,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 79
+          },
+          {
+            "lineNumber": 80,
+            "text": "    public function courseLevel()"
+          },
+          {
+            "lineNumber": 81,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 82,
+            "text": "        "
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 8,
+            "line": 81
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/Course.php",
+        "signatures": {}
+      },
+      "score": 0.30174291133880615
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class Teacher extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 13,
+            "text": "        'campus_id',"
+          },
+          {
+            "lineNumber": 14,
+            "text": "        'user_id',"
+          },
+          {
+            "lineNumber": 15,
+            "text": "        'first_name',"
+          },
+          {
+            "lineNumber": 16,
+            "text": "        'last_name',"
+          },
+          {
+            "lineNumber": 17,
+            "text": "        'document_id',"
+          },
+          {
+            "lineNumber": 18,
+            "text": "        'email',"
+          },
+          {
+            "lineNumber": 19,
+            "text": "        'phone',"
+          },
+          {
+            "lineNumber": 20,
+            "text": "        'status',"
+          },
+          {
+            "lineNumber": 21,
+            "text": "        'profile_photo_path',"
+          },
+          {
+            "lineNumber": 22,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 23
+          },
+          {
+            "lineNumber": 24,
+            "text": "    public function campus()"
+          },
+          {
+            "lineNumber": 25,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 26,
+            "text": "        return $this-\u003ebelongsTo(Campus::class);"
+          },
+          {
+            "lineNumber": 27,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 28
+          },
+          {
+            "lineNumber": 29,
+            "text": "    public function user()"
+          },
+          {
+            "lineNumber": 30,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 31,
+            "text": "        return $this-\u003ebelongsTo(User::class);"
+          },
+          {
+            "lineNumber": 32,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 33
+          },
+          {
+            "lineNumber": 34,
+            "text": "    public function groups()"
+          },
+          {
+            "lineNumber": 35,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 36,
+            "text": "        return $this-\u003ehasMany(Group::class);"
+          },
+          {
+            "lineNumber": 37,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 38
+          },
+          {
+            "lineNumber": 39,
+            "text": "    public function courses()"
+          },
+          {
+            "lineNumber": 40,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 41,
+            "text": "        return $this-\u003ehasMany(Course::class);"
+          },
+          {
+            "lineNumber": 42,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 43
+          },
+          {
+            "lineNumber": 44,
+            "text": "    public function makeupSessions()"
+          },
+          {
+            "lineNumber": 45,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 46,
+            "text": "        return $this-\u003ehasMany(MakeupSession::class);"
+          },
+          {
+            "lineNumber": 47,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 48
+          },
+          {
+            "lineNumber": 49,
+            "text": "    public function getFullNameAttribute(): string"
+          },
+          {
+            "lineNumber": 50,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 51,
+            "text": "        return trim($this-\u003efirst_name.' '.$this-\u003elast_name);"
+          },
+          {
+            "lineNumber": 52,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 53,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 53
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/Teacher.php",
+        "signatures": {}
+      },
+      "score": 0.30051618814468384
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class Representative extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 13,
+            "text": "        'campus_id',"
+          },
+          {
+            "lineNumber": 14,
+            "text": "        'user_id',"
+          },
+          {
+            "lineNumber": 15,
+            "text": "        'first_name',"
+          },
+          {
+            "lineNumber": 16,
+            "text": "        'last_name',"
+          },
+          {
+            "lineNumber": 17,
+            "text": "        'document_id',"
+          },
+          {
+            "lineNumber": 18,
+            "text": "        'email',"
+          },
+          {
+            "lineNumber": 19,
+            "text": "        'phone',"
+          },
+          {
+            "lineNumber": 20,
+            "text": "        'address',"
+          },
+          {
+            "lineNumber": 21,
+            "text": "        'home_phone',"
+          },
+          {
+            "lineNumber": 22,
+            "text": "        'mobile_phone',"
+          },
+          {
+            "lineNumber": 23,
+            "text": "        'relation',"
+          },
+          {
+            "lineNumber": 24,
+            "text": "        'work_place',"
+          },
+          {
+            "lineNumber": 25,
+            "text": "        'work_address',"
+          },
+          {
+            "lineNumber": 26,
+            "text": "        'office_phone',"
+          },
+          {
+            "lineNumber": 27,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 28
+          },
+          {
+            "lineNumber": 29,
+            "text": "    public function getFullNameAttribute(): string"
+          },
+          {
+            "lineNumber": 30,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 31,
+            "text": "        return trim(($this-\u003efirst_name ?? '').' '.($this-\u003elast_name ?? ''));"
+          },
+          {
+            "lineNumber": 32,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 33
+          },
+          {
+            "lineNumber": 34,
+            "text": "    public function students()"
+          },
+          {
+            "lineNumber": 35,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 36,
+            "text": "        return $this-\u003ebelongsToMany(Student::class, 'student_representative');"
+          },
+          {
+            "lineNumber": 37,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 38
+          },
+          {
+            "lineNumber": 39,
+            "text": "    public function campus()"
+          },
+          {
+            "lineNumber": 40,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 41,
+            "text": "        return $this-\u003ebelongsTo(Campus::class);"
+          },
+          {
+            "lineNumber": 42,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 43
+          },
+          {
+            "lineNumber": 44,
+            "text": "    public function user()"
+          },
+          {
+            "lineNumber": 45,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 46,
+            "text": "        return $this-\u003ebelongsTo(User::class);"
+          },
+          {
+            "lineNumber": 47,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 48
+          },
+          {
+            "lineNumber": 49,
+            "text": "    public function chargePaymentRequests()"
+          },
+          {
+            "lineNumber": 50,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 51,
+            "text": "        return $this-\u003ehasMany(ChargePaymentRequest::class)-\u003elatest();"
+          },
+          {
+            "lineNumber": 52,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 53,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 53
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/Representative.php",
+        "signatures": {}
+      },
+      "score": 0.2924332618713379
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class Payment extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 13,
+            "text": "        'campus_id',"
+          },
+          {
+            "lineNumber": 14,
+            "text": "        'student_id',"
+          },
+          {
+            "lineNumber": 15,
+            "text": "        'charge_id',"
+          },
+          {
+            "lineNumber": 16,
+            "text": "        'makeup_request_id',"
+          },
+          {
+            "lineNumber": 17,
+            "text": "        'amount',"
+          },
+          {
+            "lineNumber": 18,
+            "text": "        'paid_at',"
+          },
+          {
+            "lineNumber": 19,
+            "text": "        'paid_at_datetime',"
+          },
+          {
+            "lineNumber": 20,
+            "text": "        'method',"
+          },
+          {
+            "lineNumber": 21,
+            "text": "        'reference',"
+          },
+          {
+            "lineNumber": 22,
+            "text": "        'status',"
+          },
+          {
+            "lineNumber": 23,
+            "text": "        'received_by',"
+          },
+          {
+            "lineNumber": 24,
+            "text": "        'notes',"
+          },
+          {
+            "lineNumber": 25,
+            "text": "        'voided_at',"
+          },
+          {
+            "lineNumber": 26,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 27
+          },
+          {
+            "lineNumber": 28,
+            "text": "    protected function casts(): array"
+          },
+          {
+            "lineNumber": 29,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 30,
+            "text": "        return ["
+          },
+          {
+            "lineNumber": 31,
+            "text": "            'paid_at' =\u003e 'date',"
+          },
+          {
+            "lineNumber": 32,
+            "text": "            'paid_at_datetime' =\u003e 'datetime',"
+          },
+          {
+            "lineNumber": 33,
+            "text": "            'amount' =\u003e 'float',"
+          },
+          {
+            "lineNumber": 34,
+            "text": "            'voided_at' =\u003e 'datetime',"
+          },
+          {
+            "lineNumber": 35,
+            "text": "        ];"
+          },
+          {
+            "lineNumber": 36,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 37
+          },
+          {
+            "lineNumber": 38,
+            "text": "    public function student()"
+          },
+          {
+            "lineNumber": 39,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 40,
+            "text": "        return $this-\u003ebelongsTo(Student::class);"
+          },
+          {
+            "lineNumber": 41,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 42
+          },
+          {
+            "lineNumber": 43,
+            "text": "    public function charge()"
+          },
+          {
+            "lineNumber": 44,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 45,
+            "text": "        return $this-\u003ebelongsTo(Charge::class);"
+          },
+          {
+            "lineNumber": 46,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 47
+          },
+          {
+            "lineNumber": 48,
+            "text": "    public function makeupRequest()"
+          },
+          {
+            "lineNumber": 49,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 50,
+            "text": "        return $this-\u003ebelongsTo(MakeupRequest::class);"
+          },
+          {
+            "lineNumber": 51,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 52
+          },
+          {
+            "lineNumber": 53,
+            "text": "    public function receivedBy()"
+          },
+          {
+            "lineNumber": 54,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 55,
+            "text": "        return $this-\u003ebelongsTo(User::class, 'received_by');"
+          },
+          {
+            "lineNumber": 56,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 57
+          },
+          {
+            "lineNumber": 58,
+            "text": "    public function receipt()"
+          },
+          {
+            "lineNumber": 59,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 60,
+            "text": "        return $this-\u003ehasOne(Receipt::class);"
+          },
+          {
+            "lineNumber": 61,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 62
+          },
+          {
+            "lineNumber": 63,
+            "text": "    public function allocations()"
+          },
+          {
+            "lineNumber": 64,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 65,
+            "text": "        return $this-\u003ehasMany(PaymentAllocation::class);"
+          },
+          {
+            "lineNumber": 66,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 67,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 67
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/Payment.php",
+        "signatures": {}
+      },
+      "score": 0.2864123582839966
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class MakeupRequest extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    public const STATUS_PENDING_PAYMENT = 'pending_payment';"
+          },
+          {
+            "lineNumber": 13,
+            "text": "    public const STATUS_PENDING_VALIDATION = 'pending_validation';"
+          },
+          {
+            "lineNumber": 14,
+            "text": "    public const STATUS_APPROVED_FOR_BOOKING = 'approved_for_booking';"
+          },
+          {
+            "lineNumber": 15,
+            "text": "    public const STATUS_BOOKED = 'booked';"
+          },
+          {
+            "lineNumber": 16,
+            "text": "    public const STATUS_COMPLETED = 'completed';"
+          },
+          {
+            "lineNumber": 17,
+            "text": "    public const STATUS_MISSED = 'missed';"
+          },
+          {
+            "lineNumber": 18,
+            "text": "    public const STATUS_CANCELLED = 'cancelled';"
+          },
+          {
+            "lineNumber": 19,
+            "text": "    public const STATUS_REJECTED = 'rejected';"
+          },
+          {
+            "lineNumber": 20
+          },
+          {
+            "lineNumber": 21,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 22,
+            "text": "        'campus_id',"
+          },
+          {
+            "lineNumber": 23,
+            "text": "        'student_id',"
+          },
+          {
+            "lineNumber": 24,
+            "text": "        'enrollment_id',"
+          },
+          {
+            "lineNumber": 25,
+            "text": "        'attendance_record_id',"
+          },
+          {
+            "lineNumber": 26,
+            "text": "        'class_session_id',"
+          },
+          {
+            "lineNumber": 27,
+            "text": "        'charge_id',"
+          },
+          {
+            "lineNumber": 28,
+            "text": "        'payment_id',"
+          },
+          {
+            "lineNumber": 29,
+            "text": "        'request_type',"
+          },
+          {
+            "lineNumber": 30,
+            "text": "        'price',"
+          },
+          {
+            "lineNumber": 31,
+            "text": "        'medical_support_required',"
+          },
+          {
+            "lineNumber": 32,
+            "text": "        'medical_support_path',"
+          },
+          {
+            "lineNumber": 33,
+            "text": "        'status',"
+          },
+          {
+            "lineNumber": 34,
+            "text": "        'payment_notes',"
+          },
+          {
+            "lineNumber": 35,
+            "text": "        'validated_by',"
+          },
+          {
+            "lineNumber": 36,
+            "text": "        'validated_at',"
+          },
+          {
+            "lineNumber": 37,
+            "text": "        'rejection_reason',"
+          },
+          {
+            "lineNumber": 38,
+            "text": "        'notification_emailed_at',"
+          },
+          {
+            "lineNumber": 39,
+            "text": "        'approval_emailed_at',"
+          },
+          {
+            "lineNumber": 40,
+            "text": "        'rejection_emailed_at',"
+          },
+          {
+            "lineNumber": 41,
+            "text": "        'booking_emailed_at',"
+          },
+          {
+            "lineNumber": 42,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 43
+          },
+          {
+            "lineNumber": 44,
+            "text": "    protected function casts(): array"
+          },
+          {
+            "lineNumber": 45,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 46,
+            "text": "        return ["
+          },
+          {
+            "lineNumber": 47,
+            "text": "            'price' =\u003e 'float',"
+          },
+          {
+            "lineNumber": 48,
+            "text": "            'medical_support_required' =\u003e 'boolean',"
+          },
+          {
+            "lineNumber": 49,
+            "text": "            'validated_at' =\u003e 'datetime',"
+          },
+          {
+            "lineNumber": 50,
+            "text": "            'notification_emailed_at' =\u003e 'datetime',"
+          },
+          {
+            "lineNumber": 51,
+            "text": "            'approval_emailed_at' =\u003e 'datetime',"
+          },
+          {
+            "lineNumber": 52,
+            "text": "            'rejection_emailed_at' =\u003e 'datetime',"
+          },
+          {
+            "lineNumber": 53,
+            "text": "            'booking_emailed_at' =\u003e 'datetime',"
+          },
+          {
+            "lineNumber": 54,
+            "text": "        ];"
+          },
+          {
+            "lineNumber": 55,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 56
+          },
+          {
+            "lineNumber": 57,
+            "text": "    public function campus()"
+          },
+          {
+            "lineNumber": 58,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 59,
+            "text": "        return $this-\u003ebelongsTo(Campus::class);"
+          },
+          {
+            "lineNumber": 60,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 61
+          },
+          {
+            "lineNumber": 62,
+            "text": "    public function student()"
+          },
+          {
+            "lineNumber": 63,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 64,
+            "text": "        return $this-\u003ebelongsTo(Student::class);"
+          },
+          {
+            "lineNumber": 65,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 66
+          },
+          {
+            "lineNumber": 67,
+            "text": "    public function enrollment()"
+          },
+          {
+            "lineNumber": 68,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 69,
+            "text": "        return $this-\u003ebelongsTo(Enrollment::class);"
+          },
+          {
+            "lineNumber": 70,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 71
+          },
+          {
+            "lineNumber": 72,
+            "text": "    public function attendanceRecord()"
+          },
+          {
+            "lineNumber": 73,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 74,
+            "text": "        return $this-\u003ebelongsTo(AttendanceRecord::class);"
+          },
+          {
+            "lineNumber": 75,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 76
+          },
+          {
+            "lineNumber": 77,
+            "text": "    public function missedSession()"
+          },
+          {
+            "lineNumber": 78,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 79,
+            "text": "        "
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "column": 8,
+            "line": 78
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/MakeupRequest.php",
+        "signatures": {}
+      },
+      "score": 0.2839122414588928
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class AuthorizedContact extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 13,
+            "text": "        'student_id',"
+          },
+          {
+            "lineNumber": 14,
+            "text": "        'slot',"
+          },
+          {
+            "lineNumber": 15,
+            "text": "        'first_name',"
+          },
+          {
+            "lineNumber": 16,
+            "text": "        'last_name',"
+          },
+          {
+            "lineNumber": 17,
+            "text": "        'document_id',"
+          },
+          {
+            "lineNumber": 18,
+            "text": "        'address',"
+          },
+          {
+            "lineNumber": 19,
+            "text": "        'home_phone',"
+          },
+          {
+            "lineNumber": 20,
+            "text": "        'mobile_phone',"
+          },
+          {
+            "lineNumber": 21,
+            "text": "        'relationship',"
+          },
+          {
+            "lineNumber": 22,
+            "text": "        'work_place',"
+          },
+          {
+            "lineNumber": 23,
+            "text": "        'work_address',"
+          },
+          {
+            "lineNumber": 24,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 25
+          },
+          {
+            "lineNumber": 26,
+            "text": "    public function student()"
+          },
+          {
+            "lineNumber": 27,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 28,
+            "text": "        return $this-\u003ebelongsTo(Student::class);"
+          },
+          {
+            "lineNumber": 29,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 30
+          },
+          {
+            "lineNumber": 31,
+            "text": "    public function getFullNameAttribute(): string"
+          },
+          {
+            "lineNumber": 32,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 33,
+            "text": "        return trim(($this-\u003efirst_name ?? '').' '.($this-\u003elast_name ?? ''));"
+          },
+          {
+            "lineNumber": 34,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 35,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 35
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/AuthorizedContact.php",
+        "signatures": {}
+      },
+      "score": 0.28197264671325684
+    },
+    {
+      "codeBlock": {
+        "detailedLines": [
+          {
+            "lineNumber": 1,
+            "text": "\u003c?php"
+          },
+          {
+            "lineNumber": 2
+          },
+          {
+            "lineNumber": 3,
+            "text": "namespace App\\Models;"
+          },
+          {
+            "lineNumber": 4
+          },
+          {
+            "lineNumber": 5,
+            "text": "use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;"
+          },
+          {
+            "lineNumber": 6,
+            "text": "use Illuminate\\Database\\Eloquent\\Model;"
+          },
+          {
+            "lineNumber": 7
+          },
+          {
+            "lineNumber": 8,
+            "text": "class MakeupBooking extends Model"
+          },
+          {
+            "lineNumber": 9,
+            "text": "{"
+          },
+          {
+            "lineNumber": 10,
+            "text": "    use HasFactory;"
+          },
+          {
+            "lineNumber": 11
+          },
+          {
+            "lineNumber": 12,
+            "text": "    protected $fillable = ["
+          },
+          {
+            "lineNumber": 13,
+            "text": "        'makeup_request_id',"
+          },
+          {
+            "lineNumber": 14,
+            "text": "        'makeup_session_id',"
+          },
+          {
+            "lineNumber": 15,
+            "text": "        'booked_at',"
+          },
+          {
+            "lineNumber": 16,
+            "text": "        'attended_at',"
+          },
+          {
+            "lineNumber": 17,
+            "text": "        'status',"
+          },
+          {
+            "lineNumber": 18,
+            "text": "        'notes',"
+          },
+          {
+            "lineNumber": 19,
+            "text": "    ];"
+          },
+          {
+            "lineNumber": 20
+          },
+          {
+            "lineNumber": 21,
+            "text": "    protected function casts(): array"
+          },
+          {
+            "lineNumber": 22,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 23,
+            "text": "        return ["
+          },
+          {
+            "lineNumber": 24,
+            "text": "            'booked_at' =\u003e 'datetime',"
+          },
+          {
+            "lineNumber": 25,
+            "text": "            'attended_at' =\u003e 'datetime',"
+          },
+          {
+            "lineNumber": 26,
+            "text": "        ];"
+          },
+          {
+            "lineNumber": 27,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 28
+          },
+          {
+            "lineNumber": 29,
+            "text": "    public function makeupRequest()"
+          },
+          {
+            "lineNumber": 30,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 31,
+            "text": "        return $this-\u003ebelongsTo(MakeupRequest::class);"
+          },
+          {
+            "lineNumber": 32,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 33
+          },
+          {
+            "lineNumber": 34,
+            "text": "    public function makeupSession()"
+          },
+          {
+            "lineNumber": 35,
+            "text": "    {"
+          },
+          {
+            "lineNumber": 36,
+            "text": "        return $this-\u003ebelongsTo(MakeupSession::class);"
+          },
+          {
+            "lineNumber": 37,
+            "text": "    }"
+          },
+          {
+            "lineNumber": 38,
+            "text": "}"
+          }
+        ],
+        "range": {
+          "endPosition": {
+            "line": 38
+          },
+          "startPosition": {}
+        },
+        "relativeWorkspacePath": "./app/Models/MakeupBooking.php",
+        "signatures": {}
+      },
+      "score": 0.2510688304901123
+    }
+  ]
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="semantic_search_full"><details>
+<summary>Tool use: **semantic_search_full**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "*.php",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "permission:|EnsurePermission"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "permission:|EnsurePermission",
+  "topFiles": [
+    {
+      "matchCount": 2,
+      "uri": "bootstrap/app.php"
+    },
+    {
+      "matchCount": 6,
+      "uri": "routes/web.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Middleware/EnsurePermission.php"
+    }
+  ],
+  "totalFiles": 3,
+  "totalMatches": 9
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search">
+<details>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **2** results in **1** directory</summary>
+
+Directory: **/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon** (2 files)
+
+| File |
+|------|
+| `database/seeders/DatabaseSeeder.php` |
+| `database/seeders/UatFixtureSeeder.php` |
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
+<summary>Tool use: **glob_file_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/seeders/UatFixtureSeeder.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "**/DatabaseSeeder.php",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "permission"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "permission",
+  "topFiles": [
+    {
+      "matchCount": 13,
+      "uri": "database/seeders/DatabaseSeeder.php"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 13
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsureCampusAccess.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/seeders/DatabaseSeeder.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/AttendanceController.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "*.php",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "CourseController|courses\\.show"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "CourseController|courses\\.show",
+  "topFiles": [
+    {
+      "matchCount": 1,
+      "uri": "resources/views/operations/wizard.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/courses/edit.blade.php"
+    },
+    {
+      "matchCount": 7,
+      "uri": "app/Http/Controllers/CourseController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/teachers/show.blade.php"
+    },
+    {
+      "matchCount": 4,
+      "uri": "routes/web.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/teachers/calendar.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/dashboard.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/courses/index.blade.php"
+    }
+  ],
+  "totalFiles": 8,
+  "totalMatches": 17
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+I need to examine the courses/show and students/show structures to determine where to add history functionality. Also need to design an "evaluation period" system since "histricos" suggests tracking multiple entries over time. I'll implement this with an `evaluation_batch` or `reported_at` field combined with a `label` (like "Period 1", "October 2026") linked to enrollments or courses.
+
+For the data model:
+- Consider a `grades` table with enrollment_id as the primary foreign key
+- Alternative: course_id + student_id + campus_id (but this is redundant)
+- Best approach uses enrollment_id as the unique identifier for student+course relationships
+- Fields needed: vocabulary_scale, listening_scale, grammar_scale (as enums or FKs to scale_levels)
+- observations field for text comments
+- evaluated_at for date tracking - Use `evaluated_by` field with teacher user ID
+- Add `period_label` string like "Informe mensual marzo" or `evaluation_sequence` integer
+- Course is derived from enrollment  group  course_id, so enrollment_id suffices
+- History requires multiple rows per enrollment_id, one per evaluation event
+- Dimensions: use enum columns instead of JSON for clarity and queryability
+- Scale uses varchar with allowed values: outstanding, acceptable, regular, need_support (English keys with Spanish labels in UI) Teacher authorization requires that teachers must be assigned to the group's course, similar to attendance rules, by filtering using teacher_id on Group.
+
+Admin users should have full access to view and potentially edit grade reports.
+
+To ensure proper campus access, a GradeReport or CourseGrade model needs to be added with campus_id or resolved through enrollment associations.
+
+Migration plan:
+- Create `course_grade_entries` or `enrollment_grade_reports` table
+- Include fields: id, campus_id (denormalized), enrollment_id, recorded_by (teacher user ID), evaluated_at (date), optional title (e.g., "Cuatrimestre 1")
+- Rating fields: vocabulary_rating, listening_rating, speaking_rating, writing_rating, grammar_rating (as string enums)</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/CourseController.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/courses/show.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+I have sufficient information to develop a plan. Key decisions to document:
+
+- Linking to "curso": Use `Course` with one `managedGroup` and enrollments on that group; `enrollment_id` serves as the appropriate grain for "student in this course instance".
+- Periods for history: Add `evaluated_on` (date) and optional `label` (e.g., "Oct 2026 - Reporte 1") to create distinct historical entries per enrollment over time.
+- Spelling: Correct "Writting" to "writing" in code and display "Writing" in the UI. Scale values should be stored as a string enum: outstanding, acceptable, regular, need_support (using English keys in the database and Spanish in i18n translations).
+
+Permissions:
+- Create new `grades.manage` permission for teachers and admins.
+- Optionally add `grades.view` for read-only access on the student portal.
+- Note: Family/student portal functionality is planned for a later phase.
+
+Authorization:
+- Teachers can only manage grades for courses where they are the designated teacher.
+- Admins have full access across the campus.
+- Implement authorization checks in controllers similar to how AttendanceController handles it. For easy data entry, the UI will include a page at `GET /courses/{course}/grades` with the following features:
+
+- A button to add a new evaluation with a date and optional label
+- A table showing one row per active enrollment with five rubric selection columns and an observations column
+- A single "Save Evaluation" button to create or update multiple `enrollment_grade` records under the same batch ID
+
+This approach allows saving all evaluations in one action rather than creating separate records for each student. For batching grades, a single table approach is simpler than a separate batch model. Use `evaluated_on` and `label` to group entries under the same evaluation, allowing one form to save all student entries at once. This natural grouping eliminates the need for a separate `grade_evaluations` table. To simplify grade batching, use a `grade_set_id` (UUID) per form submission to group related student grades. This avoids conflicts when multiple teachers save grades and ensures all entries in a batch share the same identifier.
+
+Key implementation details:
+- Create `enrollment_grade_sets` table with fields: id, course_id, campus_id, group_id, label, evaluated_on, created_by_user_id
+- Create `enrollment_grades` table with fields: id, set_id, enrollment_id, ...
+- Use `recorded_at` date to track when grades were saved
+- Set `grade_set_id` as UUID for each batch submission to ensure consistency and prevent conflicts between concurrent saves
+
+This approach allows grouping all student grades from one form submission under a single `grade_set_id`, making it easier to manage and retrieve grade batches.</details></think>
+
+_**Agent (default)**_
+
+Confirmando la relación curso-grupo-profesor para autorización.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/Course.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+Course has teacher_id directly.</details></think>
+
+_**Agent (default)**_
+
+Teniendo claro el modelo: `Course` tiene `teacher_id` y `managedGroup` con inscripciones. Proponemos un diseño por "lote" de evaluación para historial y carga masiva.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ask_question">
+<details>
+<summary>Tool use: **ask_question**</summary>
+
+
+Parameters:
+
+```json
+{
+  "questions": [
+    {
+      "id": "student_portal",
+      "options": [
+        {
+          "id": "backoffice_only",
+          "label": "Solo backoffice (ficha alumno + ficha curso) en esta fase"
+        },
+        {
+          "id": "include_portal",
+          "label": "También portal alumno y/o representante (solo lectura)"
+        }
+      ],
+      "prompt": "¿Los alumnos o familias deben ver las notas en el portal (alumno/representante) o basta con ficha en el backoffice (admin/profesor) en esta primera fase?"
+    }
+  ],
+  "title": "Alcance del módulo de notas"
+}
+```
+Additional data:
+
+```json
+{
+  "currentSelections": {
+    "student_portal": [
+      "include_portal"
+    ]
+  },
+  "freeformTexts": {
+    "student_portal": ""
+  },
+  "status": "submitted"
+}
+```
+Result:
+
+```json
+{
+  "answers": [
+    {
+      "freeformText": "",
+      "questionId": "student_portal",
+      "selectedOptionIds": [
+        "include_portal"
+      ]
+    }
+  ]
+}
+```
+User decision: **accepted**
+
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ask_question"><details>
+<summary>Tool use: **ask_question**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+The user wants to include read-only access for both student and representative portals in the first phase.</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="create_plan">
+<details>
+<summary>Tool use: **create_plan**</summary>
+
+
+Parameters:
+
+```json
+{
+  "name": "Modulo evaluaciones notas",
+  "overview": "Diseñar e implementar evaluaciones por curso con cinco rubros (Vocabulary, Listening, Speaking, Writing, Grammar), escala de cuatro niveles, observaciones e historial agrupado por “entrega” de evaluación. Profesores cargan por curso; admin ve todo; alumno y representante consultan en portal en solo lectura.",
+  "plan": "# Plan: módulo de evaluaciones / notas por curso\n\n## Contexto del dominio en el código actual\n\n- La relación **alumno ↔ curso** pasa por [&#96;Enrollment&#96;](app/Models/Enrollment.php) → [&#96;Group&#96;](app/Models/Group.php) → [&#96;Course&#96;](app/Models/Course.php). El curso operativo usa &#96;managed_group_id&#96; y la lista de alumnos es &#96;course-\u003emanagedGroup-\u003eenrollments&#96;.\n- El **profesor titular del curso** está en [&#96;courses.teacher_id&#96;](app/Models/Course.php) (además del &#96;teacher_id&#96; del grupo). La autorización puede alinearse con [&#96;AttendanceController&#96;](app/Http/Controllers/AttendanceController.php): profesor limitado a sus grupos/cursos; admin por campus.\n- Permisos se declaran en [&#96;database/seeders/DatabaseSeeder.php&#96;](database/seeders/DatabaseSeeder.php) (&#96;Permission&#96; + sync a roles).\n- Campus: extender [&#96;EnsureCampusAccess::resolveCampusId&#96;](app/Http/Middleware/EnsureCampusAccess.php) si el modelo nuevo no expone &#96;campus_id&#96; directamente (recomendación: **denormalizar &#96;campus_id&#96;** en tablas nuevas para mantener el patrón actual).\n\n&#96;&#96;&#96;mermaid\nflowchart LR\n  Course --\u003e Group\n  Group --\u003e Enrollment\n  Enrollment --\u003e Student\n  GradeEvaluationSet --\u003e Course\n  GradeEvaluationSet --\u003e GradeEntry\n  GradeEntry --\u003e Enrollment\n&#96;&#96;&#96;\n\n## Modelo de datos\n\n**Constantes de negocio (código)**\n\n- Dimensiones (orden fijo UI): &#96;vocabulary&#96;, &#96;listening&#96;, &#96;speaking&#96;, &#96;writing&#96;, &#96;grammar&#96;.\n- Escala (valores guardados en BD, etiquetas en español en UI): &#96;outstanding&#96;, &#96;acceptable&#96;, &#96;regular&#96;, &#96;need_support&#96; → **Outstanding**, **Acceptable**, **Regular**, **Need Support**.\n\n**Tabla 1 — &#96;grade_evaluation_sets&#96; (“una carga” / historial)**\n\nAgrupa todas las filas de alumnos guardadas en el mismo envío (misma fecha de informe, mismo curso).\n\n| Campo | Notas |\n|-------|--------|\n| &#96;id&#96; | PK |\n| &#96;campus_id&#96; | Denormalizado |\n| &#96;course_id&#96; | FK curso evaluado |\n| &#96;group_id&#96; | FK grupo operativo (opcional pero útil para auditoría; debe coincidir con &#96;course.managed_group_id&#96; cuando exista) |\n| &#96;evaluated_on&#96; | Fecha del informe (date) |\n| &#96;title&#96; | Opcional: “Octubre 2026”, “Reporte 2”, etc. |\n| &#96;created_by&#96; | &#96;users.id&#96; (profesor o admin) |\n| &#96;timestamps&#96; | |\n\n**Tabla 2 — &#96;grade_entries&#96; (una fila por alumno en ese set)**\n\n| Campo | Notas |\n|-------|--------|\n| &#96;id&#96; | PK |\n| &#96;grade_evaluation_set_id&#96; | FK |\n| &#96;campus_id&#96; | Denormalizado |\n| &#96;enrollment_id&#96; | FK — amarra alumno + curso vía grupo |\n| Campos escala | &#96;vocabulary_rating&#96;, &#96;listening_rating&#96;, … &#96;grammar_rating&#96; — string o enum en validación |\n| &#96;observations&#96; | &#96;text&#96; nullable |\n\n**Reglas**\n\n- Un alumno **no** debe tener dos entradas en el **mismo set** (unique &#96;(grade_evaluation_set_id, enrollment_id)&#96;).\n- Historial = lista de **sets** ordenados por &#96;evaluated_on&#96; desc; dentro de cada set, las filas de &#96;grade_entries&#96;.\n\n**Migraciones + modelos Eloquent** (&#96;GradeEvaluationSet&#96;, &#96;GradeEntry&#96;) con relaciones a &#96;Course&#96;, &#96;Enrollment&#96;, &#96;User&#96;.\n\n## Permisos y roles\n\nAñadir permisos nuevos (nombres propuestos):\n\n- &#96;grades.manage&#96; — crear/editar sets y entradas (profesor del curso + admin).\n- &#96;grades.view&#96; — lectura ampliada si hace falta separar; en la práctica **portal** puede depender de &#96;portal.student.view&#96; / &#96;portal.representative.view&#96; sin permiso extra, o de &#96;grades.view&#96; solo lectura — **recomendación**: &#96;grades.manage&#96; para backoffice escritura; para portal **solo lectura** reutilizar permisos de portal existentes y validar que el alumno/representante solo ve sus datos.\n\nActualizar [&#96;DatabaseSeeder&#96;](database/seeders/DatabaseSeeder.php): registrar permisos; asignar &#96;grades.manage&#96; a **admin** y **teacher** (y optionally master).\n\n## Autorización (servicio o policy)\n\n- **Admin** (mismo campus): CRUD en cualquier curso del campus.\n- **Profesor**: solo si &#96;Teacher&#96; vinculado al usuario coincide con &#96;course.teacher_id&#96; (y/o validación adicional con &#96;managedGroup.teacher_id&#96; por consistencia).\n- **Alumno portal**: solo entradas cuyo &#96;enrollment.student_id&#96; sea el alumno autenticado (vía [&#96;PortalController&#96;](app/Http/Controllers/PortalController.php) resolución de &#96;Student&#96;).\n- **Representante portal**: solo alumnos vinculados en &#96;student_representative&#96;.\n\nCentralizar en un método tipo &#96;assertCanManageGrades(User $user, Course $course)&#96; para no duplicar lógica.\n\n## Rutas y controladores\n\n**Backoffice**\n\n- &#96;GET/POST /courses/{course}/grade-sets/create&#96; + &#96;POST .../grade-sets&#96; para guardar un set completo (transacción: crear set + N &#96;grade_entries&#96;).\n- &#96;GET /courses/{course}/grades&#96; — vista principal: historial de sets + botón “Nueva evaluación”.\n- &#96;PATCH /grade-sets/{set}&#96; / &#96;DELETE&#96; opcional para editar o anular un informe (definir si edición está permitida o solo “nueva versión”; MVP sugerido: **editar set reciente** o **desactivar** con soft delete si se requiere auditoría).\n\nNombres de rutas estilo &#96;courses.grades.index&#96;, &#96;courses.grades.store&#96;, etc., agrupadas en [&#96;routes/web.php&#96;](routes/web.php) con &#96;permission:grades.manage&#96; + &#96;EnsureCampusAccess&#96;.\n\n**Portal**\n\n- Ampliar [&#96;PortalController&#96;](app/Http/Controllers/PortalController.php) o controlador dedicado &#96;PortalGradesController&#96;:\n  - Alumno: resumen de evaluaciones por curso (histórico).\n  - Representante: mismo formato por cada hijo vinculado.\n\n## UX/UI (prioridad alta)\n\n### Carga por profesor (objetivo: rápido y sin errores)\n\n1. Desde [&#96;courses/show.blade.php&#96;](resources/views/courses/show.blade.php): botón destacado **“Evaluaciones / Notas”** → listado de informes.\n2. Vista **“Nueva evaluación”**:\n   - Campos superiores: **Fecha del informe**, **Título opcional**.\n   - Tabla responsive tipo “matriz”: filas = alumnos activos del grupo; columnas = 5 selects con la escala (etiquetas cortas + color por nivel usando &#96;badge-pill&#96; existente en [&#96;partials/ui/status-badge&#96;](resources/views/partials/ui/status-badge.blade.php) o nuevas clases en [&#96;resources/css/app.css&#96;](resources/css/app.css)).\n   - Columna final: observaciones por alumno (textarea corto o expandible).\n   - Barra fija inferior en móvil: **Guardar evaluación** (sticky).\n   - Opcional UX: “Copiar fila anterior” / “Aplicar mismo nivel a todos” (nice-to-have, no bloqueante).\n\n### Historial en ficha curso\n\n- Lista de **tarjetas** por &#96;evaluated_on&#96; + título + cantidad de alumnos; expandir o enlace a detalle del set con tabla de resultados (solo lectura para quien no gestiona).\n\n### Historial en ficha alumno\n\n- En [&#96;resources/views/students/show.blade.php&#96;](resources/views/students/show.blade.php): sección **“Evaluaciones por curso”**: timeline o acordeón por curso, dentro cada informe con las 5 calificaciones + observaciones.\n\n### Portal alumno / familia\n\n- Sección compacta en [&#96;portal/student.blade.php&#96;](resources/views/portal/student.blade.php) y [&#96;portal/representative.blade.php&#96;](resources/views/portal/representative.blade.php): mismas tarjetas que backoffice pero sin acciones de edición; enlace “Ver detalle” opcional.\n\n**Estilo**: reutilizar patrones ya usados (cards, &#96;section-head&#96;, grid responsive, sin tablas anchas con scroll; en móvil apilar rubros).\n\n## Otros detalles\n\n- **Audit**: opcional &#96;AuditTrail::log&#96; al crear/editar set (consistente con finanzas/asistencia).\n- **Validación**: &#96;Rule::in([...])&#96; para cada rating; observaciones string nullable max length.\n- **Tests**: feature test mínimo — profesor puede guardar set; alumno no puede POST; alumno puede GET portal.\n\n## Orden de implementación sugerido\n\n1. Migraciones + modelos + enums/helpers de escala/dimensiones.\n2. Seeder de permisos + policy/autorización.\n3. &#96;GradeEvaluationController&#96; (o anidado bajo curso) + vistas backoffice (índice + formulario de carga).\n4. Integración en &#96;courses/show&#96; y &#96;students/show&#96;.\n5. Portal alumno + representante (lectura).\n6. Pulido CSS y pruebas.\n",
+  "todos": [
+    {
+      "content": "Migraciones grade_evaluation_sets + grade_entries, modelos Eloquent, constantes escala/rubros, campus_id denormalizado",
+      "id": "schema-models",
+      "status": "pending"
+    },
+    {
+      "content": "Permisos grades.manage en DatabaseSeeder; policy/helper autorización admin vs teacher vs portal",
+      "id": "auth-perms",
+      "status": "pending"
+    },
+    {
+      "content": "Rutas + controlador carga/listado por curso; vistas matriz + historial; enlace desde courses/show",
+      "id": "teacher-ui",
+      "status": "pending"
+    },
+    {
+      "content": "Sección historial en students/show y refinar courses/show",
+      "id": "admin-views",
+      "status": "pending"
+    },
+    {
+      "content": "Consulta en portal estudiante y representante (solo lectura, datos filtrados)",
+      "id": "portal-readonly",
+      "status": "pending"
+    },
+    {
+      "content": "Feature tests mínimos + estilos responsive (badges por nivel, sin scroll horizontal)",
+      "id": "tests-css",
+      "status": "pending"
+    }
+  ]
+}
+```
+Additional data:
+
+```json
+{
+  "hasOpenedEditor": true,
+  "planId": "modulo_evaluaciones_notas_fb5b4ef4",
+  "planUri": "file:///Users/josueramos/.cursor/plans/modulo_evaluaciones_notas_fb5b4ef4.plan.md",
+  "reviewData": {
+    "isShowingInput": false,
+    "selectedOption": "none",
+    "status": "Requested"
+  }
+}
+```
+Result:
+
+```json
+{
+  "rejected": {}
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="create_plan"><details>
+<summary>Tool use: **create_plan**</summary>
+
+</details></tool-use>
+
+---
+
+_**User**_
+
+Implement the plan as specified, it is attached for your reference. Do NOT edit the plan file itself.
+
+To-do's from the plan have already been created. Do not create them again. Mark them as in_progress as you work, starting with the first one. Don't stop until you have completed all the to-dos.
+
+---
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+The user wants me to implement the complete grades/evaluations module according to the specified plan.</details></think>
+
+_**Agent (default)**_
+
+Implementando el módulo de evaluaciones según el plan: empezando por esquema y modelos.
+
+
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="todo_write">
+<details>
+<summary>Tool use: **todo_write**</summary>
+
+
+Parameters:
+
+```json
+{
+  "merge": true
+}
+```
+Result:
+
+```json
+{
+  "finalTodos": [
+    {
+      "content": "Migraciones grade_evaluation_sets + grade_entries, modelos Eloquent, constantes escala/rubros, campus_id denormalizado",
+      "id": "schema-models",
+      "status": "in_progress"
+    },
+    {
+      "content": "Permisos grades.manage en DatabaseSeeder; policy/helper autorización admin vs teacher vs portal",
+      "id": "auth-perms",
+      "status": "pending"
+    },
+    {
+      "content": "Rutas + controlador carga/listado por curso; vistas matriz + historial; enlace desde courses/show",
+      "id": "teacher-ui",
+      "status": "pending"
+    },
+    {
+      "content": "Sección historial en students/show y refinar courses/show",
+      "id": "admin-views",
+      "status": "pending"
+    },
+    {
+      "content": "Consulta en portal estudiante y representante (solo lectura, datos filtrados)",
+      "id": "portal-readonly",
+      "status": "pending"
+    },
+    {
+      "content": "Feature tests mínimos + estilos responsive (badges por nivel, sin scroll horizontal)",
+      "id": "tests-css",
+      "status": "pending"
+    }
+  ],
+  "initialTodos": [
+    {
+      "content": "Migraciones grade_evaluation_sets + grade_entries, modelos Eloquent, constantes escala/rubros, campus_id denormalizado",
+      "id": "schema-models",
+      "status": "pending"
+    },
+    {
+      "content": "Permisos grades.manage en DatabaseSeeder; policy/helper autorización admin vs teacher vs portal",
+      "id": "auth-perms",
+      "status": "pending"
+    },
+    {
+      "content": "Rutas + controlador carga/listado por curso; vistas matriz + historial; enlace desde courses/show",
+      "id": "teacher-ui",
+      "status": "pending"
+    },
+    {
+      "content": "Sección historial en students/show y refinar courses/show",
+      "id": "admin-views",
+      "status": "pending"
+    },
+    {
+      "content": "Consulta en portal estudiante y representante (solo lectura, datos filtrados)",
+      "id": "portal-readonly",
+      "status": "pending"
+    },
+    {
+      "content": "Feature tests mínimos + estilos responsive (badges por nivel, sin scroll horizontal)",
+      "id": "tests-css",
+      "status": "pending"
+    }
+  ],
+  "success": true,
+  "wasMerge": true
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="todo_write"><details>
+<summary>Tool use: **todo_write**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/web.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/CourseController.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+I need to create migrations for grade_evaluation_sets and grade_entries.</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/web.php",
+  "pattern": "teacher|courses"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/web.php",
+  "pattern": "teacher|courses",
+  "topFiles": [
+    {
+      "matchCount": 7,
+      "uri": "routes/web.php"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 7
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/User.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+Only administrators can access course routes. I need to add grade management routes accessible to both admins and teachers with the `grades.manage` permission. I'll create a new route group outside the admin-only block that uses the existing attendance pattern.
+
+- Add route group with `role:admin,teacher` and `permission:grades.manage`
+- Place it outside the admin-only section in web.php
+- Use the same structure as attendance routes
+- Define route for course grades index page
+
+```php
+Route::middleware(['role:admin,teacher', 'permission:grades.manage'])->group(function () {
+    Route::get('/courses/{course}/grades', ...)->name('courses.grades.index');
+```</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/User.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsureRole.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+I need to:
+- Add `grades.manage` to DatabaseSeeder permissions
+- Add `grades.manage` to roleTeacher sync I need to ensure `grades.manage` is available for teachers by either adding it to the legacy array in User.php or confirming the role permissions are properly synced. Since the seeder uses `roleTeacher->permissions()->syncWithoutDetaching`, the permission exists in the pivot table. The `hasPermission` check looks at both legacy permissions and role permissions, so as long as the role has the permission, it should work. Therefore, I should add `grades.manage` to the role in the seeder and ensure the roleTeacher has it synced.
+
+- Add `grades.manage` to DatabaseSeeder permissions
+- Ensure roleTeacher sync includes `grades.manage`
+- Confirm legacy array in User.php is not needed if role has the permission
+- Verify `hasPermission` checks both legacy and role permissions correctly But wait, the legacy check happens first; if not found, it falls through to the roles query. Since legacy doesn't include `grades.manage` for teachers, it correctly queries roles. Teachers have `roleTeacher` linked with permissions from the seeder, so I'll add `grades.manage` to teacher's synced permissions.
+
+Teachers also need routes with middleware group.
+
+Files to create:
+- database/migrations/xxxx_create_grade_evaluation_tables.php
+- app/Support/GradeEvaluation.php (constants class)
+- app/Models/GradeEvaluationSet.php
+- app/Models/GradeEntry.php - Implement migration for `grade_evaluation_sets` table with `campus_id` and `course_id` foreign keys.
+- Update `EnsureCampusAccess` middleware to include `GradeEvaluationSet` and `GradeEntry` models in `resolveCampusId`.
+- Modify `StudentController@show` to load grade history by querying `GradeEntry` where `enrollment.student_id = student`.
+- Create `CourseGradeController` to handle grade-related actions: index, create, store, show set, edit set, update set.
+- Add `grades.manage` permission to `DatabaseSeeder` and ensure it's synced with `roleTeacher`.</details></think>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "*.php",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "AuditTrail::log"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "AuditTrail::log",
+  "topFiles": [
+    {
+      "matchCount": 5,
+      "uri": "app/Http/Controllers/StudentController.php"
+    },
+    {
+      "matchCount": 2,
+      "uri": "app/Http/Controllers/FinanceController.php"
+    },
+    {
+      "matchCount": 2,
+      "uri": "app/Http/Controllers/AuthController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/AttendanceController.php"
+    },
+    {
+      "matchCount": 3,
+      "uri": "app/Http/Controllers/GroupController.php"
+    },
+    {
+      "matchCount": 2,
+      "uri": "app/Http/Controllers/EnrollmentController.php"
+    }
+  ],
+  "totalFiles": 6,
+  "totalMatches": 19
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/StudentController.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "contextAfter": 80,
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/StudentController.php",
+  "pattern": "function show"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/StudentController.php",
+  "pattern": "function show",
+  "topFiles": [
+    {
+      "matchCount": 81,
+      "uri": "app/Http/Controllers/StudentController.php"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 1
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "contextAfter": 100,
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/StudentController.php",
+  "pattern": "function detailData"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/StudentController.php",
+  "pattern": "function detailData",
+  "topFiles": [
+    {
+      "matchCount": 101,
+      "uri": "app/Http/Controllers/StudentController.php"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 1
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<think><details><summary>Thought Process</summary>
+I'll add `gradeHistory` to detailData by querying grade entries for this student with set and</details></think>

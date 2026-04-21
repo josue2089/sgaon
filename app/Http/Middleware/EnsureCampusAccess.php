@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use App\Models\ClassSession;
 use App\Models\Enrollment;
+use App\Models\GradeEntry;
+use App\Models\GradeEvaluationSet;
 use App\Models\Payment;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
@@ -51,6 +53,10 @@ class EnsureCampusAccess
         }
 
         if ($model instanceof Payment) {
+            return (int) $model->campus_id;
+        }
+
+        if ($model instanceof GradeEvaluationSet || $model instanceof GradeEntry) {
             return (int) $model->campus_id;
         }
 

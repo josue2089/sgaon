@@ -114,9 +114,9 @@ class AttendanceController extends Controller
         }
 
         ClassSession::where('id', $data['class_session_id'])->update([
-            'topic' => $data['topic'] ?: null,
-            'program_status' => $data['program_status'] ?: null,
-            'program_notes' => $data['program_notes'] ?: null,
+            'topic' => $data['topic'] ?? null,
+            'program_status' => $data['program_status'] ?? null,
+            'program_notes' => $data['program_notes'] ?? null,
         ]);
 
         $written = 0;

@@ -121,4 +121,9 @@ class Course extends Model
     {
         return $this->hasManyThrough(Enrollment::class, Group::class);
     }
+
+    public function gradeEvaluationSets()
+    {
+        return $this->hasMany(GradeEvaluationSet::class)->orderByDesc('evaluated_on')->orderByDesc('id');
+    }
 }

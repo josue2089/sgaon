@@ -9,6 +9,7 @@ use App\Models\AuthorizedContact;
 use App\Models\Campus;
 use App\Models\Charge;
 use App\Models\Enrollment;
+use App\Models\GradeEntry;
 use App\Models\Representative;
 use App\Models\StudentAttachment;
 use App\Models\Student;
@@ -392,6 +393,13 @@ class StudentController extends Controller
             'outstanding_total' => (float) $student->charges->sum(fn (Charge $charge) => FinanceReconcile::outstandingForCharge($charge)),
         ];
 
+        $gradeEvaluationHistory = GradeEntry::query()
+            ->whereHas('enrollment', fn ($q) => $q->where('student_id', $student->id))
+            ->with(['evaluationSet.course.teacher'])
+            ->get()
+            ->sortByDesc(fn ($entry) => optional($entry->evaluationSet)->evaluated_on)
+            ->values();
+
         return [
             'student' => $student,
             'currentEnrollment' => $currentEnrollment,
@@ -400,6 +408,7 @@ class StudentController extends Controller
             'nextCourseLevel' => $nextCourseLevel,
             'summary' => $summary,
             'courseHistory' => $student->enrollments,
+            'gradeEvaluationHistory' => $gradeEvaluationHistory,
             'paymentHistory' => $student->payments->take(15),
             'chargeHistory' => $student->charges->take(15),
             'auditLogs' => AuditLog::query()

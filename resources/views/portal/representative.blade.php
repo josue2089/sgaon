@@ -14,6 +14,11 @@
 <h4>Resumen financiero</h4>
 <table><thead><tr><th>Cargos</th><th>Pagos</th><th>Saldo</th></tr></thead><tbody><tr><td>${{ number_format($student->charges->sum('amount'),2) }}</td><td>${{ number_format($student->payments->sum('amount'),2) }}</td><td>${{ number_format($student->charges->sum('amount') - $student->payments->sum('amount'),2) }}</td></tr></tbody></table>
 </div>
+</div>
+<div style="margin-top:1rem;">
+<h4>Evaluaciones</h4>
+@include('partials.portal-grade-entries', ['gradeEntries' => ($repGradeEntriesByStudentId[(int) $student->id] ?? collect())->sortByDesc(fn ($e) => optional($e->evaluationSet)->evaluated_on)])
+</div>
 <div style="margin-top:1rem;">
 <h4>Pagos pendientes</h4>
 <table>
@@ -62,7 +67,6 @@
 </table>
 </div>
 @endif
-</div>
 </div>
 @empty
 <div class="card">No hay alumnos asociados a este representante.</div>

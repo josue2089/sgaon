@@ -61,6 +61,14 @@
 
 <div class="card">
     <div class="section-head section-head-tight">
+        <h2 class="section-title section-title-md">Mis evaluaciones</h2>
+        <div class="entity-sub">Informes por curso (solo lectura)</div>
+    </div>
+    @include('partials.portal-grade-entries', ['gradeEntries' => $portalGradeEntries])
+</div>
+
+<div class="card">
+    <div class="section-head section-head-tight">
         <h2 class="section-title section-title-md">Mis recuperativas</h2>
         <div class="entity-sub">Gestiona pago y reserva sin scroll horizontal</div>
     </div>

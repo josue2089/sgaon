@@ -44,6 +44,7 @@ class DatabaseSeeder extends Seeder
             'groups.manage',
             'enrollments.manage',
             'attendance.manage',
+            'grades.manage',
             'finance.manage',
             'reports.view',
             'portal.student.view',
@@ -59,6 +60,7 @@ class DatabaseSeeder extends Seeder
         $roleTeacher->permissions()->syncWithoutDetaching([
             $permissions['dashboard.view']->id,
             $permissions['attendance.manage']->id,
+            $permissions['grades.manage']->id,
             $permissions['reports.view']->id,
         ]);
         $roleStudent->permissions()->syncWithoutDetaching([

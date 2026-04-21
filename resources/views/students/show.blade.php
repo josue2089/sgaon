@@ -50,6 +50,7 @@
 
 <div class="student-section-nav">
     <a href="#student-progress" class="student-section-pill">Progreso</a>
+    <a href="#student-evaluations" class="student-section-pill">Evaluaciones</a>
     <a href="#student-academic" class="student-section-pill">Académico</a>
     <a href="#student-finance" class="student-section-pill">Financiero</a>
     <a href="#student-audit" class="student-section-pill">Auditoría</a>
@@ -244,6 +245,42 @@
     @else
         <div class="empty-state">No hay adjuntos cargados.</div>
     @endif
+</div>
+
+<div class="card" id="student-evaluations">
+    <div class="section-head section-head-tight">
+        <h2 class="section-title section-title-md">Evaluaciones por curso</h2>
+        <div class="entity-sub">Histórico de rubros por informe</div>
+    </div>
+    @forelse($gradeEvaluationHistory as $entry)
+        @php($evalSet = $entry->evaluationSet)
+        @php($gcourse = $evalSet?->course)
+        <article class="grades-student-entry">
+            <div class="grades-student-entry-head">
+                <div>
+                    <div class="table-title">{{ $gcourse?->name ?? 'Curso' }}</div>
+                    <div class="table-sub">{{ $evalSet?->evaluated_on?->format('d/m/Y') ?? '' }} @if($evalSet?->title)· {{ $evalSet->title }}@endif</div>
+                </div>
+                @if($gcourse)
+                    <a class="btn secondary" href="{{ route('courses.grades.index', $gcourse) }}">Evaluaciones del curso</a>
+                @endif
+            </div>
+            <div class="grades-student-rubrics">
+                @foreach(\App\Support\GradeRubric::SKILL_KEYS as $skill)
+                    @php($rating = $entry->ratingForSkill($skill))
+                    <div class="grades-student-rubric">
+                        <span>{{ \App\Support\GradeRubric::SKILL_LABELS_ES[$skill] }}</span>
+                        @include('partials.ui.status-badge', ['tone' => \App\Support\GradeRubric::ratingTone($rating), 'text' => \App\Support\GradeRubric::RATING_LABELS_ES[$rating] ?? $rating])
+                    </div>
+                @endforeach
+            </div>
+            @if($entry->observations)
+                <div class="grades-student-obs">{{ $entry->observations }}</div>
+            @endif
+        </article>
+    @empty
+        <div class="empty-state-inline">Sin evaluaciones registradas.</div>
+    @endforelse
 </div>
 
 <div class="detail-grid student-detail-grid">

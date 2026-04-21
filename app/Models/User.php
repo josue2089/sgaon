@@ -78,7 +78,7 @@ class User extends Authenticatable
         }
 
         $legacy = [
-            self::ROLE_TEACHER => ['attendance.manage', 'reports.view', 'dashboard.view'],
+            self::ROLE_TEACHER => ['attendance.manage', 'grades.manage', 'reports.view', 'dashboard.view'],
             self::ROLE_STUDENT => ['portal.student.view', 'dashboard.view'],
             self::ROLE_REPRESENTATIVE => ['portal.representative.view', 'dashboard.view'],
         ];

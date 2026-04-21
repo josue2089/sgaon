@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Charge;
 use App\Models\ChargePaymentRequest;
+use App\Models\GradeEntry;
 use App\Models\Representative;
 use App\Models\MakeupRequest;
 use App\Models\MakeupSession;
@@ -127,7 +128,14 @@ class PortalController extends Controller
             ->latest()
             ->get();
 
-        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions', 'pendingCharges', 'chargePaymentRequests'));
+        $portalGradeEntries = GradeEntry::query()
+            ->whereHas('enrollment', fn ($q) => $q->where('student_id', $student->id))
+            ->with(['evaluationSet.course'])
+            ->get()
+            ->sortByDesc(fn ($entry) => optional($entry->evaluationSet)->evaluated_on)
+            ->values();
+
+        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions', 'pendingCharges', 'chargePaymentRequests', 'portalGradeEntries'));
     }
 
     public function submitMakeupPayment(Request $request, MakeupRequest $makeupRequest): RedirectResponse
@@ -218,7 +226,17 @@ class PortalController extends Controller
             ])
             ->get();
 
-        return view('portal.representative', compact('representative', 'students'));
+        $studentIds = $students->pluck('id')->all();
+        $repGradeEntriesByStudentId = collect();
+        if ($studentIds !== []) {
+            $repGradeEntriesByStudentId = GradeEntry::query()
+                ->whereHas('enrollment', fn ($q) => $q->whereIn('student_id', $studentIds))
+                ->with(['evaluationSet.course', 'enrollment'])
+                ->get()
+                ->groupBy(fn ($entry) => (int) $entry->enrollment->student_id);
+        }
+
+        return view('portal.representative', compact('representative', 'students', 'repGradeEntriesByStudentId'));
     }
 
     public function submitChargePaymentAsStudent(Request $request, Charge $charge): RedirectResponse

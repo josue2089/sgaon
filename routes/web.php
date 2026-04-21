@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampusController;
 use App\Http\Controllers\ClassSessionController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CourseGradeController;
 use App\Http\Controllers\CourseLevelController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnrollmentController;
@@ -116,6 +117,15 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
     Route::middleware(['role:admin,teacher', 'permission:attendance.manage'])->group(function () {
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+    });
+
+    Route::middleware(['role:admin,teacher', 'permission:grades.manage'])->group(function () {
+        Route::get('/courses/{course}/grades', [CourseGradeController::class, 'index'])->name('courses.grades.index');
+        Route::get('/courses/{course}/grades/create', [CourseGradeController::class, 'create'])->name('courses.grades.create');
+        Route::post('/courses/{course}/grades', [CourseGradeController::class, 'store'])->name('courses.grades.store');
+        Route::get('/grade-evaluation-sets/{gradeEvaluationSet}', [CourseGradeController::class, 'show'])->name('grade-evaluation-sets.show');
+        Route::get('/grade-evaluation-sets/{gradeEvaluationSet}/edit', [CourseGradeController::class, 'edit'])->name('grade-evaluation-sets.edit');
+        Route::put('/grade-evaluation-sets/{gradeEvaluationSet}', [CourseGradeController::class, 'update'])->name('grade-evaluation-sets.update');
     });
 
     Route::middleware(['role:student', 'permission:portal.student.view'])->group(function () {

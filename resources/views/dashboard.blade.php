@@ -21,6 +21,24 @@
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'alert', 'label' => 'Alertas', 'value' => $openAlertsCount])
 </div>
 
+@if(auth()->user()?->role === 'teacher' && $teacherGradeCourses->isNotEmpty())
+<div class="card grades-dashboard-card">
+    <div class="section-head section-head-tight">
+        <h2 class="section-title section-title-md">Evaluaciones por curso</h2>
+        <p class="page-subtitle section-subtitle">Carga y consulta el historial de notas por rubro</p>
+    </div>
+    <div class="grades-dashboard-links">
+        @foreach($teacherGradeCourses as $tc)
+            <a class="grades-dashboard-link" href="{{ route('courses.grades.index', $tc) }}">
+                <span class="grades-dashboard-link-title">{{ $tc->name }}</span>
+                @if($tc->code)<span class="grades-dashboard-link-meta">{{ $tc->code }}</span>@endif
+                <span class="grades-dashboard-link-arrow">Evaluaciones →</span>
+            </a>
+        @endforeach
+    </div>
+</div>
+@endif
+
 <div class="split-2">
     <div class="card">
         <div class="module-head">

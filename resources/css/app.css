@@ -3175,3 +3175,256 @@ dialog.finance-proof-dialog[open] {
         width: 100%;
     }
 }
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Evaluaciones / notas por curso */
+.grades-dashboard-card {
+    margin-bottom: 1rem;
+}
+
+.grades-dashboard-links {
+    display: grid;
+    gap: 0.65rem;
+    padding: 0 1.2rem 1.2rem;
+}
+
+.grades-dashboard-link {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem 1rem;
+    align-items: center;
+    padding: 0.9rem 1rem;
+    border: 1px solid #dbe6f7;
+    border-radius: 16px;
+    background: #fff;
+    text-decoration: none;
+    color: var(--text);
+}
+
+.grades-dashboard-link-title {
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+.grades-dashboard-link-meta {
+    grid-column: 1 / -1;
+    font-size: 0.88rem;
+    color: var(--muted);
+}
+
+.grades-dashboard-link-arrow {
+    grid-column: 2;
+    grid-row: 1;
+    font-weight: 800;
+    font-size: 0.88rem;
+    color: var(--brand);
+}
+
+.grades-set-card {
+    border: 1px solid #dbe6f7;
+    border-radius: 16px;
+    padding: 1rem;
+    margin-bottom: 0.65rem;
+}
+
+.grades-set-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.grades-set-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.grades-meta-card {
+    margin-bottom: 0.75rem;
+}
+
+.grades-matrix-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.grades-matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.grades-matrix-table th,
+.grades-matrix-table td {
+    padding: 0.45rem 0.35rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+}
+
+.grades-matrix-sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: #fff;
+    min-width: 9rem;
+    box-shadow: 4px 0 8px rgba(7, 18, 53, 0.06);
+}
+
+.grades-matrix-select {
+    min-width: 7rem;
+    max-width: 10rem;
+    width: 100%;
+}
+
+.grades-matrix-notes {
+    width: 100%;
+    min-width: 10rem;
+    min-height: 3rem;
+    box-sizing: border-box;
+}
+
+.grades-matrix-form {
+    padding-bottom: 5rem;
+}
+
+.grades-matrix-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin: 0 -0.5rem;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid var(--line);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.grades-detail-card {
+    padding: 0 1rem 1rem;
+}
+
+.grades-detail-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.grades-entry-card {
+    border: 1px solid #e4ebf8;
+    border-radius: 16px;
+    padding: 0.9rem;
+    background: #fbfdff;
+}
+
+.grades-entry-rubrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+}
+
+.grades-entry-rubric {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.grades-entry-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.grades-entry-obs {
+    margin-top: 0.65rem;
+    font-size: 0.92rem;
+}
+
+.grades-student-entry {
+    border: 1px solid #dbe6f7;
+    border-radius: 16px;
+    padding: 0.9rem;
+    margin-bottom: 0.65rem;
+}
+
+.grades-student-entry-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.grades-student-rubrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.45rem;
+    margin-top: 0.55rem;
+}
+
+.grades-student-rubric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+}
+
+.grades-student-obs {
+    margin-top: 0.55rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+}
+
+.grades-portal-list {
+    display: grid;
+    gap: 0.65rem;
+    padding: 0 1.2rem 1.2rem;
+}
+
+.grades-portal-entry {
+    border: 1px solid #e4ebf8;
+    border-radius: 14px;
+    padding: 0.75rem 0.9rem;
+    background: #fbfdff;
+}
+
+.grades-portal-rubrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.45rem;
+}
+
+.grades-portal-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+}
+
+.grades-portal-obs {
+    margin-top: 0.45rem;
+    font-size: 0.88rem;
+    color: var(--muted);
+}
+
+@media (max-width: 640px) {
+    .grades-matrix-select {
+        min-width: 5.5rem;
+        font-size: 0.82rem;
+    }
+}
