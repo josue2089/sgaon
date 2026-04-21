@@ -2964,3 +2964,191 @@ textarea {
         width: 100%;
     }
 }
+
+/* Financiero — solicitudes de pago (tarjetas + modal comprobante) */
+.finance-payment-requests-card .section-head {
+    padding-bottom: 0;
+}
+
+.finance-payment-request-list {
+    display: grid;
+    gap: 0.9rem;
+    padding: 0 1.2rem 1.2rem;
+}
+
+.finance-payment-request-card {
+    border: 1px solid #dbe6f7;
+    border-radius: 20px;
+    background: #fff;
+    padding: 1rem;
+    display: grid;
+    gap: 0.85rem;
+}
+
+.finance-payment-request-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.finance-payment-request-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.5rem 1rem;
+    font-size: 0.92rem;
+    color: var(--muted);
+}
+
+.finance-payment-request-panes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.finance-payment-request-pane {
+    border: 1px solid #e4ebf8;
+    border-radius: 16px;
+    background: #fbfdff;
+    padding: 0.85rem;
+}
+
+.finance-payment-request-pane h4 {
+    margin: 0 0 0.55rem;
+    font-size: 0.98rem;
+    color: var(--brand);
+}
+
+.finance-payment-request-pane-actions {
+    min-width: 0;
+}
+
+.finance-payment-request-actions-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+.finance-payment-action-form {
+    margin: 0;
+}
+
+.finance-payment-action-form .btn {
+    white-space: nowrap;
+}
+
+.finance-payment-reject-form {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.finance-payment-reject-form textarea {
+    min-height: 70px;
+    resize: vertical;
+}
+
+.finance-reject-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.finance-payment-reject-note {
+    margin-top: 0.45rem;
+    font-size: 0.92rem;
+    color: var(--muted);
+}
+
+.finance-proof-dialog {
+    border: none;
+    border-radius: 20px;
+    padding: 1rem 1.25rem;
+    width: min(920px, calc(100vw - 2rem));
+    max-height: calc(100vh - 2rem);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 48px rgba(7, 18, 53, 0.22);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
+}
+
+.finance-proof-dialog::backdrop {
+    background: rgba(7, 18, 53, 0.52);
+    backdrop-filter: blur(3px);
+}
+
+.finance-proof-dialog-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.finance-proof-dialog-title {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--brand);
+}
+
+.finance-proof-dialog-body {
+    flex: 1;
+    min-height: 0;
+    margin-top: 0.65rem;
+    border-radius: 12px;
+    overflow: auto;
+    background: #f1f5f9;
+    border: 1px solid var(--line);
+}
+
+.finance-proof-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: min(72vh, 640px);
+    object-fit: contain;
+}
+
+.finance-proof-iframe {
+    width: 100%;
+    min-height: min(72vh, 640px);
+    height: min(72vh, 640px);
+    border: 0;
+    background: #fff;
+}
+
+.finance-proof-fallback {
+    margin: 0 0 0.75rem;
+    padding: 1rem;
+    color: var(--muted);
+}
+
+.finance-proof-dialog-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: flex-end;
+    margin-top: 0.85rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+    .finance-payment-request-panes {
+        grid-template-columns: 1fr;
+    }
+
+    .finance-payment-request-actions-row {
+        grid-template-columns: 1fr;
+    }
+
+    .finance-payment-action-form .btn {
+        width: 100%;
+    }
+}

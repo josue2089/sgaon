@@ -141,49 +141,103 @@
     </div>
 </div>
 
-<div class="card">
-    <h3 class="section-title section-title-sm">Solicitudes de pago por validar</h3>
-    <table>
-        <thead>
-        <tr><th>Alumno</th><th>Cargo</th><th>Monto</th><th>Comprobante</th><th>Referencia</th><th>Estado</th><th>Acciones</th></tr>
-        </thead>
-        <tbody>
+<div class="card finance-payment-requests-card">
+    <div class="section-head section-head-tight">
+        <h3 class="section-title section-title-sm">Solicitudes de pago por validar</h3>
+        <div class="entity-sub">Revisa el comprobante en pantalla y define la acción sin tablas anchas</div>
+    </div>
+    <div class="finance-payment-request-list">
         @forelse($paymentRequests as $paymentRequest)
-            <tr>
-                <td>
-                    <div class="table-title">{{ $paymentRequest->student?->full_name ?? 'N/D' }}</div>
-                    <div class="table-sub">{{ $paymentRequest->representative?->full_name ? 'Enviado por: '.$paymentRequest->representative->full_name : 'Enviado por alumno' }}</div>
-                </td>
-                <td>{{ $paymentRequest->charge?->concept ?? 'N/D' }}</td>
-                <td>${{ number_format($paymentRequest->amount, 2) }}</td>
-                <td><a href="{{ \Illuminate\Support\Facades\Storage::url($paymentRequest->proof_path) }}" target="_blank">Ver archivo</a></td>
-                <td>{{ $paymentRequest->reference ?: 'Sin referencia' }}</td>
-                <td>{{ ucfirst(str_replace('_', ' ', $paymentRequest->status)) }}</td>
-                <td>
-                    @if($paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_PENDING_VALIDATION)
-                        <form method="POST" action="{{ route('finance.payment-requests.review', $paymentRequest) }}" class="stack-xs">
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="action" value="approve">
-                            <button class="btn secondary" type="submit">Aprobar</button>
-                        </form>
-                        <form method="POST" action="{{ route('finance.payment-requests.review', $paymentRequest) }}" class="stack-xs" style="margin-top:.4rem;">
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="action" value="reject">
-                            <input name="rejection_reason" placeholder="Motivo rechazo">
-                            <button class="btn secondary" type="submit">Rechazar</button>
-                        </form>
-                    @else
-                        <div class="table-sub">{{ $paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_APPROVED ? 'Procesada' : 'Rechazada' }}</div>
+            @php
+                $proofUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($paymentRequest->proof_path);
+                $proofMime = strtolower((string) ($paymentRequest->proof_mime_type ?? ''));
+                $isImage = str_starts_with($proofMime, 'image/');
+                $isPdf = $proofMime === 'application/pdf' || str_ends_with(strtolower($paymentRequest->proof_path), '.pdf');
+            @endphp
+            <article class="finance-payment-request-card">
+                <div class="finance-payment-request-head">
+                    <div>
+                        <div class="table-title">{{ $paymentRequest->student?->full_name ?? 'N/D' }}</div>
+                        <div class="table-sub">{{ $paymentRequest->representative?->full_name ? 'Enviado por representante: '.$paymentRequest->representative->full_name : 'Enviado por alumno' }}</div>
+                        @if($paymentRequest->submitted_at)
+                            <div class="table-sub">Recibido: {{ $paymentRequest->submitted_at->format('d/m/Y H:i') }}</div>
+                        @endif
+                    </div>
+                    <div>
+                        @include('partials.ui.status-badge', [
+                            'tone' => $paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_APPROVED ? 'ok' : ($paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_REJECTED ? 'danger' : 'warn'),
+                            'text' => ucfirst(str_replace('_', ' ', $paymentRequest->status)),
+                        ])
+                    </div>
+                </div>
+                <div class="finance-payment-request-meta">
+                    <div><strong>Cargo:</strong> {{ $paymentRequest->charge?->concept ?? 'N/D' }}</div>
+                    <div><strong>Monto solicitado:</strong> ${{ number_format($paymentRequest->amount, 2) }}</div>
+                    <div><strong>Referencia:</strong> {{ $paymentRequest->reference ?: 'Sin referencia' }}</div>
+                    @if($paymentRequest->payment_method)
+                        <div><strong>Método declarado:</strong> {{ $paymentRequest->payment_method }}</div>
                     @endif
-                </td>
-            </tr>
+                </div>
+                <div class="finance-payment-request-panes">
+                    <div class="finance-payment-request-pane">
+                        <h4>Comprobante</h4>
+                        <button type="button" class="btn secondary finance-proof-open-btn" onclick="document.getElementById('finance-proof-dialog-{{ $paymentRequest->id }}').showModal()">
+                            Ver comprobante
+                        </button>
+                        <div class="table-sub">{{ $paymentRequest->proof_original_name ?: 'Archivo adjunto' }}</div>
+                    </div>
+                    <div class="finance-payment-request-pane finance-payment-request-pane-actions">
+                        <h4>Decisión</h4>
+                        @if($paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_PENDING_VALIDATION)
+                            <div class="finance-payment-request-actions-row">
+                                <form method="POST" action="{{ route('finance.payment-requests.review', $paymentRequest) }}" class="finance-payment-action-form">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="action" value="approve">
+                                    <button class="btn" type="submit">Aprobar</button>
+                                </form>
+                                <form method="POST" action="{{ route('finance.payment-requests.review', $paymentRequest) }}" class="finance-payment-action-form finance-payment-reject-form">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="action" value="reject">
+                                    <label class="finance-reject-label" for="reject-reason-{{ $paymentRequest->id }}">Motivo de rechazo</label>
+                                    <textarea id="reject-reason-{{ $paymentRequest->id }}" name="rejection_reason" rows="2" placeholder="Solo si rechazas — describe el problema del comprobante"></textarea>
+                                    <button class="btn secondary" type="submit">Rechazar</button>
+                                </form>
+                            </div>
+                        @else
+                            <div class="table-sub">{{ $paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_APPROVED ? 'Esta solicitud ya fue aprobada y aplicada.' : 'Esta solicitud fue rechazada.' }}</div>
+                            @if($paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_REJECTED && $paymentRequest->rejection_reason)
+                                <div class="finance-payment-reject-note"><strong>Motivo registrado:</strong> {{ $paymentRequest->rejection_reason }}</div>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+            </article>
+            <dialog id="finance-proof-dialog-{{ $paymentRequest->id }}" class="finance-proof-dialog">
+                <div class="finance-proof-dialog-head">
+                    <h3 class="finance-proof-dialog-title">Comprobante · {{ $paymentRequest->student?->full_name ?? 'Alumno' }}</h3>
+                    <button type="button" class="charge-pay-dialog-close" onclick="document.getElementById('finance-proof-dialog-{{ $paymentRequest->id }}').close()" aria-label="Cerrar">&times;</button>
+                </div>
+                <div class="finance-proof-dialog-body">
+                    @if($isImage)
+                        <img src="{{ $proofUrl }}" alt="Comprobante de pago" class="finance-proof-img">
+                    @elseif($isPdf)
+                        <iframe src="{{ $proofUrl }}" title="Comprobante PDF" class="finance-proof-iframe"></iframe>
+                    @else
+                        <p class="finance-proof-fallback">No hay vista previa para este tipo de archivo.</p>
+                        <p><a class="btn secondary" href="{{ $proofUrl }}" target="_blank" rel="noopener">Abrir o descargar archivo</a></p>
+                    @endif
+                </div>
+                <div class="finance-proof-dialog-footer">
+                    <a class="btn secondary" href="{{ $proofUrl }}" target="_blank" rel="noopener">Abrir en pestaña nueva</a>
+                    <button type="button" class="btn" onclick="document.getElementById('finance-proof-dialog-{{ $paymentRequest->id }}').close()">Cerrar</button>
+                </div>
+            </dialog>
         @empty
-            <tr><td colspan="7"><div class="empty-state-inline">No hay solicitudes de pago pendientes.</div></td></tr>
+            <div class="empty-state-inline">No hay solicitudes de pago pendientes.</div>
         @endforelse
-        </tbody>
-    </table>
+    </div>
 </div>
 
 <div class="card">
@@ -365,6 +419,14 @@
                 syncPaymentStudentFromCharge();
             }
         }
+
+        document.querySelectorAll('dialog.finance-proof-dialog').forEach(function (dlg) {
+            dlg.addEventListener('click', function (e) {
+                if (e.target === dlg) {
+                    dlg.close();
+                }
+            });
+        });
     })();
 </script>
 @endpush
