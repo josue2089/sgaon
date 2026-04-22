@@ -66,7 +66,7 @@
             </div>
 
             <p style="margin:0 0 18px;">
-                <a href="{{ url('/portal/student') }}" style="display:inline-block;background:#1b3f9d;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-size:14px;font-weight:700;">
+                <a href="{{ url('/portal/student#renewal-enrollment') }}" style="display:inline-block;background:#1b3f9d;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-size:14px;font-weight:700;">
                     Ir al portal para inscripción
                 </a>
             </p>

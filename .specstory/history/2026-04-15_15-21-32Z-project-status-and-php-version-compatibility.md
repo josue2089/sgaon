@@ -17512,3 +17512,17 @@ Puedes probar con:
 - `php artisan levels:send-renewal-reminders`
 
 Si quieres, después te lo dejo parametrizable por `.env` (por ejemplo `RENEWAL_CLASSES_THRESHOLD=15`) para no tocar código cada vez.
+
+---
+
+_**User**_
+
+Ya me llego el recordatorio, veo que creo el curso, pero no creo las sesiones correspondientes. Te dejo screenshot 
+
+Ademas cuando ingreso como alumno desde el boton del email de recordatorio, no veo donde realizar la inscripcion.
+
+---
+
+_**Agent (default)**_
+
+Gracias por el screenshot, voy a corregir ambos puntos: 1) que el curso autogenerado también planifique sesiones, y 2) habilitar

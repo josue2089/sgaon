@@ -7,9 +7,8 @@ use App\Models\Alert;
 use App\Models\Course;
 use App\Models\CourseLevel;
 use App\Models\Enrollment;
-use App\Models\Group;
 use App\Models\ProgramLevel;
-use App\Models\ScheduleTemplate;
+use App\Support\CoursePlanner;
 use App\Support\RenewalEnrollmentEligibility;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
@@ -156,12 +155,9 @@ class SendLevelRenewalReminders extends Command
 
         $existing = $query->first();
         if ($existing) {
-            return $existing;
-        }
-
-        $scheduleTemplate = ScheduleTemplate::query()->find($course->schedule_template_id);
-        if (! $scheduleTemplate) {
-            return null;
+            $existing->load(['period', 'scheduleTemplate', 'managedGroup.sessions.attendanceRecords']);
+            CoursePlanner::sync($existing);
+            return $existing->fresh();
         }
 
         $draft = new Course([
@@ -180,26 +176,11 @@ class SendLevelRenewalReminders extends Command
         ]);
         $draft->setRelation('programLevel', $nextLevel instanceof ProgramLevel ? $nextLevel : null);
         $draft->setRelation('courseLevel', $nextLevel instanceof CourseLevel ? $nextLevel : null);
-        $draft->setRelation('scheduleTemplate', $scheduleTemplate);
         $draft->name = $this->nextCourseName($draft);
         $draft->save();
-
-        $group = Group::query()->create([
-            'campus_id' => $course->campus_id,
-            'course_id' => $draft->id,
-            'teacher_id' => null,
-            'name' => trim(($course->managedGroup?->name ?: 'Grupo').'-SIG-'.$draft->id),
-            'period' => $course->period?->code,
-            'schedule' => $course->managedGroup?->schedule ?: $scheduleTemplate->display_label,
-            'start_date' => $draft->start_date,
-            'end_date' => null,
-            'status' => 'active',
-            'capacity' => $course->managedGroup?->capacity ?: 30,
-        ]);
-
-        $draft->forceFill(['managed_group_id' => $group->id])->save();
-
-        return $draft;
+        $draft->load(['period', 'scheduleTemplate', 'managedGroup.sessions.attendanceRecords']);
+        CoursePlanner::sync($draft);
+        return $draft->fresh();
     }
 
     private function nextCourseName(Course $draft): string

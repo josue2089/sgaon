@@ -18,7 +18,7 @@ class CoursePlanner
 
     public static function sync(Course $course): Course
     {
-        if (! $course->teacher_id || ! $course->period_id || ! $course->schedule_template_id || ! $course->start_date || ! $course->academic_hours) {
+        if (! $course->schedule_template_id || ! $course->start_date || ! $course->academic_hours) {
             return $course;
         }
 

@@ -59,12 +59,54 @@
     </div>
 </div>
 
-<div class="card">
+<div class="card" id="renewal-enrollment">
     <div class="section-head section-head-tight">
         <h2 class="section-title section-title-md">Mis evaluaciones</h2>
         <div class="entity-sub">Informes por curso (solo lectura)</div>
     </div>
     @include('partials.portal-grade-entries', ['gradeEntries' => $portalGradeEntries])
+</div>
+
+<div class="card">
+    <div class="section-head section-head-tight">
+        <h2 class="section-title section-title-md">Inscripción al siguiente curso</h2>
+        <div class="entity-sub">Cursos habilitados desde recordatorio de renovación</div>
+    </div>
+    <div class="makeup-student-list">
+        @forelse($renewalOffers as $offer)
+            <article class="makeup-student-card">
+                <div class="makeup-student-head">
+                    <div>
+                        <div class="table-title">{{ $offer['target_course']->name }}</div>
+                        <div class="table-sub">Desde {{ $offer['source_course']->name }}</div>
+                    </div>
+                    <div>
+                        @if($offer['already_enrolled'])
+                            @include('partials.ui.status-badge', ['tone' => 'ok', 'text' => 'Inscrito'])
+                        @elseif($offer['eligible'])
+                            @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Disponible'])
+                        @else
+                            @include('partials.ui.status-badge', ['tone' => 'danger', 'text' => 'No elegible'])
+                        @endif
+                    </div>
+                </div>
+                <div class="makeup-student-meta">
+                    <div><strong>Inicio:</strong> {{ $offer['target_course']->start_date?->format('d/m/Y') ?? 'N/D' }}</div>
+                    <div><strong>Horario:</strong> {{ $offer['target_course']->scheduleTemplate?->display_label ?? 'N/D' }}</div>
+                </div>
+                @if(! $offer['already_enrolled'] && $offer['eligible'])
+                    <form method="POST" action="{{ route('portal.student.renewals.enroll', $offer['target_course']) }}">
+                        @csrf
+                        <button class="btn secondary" type="submit">Inscribirme en este curso</button>
+                    </form>
+                @elseif(! $offer['eligible'])
+                    <div class="table-sub">Tu evaluación final está en revisión (Need Support).</div>
+                @endif
+            </article>
+        @empty
+            <div class="empty-state-inline">Aún no hay cursos de renovación habilitados.</div>
+        @endforelse
+    </div>
 </div>
 
 <div class="card">

@@ -130,6 +130,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
 
     Route::middleware(['role:student', 'permission:portal.student.view'])->group(function () {
         Route::get('/portal/student', [PortalController::class, 'student'])->name('portal.student');
+        Route::post('/portal/student/renewal-enrollments/{course}', [PortalController::class, 'enrollInRenewalCourse'])->name('portal.student.renewals.enroll');
         Route::post('/portal/student/makeups/{makeupRequest}/payment', [PortalController::class, 'submitMakeupPayment'])->name('portal.student.makeups.payment');
         Route::post('/portal/student/makeups/{makeupRequest}/book', [PortalController::class, 'bookMakeupSession'])->name('portal.student.makeups.book');
         Route::post('/portal/student/charges/{charge}/payment', [PortalController::class, 'submitChargePaymentAsStudent'])->name('portal.student.charges.payment');
