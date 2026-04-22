@@ -1,3 +1,71 @@
+.portal-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 14px 0 16px;
+}
+
+.portal-tab {
+    border: 1px solid #d8e1f0;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f3563;
+    cursor: pointer;
+}
+
+.portal-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    margin-left: 6px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    background: #eef3ff;
+    color: #1b3f9d;
+}
+
+.portal-tab.is-active {
+    background: #1b3f9d;
+    border-color: #1b3f9d;
+    color: #fff;
+}
+
+.portal-tab.is-active .portal-tab-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.portal-tab-panel {
+    display: none;
+}
+
+.portal-tab-panel.is-active {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .portal-tabs {
+        position: sticky;
+        top: 56px;
+        z-index: 12;
+        background: #f8fafb;
+        padding: 8px 0;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .portal-tabs .portal-tab {
+        white-space: nowrap;
+    }
+}
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';

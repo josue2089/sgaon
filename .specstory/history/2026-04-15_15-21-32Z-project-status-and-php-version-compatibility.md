@@ -17525,4 +17525,1637 @@ Ademas cuando ingreso como alumno desde el boton del email de recordatorio, no v
 
 _**Agent (default)**_
 
-Gracias por el screenshot, voy a corregir ambos puntos: 1) que el curso autogenerado también planifique sesiones, y 2) habilitar
+Gracias por el screenshot, voy a corregir ambos puntos: 1) que el curso autogenerado también planifique sesiones, y 2) habilitar en portal del alumno un CTA claro para inscribirse al siguiente curso desde el recordatorio. Reviso controlador/vistas de portal y te lo dejo funcionando.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/PortalController.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Support/CoursePlanner.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/Student.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Console/Commands/SendLevelRenewalReminders.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Encontré la causa raíz: el planificador de sesiones no corría sin profesor, por eso el curso draft quedaba con `0/0`. Voy a corregirlo para que sí genere sesiones aunque el profesor esté vacío, y además agregaré un bloque de “Inscripción al siguiente curso” en el portal alumno con botón funcional.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Support/CoursePlanner.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Console/Commands/SendLevelRenewalReminders.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/web.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/PortalController.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/PortalController.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/PortalController.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "*.php",
+  "outputMode": "files_with_matches",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models",
+  "pattern": "class Period"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "files_with_matches",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models",
+  "pattern": "class Period",
+  "topFiles": [
+    {
+      "matchCount": 1,
+      "uri": "app/Models/Period.php"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 1
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/Period.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/emails/level-renewal-reminder.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan test 2>&1</summary>
+
+```bash
+php artisan test 2>&1
+```
+
+```
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true                                                    0.01s  
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                        0.17s  
+
+   PASS  Tests\Feature\GradeEvaluationTest
+  ✓ teacher can create grade evaluation set                              0.24s  
+  ✓ student cannot post grade evaluation                                 0.02s  
+  ✓ student portal loads after grade exists                              0.03s  
+
+   FAIL  Tests\Feature\LevelRenewalAutomationTest
+  ⨯ command creates next course draft without teacher when course is du… 0.05s  
+  ✓ enrollment is blocked when previous course has need support          0.01s  
+  ⨯ student can enroll from portal when renewal offer exists             0.01s  
+
+   PASS  Tests\Feature\RoleAccessTest
+  ✓ student cannot access admin finance                                  0.01s  
+  ✓ admin can access finance                                             0.01s  
+  ✓ student dashboard redirects to student portal                        0.01s  
+  ✓ representative portal is accessible with profile                     0.01s  
+  ✓ audit log is created on finance charge creation                      0.01s  
+
+   PASS  Tests\Feature\UatChecklistTest
+  ✓ uat campus isolation blocks cross campus student edit                0.01s  
+  ✓ uat teacher can only record attendance for assigned sessions         0.02s  
+  ✓ uat representative portal only sees linked students                  0.01s  
+  ✓ uat reports export and alert generation                              0.02s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\LevelRenewalAutomationTest &gt; command creates next c…   
+  Failed asserting that null is not null.
+
+  at tests/Feature/LevelRenewalAutomationTest.php:120
+    116▕             -&gt;first();
+    117▕ 
+    118▕         $this-&gt;assertNotNull($nextCourse);
+    119▕         $this-&gt;assertSame((int) $schedule-&gt;id, (int) $nextCourse-&gt;schedule_template_id);
+  ➜ 120▕         $this-&gt;assertNotNull($nextCourse-&gt;managed_group_id);
+    121▕         $this-&gt;assertGreaterThan(0, ClassSession::query()-&gt;where('group_id', $nextCourse-&gt;managed_group_id)-&gt;count());
+    122▕     }
+    123▕ 
+    124▕     public function test_enrollment_is_blocked_when_previous_course_has_need_support(): void
+
+  1   tests/Feature/LevelRenewalAutomationTest.php:120
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\LevelRenewalAutomationTest &gt; studen…  ErrorException   
+  Undefined variable $period
+
+  at tests/Feature/LevelRenewalAutomationTest.php:255
+    251▕             'academic_level_id' =&gt; $academicLevel-&gt;id,
+    252▕             'program_id' =&gt; $program-&gt;id,
+    253▕             'program_level_id' =&gt; $level1-&gt;id,
+    254▕             'schedule_template_id' =&gt; $schedule-&gt;id,
+  ➜ 255▕             'period_id' =&gt; $period-&gt;id,
+    256▕             'name' =&gt; 'Origen portal',
+    257▕             'start_date' =&gt; now()-&gt;subDays(30)-&gt;toDateString(),
+    258▕             'end_date' =&gt; now()-&gt;toDateString(),
+    259▕             'academic_hours' =&gt; 40,
+
+
+  Tests:    2 failed, 15 passed (40 assertions)
+  Duration: 0.75s
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Support/CoursePlanner.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Hice el ajuste adicional para que el planificador no dependa de `period_id` (solo del horario/fecha/duración), que era lo que impedía crear sesiones en algunos drafts. Ahora corro tests otra vez.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan test 2>&1</summary>
+
+```bash
+php artisan test 2>&1
+```
+
+```
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                        0.10s  
+
+   PASS  Tests\Feature\GradeEvaluationTest
+  ✓ teacher can create grade evaluation set                              0.23s  
+  ✓ student cannot post grade evaluation                                 0.02s  
+  ✓ student portal loads after grade exists                              0.02s  
+
+   FAIL  Tests\Feature\LevelRenewalAutomationTest
+  ✓ command creates next course draft without teacher when course is du… 0.04s  
+  ✓ enrollment is blocked when previous course has need support          0.01s  
+  ⨯ student can enroll from portal when renewal offer exists             0.02s  
+
+   PASS  Tests\Feature\RoleAccessTest
+  ✓ student cannot access admin finance                                  0.01s  
+  ✓ admin can access finance                                             0.01s  
+  ✓ student dashboard redirects to student portal                        0.01s  
+  ✓ representative portal is accessible with profile                     0.01s  
+  ✓ audit log is created on finance charge creation                      0.01s  
+
+   PASS  Tests\Feature\UatChecklistTest
+  ✓ uat campus isolation blocks cross campus student edit                0.01s  
+  ✓ uat teacher can only record attendance for assigned sessions         0.02s  
+  ✓ uat representative portal only sees linked students                  0.01s  
+  ✓ uat reports export and alert generation                              0.02s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\LevelRenewalAutomationTest &gt; studen…  ErrorException   
+  Undefined variable $period
+
+  at tests/Feature/LevelRenewalAutomationTest.php:261
+    257▕             'academic_level_id' =&gt; $academicLevel-&gt;id,
+    258▕             'program_id' =&gt; $program-&gt;id,
+    259▕             'program_level_id' =&gt; $level1-&gt;id,
+    260▕             'schedule_template_id' =&gt; $schedule-&gt;id,
+  ➜ 261▕             'period_id' =&gt; $period-&gt;id,
+    262▕             'name' =&gt; 'Origen portal',
+    263▕             'start_date' =&gt; now()-&gt;subDays(30)-&gt;toDateString(),
+    264▕             'end_date' =&gt; now()-&gt;toDateString(),
+    265▕             'academic_hours' =&gt; 40,
+
+
+  Tests:    1 failed, 16 passed (41 assertions)
+  Duration: 0.62s
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan test --filter=LevelRenewalAutomationTest 2>&1</summary>
+
+```bash
+php artisan test --filter=LevelRenewalAutomationTest 2>&1
+```
+
+```
+
+   PASS  Tests\Feature\LevelRenewalAutomationTest
+  ✓ command creates next course draft without teacher when course is du… 0.35s  
+  ✓ enrollment is blocked when previous course has need support          0.05s  
+  ✓ student can enroll from portal when renewal offer exists             0.02s  
+
+  Tests:    3 passed (12 assertions)
+  Duration: 0.51s
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan test 2>&1</summary>
+
+```bash
+php artisan test 2>&1
+```
+
+```
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                        0.09s  
+
+   PASS  Tests\Feature\GradeEvaluationTest
+  ✓ teacher can create grade evaluation set                              0.20s  
+  ✓ student cannot post grade evaluation                                 0.02s  
+  ✓ student portal loads after grade exists                              0.02s  
+
+   PASS  Tests\Feature\LevelRenewalAutomationTest
+  ✓ command creates next course draft without teacher when course is du… 0.03s  
+  ✓ enrollment is blocked when previous course has need support          0.01s  
+  ✓ student can enroll from portal when renewal offer exists             0.02s  
+
+   PASS  Tests\Feature\RoleAccessTest
+  ✓ student cannot access admin finance                                  0.01s  
+  ✓ admin can access finance                                             0.01s  
+  ✓ student dashboard redirects to student portal                        0.01s  
+  ✓ representative portal is accessible with profile                     0.01s  
+  ✓ audit log is created on finance charge creation                      0.01s  
+
+   PASS  Tests\Feature\UatChecklistTest
+  ✓ uat campus isolation blocks cross campus student edit                0.01s  
+  ✓ uat teacher can only record attendance for assigned sessions         0.02s  
+  ✓ uat representative portal only sees linked students                  0.01s  
+  ✓ uat reports export and alert generation                              0.02s  
+
+  Tests:    17 passed (45 assertions)
+  Duration: 0.57s
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints">
+<details>
+<summary>Tool use: **read_lints**</summary>
+
+
+Parameters:
+
+```json
+{
+  "paths": [
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Support/CoursePlanner.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Console/Commands/SendLevelRenewalReminders.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/PortalController.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/emails/level-renewal-reminder.blade.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/web.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php"
+  ]
+}
+```
+Result:
+
+```json
+{
+  "linterErrorsByFile": [
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Support/CoursePlanner.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Console/Commands/SendLevelRenewalReminders.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/PortalController.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/emails/level-renewal-reminder.blade.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/web.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php"
+    }
+  ]
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints"><details>
+<summary>Tool use: **read_lints**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Excelente reporte; ya corregí ambos problemas.
+
+### Qué estaba pasando
+
+- **No se creaban sesiones** en el curso autogenerado porque el planificador (`CoursePlanner`) no corría si faltaba profesor/periodo.
+- En **portal alumno** no había un bloque específico para inscripción de renovación, así que desde el botón del correo no había acción clara.
+
+### Qué ajusté
+
+- En `app/Support/CoursePlanner.php`:
+  - ahora puede planificar aunque el curso no tenga profesor asignado (y tampoco depende de `period_id` para planificar sesiones).
+
+- En `app/Console/Commands/SendLevelRenewalReminders.php`:
+  - cuando crea (o encuentra) el curso siguiente, ahora ejecuta `CoursePlanner::sync(...)` para que queden creadas sus sesiones automáticamente.
+
+- En portal alumno:
+  - nueva ruta: `POST /portal/student/renewal-enrollments/{course}` (`portal.student.renewals.enroll`)
+  - nuevo método en `PortalController`: `enrollInRenewalCourse(...)`
+  - nueva sección visible en `resources/views/portal/student.blade.php`:
+    - **“Inscripción al siguiente curso”**
+    - muestra cursos habilitados
+    - botón **“Inscribirme en este curso”** cuando es elegible
+    - estado de no elegible si aplica.
+
+- En correo:
+  - botón ahora apunta directo a `portal/student#renewal-enrollment` para llevar al bloque de inscripción.
+
+### Verificación
+
+Corrí tests completos:
+
+- `php artisan test` → **17 passed (45 assertions)**
+
+Incluye pruebas nuevas:
+- creación de curso siguiente con sesiones,
+- bloqueo por `Need Support`,
+- inscripción desde portal cuando hay oferta elegible.
+
+---
+
+### Qué hacer ahora para verificar en tu entorno
+
+1. Ejecuta nuevamente:
+   - `php artisan levels:send-renewal-reminders`
+2. Revisa el curso autogenerado en cursos:
+   - debe mostrar sesiones planificadas (ya no `0/0`).
+3. Entra como alumno desde el botón del email:
+   - te debe llevar a portal en la sección **Inscripción al siguiente curso**,
+   - y podrás usar **Inscribirme en este curso** si eres elegible.
+
+Si quieres, te ayudo a forzar una corrida sobre ese curso específico que sale en tu screenshot para validar en vivo en 2 minutos.
+
+---
+
+_**User**_
+
+El panel del estudiante, debemos mejorar el UX/UI ya que hay demasiados elementos en una sola pantalla
+
+Que es lo mas recoemndable desde el puntod e vista UX/UI crear pantallas independientes o manejar Tabs?
+
+---
+
+_**Agent (default)**_
+
+Lo más recomendable aquí es un enfoque **híbrido**:
+
+- **No** dejar todo en una sola pantalla (ya te está pasando: sobrecarga cognitiva).
+- **No** fragmentar en demasiadas pantallas profundas (el alumno se pierde).
+- Sí usar **Dashboard + Tabs por dominio**.
+
+## Recomendación UX/UI (práctica)
+
+1. **Pantalla principal (Resumen)**
+   - Solo KPIs y acciones clave:
+     - Próxima clase
+     - Estado de inscripción siguiente curso
+     - Pagos pendientes
+     - Alertas importantes
+   - Máximo 4–6 bloques cortos.
+
+2. **Tabs de primer nivel**
+   - `Resumen`
+   - `Inscripciones`
+   - `Evaluaciones`
+   - `Agenda / Asistencia`
+   - `Pagos`
+   - `Recuperativas`
+   
+   Esto reduce scroll y mejora orientación.
+
+3. **Acciones críticas siempre visibles**
+   - CTA fijo arriba: “Inscribirme al siguiente curso” cuando aplique.
+   - Badge/alerta si está bloqueado por `Need Support`.
+
+4. **Jerarquía visual**
+   - Contenido “debo hacer ahora” arriba.
+   - Historial y tablas largas en tabs secundarios o acordeones.
+
+5. **Mobile-first**
+   - Tabs tipo segmented control horizontal.
+   - Cards compactas, evitar tablas anchas.
+
+## Cuándo usar pantallas independientes en vez de tabs
+
+Usa páginas separadas solo si:
+- el flujo tiene varios pasos (ej. pago + comprobante + validación),
+- requiere foco total (formularios largos),
+- o tiene mucha data densa (historial extenso con filtros).
+
+En tu caso actual: **tabs** son mejor base, con 1–2 pantallas dedicadas solo para flujos complejos (por ejemplo “Detalle de pago” o “Detalle de recuperativa”).
+
+---
+
+Si quieres, te propongo la **estructura exacta de información** para tu portal actual (qué mover a cada tab y qué dejar en Resumen) y luego te la implemento directamente en Blade/CSS.
+
+---
+
+_**User**_
+
+Hazlo
+
+---
+
+_**Agent (default)**_
+
+Perfecto — voy a reestructurar el portal del estudiante con **tabs por dominio** (`Resumen`, `Inscripciones`, `Evaluaciones`, `Agenda`, `Pagos`, `Recuperativas`) manteniendo todo funcional (incluyendo diálogos y botón de inscripción). Luego corro tests para asegurar que no se rompa nada.
+
+_**Agent (default)**_
+
+Failed to find context:
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-head section-head-tight">
+        <h2 class="section-title section-title-md">Mis evaluaciones</h2>
+        <div class="entity-sub">Informes por curso (solo lectura)</div>
+    </div>
+    @include('partials.portal-grade-entries', ['gradeEntries' => $portalGradeEntries])
+</div>
+
+<div class="card" id="renewal-enrollment">
+    <div class="section-head section-head-tight">
+        <h2 class="section-title section-title-md">Inscripción al siguiente curso</h2>
+        <div class="entity-sub">Cursos habilitados desde recordatorio de renovación</div>
+    </div>
+    <div class="makeup-student-list">
+        @forelse($renewalOffers as $offer)
+            <article class="makeup-student-card">
+                <div class="makeup-student-head">
+                    <div>
+                        <div class="table-title">{{ $offer['target_course']->name }}</div>
+                        <div class="table-sub">Desde {{ $offer['source_course']->name }}</div>
+                    </div>
+                    <div>
+                        @if($offer['already_enrolled'])
+                            @include('partials.ui.status-badge', ['tone' => 'ok', 'text' => 'Inscrito'])
+                        @elseif($offer['eligible'])
+                            @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Disponible'])
+                        @else
+                            @include('partials.ui.status-badge', ['tone' => 'danger', 'text' => 'No elegible'])
+                        @endif
+                    </div>
+                </div>
+                <div class="makeup-student-meta">
+                    <div><strong>Inicio:</strong> {{ $offer['target_course']->start_date?->format('d/m/Y') ?? 'N/D' }}</div>
+                    <div><strong>Horario:</strong> {{ $offer['target_course']->scheduleTemplate?->display_label ?? 'N/D' }}</div>
+                </div>
+                @if(! $offer['already_enrolled'] && $offer['eligible'])
+                    <form method="POST" action="{{ route('portal.student.renewals.enroll', $offer['target_course']) }}">
+                        @csrf
+                        <button class="btn secondary" type="submit">Inscribirme en este curso</button>
+                    </form>
+                @elseif(! $offer['eligible'])
+                    <div class="table-sub">Tu evaluación final está en revisión (Need Support).</div>
+                @endif
+            </article>
+        @empty
+            <div class="empty-state-inline">Aún no hay cursos de renovación habilitados.</div>
+        @endforelse
+    </div>
+</div>
+
+<div class="card">
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan test --filter=LevelRenewalAutomationTest 2>&1</summary>
+
+```bash
+php artisan test --filter=LevelRenewalAutomationTest 2>&1
+```
+
+```
+
+   FAIL  Tests\Feature\LevelRenewalAutomationTest
+  ✓ command creates next course draft without teacher when course is du… 0.28s  
+  ✓ enrollment is blocked when previous course has need support          0.04s  
+  ⨯ student can enroll from portal when renewal offer exists             0.32s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\LevelRenewalAutomationTest &gt; student can enroll fro…   
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+The following exception occurred during the last request:
+
+ParseError: syntax error, unexpected token "elseif" in /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/storage/framework/views/779223a41995d69ed97f5bd796f48826.php:140
+Stack trace:
+#0 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(124): Illuminate\Filesystem\Filesystem::{closure:Illuminate\Filesystem\Filesystem::getRequire():120}()
+#1 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(57): Illuminate\Filesystem\Filesystem-&gt;getRequire('/Users/josueram...', Array)
+#2 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(76): Illuminate\View\Engines\PhpEngine-&gt;evaluatePath('/Users/josueram...', Array)
+#3 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(208): Illuminate\View\Engines\CompilerEngine-&gt;get('/Users/josueram...', Array)
+#4 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(191): Illuminate\View\View-&gt;getContents()
+#5 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(160): Illuminate\View\View-&gt;renderContents()
+#6 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Response.php(78): Illuminate\View\View-&gt;render()
+#7 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Response.php(34): Illuminate\Http\Response-&gt;setContent(Object(Illuminate\View\View))
+#8 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(939): Illuminate\Http\Response-&gt;__construct(Object(Illuminate\View\View), 200, Array)
+#9 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(906): Illuminate\Routing\Router::toResponse(Object(Illuminate\Http\Request), Object(Illuminate\View\View))
+#10 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Routing\Router-&gt;prepareResponse(Object(Illuminate\Http\Request), Object(Illuminate\View\View))
+#11 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Routing\Router-&gt;{closure:Illuminate\Routing\Router::runRouteWithinStack():821}(Object(Illuminate\Http\Request))
+#12 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsurePermission.php(19): Illuminate\Pipeline\Pipeline-&gt;{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}(Object(Illuminate\Http\Request))
+#13 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsurePermission-&gt;handle(Object(Illuminate\Http\Request), Object(Closure), 'portal.student....')
+#14 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsureRole.php(19): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#15 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsureRole-&gt;handle(Object(Illuminate\Http\Request), Object(Closure), 'student')
+#16 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsureCampusAccess.php(38): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#17 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsureCampusAccess-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#18 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#19 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#20 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#21 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#22 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#23 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#24 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#25 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#26 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#27 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession-&gt;handleStatefulRequest(Object(Illuminate\Http\Request), Object(Illuminate\Session\Store), Object(Closure))
+#28 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#29 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#30 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#31 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#32 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#33 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#34 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline-&gt;then(Object(Closure))
+#35 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router-&gt;runRouteWithinStack(Object(Illuminate\Routing\Route), Object(Illuminate\Http\Request))
+#36 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router-&gt;runRoute(Object(Illuminate\Http\Request), Object(Illuminate\Routing\Route))
+#37 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router-&gt;dispatchToRoute(Object(Illuminate\Http\Request))
+#38 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router-&gt;dispatch(Object(Illuminate\Http\Request))
+#39 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel-&gt;{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}(Object(Illuminate\Http\Request))
+#40 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline-&gt;{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}(Object(Illuminate\Http\Request))
+#41 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#42 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#43 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#44 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#45 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#46 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#47 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#48 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#49 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#50 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(61): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#51 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#52 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#53 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#54 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#55 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#56 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#57 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#58 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#59 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline-&gt;then(Object(Closure))
+#60 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel-&gt;sendRequestThroughRouter(Object(Illuminate\Http\Request))
+#61 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel-&gt;handle(Object(Illuminate\Http\Request))
+#62 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(368): Illuminate\Foundation\Testing\TestCase-&gt;call('GET', 'http://localhos...', Array, Array, Array, Array)
+#63 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php(333): Illuminate\Foundation\Testing\TestCase-&gt;get('http://localhos...')
+#64 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(1667): Tests\Feature\LevelRenewalAutomationTest-&gt;test_student_can_enroll_from_portal_when_renewal_offer_exists()
+#65 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(519): PHPUnit\Framework\TestCase-&gt;runTest()
+#66 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase-&gt;runBare()
+#67 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(365): PHPUnit\Framework\TestRunner-&gt;run(Object(Tests\Feature\LevelRenewalAutomationTest))
+#68 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase-&gt;run()
+#69 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite-&gt;run()
+#70 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite-&gt;run()
+#71 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite-&gt;run()
+#72 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner-&gt;run(Object(PHPUnit\TextUI\Configuration\Configuration), Object(PHPUnit\Runner\ResultCache\DefaultResultCache), Object(PHPUnit\Framework\TestSuite))
+#73 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application-&gt;run(Array)
+#74 {main}
+
+Next Illuminate\View\ViewException: syntax error, unexpected token "elseif" (View: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php) in /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/storage/framework/views/779223a41995d69ed97f5bd796f48826.php:140
+Stack trace:
+#0 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(59): Illuminate\View\Engines\CompilerEngine-&gt;handleViewException(Object(ParseError), 1)
+#1 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(76): Illuminate\View\Engines\PhpEngine-&gt;evaluatePath('/Users/josueram...', Array)
+#2 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(208): Illuminate\View\Engines\CompilerEngine-&gt;get('/Users/josueram...', Array)
+#3 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(191): Illuminate\View\View-&gt;getContents()
+#4 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(160): Illuminate\View\View-&gt;renderContents()
+#5 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Response.php(78): Illuminate\View\View-&gt;render()
+#6 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Response.php(34): Illuminate\Http\Response-&gt;setContent(Object(Illuminate\View\View))
+#7 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(939): Illuminate\Http\Response-&gt;__construct(Object(Illuminate\View\View), 200, Array)
+#8 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(906): Illuminate\Routing\Router::toResponse(Object(Illuminate\Http\Request), Object(Illuminate\View\View))
+#9 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Routing\Router-&gt;prepareResponse(Object(Illuminate\Http\Request), Object(Illuminate\View\View))
+#10 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Routing\Router-&gt;{closure:Illuminate\Routing\Router::runRouteWithinStack():821}(Object(Illuminate\Http\Request))
+#11 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsurePermission.php(19): Illuminate\Pipeline\Pipeline-&gt;{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}(Object(Illuminate\Http\Request))
+#12 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsurePermission-&gt;handle(Object(Illuminate\Http\Request), Object(Closure), 'portal.student....')
+#13 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsureRole.php(19): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#14 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsureRole-&gt;handle(Object(Illuminate\Http\Request), Object(Closure), 'student')
+#15 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsureCampusAccess.php(38): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#16 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsureCampusAccess-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#17 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#18 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#19 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#20 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#21 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#22 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#23 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#24 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#25 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#26 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession-&gt;handleStatefulRequest(Object(Illuminate\Http\Request), Object(Illuminate\Session\Store), Object(Closure))
+#27 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#28 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#29 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#30 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#31 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#32 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#33 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline-&gt;then(Object(Closure))
+#34 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router-&gt;runRouteWithinStack(Object(Illuminate\Routing\Route), Object(Illuminate\Http\Request))
+#35 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router-&gt;runRoute(Object(Illuminate\Http\Request), Object(Illuminate\Routing\Route))
+#36 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router-&gt;dispatchToRoute(Object(Illuminate\Http\Request))
+#37 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router-&gt;dispatch(Object(Illuminate\Http\Request))
+#38 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel-&gt;{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}(Object(Illuminate\Http\Request))
+#39 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline-&gt;{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}(Object(Illuminate\Http\Request))
+#40 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#41 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#42 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#43 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#44 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#45 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#46 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#47 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#48 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#49 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(61): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#50 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#51 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#52 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#53 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#54 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#55 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#56 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#57 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#58 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline-&gt;then(Object(Closure))
+#59 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel-&gt;sendRequestThroughRouter(Object(Illuminate\Http\Request))
+#60 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel-&gt;handle(Object(Illuminate\Http\Request))
+#61 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(368): Illuminate\Foundation\Testing\TestCase-&gt;call('GET', 'http://localhos...', Array, Array, Array, Array)
+#62 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php(333): Illuminate\Foundation\Testing\TestCase-&gt;get('http://localhos...')
+#63 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(1667): Tests\Feature\LevelRenewalAutomationTest-&gt;test_student_can_enroll_from_portal_when_renewal_offer_exists()
+#64 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(519): PHPUnit\Framework\TestCase-&gt;runTest()
+#65 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase-&gt;runBare()
+#66 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(365): PHPUnit\Framework\TestRunner-&gt;run(Object(Tests\Feature\LevelRenewalAutomationTest))
+#67 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase-&gt;run()
+#68 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite-&gt;run()
+#69 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite-&gt;run()
+#70 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite-&gt;run()
+#71 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner-&gt;run(Object(PHPUnit\TextUI\Configuration\Configuration), Object(PHPUnit\Runner\ResultCache\DefaultResultCache), Object(PHPUnit\Framework\TestSuite))
+#72 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application-&gt;run(Array)
+#73 {main}
+
+----------------------------------------------------------------------------------
+
+syntax error, unexpected token "elseif" (View: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php)
+
+  at tests/Feature/LevelRenewalAutomationTest.php:334
+    330▕             'observations' =&gt; null,
+    331▕         ]);
+    332▕ 
+    333▕         $portal = $this-&gt;actingAs($studentUser)-&gt;get(route('portal.student'));
+  ➜ 334▕         $portal-&gt;assertOk();
+    335▕         $portal-&gt;assertSee('Inscribirme en este curso');
+    336▕ 
+    337▕         $enroll = $this-&gt;actingAs($studentUser)-&gt;post(route('portal.student.renewals.enroll', $targetCourse));
+    338▕         $enroll-&gt;assertRedirect();
+
+
+  Tests:    1 failed, 2 passed (9 assertions)
+  Duration: 0.70s
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php",
+  "pattern": "@elseif"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php",
+  "pattern": "@elseif",
+  "topFiles": [
+    {
+      "matchCount": 3,
+      "uri": "resources/views/portal/student.blade.php"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 3
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan test --filter=LevelRenewalAutomationTest 2>&1</summary>
+
+```bash
+php artisan test --filter=LevelRenewalAutomationTest 2>&1
+```
+
+```
+
+   FAIL  Tests\Feature\LevelRenewalAutomationTest
+  ✓ command creates next course draft without teacher when course is du… 0.49s  
+  ✓ enrollment is blocked when previous course has need support          0.08s  
+  ⨯ student can enroll from portal when renewal offer exists             0.30s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\LevelRenewalAutomationTest &gt; student can enroll fro…   
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+The following exception occurred during the last request:
+
+ParseError: syntax error, unexpected token "elseif" in /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/storage/framework/views/779223a41995d69ed97f5bd796f48826.php:144
+Stack trace:
+#0 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(124): Illuminate\Filesystem\Filesystem::{closure:Illuminate\Filesystem\Filesystem::getRequire():120}()
+#1 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(57): Illuminate\Filesystem\Filesystem-&gt;getRequire('/Users/josueram...', Array)
+#2 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(76): Illuminate\View\Engines\PhpEngine-&gt;evaluatePath('/Users/josueram...', Array)
+#3 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(208): Illuminate\View\Engines\CompilerEngine-&gt;get('/Users/josueram...', Array)
+#4 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(191): Illuminate\View\View-&gt;getContents()
+#5 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(160): Illuminate\View\View-&gt;renderContents()
+#6 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Response.php(78): Illuminate\View\View-&gt;render()
+#7 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Response.php(34): Illuminate\Http\Response-&gt;setContent(Object(Illuminate\View\View))
+#8 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(939): Illuminate\Http\Response-&gt;__construct(Object(Illuminate\View\View), 200, Array)
+#9 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(906): Illuminate\Routing\Router::toResponse(Object(Illuminate\Http\Request), Object(Illuminate\View\View))
+#10 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Routing\Router-&gt;prepareResponse(Object(Illuminate\Http\Request), Object(Illuminate\View\View))
+#11 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Routing\Router-&gt;{closure:Illuminate\Routing\Router::runRouteWithinStack():821}(Object(Illuminate\Http\Request))
+#12 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsurePermission.php(19): Illuminate\Pipeline\Pipeline-&gt;{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}(Object(Illuminate\Http\Request))
+#13 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsurePermission-&gt;handle(Object(Illuminate\Http\Request), Object(Closure), 'portal.student....')
+#14 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsureRole.php(19): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#15 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsureRole-&gt;handle(Object(Illuminate\Http\Request), Object(Closure), 'student')
+#16 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsureCampusAccess.php(38): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#17 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsureCampusAccess-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#18 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#19 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#20 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#21 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#22 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#23 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#24 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#25 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#26 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#27 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession-&gt;handleStatefulRequest(Object(Illuminate\Http\Request), Object(Illuminate\Session\Store), Object(Closure))
+#28 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#29 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#30 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#31 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#32 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#33 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#34 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline-&gt;then(Object(Closure))
+#35 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router-&gt;runRouteWithinStack(Object(Illuminate\Routing\Route), Object(Illuminate\Http\Request))
+#36 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router-&gt;runRoute(Object(Illuminate\Http\Request), Object(Illuminate\Routing\Route))
+#37 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router-&gt;dispatchToRoute(Object(Illuminate\Http\Request))
+#38 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router-&gt;dispatch(Object(Illuminate\Http\Request))
+#39 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel-&gt;{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}(Object(Illuminate\Http\Request))
+#40 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline-&gt;{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}(Object(Illuminate\Http\Request))
+#41 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#42 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#43 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#44 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#45 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#46 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#47 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#48 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#49 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#50 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(61): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#51 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#52 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#53 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#54 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#55 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#56 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#57 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#58 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#59 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline-&gt;then(Object(Closure))
+#60 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel-&gt;sendRequestThroughRouter(Object(Illuminate\Http\Request))
+#61 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel-&gt;handle(Object(Illuminate\Http\Request))
+#62 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(368): Illuminate\Foundation\Testing\TestCase-&gt;call('GET', 'http://localhos...', Array, Array, Array, Array)
+#63 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php(333): Illuminate\Foundation\Testing\TestCase-&gt;get('http://localhos...')
+#64 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(1667): Tests\Feature\LevelRenewalAutomationTest-&gt;test_student_can_enroll_from_portal_when_renewal_offer_exists()
+#65 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(519): PHPUnit\Framework\TestCase-&gt;runTest()
+#66 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase-&gt;runBare()
+#67 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(365): PHPUnit\Framework\TestRunner-&gt;run(Object(Tests\Feature\LevelRenewalAutomationTest))
+#68 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase-&gt;run()
+#69 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite-&gt;run()
+#70 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite-&gt;run()
+#71 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite-&gt;run()
+#72 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner-&gt;run(Object(PHPUnit\TextUI\Configuration\Configuration), Object(PHPUnit\Runner\ResultCache\DefaultResultCache), Object(PHPUnit\Framework\TestSuite))
+#73 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application-&gt;run(Array)
+#74 {main}
+
+Next Illuminate\View\ViewException: syntax error, unexpected token "elseif" (View: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php) in /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/storage/framework/views/779223a41995d69ed97f5bd796f48826.php:144
+Stack trace:
+#0 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(59): Illuminate\View\Engines\CompilerEngine-&gt;handleViewException(Object(ParseError), 1)
+#1 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(76): Illuminate\View\Engines\PhpEngine-&gt;evaluatePath('/Users/josueram...', Array)
+#2 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(208): Illuminate\View\Engines\CompilerEngine-&gt;get('/Users/josueram...', Array)
+#3 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(191): Illuminate\View\View-&gt;getContents()
+#4 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/View.php(160): Illuminate\View\View-&gt;renderContents()
+#5 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Response.php(78): Illuminate\View\View-&gt;render()
+#6 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Response.php(34): Illuminate\Http\Response-&gt;setContent(Object(Illuminate\View\View))
+#7 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(939): Illuminate\Http\Response-&gt;__construct(Object(Illuminate\View\View), 200, Array)
+#8 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(906): Illuminate\Routing\Router::toResponse(Object(Illuminate\Http\Request), Object(Illuminate\View\View))
+#9 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Routing\Router-&gt;prepareResponse(Object(Illuminate\Http\Request), Object(Illuminate\View\View))
+#10 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Routing\Router-&gt;{closure:Illuminate\Routing\Router::runRouteWithinStack():821}(Object(Illuminate\Http\Request))
+#11 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsurePermission.php(19): Illuminate\Pipeline\Pipeline-&gt;{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}(Object(Illuminate\Http\Request))
+#12 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsurePermission-&gt;handle(Object(Illuminate\Http\Request), Object(Closure), 'portal.student....')
+#13 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsureRole.php(19): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#14 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsureRole-&gt;handle(Object(Illuminate\Http\Request), Object(Closure), 'student')
+#15 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Middleware/EnsureCampusAccess.php(38): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#16 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\EnsureCampusAccess-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#17 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#18 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#19 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#20 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#21 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#22 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#23 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#24 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#25 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#26 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession-&gt;handleStatefulRequest(Object(Illuminate\Http\Request), Object(Illuminate\Session\Store), Object(Closure))
+#27 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#28 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#29 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#30 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#31 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#32 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#33 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline-&gt;then(Object(Closure))
+#34 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router-&gt;runRouteWithinStack(Object(Illuminate\Routing\Route), Object(Illuminate\Http\Request))
+#35 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router-&gt;runRoute(Object(Illuminate\Http\Request), Object(Illuminate\Routing\Route))
+#36 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router-&gt;dispatchToRoute(Object(Illuminate\Http\Request))
+#37 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router-&gt;dispatch(Object(Illuminate\Http\Request))
+#38 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel-&gt;{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}(Object(Illuminate\Http\Request))
+#39 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline-&gt;{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}(Object(Illuminate\Http\Request))
+#40 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#41 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#42 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#43 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#44 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#45 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#46 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#47 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#48 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#49 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(61): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#50 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#51 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#52 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#53 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#54 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#55 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#56 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#57 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#58 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline-&gt;then(Object(Closure))
+#59 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel-&gt;sendRequestThroughRouter(Object(Illuminate\Http\Request))
+#60 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel-&gt;handle(Object(Illuminate\Http\Request))
+#61 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(368): Illuminate\Foundation\Testing\TestCase-&gt;call('GET', 'http://localhos...', Array, Array, Array, Array)
+#62 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php(333): Illuminate\Foundation\Testing\TestCase-&gt;get('http://localhos...')
+#63 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(1667): Tests\Feature\LevelRenewalAutomationTest-&gt;test_student_can_enroll_from_portal_when_renewal_offer_exists()
+#64 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(519): PHPUnit\Framework\TestCase-&gt;runTest()
+#65 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase-&gt;runBare()
+#66 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestCase.php(365): PHPUnit\Framework\TestRunner-&gt;run(Object(Tests\Feature\LevelRenewalAutomationTest))
+#67 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase-&gt;run()
+#68 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite-&gt;run()
+#69 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite-&gt;run()
+#70 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite-&gt;run()
+#71 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner-&gt;run(Object(PHPUnit\TextUI\Configuration\Configuration), Object(PHPUnit\Runner\ResultCache\DefaultResultCache), Object(PHPUnit\Framework\TestSuite))
+#72 /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application-&gt;run(Array)
+#73 {main}
+
+----------------------------------------------------------------------------------
+
+syntax error, unexpected token "elseif" (View: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php)
+
+  at tests/Feature/LevelRenewalAutomationTest.php:334
+    330▕             'observations' =&gt; null,
+    331▕         ]);
+    332▕ 
+    333▕         $portal = $this-&gt;actingAs($studentUser)-&gt;get(route('portal.student'));
+  ➜ 334▕         $portal-&gt;assertOk();
+    335▕         $portal-&gt;assertSee('Inscribirme en este curso');
+    336▕ 
+    337▕         $enroll = $this-&gt;actingAs($studentUser)-&gt;post(route('portal.student.renewals.enroll', $targetCourse));
+    338▕         $enroll-&gt;assertRedirect();
+
+
+  Tests:    1 failed, 2 passed (9 assertions)
+  Duration: 1.04s
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php",
+  "pattern": "@if|@elseif|@else|@endif"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php",
+  "pattern": "@if|@elseif|@else|@endif",
+  "topFiles": [
+    {
+      "matchCount": 21,
+      "uri": "resources/views/portal/student.blade.php"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 21
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan test --filter=LevelRenewalAutomationTest 2>&1</summary>
+
+```bash
+php artisan test --filter=LevelRenewalAutomationTest 2>&1
+```
+
+```
+
+   PASS  Tests\Feature\LevelRenewalAutomationTest
+  ✓ command creates next course draft without teacher when course is du… 0.28s  
+  ✓ enrollment is blocked when previous course has need support          0.04s  
+  ✓ student can enroll from portal when renewal offer exists             0.02s  
+
+  Tests:    3 passed (12 assertions)
+  Duration: 0.41s
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan test 2>&1</summary>
+
+```bash
+php artisan test 2>&1
+```
+
+```
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                        0.07s  
+
+   PASS  Tests\Feature\GradeEvaluationTest
+  ✓ teacher can create grade evaluation set                              0.16s  
+  ✓ student cannot post grade evaluation                                 0.02s  
+  ✓ student portal loads after grade exists                              0.02s  
+
+   PASS  Tests\Feature\LevelRenewalAutomationTest
+  ✓ command creates next course draft without teacher when course is du… 0.02s  
+  ✓ enrollment is blocked when previous course has need support          0.01s  
+  ✓ student can enroll from portal when renewal offer exists             0.02s  
+
+   PASS  Tests\Feature\RoleAccessTest
+  ✓ student cannot access admin finance                                  0.01s  
+  ✓ admin can access finance                                             0.01s  
+  ✓ student dashboard redirects to student portal                        0.01s  
+  ✓ representative portal is accessible with profile                     0.01s  
+  ✓ audit log is created on finance charge creation                      0.01s  
+
+   PASS  Tests\Feature\UatChecklistTest
+  ✓ uat campus isolation blocks cross campus student edit                0.01s  
+  ✓ uat teacher can only record attendance for assigned sessions         0.02s  
+  ✓ uat representative portal only sees linked students                  0.01s  
+  ✓ uat reports export and alert generation                              0.02s  
+
+  Tests:    17 passed (45 assertions)
+  Duration: 0.45s
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints">
+<details>
+<summary>Tool use: **read_lints**</summary>
+
+
+Parameters:
+
+```json
+{
+  "paths": [
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css"
+  ]
+}
+```
+Result:
+
+```json
+{
+  "linterErrorsByFile": [
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css"
+    }
+  ]
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints"><details>
+<summary>Tool use: **read_lints**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Hecho. Ya reorganicé el **Portal del Alumno** con mejor UX/UI usando **tabs**, manteniendo todas las funciones activas.
+
+### Qué cambié
+
+- Reestructuré `resources/views/portal/student.blade.php` en tabs:
+  - `Resumen`
+  - `Inscripciones`
+  - `Evaluaciones`
+  - `Agenda`
+  - `Pagos`
+  - `Recuperativas`
+- Dejé en `Resumen` lo más crítico:
+  - **Inscripción al siguiente curso** (CTA principal)
+- Mantengo el deep-link del correo:
+  - el botón del email sigue llevando a `#renewal-enrollment`
+  - ahora abre la pestaña correcta automáticamente.
+- Agregué JS en la misma vista para:
+  - alternar tabs
+  - persistir tab en hash `#tab-*`
+  - resolver anchor `#renewal-enrollment`.
+
+### Estilos nuevos
+
+- Añadí estilos de tabs en `resources/css/app.css`:
+  - `.portal-tabs`
+  - `.portal-tab`
+  - `.portal-tab.is-active`
+  - `.portal-tab-panel`
+  - `.portal-tab-panel.is-active`
+
+### Validación
+
+- `php artisan test` completo: **17 passed (45 assertions)**.
+- Sin errores de linter en archivos tocados.
+
+---
+
+Si quieres, siguiente iteración te la dejo aún más pro:
+- badges con contadores por tab (`Pagos (2)`, `Recuperativas (1)`),
+- sticky tab bar en móvil,
+- y “estado vacío inteligente” por pestaña.
+
+---
+
+_**User**_
+
+Haz estos 3 ajustes 
+
+badges con contadores por tab (Pagos (2), Recuperativas (1)),
+sticky tab bar en móvil,
+y “estado vacío inteligente” por pestaña.
+
+---
+
+_**Agent (default)**_
+
+Perfecto, aplico esos 3 ajustes ahora mismo sobre el portal: contadores en tabs, barra sticky en móvil y estados vacíos más contextuales por pestaña, sin romper flujos de inscripción/pagos.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
