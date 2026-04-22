@@ -58,8 +58,18 @@
                 <div style="font-size:14px;font-weight:800;color:#7a5500;margin-bottom:6px;">Acción recomendada</div>
                 <div style="font-size:15px;line-height:1.7;color:#694b00;">
                     Gestiona tu inscripción con anticipación para asegurar cupo en <strong>{{ $nextLevel->name }}</strong> y mantener continuidad en tu proceso formativo.
+                    @if($nextCourse)
+                        <br><br>
+                        Curso habilitado: <strong>{{ $nextCourse->name }}</strong>.
+                    @endif
                 </div>
             </div>
+
+            <p style="margin:0 0 18px;">
+                <a href="{{ url('/portal/student') }}" style="display:inline-block;background:#1b3f9d;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-size:14px;font-weight:700;">
+                    Ir al portal para inscripción
+                </a>
+            </p>
 
             <p style="font-size:14px;line-height:1.7;margin:0;color:#61749b;">
                 Si necesitas apoyo para continuar con el siguiente nivel, responde este correo o contacta al equipo administrativo de ON English.

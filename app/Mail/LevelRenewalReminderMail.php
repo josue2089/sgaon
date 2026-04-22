@@ -19,6 +19,7 @@ class LevelRenewalReminderMail extends Mailable
         public Course $course,
         public $currentLevel,
         public $nextLevel,
+        public ?Course $nextCourse = null,
     ) {
     }
 

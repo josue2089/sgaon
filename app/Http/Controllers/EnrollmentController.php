@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Enrollment;
 use App\Models\Group;
 use App\Models\Student;
+use App\Support\RenewalEnrollmentEligibility;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -105,6 +106,7 @@ class EnrollmentController extends Controller
                 'group_id' => 'No se puede inscribir en un grupo inactivo.',
             ]);
         }
+        $this->assertStudentCanEnrollByGrade($student, $group);
         $alreadyInGroup = Enrollment::query()
             ->where('group_id', $group->id)
             ->where('student_id', $student->id)
@@ -168,6 +170,7 @@ class EnrollmentController extends Controller
                 'group_id' => 'No se puede inscribir en un grupo inactivo.',
             ]);
         }
+        $this->assertStudentCanEnrollByGrade($student, $group);
         $duplicate = Enrollment::query()
             ->where('group_id', $group->id)
             ->where('student_id', $student->id)
@@ -205,5 +208,47 @@ class EnrollmentController extends Controller
         AuditTrail::log(request(), 'enrollment.delete', null, $payload);
 
         return redirect()->route('enrollments.index')->with('success', 'Inscripción eliminada.');
+    }
+
+    private function assertStudentCanEnrollByGrade(Student $student, Group $targetGroup): void
+    {
+        $targetCourse = $targetGroup->course()->with(['programLevel', 'courseLevel'])->first();
+        if (! $targetCourse) {
+            return;
+        }
+
+        $candidatePreviousEnrollment = Enrollment::query()
+            ->where('student_id', $student->id)
+            ->with(['group.course.programLevel', 'group.course.courseLevel'])
+            ->orderByDesc('enrolled_at')
+            ->orderByDesc('id')
+            ->get()
+            ->first(function (Enrollment $enrollment) use ($targetCourse): bool {
+                $sourceCourse = $enrollment->group?->course;
+                if (! $sourceCourse || (int) $sourceCourse->id === (int) $targetCourse->id) {
+                    return false;
+                }
+
+                if ($sourceCourse->programLevel && $targetCourse->program_level_id) {
+                    return (int) ($sourceCourse->programLevel?->nextLevel()?->id ?? 0) === (int) $targetCourse->program_level_id;
+                }
+
+                if ($sourceCourse->courseLevel && $targetCourse->course_level_id) {
+                    return (int) ($sourceCourse->courseLevel?->nextLevel()?->id ?? 0) === (int) $targetCourse->course_level_id;
+                }
+
+                return false;
+            });
+
+        if (! $candidatePreviousEnrollment || ! $candidatePreviousEnrollment->group?->course) {
+            return;
+        }
+
+        $eligibility = RenewalEnrollmentEligibility::evaluateForCourse($student, $candidatePreviousEnrollment->group->course);
+        if (! $eligibility['eligible']) {
+            throw ValidationException::withMessages([
+                'student_id' => 'El alumno no puede inscribirse al siguiente curso porque su evaluación final está en Need Support.',
+            ]);
+        }
     }
 }
