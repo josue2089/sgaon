@@ -16204,6 +16204,10 @@ No se `podran inscribir en el siguiente curso, y entraran en otro flujo que vere
 
 _**Agent (default)**_
 
+Entendido: voy a implementar este nuevo flujo de **pre-creación automática del siguiente curso** y el **bloqueo/habilitación de inscripción según nota final**. Primero revisaré cómo manejan actualmente cursos, inscripciones, cron/jobs y correos para integrarlo sin romper lo existente.
+
+_**Agent (default)**_
+
 <tool-use data-tool-type="unknown" data-tool-name="todo_write">
 <details>
 <summary>Tool use: **todo_write**</summary>
@@ -16216,7 +16220,68 @@ Parameters:
   "merge": true
 }
 ```
-Status: **loading**
+Result:
+
+```json
+{
+  "finalTodos": [
+    {
+      "content": "Detectar cursos por finalizar (5 días o 1-2 clases) y crear automáticamente el siguiente curso con mismo horario y sin profesor",
+      "id": "next-course-auto-create",
+      "status": "in_progress"
+    },
+    {
+      "content": "Restringir inscripción al siguiente curso según evaluación final (Outstanding/Acceptable/Regular permitido, Need Support bloqueado)",
+      "id": "enrollment-gating-ratings",
+      "status": "pending"
+    },
+    {
+      "content": "Ajustar recordatorio automático por email para enlazar inscripción al siguiente curso solo cuando corresponda",
+      "id": "email-reminder-integration",
+      "status": "pending"
+    },
+    {
+      "content": "Agregar pruebas del flujo automático y reglas de elegibilidad por notas",
+      "id": "tests-and-validation",
+      "status": "pending"
+    }
+  ],
+  "initialTodos": [
+    {
+      "content": "Migraciones grade_evaluation_sets + grade_entries, modelos Eloquent, constantes escala/rubros, campus_id denormalizado",
+      "id": "schema-models",
+      "status": "completed"
+    },
+    {
+      "content": "Permisos grades.manage en DatabaseSeeder; policy/helper autorización admin vs teacher vs portal",
+      "id": "auth-perms",
+      "status": "completed"
+    },
+    {
+      "content": "Rutas + controlador carga/listado por curso; vistas matriz + historial; enlace desde courses/show",
+      "id": "teacher-ui",
+      "status": "completed"
+    },
+    {
+      "content": "Sección historial en students/show y refinar courses/show",
+      "id": "admin-views",
+      "status": "completed"
+    },
+    {
+      "content": "Consulta en portal estudiante y representante (solo lectura, datos filtrados)",
+      "id": "portal-readonly",
+      "status": "completed"
+    },
+    {
+      "content": "Feature tests mínimos + estilos responsive (badges por nivel, sin scroll horizontal)",
+      "id": "tests-css",
+      "status": "completed"
+    }
+  ],
+  "success": true
+}
+```
+Status: **completed**
 
 
 </details>
@@ -16233,7 +16298,112 @@ _**Agent (default)**_
 <details>
 <summary>Tool use: **ripgrep_raw_search**</summary>
 
-Status: **loading**
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "outputMode": "files_with_matches",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app",
+  "pattern": "class Course|managed_group_id|teacher_id|start_date|end_date|schedule|horario"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "files_with_matches",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app",
+  "pattern": "class Course|managed_group_id|teacher_id|start_date|end_date|schedule|horario",
+  "topFiles": [
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/ScheduleTemplateController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/CourseGradeController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/CampusController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/TeacherController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Support/CoursePlanner.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/OperationWizardController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/DashboardController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Console/Commands/SendLevelRenewalReminders.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/ClassSessionController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Models/Group.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/FinanceController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/CourseController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Models/MakeupSession.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Console/Commands/ImportEnrollmentsHistorical.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Models/CourseLevel.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/MakeupRecoveryController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/CourseLevelController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Models/Course.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/AttendanceController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/GroupController.php"
+    }
+  ],
+  "totalFiles": 22,
+  "totalMatches": 22
+}
+```
+Status: **completed**
 
 
 </details>
@@ -16250,7 +16420,113 @@ _**Agent (default)**_
 <details>
 <summary>Tool use: **ripgrep_raw_search**</summary>
 
-Status: **loading**
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "*.php",
+  "outputMode": "files_with_matches",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "reminder|recordatorio|email|Mail::|Mailable|Notification|notify"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "files_with_matches",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "reminder|recordatorio|email|Mail::|Mailable|Notification|notify",
+  "topFiles": [
+    {
+      "matchCount": 1,
+      "uri": "resources/views/reports/audit.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/FinanceController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "config/mail.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Mail/MakeupRecoveryRejectedMail.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Mail/ChargePaymentApprovedMail.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "database/migrations/2026_03_18_173000_add_emailed_at_to_alerts_table.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/StudentController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/portal/representative.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/portal/student.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "database/factories/UserFactory.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/DashboardController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/students/show.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Models/ProgramLevel.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Mail/ChargePaymentRejectedMail.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "database/migrations/2026_04_13_090000_create_programs_tables.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Models/Teacher.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/program_levels/show.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Mail/ChargePendingMail.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Models/ChargePaymentRequest.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Models/CourseLevel.php"
+    }
+  ],
+  "totalFiles": 77,
+  "totalMatches": 77
+}
+```
+Status: **completed**
 
 
 </details>
@@ -16267,7 +16543,358 @@ _**Agent (default)**_
 <details>
 <summary>Tool use: **ripgrep_raw_search**</summary>
 
-Status: **loading**
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "*.php",
+  "outputMode": "files_with_matches",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "next course|siguiente curso|promotion|promote|upgrade|enroll|inscrib"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "files_with_matches",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon",
+  "pattern": "next course|siguiente curso|promotion|promote|upgrade|enroll|inscrib",
+  "topFiles": [
+    {
+      "matchCount": 1,
+      "uri": "routes/web.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/emails/makeup-recovery-created.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/grades/set-show.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/MakeupRecoveryController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/finance/index.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/ReportController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "database/migrations/2026_04_13_210000_create_makeup_domain_tables.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Models/GradeEntry.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/PortalController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Models/Student.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Console/Commands/BackfillChargeAcademicContext.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/enrollments/edit.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/students/enrollment-sheet-pdf.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Jobs/GenerateReportExportJob.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "resources/views/attendance/index.blade.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "tests/Feature/GradeEvaluationTest.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/GroupController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Http/Controllers/TeacherController.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "app/Support/MakeupRecoveryEngine.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "database/seeders/DatabaseSeeder.php"
+    }
+  ],
+  "totalFiles": 67,
+  "totalMatches": 67
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Ya encontré puntos clave: existe un comando de recordatorios de renovación y estructura de niveles/cursos. Ahora voy a extender ese flujo para crear el siguiente curso automáticamente y aplicar el filtro por nota antes de permitir inscripción.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Console/Commands/SendLevelRenewalReminders.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/CourseLevel.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/Course.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/EnrollmentController.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Mail/LevelRenewalReminderMail.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/emails/level-renewal-reminder.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/GradeEntry.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Support/GradeRubric.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/Group.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/console.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/routes/web.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/UatChecklistTest.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/CourseController.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Support/CoursePlanner.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "glob": "*.php",
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/migrations",
+  "pattern": "create\\('courses'|teacher_id"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/migrations",
+  "pattern": "create\\('courses'|teacher_id",
+  "topFiles": [
+    {
+      "matchCount": 1,
+      "uri": "database/migrations/2026_04_13_210000_create_makeup_domain_tables.php"
+    },
+    {
+      "matchCount": 4,
+      "uri": "database/migrations/2026_03_18_130000_add_operational_fields_to_courses_table.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "database/migrations/2026_02_23_121437_create_groups_table.php"
+    },
+    {
+      "matchCount": 1,
+      "uri": "database/migrations/2026_02_23_121437_create_courses_table.php"
+    }
+  ],
+  "totalFiles": 4,
+  "totalMatches": 7
+}
+```
+Status: **completed**
 
 
 </details>
@@ -16281,7 +16908,7 @@ Status: **loading**
 _**Agent (default)**_
 
 <tool-use data-tool-type="read" data-tool-name="read_file_v2">
-<details><summary>Tool use: **read_file_v2** • Read file: </summary>
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/migrations/2026_02_23_121437_create_courses_table.php</summary>
 
 </details>
 </tool-use>
@@ -16294,7 +16921,103 @@ _**Agent (default)**_
 _**Agent (default)**_
 
 <tool-use data-tool-type="read" data-tool-name="read_file_v2">
-<details><summary>Tool use: **read_file_v2** • Read file: </summary>
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/ProgramLevel.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Voy a aplicar los cambios de backend en tres partes: 1) servicio de elegibilidad por notas, 2) comando de recordatorio para autogenerar siguiente curso, 3) bloqueo en inscripción cuando haya `Need Support`. Después ajusto email y pruebas.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Support/RenewalEnrollmentEligibility.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Console/Commands/SendLevelRenewalReminders.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/EnrollmentController.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Mail/LevelRenewalReminderMail.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/emails/level-renewal-reminder.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Estoy en la parte de pruebas para asegurar que este flujo no quede solo en código: agregaré casos de autogeneración del curso siguiente y bloqueo de inscripción cuando hay `Need Support`, y luego correré toda la suite.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/GradeEvaluationTest.php</summary>
 
 </details>
 </tool-use>
@@ -16307,7 +17030,7 @@ _**Agent (default)**_
 _**Agent (default)**_
 
 <tool-use data-tool-type="read" data-tool-name="read_file_v2">
-<details><summary>Tool use: **read_file_v2** • Read file: </summary>
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/seeders/UatFixtureSeeder.php</summary>
 
 </details>
 </tool-use>
@@ -16320,7 +17043,7 @@ _**Agent (default)**_
 _**Agent (default)**_
 
 <tool-use data-tool-type="read" data-tool-name="read_file_v2">
-<details><summary>Tool use: **read_file_v2** • Read file: </summary>
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/ScheduleTemplate.php</summary>
 
 </details>
 </tool-use>
@@ -16329,3 +17052,463 @@ _**Agent (default)**_
 <summary>Tool use: **read_file_v2**</summary>
 
 </details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Models/Program.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/migrations/2026_03_18_170000_create_course_levels_table.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/migrations/2026_04_13_090000_create_programs_tables.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+File not found
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search">
+<details>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **1** result in **1** directory</summary>
+
+Directory: **/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/migrations** (1 file)
+
+| File |
+|------|
+| `2026_03_18_100200_create_schedule_templates_table.php` |
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
+<summary>Tool use: **glob_file_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/database/migrations/2026_03_18_100200_create_schedule_templates_table.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan test 2>&1</summary>
+
+```bash
+php artisan test 2>&1
+```
+
+```
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true                                                    0.02s  
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                        0.17s  
+
+   PASS  Tests\Feature\GradeEvaluationTest
+  ✓ teacher can create grade evaluation set                              0.41s  
+  ✓ student cannot post grade evaluation                                 0.02s  
+  ✓ student portal loads after grade exists                              0.03s  
+
+   PASS  Tests\Feature\LevelRenewalAutomationTest
+  ✓ command creates next course draft without teacher when course is du… 0.06s  
+  ✓ enrollment is blocked when previous course has need support          0.01s  
+
+   PASS  Tests\Feature\RoleAccessTest
+  ✓ student cannot access admin finance                                  0.01s  
+  ✓ admin can access finance                                             0.01s  
+  ✓ student dashboard redirects to student portal                        0.01s  
+  ✓ representative portal is accessible with profile                     0.01s  
+  ✓ audit log is created on finance charge creation                      0.01s  
+
+   PASS  Tests\Feature\UatChecklistTest
+  ✓ uat campus isolation blocks cross campus student edit                0.02s  
+  ✓ uat teacher can only record attendance for assigned sessions         0.02s  
+  ✓ uat representative portal only sees linked students                  0.02s  
+  ✓ uat reports export and alert generation                              0.02s  
+
+  Tests:    16 passed (40 assertions)
+  Duration: 0.96s
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints">
+<details>
+<summary>Tool use: **read_lints**</summary>
+
+
+Parameters:
+
+```json
+{
+  "paths": [
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Console/Commands/SendLevelRenewalReminders.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/EnrollmentController.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Support/RenewalEnrollmentEligibility.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/emails/level-renewal-reminder.blade.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Mail/LevelRenewalReminderMail.php"
+  ]
+}
+```
+Result:
+
+```json
+{
+  "linterErrorsByFile": [
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Console/Commands/SendLevelRenewalReminders.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/EnrollmentController.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Support/RenewalEnrollmentEligibility.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/tests/Feature/LevelRenewalAutomationTest.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/emails/level-renewal-reminder.blade.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Mail/LevelRenewalReminderMail.php"
+    }
+  ]
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints"><details>
+<summary>Tool use: **read_lints**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="todo_write">
+<details>
+<summary>Tool use: **todo_write**</summary>
+
+
+Parameters:
+
+```json
+{
+  "merge": true
+}
+```
+Result:
+
+```json
+{
+  "finalTodos": [
+    {
+      "content": "Detectar cursos por finalizar (5 días o 1-2 clases) y crear automáticamente el siguiente curso con mismo horario y sin profesor",
+      "id": "next-course-auto-create",
+      "status": "completed"
+    },
+    {
+      "content": "Restringir inscripción al siguiente curso según evaluación final (Outstanding/Acceptable/Regular permitido, Need Support bloqueado)",
+      "id": "enrollment-gating-ratings",
+      "status": "completed"
+    },
+    {
+      "content": "Ajustar recordatorio automático por email para enlazar inscripción al siguiente curso solo cuando corresponda",
+      "id": "email-reminder-integration",
+      "status": "completed"
+    },
+    {
+      "content": "Agregar pruebas del flujo automático y reglas de elegibilidad por notas",
+      "id": "tests-and-validation",
+      "status": "completed"
+    }
+  ],
+  "initialTodos": [
+    {
+      "content": "Detectar cursos por finalizar (5 días o 1-2 clases) y crear automáticamente el siguiente curso con mismo horario y sin profesor",
+      "id": "next-course-auto-create",
+      "status": "in_progress"
+    },
+    {
+      "content": "Restringir inscripción al siguiente curso según evaluación final (Outstanding/Acceptable/Regular permitido, Need Support bloqueado)",
+      "id": "enrollment-gating-ratings",
+      "status": "pending"
+    },
+    {
+      "content": "Ajustar recordatorio automático por email para enlazar inscripción al siguiente curso solo cuando corresponda",
+      "id": "email-reminder-integration",
+      "status": "pending"
+    },
+    {
+      "content": "Agregar pruebas del flujo automático y reglas de elegibilidad por notas",
+      "id": "tests-and-validation",
+      "status": "pending"
+    }
+  ],
+  "success": true,
+  "wasMerge": true
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="todo_write"><details>
+<summary>Tool use: **todo_write**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Implementé el módulo que pediste end-to-end: **autogeneración del siguiente curso**, **bloqueo por nota Need Support**, y **ajuste del recordatorio por email**.
+
+### Lo que quedó implementado
+
+- **Autogeneración del siguiente curso** en `levels:send-renewal-reminders` (`app/Console/Commands/SendLevelRenewalReminders.php`)
+  - Dispara cuando faltan **5 días** para terminar el curso **o** cuando quedan **1-2 clases**.
+  - Crea automáticamente el curso siguiente correspondiente (siguiente `ProgramLevel` o `CourseLevel`) con:
+    - mismo horario (`schedule_template_id`)
+    - **sin profesor asignado** (`teacher_id = null`)
+    - grupo operativo creado (también sin profesor) para permitir futuras inscripciones.
+  - Evita duplicados si ya existe un curso siguiente equivalente.
+
+- **Regla de elegibilidad por nota** (`app/Support/RenewalEnrollmentEligibility.php`)
+  - Solo permite avanzar si la evaluación final tiene rubros dentro de:
+    - `Outstanding`, `Acceptable`, `Regular`
+  - Si aparece `Need Support` (o falta evaluación), se marca como **no elegible**.
+
+- **Bloqueo de inscripción al siguiente curso** (`app/Http/Controllers/EnrollmentController.php`)
+  - Al intentar inscribir en un curso “siguiente nivel”, valida elegibilidad.
+  - Si tiene `Need Support`, bloquea inscripción con error de validación.
+
+- **Email de recordatorio ajustado** (`app/Mail/LevelRenewalReminderMail.php`, `resources/views/emails/level-renewal-reminder.blade.php`)
+  - Incluye referencia al curso habilitado (si fue creado).
+  - Mantiene CTA al portal.
+  - Solo envía correo de renovación cuando el alumno está elegible.
+
+---
+
+### Pruebas agregadas
+
+Nuevo archivo: `tests/Feature/LevelRenewalAutomationTest.php`
+
+- Verifica que el comando cree el siguiente curso sin profesor cuando el curso está por finalizar.
+- Verifica que la inscripción se bloquee cuando la evaluación previa incluye `Need Support`.
+
+---
+
+### Estado de ejecución
+
+- Corrí toda la suite: **16 tests, 40 assertions, todo en PASS**.
+- To-dos del módulo: **todos completados**.
+
+Si quieres, en el siguiente paso te implemento el “otro flujo” para `Need Support` (por ejemplo: alerta interna + cola de seguimiento + email distinto sin CTA de inscripción).
+
+---
+
+_**User**_
+
+Como lo pueod probar?
+
+---
+
+_**Agent (default)**_
+
+Perfecto. La forma más rápida es probarlo en **3 bloques**: autogeneración, elegibilidad por nota, e inscripción.
+
+## 1) Probar autogeneración del siguiente curso
+
+1. Crea/usa un curso que tenga:
+   - `end_date` a **5 días** desde hoy (o que le queden 1-2 clases)
+   - `program_level_id` (o `course_level_id`) con siguiente nivel existente
+   - `schedule_template_id` definido
+   - al menos 1 alumno inscrito activo
+
+2. Ejecuta primero en simulación:
+   - `php artisan levels:send-renewal-reminders --dry-run`
+
+3. Ejecuta real:
+   - `php artisan levels:send-renewal-reminders`
+
+4. Verifica en backoffice (`/courses`) que se creó un curso nuevo con:
+   - mismo horario (`schedule_template_id`)
+   - **sin profesor asignado**
+   - nivel siguiente
+   - grupo gestionado creado (`managed_group_id` no nulo)
+
+---
+
+## 2) Probar regla de notas (Allowed vs Need Support)
+
+### Caso permitido
+1. En el curso actual del alumno, crea una evaluación final con solo:
+   - `Outstanding`, `Acceptable`, `Regular`
+2. Ejecuta comando:
+   - `php artisan levels:send-renewal-reminders`
+3. Resultado esperado:
+   - recibe recordatorio
+   - puede inscribirse al siguiente curso
+
+### Caso bloqueado
+1. Crea evaluación final con al menos un rubro en `Need Support`.
+2. Intenta inscribir al alumno en el siguiente curso (desde enrollments o curso).
+3. Resultado esperado:
+   - inscripción bloqueada con mensaje de validación.
+
+---
+
+## 3) Probar desde tests automáticos (rápido y confiable)
+
+Ejecuta:
+- `php artisan test --filter=LevelRenewalAutomationTest`
+
+Debes ver:
+- test de creación automática del siguiente curso
+- test de bloqueo por `Need Support`
+
+---
+
+## 4) Si quieres validarlo “en tiempo real” automático
+
+El scheduler ya está configurado, pero para simular corrida periódica en local:
+- `php artisan schedule:work`
+
+Y en otra terminal ajustas fechas/notas y observas cuándo dispara `levels:send-renewal-reminders`.
+
+---
+
+Si quieres, te doy ahora un **checklist exacto de datos** (qué curso, qué fecha y qué notas cargar) para que lo pruebes en menos de 10 minutos en tu entorno.
+
+---
+
+_**User**_
+
+Podemos ajustar lel comando para que cree el cusro cuando falyen 15 clases, solo para probar?
+
+---
+
+_**Agent (default)**_
+
+Sí, lo ajusto ahora mismo para que el disparador por clases sea **hasta 15 clases restantes** (en vez de 1-2), solo para pruebas.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Console/Commands/SendLevelRenewalReminders.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Listo, quedó ajustado.
+
+- En `app/Console/Commands/SendLevelRenewalReminders.php` ahora el comando dispara por clases cuando quedan **1 a 15** sesiones:
+  - antes: `<= 2`
+  - ahora: `<= 15`
+
+Puedes probar con:
+- `php artisan levels:send-renewal-reminders --dry-run`
+- `php artisan levels:send-renewal-reminders`
+
+Si quieres, después te lo dejo parametrizable por `.env` (por ejemplo `RENEWAL_CLASSES_THRESHOLD=15`) para no tocar código cada vez.

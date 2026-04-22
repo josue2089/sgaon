@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Mail;
 
 class SendLevelRenewalReminders extends Command
 {
+    private const TEST_REMAINING_SESSIONS_TRIGGER_MAX = 15;
+
     protected $signature = 'levels:send-renewal-reminders {--dry-run}';
 
     protected $description = 'Genera recordatorios 5 dias antes de la finalizacion del curso actual para inscripcion al siguiente nivel.';
@@ -43,7 +45,7 @@ class SendLevelRenewalReminders extends Command
 
                 $reminderDate = $course->end_date->copy()->subDays((int) ($courseLevel->reminder_days_before ?? 5));
                 $remainingSessions = $this->remainingSessions($course, $today);
-                $isDueBySessions = $remainingSessions >= 1 && $remainingSessions <= 2;
+                $isDueBySessions = $remainingSessions >= 1 && $remainingSessions <= self::TEST_REMAINING_SESSIONS_TRIGGER_MAX;
                 if (! $reminderDate->isSameDay($today) && ! $isDueBySessions) {
                     return;
                 }
