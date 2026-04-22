@@ -19159,3 +19159,356 @@ _**Agent (default)**_
 <summary>Tool use: **read_file_v2**</summary>
 
 </details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search">
+<details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "portal-tabs|portal-tab-badge|portal-tab-panel"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css",
+  "pattern": "portal-tabs|portal-tab-badge|portal-tab-panel",
+  "topFiles": [
+    {
+      "matchCount": 3,
+      "uri": "resources/css/app.css"
+    }
+  ],
+  "totalFiles": 1,
+  "totalMatches": 3
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css</summary>
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan test --filter=LevelRenewalAutomationTest 2>&1</summary>
+
+```bash
+php artisan test --filter=LevelRenewalAutomationTest 2>&1
+```
+
+```
+
+   PASS  Tests\Feature\LevelRenewalAutomationTest
+  ✓ command creates next course draft without teacher when course is du… 0.34s  
+  ✓ enrollment is blocked when previous course has need support          0.04s  
+  ✓ student can enroll from portal when renewal offer exists             0.03s  
+
+  Tests:    3 passed (12 assertions)
+  Duration: 0.50s
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2">
+<details><summary>Tool use: **run_terminal_command_v2** • Run command: php artisan test 2>&1</summary>
+
+```bash
+php artisan test 2>&1
+```
+
+```
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                        0.08s  
+
+   PASS  Tests\Feature\GradeEvaluationTest
+  ✓ teacher can create grade evaluation set                              0.17s  
+  ✓ student cannot post grade evaluation                                 0.01s  
+  ✓ student portal loads after grade exists                              0.02s  
+
+   PASS  Tests\Feature\LevelRenewalAutomationTest
+  ✓ command creates next course draft without teacher when course is du… 0.02s  
+  ✓ enrollment is blocked when previous course has need support          0.01s  
+  ✓ student can enroll from portal when renewal offer exists             0.02s  
+
+   PASS  Tests\Feature\RoleAccessTest
+  ✓ student cannot access admin finance                                  0.01s  
+  ✓ admin can access finance                                             0.01s  
+  ✓ student dashboard redirects to student portal                        0.01s  
+  ✓ representative portal is accessible with profile                     0.01s  
+  ✓ audit log is created on finance charge creation                      0.01s  
+
+   PASS  Tests\Feature\UatChecklistTest
+  ✓ uat campus isolation blocks cross campus student edit                0.01s  
+  ✓ uat teacher can only record attendance for assigned sessions         0.02s  
+  ✓ uat representative portal only sees linked students                  0.01s  
+  ✓ uat reports export and alert generation                              0.02s  
+
+  Tests:    17 passed (45 assertions)
+  Duration: 0.50s
+
+
+```
+</details>
+</tool-use>
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints">
+<details>
+<summary>Tool use: **read_lints**</summary>
+
+
+Parameters:
+
+```json
+{
+  "paths": [
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php",
+    "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css"
+  ]
+}
+```
+Result:
+
+```json
+{
+  "linterErrorsByFile": [
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/student.blade.php"
+    },
+    {
+      "relativeWorkspacePath": "/Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/css/app.css"
+    }
+  ]
+}
+```
+Status: **completed**
+
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints"><details>
+<summary>Tool use: **read_lints**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Listo, ya apliqué los 3 ajustes UX/UI en el portal del estudiante.
+
+### Cambios implementados
+
+- **Badges con contadores por tab**
+  - Agregué contadores dinámicos en:
+    - `Inscripciones`
+    - `Evaluaciones`
+    - `Agenda`
+    - `Pagos`
+    - `Recuperativas`
+  - Archivo: `resources/views/portal/student.blade.php`
+  - Estilo visual del badge: `resources/css/app.css` (`.portal-tab-badge`)
+
+- **Sticky tab bar en móvil**
+  - En pantallas pequeñas, la barra de tabs ahora queda fija arriba al hacer scroll.
+  - También queda horizontal con scroll suave para que no se corte.
+  - Archivo: `resources/css/app.css` (`@media (max-width: 768px)` dentro de `.portal-tabs`)
+
+- **Estado vacío inteligente por pestaña**
+  - `Agenda`: mensaje único si no hay agenda ni asistencia.
+  - `Evaluaciones`: mensaje claro si no hay evaluaciones.
+  - `Inscripciones`: tarjeta vacía amigable si no hay inscripciones.
+  - `Recuperativas`: mensaje específico cuando no hay pendientes.
+  - `Pagos`: mensaje global cuando no hay movimientos.
+  - Archivo: `resources/views/portal/student.blade.php`
+
+---
+
+### Verificación
+
+- `php artisan test` completo: **17 passed (45 assertions)**.
+- Sin errores de linter en archivos tocados.
+
+Si quieres, siguiente mejora rápida: que el tab inicial abra automáticamente el **primero que tenga pendientes** (por ejemplo `Pagos` si hay cargos vencidos).
+
+---
+
+_**User**_
+
+Ahora hay que aplicar lo mismo al panel de representantes.
+
+---
+
+_**Agent (default)**_
+
+Perfecto, voy a aplicar el mismo patrón al panel de representantes: tabs por dominio, contadores, sticky móvil y estados vacíos inteligentes, manteniendo intactos los flujos actuales. Ahora reviso la vista/controlador y lo implemento.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/representative.blade.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2">
+<details><summary>Tool use: **read_file_v2** • Read file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/app/Http/Controllers/PortalController.php</summary>
+
+</details>
+</tool-use>
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2**</summary>
+
+</details></tool-use>
+
+_**Agent (default)**_
+
+Ya vi la vista del representante: está muy compactada en un solo bloque por alumno. Voy a reestructurar cada alumno con tabs internas + contadores + estados vacíos contextuales, reutilizando estilos y agregando JS scoped para que funcione por alumno sin conflictos.
+
+_**Agent (default)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2">
+
+<details><summary>Tool use: **edit_file_v2** • Edit file: /Users/josueramos/LOCALPROJECTS/WEBS/OnEnglish/sgaon/resources/views/portal/representative.blade.php</summary>
+
+Status: **loading**
+
+</details>
+
+</tool-use>
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+
+</details></tool-use>
