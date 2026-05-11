@@ -185,7 +185,7 @@ class StudentController extends Controller
             $data['campus_id'] = $this->campusId();
         }
 
-        $data['phone'] = $data['phone'] ?: ($data['mobile_phone'] ?? null);
+        $data['phone'] = ($data['phone'] ?? null) ?: ($data['mobile_phone'] ?? null);
 
         if ($request->hasFile('profile_photo')) {
             $data['profile_photo_path'] = $request->file('profile_photo')->store('profiles/students', 'public');
@@ -230,7 +230,7 @@ class StudentController extends Controller
             $data['campus_id'] = $this->campusId();
         }
 
-        $data['phone'] = $data['phone'] ?: ($data['mobile_phone'] ?? null);
+        $data['phone'] = ($data['phone'] ?? null) ?: ($data['mobile_phone'] ?? null);
 
         if ($request->hasFile('profile_photo')) {
             if ($student->profile_photo_path) {
