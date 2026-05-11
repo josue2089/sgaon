@@ -26,7 +26,7 @@ class CourseController extends Controller
 {
     private function campusId(): ?int
     {
-        return request()->user()?->campus_id;
+        return request()->user()?->isMasterAdmin() ? null : request()->user()?->campus_id;
     }
 
     private function resolveAcademicLevelIdFromProgram(?Program $program, int $campusId): int

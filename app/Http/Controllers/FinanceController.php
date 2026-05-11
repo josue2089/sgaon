@@ -28,9 +28,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FinanceController extends Controller
 {
+    private function campusId(Request $request): ?int
+    {
+        return $request->user()?->isMasterAdmin() ? null : $request->user()?->campus_id;
+    }
+
     public function index(Request $request): View|StreamedResponse
     {
-        $campusId = request()->user()?->campus_id;
+        $campusId = $this->campusId($request);
         $chargesQuery = Charge::with(['student', 'payments', 'course', 'group', 'period', 'enrollment.group.course'])->latest();
         $paymentsQuery = Payment::with(['student', 'receipt', 'allocations.charge'])->latest();
         $studentsQuery = Student::orderBy('first_name');
@@ -133,7 +138,7 @@ class FinanceController extends Controller
             $enrollment = Enrollment::query()
                 ->with(['group.course'])
                 ->findOrFail((int) $data['enrollment_id']);
-            if ($request->user()?->campus_id && (int) $enrollment->campus_id !== (int) $request->user()->campus_id) {
+            if ($this->campusId($request) && (int) $enrollment->campus_id !== (int) $this->campusId($request)) {
                 abort(403);
             }
 
@@ -151,7 +156,7 @@ class FinanceController extends Controller
             }
 
             $student = Student::findOrFail($studentId);
-            if ($request->user()?->campus_id && (int) $student->campus_id !== (int) $request->user()->campus_id) {
+            if ($this->campusId($request) && (int) $student->campus_id !== (int) $this->campusId($request)) {
                 abort(403);
             }
             $data['campus_id'] = $student->campus_id;
@@ -194,7 +199,7 @@ class FinanceController extends Controller
 
     public function studentHistory(Request $request, Student $student): View
     {
-        if ($request->user()?->campus_id && (int) $student->campus_id !== (int) $request->user()->campus_id) {
+        if ($this->campusId($request) && (int) $student->campus_id !== (int) $this->campusId($request)) {
             abort(403);
         }
 
@@ -260,7 +265,7 @@ class FinanceController extends Controller
         ]);
 
         $student = Student::findOrFail($data['student_id']);
-        if ($request->user()?->campus_id && (int) $student->campus_id !== (int) $request->user()->campus_id) {
+        if ($this->campusId($request) && (int) $student->campus_id !== (int) $this->campusId($request)) {
             abort(403);
         }
         $data['campus_id'] = $student->campus_id;
@@ -356,7 +361,7 @@ class FinanceController extends Controller
 
     public function reviewPaymentRequest(Request $request, ChargePaymentRequest $paymentRequest): RedirectResponse
     {
-        if ($request->user()?->campus_id && (int) $paymentRequest->campus_id !== (int) $request->user()->campus_id) {
+        if ($this->campusId($request) && (int) $paymentRequest->campus_id !== (int) $this->campusId($request)) {
             abort(403);
         }
 
@@ -570,7 +575,7 @@ class FinanceController extends Controller
             'payment.charge.period',
         ]);
 
-        if ($request->user()?->campus_id && (int) $receipt->campus_id !== (int) $request->user()->campus_id) {
+        if ($this->campusId($request) && (int) $receipt->campus_id !== (int) $this->campusId($request)) {
             abort(403);
         }
 

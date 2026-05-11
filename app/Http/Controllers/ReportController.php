@@ -18,11 +18,16 @@ use Illuminate\View\View;
 
 class ReportController extends Controller
 {
+    private function campusId(Request $request): ?int
+    {
+        return $request->user()?->isMasterAdmin() ? null : $request->user()?->campus_id;
+    }
+
     public function attendance(Request $request): View|StreamedResponse
     {
         $query = AttendanceRecord::query()->with(['classSession.group', 'enrollment.student']);
-        if ($request->user()?->campus_id) {
-            $query->whereHas('classSession', fn ($q) => $q->where('campus_id', $request->user()->campus_id));
+        if ($this->campusId($request)) {
+            $query->whereHas('classSession', fn ($q) => $q->where('campus_id', $this->campusId($request)));
         }
 
         if ($request->filled('from')) {
@@ -45,7 +50,7 @@ class ReportController extends Controller
         return view('reports.attendance', [
             'records' => $query->latest()->paginate(40)->withQueryString(),
             'groups' => \App\Models\Group::query()
-                ->when($request->user()?->campus_id, fn ($builder) => $builder->where('campus_id', $request->user()->campus_id))
+                ->when($this->campusId($request), fn ($builder) => $builder->where('campus_id', $this->campusId($request)))
                 ->orderBy('name')
                 ->get(['id', 'name']),
             'presets' => ReportPreset::query()
@@ -65,8 +70,8 @@ class ReportController extends Controller
     public function payments(Request $request): View|StreamedResponse
     {
         $query = Charge::with(['student', 'payments', 'course', 'group', 'period'])->latest();
-        if ($request->user()?->campus_id) {
-            $query->where('campus_id', $request->user()->campus_id);
+        if ($this->campusId($request)) {
+            $query->where('campus_id', $this->campusId($request));
         }
 
         if ($request->filled('status')) {
@@ -92,7 +97,7 @@ class ReportController extends Controller
         return view('reports.payments', [
             'charges' => $query->paginate(40)->withQueryString(),
             'periods' => \App\Models\Period::query()
-                ->when($request->user()?->campus_id, fn ($builder) => $builder->where('campus_id', $request->user()->campus_id))
+                ->when($this->campusId($request), fn ($builder) => $builder->where('campus_id', $this->campusId($request)))
                 ->orderBy('code')
                 ->get(['id', 'code']),
             'presets' => ReportPreset::query()
@@ -112,8 +117,8 @@ class ReportController extends Controller
     public function audit(): View
     {
         $query = AuditLog::with('user')->latest();
-        if (request()->user()?->campus_id) {
-            $query->whereHas('user', fn ($q) => $q->where('campus_id', request()->user()->campus_id));
+        if ($this->campusId(request())) {
+            $query->whereHas('user', fn ($q) => $q->where('campus_id', $this->campusId(request())));
         }
 
         return view('reports.audit', [
@@ -128,8 +133,8 @@ class ReportController extends Controller
             ->where('type', 'level_renewal')
             ->latest();
 
-        if ($request->user()?->campus_id) {
-            $query->where('campus_id', $request->user()->campus_id);
+        if ($this->campusId($request)) {
+            $query->where('campus_id', $this->campusId($request));
         }
 
         $status = (string) $request->query('status', '');
@@ -155,8 +160,8 @@ class ReportController extends Controller
         $alerts = $query->paginate(40)->withQueryString();
 
         $summaryQuery = Alert::query()->where('type', 'level_renewal');
-        if ($request->user()?->campus_id) {
-            $summaryQuery->where('campus_id', $request->user()->campus_id);
+        if ($this->campusId($request)) {
+            $summaryQuery->where('campus_id', $this->campusId($request));
         }
 
         return view('reports.level-renewals', [
@@ -213,7 +218,7 @@ class ReportController extends Controller
 
         $export = ReportExport::create([
             'user_id' => $request->user()->id,
-            'campus_id' => $request->user()->campus_id,
+            'campus_id' => $this->campusId($request),
             'type' => $data['type'],
             'filters' => $filters,
             'status' => 'pending',

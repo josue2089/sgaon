@@ -12,7 +12,7 @@
     $currentRoute = request()->route()?->getName();
     $user = auth()->user();
     $alertsQuery = \App\Models\Alert::query()->where('status', 'open');
-    if ($user?->campus_id) {
+    if ($user?->campus_id && ! $user?->isMasterAdmin()) {
         $alertsQuery->where('campus_id', $user->campus_id);
     }
     $openAlertsCount = (clone $alertsQuery)->count();

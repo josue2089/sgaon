@@ -16,12 +16,17 @@ use Illuminate\View\View;
 
 class AttendanceController extends Controller
 {
+    private function campusId(Request $request): ?int
+    {
+        return $request->user()?->isMasterAdmin() ? null : $request->user()?->campus_id;
+    }
+
     public function index(Request $request): View
     {
         $user = $request->user();
         $sessionsQuery = ClassSession::with('group');
-        if ($user?->campus_id) {
-            $sessionsQuery->where('campus_id', $user->campus_id);
+        if ($this->campusId($request)) {
+            $sessionsQuery->where('campus_id', $this->campusId($request));
         }
 
         if ($user?->role === 'teacher') {
@@ -104,9 +109,9 @@ class AttendanceController extends Controller
             }
         }
 
-        if ($request->user()?->campus_id) {
+        if ($this->campusId($request)) {
             $sessionCampusMatches = ClassSession::where('id', $data['class_session_id'])
-                ->where('campus_id', $request->user()->campus_id)
+                ->where('campus_id', $this->campusId($request))
                 ->exists();
             if (! $sessionCampusMatches) {
                 abort(403);
