@@ -17,9 +17,14 @@ class EnsureCampusAccess
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        $campusId = $user?->campus_id;
 
-        if (! $user || ! $campusId) {
+        if (! $user || $user->isMasterAdmin()) {
+            return $next($request);
+        }
+
+        $campusId = $user->campus_id;
+
+        if (! $campusId) {
             return $next($request);
         }
 

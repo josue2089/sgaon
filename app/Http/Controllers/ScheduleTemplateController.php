@@ -59,22 +59,7 @@ class ScheduleTemplateController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $campusId = $this->campusId();
-
-        $data = $request->validate([
-            'campus_id' => ['required', 'exists:campuses,id'],
-            'days' => ['required', 'array', 'min:1'],
-            'days.*' => ['required', Rule::in(array_keys(ScheduleTemplate::DAY_LABELS))],
-            'starts_at' => ['required', 'date_format:H:i'],
-            'ends_at' => ['required', 'date_format:H:i', 'after:starts_at'],
-            'status' => ['required', Rule::in(['active', 'inactive'])],
-        ]);
-
-        if ($campusId) {
-            $data['campus_id'] = $campusId;
-        }
-
-        $data['days'] = $this->normalizeDays($data['days']);
+        $data = $this->validatedScheduleData($request);
 
         ScheduleTemplate::create($data);
 
@@ -96,24 +81,7 @@ class ScheduleTemplateController extends Controller
 
     public function update(Request $request, ScheduleTemplate $schedule): RedirectResponse
     {
-        $campusId = $this->campusId();
-
-        $data = $request->validate([
-            'campus_id' => ['required', 'exists:campuses,id'],
-            'days' => ['required', 'array', 'min:1'],
-            'days.*' => ['required', Rule::in(array_keys(ScheduleTemplate::DAY_LABELS))],
-            'starts_at' => ['required', 'date_format:H:i'],
-            'ends_at' => ['required', 'date_format:H:i', 'after:starts_at'],
-            'status' => ['required', Rule::in(['active', 'inactive'])],
-        ]);
-
-        if ($campusId) {
-            $data['campus_id'] = $campusId;
-        }
-
-        $data['days'] = $this->normalizeDays($data['days']);
-
-        $schedule->update($data);
+        $schedule->update($this->validatedScheduleData($request));
 
         return redirect()->route('schedules.index')->with('success', 'Horario actualizado.');
     }
@@ -134,5 +102,45 @@ class ScheduleTemplateController extends Controller
             ->sortBy(fn (string $day) => array_search($day, $order, true))
             ->values()
             ->all();
+    }
+
+    private function validatedScheduleData(Request $request): array
+    {
+        $campusId = $this->campusId();
+
+        $request->merge([
+            'starts_at' => $this->normalizeTimeInput($request->input('starts_at')),
+            'ends_at' => $this->normalizeTimeInput($request->input('ends_at')),
+        ]);
+
+        $data = $request->validate([
+            'campus_id' => ['required', 'exists:campuses,id'],
+            'days' => ['required', 'array', 'min:1'],
+            'days.*' => ['required', Rule::in(array_keys(ScheduleTemplate::DAY_LABELS))],
+            'starts_at' => ['required', 'date_format:H:i'],
+            'ends_at' => ['required', 'date_format:H:i', 'after:starts_at'],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+        ]);
+
+        if ($campusId) {
+            $data['campus_id'] = $campusId;
+        }
+
+        $data['days'] = $this->normalizeDays($data['days']);
+
+        return $data;
+    }
+
+    private function normalizeTimeInput(?string $time): ?string
+    {
+        if ($time === null || $time === '') {
+            return $time;
+        }
+
+        if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $time)) {
+            return substr($time, 0, 5);
+        }
+
+        return $time;
     }
 }

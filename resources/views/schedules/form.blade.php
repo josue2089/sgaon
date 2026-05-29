@@ -28,10 +28,10 @@
     </div>
     <div>
         <label>Hora de inicio</label>
-        <input type="time" name="starts_at" value="{{ old('starts_at', $schedule->starts_at ?? '') }}" required>
+        <input type="time" name="starts_at" value="{{ old('starts_at', isset($schedule->starts_at) ? substr((string) $schedule->starts_at, 0, 5) : '') }}" required>
     </div>
     <div>
         <label>Hora final</label>
-        <input type="time" name="ends_at" value="{{ old('ends_at', $schedule->ends_at ?? '') }}" required>
+        <input type="time" name="ends_at" value="{{ old('ends_at', isset($schedule->ends_at) ? substr((string) $schedule->ends_at, 0, 5) : '') }}" required>
     </div>
 </div>
