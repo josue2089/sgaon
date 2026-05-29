@@ -12,7 +12,7 @@ class Student extends Model
     protected $fillable = [
         'campus_id',
         'user_id',
-        'registration_level_id',
+        'registration_program_id',
         'contract_number',
         'first_name',
         'last_name',
@@ -59,9 +59,9 @@ class Student extends Model
         return $this->belongsTo(Campus::class);
     }
 
-    public function registrationLevel()
+    public function registrationProgram()
     {
-        return $this->belongsTo(AcademicLevel::class, 'registration_level_id');
+        return $this->belongsTo(Program::class, 'registration_program_id');
     }
 
     public function user()

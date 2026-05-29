@@ -26,7 +26,7 @@
                 <div class="row"><span class="label">Nacimiento:</span> {{ $student->birth_date?->format('d/m/Y') ?? 'N/D' }}</div>
                 <div class="row"><span class="label">Edad:</span> {{ $student->age ? $student->age.' años' : 'N/D' }}</div>
                 <div class="row"><span class="label">Sede:</span> {{ $student->campus?->name ?? 'N/D' }}</div>
-                <div class="row"><span class="label">Nivel inscripción:</span> {{ $student->registrationLevel?->name ?? 'N/D' }}</div>
+                <div class="row"><span class="label">Programa inscripción:</span> {{ $student->registrationProgram?->name ?? 'N/D' }}</div>
                 <div class="row"><span class="label">Email:</span> {{ $student->email ?: 'N/D' }}</div>
                 <div class="row"><span class="label">Celular:</span> {{ $student->mobile_phone ?: $student->phone ?: 'N/D' }}</div>
                 <div class="row"><span class="label">Teléfono:</span> {{ $student->landline_phone ?: 'N/D' }}</div>

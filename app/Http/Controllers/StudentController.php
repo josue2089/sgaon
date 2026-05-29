@@ -10,7 +10,7 @@ use App\Models\Campus;
 use App\Models\Charge;
 use App\Models\Enrollment;
 use App\Models\GradeEntry;
-use App\Models\Representative;
+use App\Models\Program;
 use App\Models\StudentAttachment;
 use App\Models\Student;
 use App\Support\AuditTrail;
@@ -155,16 +155,16 @@ class StudentController extends Controller
     public function create(): View
     {
         $campuses = Campus::orderBy('name');
-        $levels = AcademicLevel::query()->orderBy('sort_order')->orderBy('name');
         if ($this->campusId()) {
             $campuses->where('id', $this->campusId());
-            $levels->where('campus_id', $this->campusId());
         }
+
+        $programs = Program::query()->where('status', 'active')->orderBy('name');
 
         return view('students.create', [
             'student' => new Student(),
             'campuses' => $campuses->get(),
-            'levels' => $levels->get(),
+            'programs' => $programs->get(),
         ]);
     }
 
@@ -202,16 +202,16 @@ class StudentController extends Controller
     public function edit(Student $student): View
     {
         $campuses = Campus::orderBy('name');
-        $levels = AcademicLevel::query()->orderBy('sort_order')->orderBy('name');
         if ($this->campusId()) {
             $campuses->where('id', $this->campusId());
-            $levels->where('campus_id', $this->campusId());
         }
+
+        $programs = Program::query()->where('status', 'active')->orderBy('name')->get();
 
         return view('students.edit', [
             'student' => $student->load(['representatives', 'authorizedContacts']),
             'campuses' => $campuses->get(),
-            'levels' => $levels->get(),
+            'programs' => $programs,
             'auditLogs' => AuditLog::query()
                 ->with('user')
                 ->where('auditable_type', Student::class)
@@ -344,7 +344,7 @@ class StudentController extends Controller
     {
         $student->load([
             'campus',
-            'registrationLevel',
+            'registrationProgram',
             'representatives',
             'authorizedContacts',
             'attachments',
@@ -447,7 +447,7 @@ class StudentController extends Controller
     {
         return $request->validate([
             'campus_id' => ['required', 'exists:campuses,id'],
-            'registration_level_id' => ['nullable', 'exists:academic_levels,id'],
+            'registration_program_id' => ['nullable', 'exists:programs,id'],
             'contract_number' => ['nullable', 'string', 'max:80'],
             'first_name' => ['required', 'string', 'max:120'],
             'last_name' => ['required', 'string', 'max:120'],

@@ -48,11 +48,11 @@
         <div><label>Email</label><input name="email" type="email" value="{{ old('email',$student->email ?? '') }}"></div>
         <div><label>Celular</label><input name="mobile_phone" value="{{ old('mobile_phone',$student->mobile_phone ?? $student->phone ?? '') }}"></div>
         <div><label>Teléfono</label><input name="landline_phone" value="{{ old('landline_phone',$student->landline_phone ?? '') }}"></div>
-        <div><label>Nivel de inscripción</label>
-            <select name="registration_level_id">
+        <div><label>Programa de inscripción</label>
+            <select name="registration_program_id">
                 <option value="">Seleccione</option>
-                @foreach($levels as $level)
-                    <option value="{{ $level->id }}" @selected((string) old('registration_level_id',$student->registration_level_id ?? '') === (string) $level->id)>{{ $level->name }}</option>
+                @foreach($programs as $program)
+                    <option value="{{ $program->id }}" @selected((string) old('registration_program_id', $student->registration_program_id ?? '') === (string) $program->id)>{{ $program->name }}</option>
                 @endforeach
             </select>
         </div>

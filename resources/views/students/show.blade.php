@@ -104,7 +104,7 @@
             <div><strong>Celular:</strong> {{ $student->mobile_phone ?: $student->phone ?: 'Sin teléfono' }}</div>
             <div><strong>Teléfono:</strong> {{ $student->landline_phone ?: 'Sin teléfono fijo' }}</div>
             <div><strong>Sede:</strong> {{ $student->campus?->name ?? 'Sin sede' }}</div>
-            <div><strong>Nivel inscripción:</strong> {{ $student->registrationLevel?->name ?? 'N/D' }}</div>
+            <div><strong>Programa inscripción:</strong> {{ $student->registrationProgram?->name ?? 'N/D' }}</div>
             <div><strong>Estado:</strong> {{ ucfirst($student->status) }}</div>
             <div><strong>Edad:</strong> {{ $student->age ? $student->age.' años' : 'N/D' }}</div>
             <div><strong>Fecha inscripción:</strong> {{ $student->enrollment_date?->format('d/m/Y') ?? 'N/D' }}</div>
