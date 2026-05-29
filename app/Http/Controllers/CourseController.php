@@ -264,9 +264,11 @@ class CourseController extends Controller
             $data['campus_id'] = $this->campusId();
         }
 
+        $calendarSnapshot = $this->calendarSnapshot($course);
+
         $course->update($data);
         $course->load(['teacher', 'period', 'scheduleTemplate', 'managedGroup.sessions.attendanceRecords']);
-        $course = CoursePlanner::sync($course);
+        $course = CoursePlanner::sync($course, $this->calendarFieldsChanged($calendarSnapshot, $course));
         $this->addStudentsToCourse($course, $studentIds);
 
         return redirect()->route('courses.show', $course)->with('success', 'Curso actualizado.');
@@ -435,5 +437,23 @@ class CourseController extends Controller
         if ($this->campusId() && (int) $course->campus_id !== (int) $this->campusId()) {
             abort(403);
         }
+    }
+
+    private function calendarSnapshot(Course $course): array
+    {
+        return [
+            'start_date' => $course->start_date?->toDateString(),
+            'schedule_template_id' => (int) $course->schedule_template_id,
+            'academic_hours' => (int) $course->academic_hours,
+            'period_id' => (int) $course->period_id,
+        ];
+    }
+
+    private function calendarFieldsChanged(array $before, Course $course): bool
+    {
+        return $before['start_date'] !== $course->start_date?->toDateString()
+            || $before['schedule_template_id'] !== (int) $course->schedule_template_id
+            || $before['academic_hours'] !== (int) $course->academic_hours
+            || $before['period_id'] !== (int) $course->period_id;
     }
 }

@@ -16,10 +16,16 @@ class CoursePlanner
 {
     public const ACADEMIC_HOUR_MINUTES = 45;
 
-    public static function sync(Course $course): Course
+    public static function sync(Course $course, bool $regenerateSessions = true): Course
     {
         if (! $course->schedule_template_id || ! $course->start_date || ! $course->academic_hours) {
-            return $course;
+            if ($regenerateSessions) {
+                return $course;
+            }
+
+            self::syncManagedGroup($course);
+
+            return $course->fresh(['teacher', 'period', 'scheduleTemplate', 'managedGroup']);
         }
 
         $schedule = $course->scheduleTemplate;
@@ -27,6 +33,12 @@ class CoursePlanner
             throw ValidationException::withMessages([
                 'schedule_template_id' => 'El horario seleccionado no existe.',
             ]);
+        }
+
+        if (! $regenerateSessions) {
+            self::syncManagedGroup($course);
+
+            return $course->fresh(['teacher', 'period', 'scheduleTemplate', 'managedGroup']);
         }
 
         $slotMinutes = self::slotMinutes($schedule);
@@ -96,8 +108,8 @@ class CoursePlanner
         if ($lockedSessions->isNotEmpty()) {
             $needsRegeneration = $existingSessions->count() !== $requiredSessions
                 || $existingSessions->first()?->session_date?->toDateString() !== $course->start_date?->toDateString()
-                || $existingSessions->first()?->starts_at !== $schedule->starts_at
-                || $existingSessions->first()?->ends_at !== $schedule->ends_at;
+                || self::normalizeTime($existingSessions->first()?->starts_at) !== self::normalizeTime($schedule->starts_at)
+                || self::normalizeTime($existingSessions->first()?->ends_at) !== self::normalizeTime($schedule->ends_at);
 
             if ($needsRegeneration) {
                 throw ValidationException::withMessages([
