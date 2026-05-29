@@ -11,6 +11,7 @@ use App\Models\Charge;
 use App\Models\Enrollment;
 use App\Models\GradeEntry;
 use App\Models\Program;
+use App\Models\Representative;
 use App\Models\StudentAttachment;
 use App\Models\Student;
 use App\Support\AuditTrail;
