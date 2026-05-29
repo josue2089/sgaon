@@ -29,7 +29,7 @@ class DashboardController extends Controller
             return redirect()->route('portal.representative');
         }
 
-        $campusId = $user?->campus_id;
+        $campusId = $user?->isMasterAdmin() ? null : $user?->campus_id;
         $studentsQuery = Student::query();
         $teachersQuery = Teacher::query();
         $coursesQuery = Course::query();
