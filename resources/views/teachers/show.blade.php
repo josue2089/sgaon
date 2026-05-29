@@ -135,7 +135,7 @@
                                     <div class="teacher-calendar-badge">Ocupado</div>
                                     <div class="teacher-calendar-title">{{ $cell['session']->group?->course?->name ?? 'Curso asignado' }}</div>
                                     <div class="teacher-calendar-sub">{{ $cell['session']->planned_class_label ?: ($cell['session']->topic ?: 'Sesión planificada') }}</div>
-                                    <a class="teacher-calendar-link" href="{{ route('attendance.index', ['class_session_id' => $cell['session']->id]) }}">Asistencia</a>
+                                    <a class="teacher-calendar-link" href="{{ route('attendance.index', ['class_session_id' => $cell['session']->id]) }}">{{ $cell['session']->canRecordAttendance() ? 'Asistencia' : 'Ver sesión' }}</a>
                                 @elseif($cell['available'])
                                     <div class="teacher-calendar-badge teacher-calendar-badge--available">Disponible</div>
                                     <div class="teacher-calendar-sub">Sin curso programado</div>
@@ -181,7 +181,7 @@
                         <td>{{ $session->group?->course?->programLevel?->name ?? $session->group?->course?->courseLevel?->name ?? 'N/D' }}</td>
                         <td>{{ $session->topic ?: 'Pendiente' }}</td>
                         <td class="table-actions">
-                            <a href="{{ route('attendance.index', ['class_session_id' => $session->id]) }}">Asistencia</a>
+                            <a href="{{ route('attendance.index', ['class_session_id' => $session->id]) }}">{{ $session->canRecordAttendance() ? 'Asistencia' : 'Ver sesión' }}</a>
                         </td>
                     </tr>
                 @endforeach

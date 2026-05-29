@@ -72,6 +72,7 @@ class AttendanceController extends Controller
         return view('attendance.index', [
             'sessions' => $sessionsQuery->latest('session_date')->take(100)->get(),
             'selectedSession' => $session,
+            'canRecordAttendance' => $session?->canRecordAttendance() ?? false,
             'enrollments' => $enrollments,
             'records' => $records,
             'previousSession' => $previousSession,
@@ -116,6 +117,13 @@ class AttendanceController extends Controller
             if (! $sessionCampusMatches) {
                 abort(403);
             }
+        }
+
+        $session = ClassSession::query()->findOrFail($data['class_session_id']);
+        if (! $session->canRecordAttendance()) {
+            return redirect()
+                ->route('attendance.index', ['class_session_id' => $session->id])
+                ->withErrors(['class_session_id' => 'La asistencia solo puede registrarse el día de la sesión o después.']);
         }
 
         ClassSession::where('id', $data['class_session_id'])->update([

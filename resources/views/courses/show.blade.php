@@ -231,7 +231,11 @@
                         </td>
                         <td>{{ $session->program_notes ?: 'Sin observación' }}</td>
                         <td class="table-actions">
-                            <a href="{{ route('attendance.index', ['class_session_id' => $session->id]) }}">Asistencia</a>
+                            @if($session->canRecordAttendance())
+                                <a href="{{ route('attendance.index', ['class_session_id' => $session->id]) }}">Asistencia</a>
+                            @else
+                                <a href="{{ route('attendance.index', ['class_session_id' => $session->id]) }}">Ver sesión</a>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

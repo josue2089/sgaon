@@ -52,4 +52,15 @@ class ClassSession extends Model
     {
         return $this->hasMany(MakeupRequest::class);
     }
+
+    public function canRecordAttendance(?\Carbon\CarbonInterface $reference = null): bool
+    {
+        if (! $this->session_date) {
+            return false;
+        }
+
+        $reference ??= now();
+
+        return $this->session_date->startOfDay()->lte($reference->copy()->startOfDay());
+    }
 }

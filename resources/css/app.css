@@ -575,6 +575,18 @@ h5 {
     background: #fbfdff;
 }
 
+.attendance-locked-notice {
+    margin-bottom: 1rem;
+}
+
+.attendance-form--locked fieldset[disabled] {
+    opacity: 0.72;
+}
+
+.attendance-form--locked .attendance-sheet-wrap {
+    pointer-events: none;
+}
+
 .grid-3 {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

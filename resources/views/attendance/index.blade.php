@@ -21,7 +21,7 @@
         <p class="page-subtitle">Registra la asistencia por sesión</p>
     </div>
     @if($selectedSession)
-        @include('partials.ui.status-badge', ['tone' => 'info', 'text' => $selectedSession->session_date?->format('d M Y')])
+        @include('partials.ui.status-badge', ['tone' => $canRecordAttendance ? 'info' : 'warn', 'text' => $selectedSession->session_date?->format('d M Y').($canRecordAttendance ? '' : ' · Programada')])
     @endif
 </div>
 
@@ -40,7 +40,9 @@
                 <select name="class_session_id">
                     <option value="">Seleccione sesión</option>
                     @foreach($sessions as $session)
-                        <option value="{{ $session->id }}" @selected(request('class_session_id')==$session->id)>{{ $session->session_date?->format('Y-m-d') }} - {{ $session->group->name ?? '' }}</option>
+                        <option value="{{ $session->id }}" @selected(request('class_session_id')==$session->id)>
+                            {{ $session->session_date?->format('Y-m-d') }} - {{ $session->group->name ?? '' }}{{ $session->canRecordAttendance() ? '' : ' (programada)' }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -51,9 +53,16 @@
 
 @if($selectedSession)
     <div class="card">
-        <form method="POST" action="{{ route('attendance.store') }}">
+        @unless($canRecordAttendance)
+            <div class="flash warn attendance-locked-notice">
+                Esta sesión está programada para el {{ $selectedSession->session_date?->format('d/m/Y') }}.
+                Podés consultar la ficha, pero la asistencia se habilitará ese día.
+            </div>
+        @endunless
+        <form method="POST" action="{{ route('attendance.store') }}" @class(['attendance-form--locked' => ! $canRecordAttendance])>
             @csrf
             <input type="hidden" name="class_session_id" value="{{ $selectedSession->id }}">
+            <fieldset @disabled(! $canRecordAttendance)>
             <div class="attendance-program-card">
                 <div class="section-head">
                     <h2 class="section-title">Programa de la sesión</h2>
@@ -102,8 +111,10 @@
                     <button class="btn secondary" type="button" data-bulk-status="absent">Todos ausentes</button>
                     <button class="btn secondary" type="button" data-bulk-status="late">Todos tarde</button>
                     <button class="btn secondary" type="button" data-bulk-status="justified">Todos justificadas</button>
-                    <button class="btn secondary" type="button" id="btn-copy-last" @disabled(!$previousSession)>Copiar última asistencia</button>
-                    <button class="btn" type="submit">Guardar asistencia</button>
+                    <button class="btn secondary" type="button" id="btn-copy-last" @disabled(!$previousSession || ! $canRecordAttendance)>Copiar última asistencia</button>
+                    @if($canRecordAttendance)
+                        <button class="btn" type="submit">Guardar asistencia</button>
+                    @endif
                 </div>
             </div>
             <div class="attendance-sheet-wrap">
@@ -167,9 +178,18 @@
                 </table>
             </div>
             <div class="attendance-footer">
-                <div class="entity-sub">Consejo: usa `P`, `A`, `T`, `J` sobre la fila enfocada para registrar más rápido.</div>
-                <button class="btn" type="submit">Guardar asistencia</button>
+                <div class="entity-sub">
+                    @if($canRecordAttendance)
+                        Consejo: usa `P`, `A`, `T`, `J` sobre la fila enfocada para registrar más rápido.
+                    @else
+                        La marcación estará disponible a partir del {{ $selectedSession->session_date?->format('d/m/Y') }}.
+                    @endif
+                </div>
+                @if($canRecordAttendance)
+                    <button class="btn" type="submit">Guardar asistencia</button>
+                @endif
             </div>
+            </fieldset>
         </form>
     </div>
 @endif
@@ -178,7 +198,7 @@
     <div class="card empty-state">Selecciona una sesión para cargar alumnos y registrar asistencia.</div>
 @endif
 
-@if($selectedSession)
+@if($selectedSession && $canRecordAttendance)
 <script>
     (() => {
         const previous = @json($previousPayload);
