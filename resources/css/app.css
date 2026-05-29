@@ -502,6 +502,19 @@ h5 {
     font-size: 0.92rem;
     font-weight: 700;
     color: var(--text);
+    cursor: pointer;
+}
+
+.student-picker input[type='checkbox'],
+.data-table input[type='checkbox'] {
+    display: inline-block;
+    flex: 0 0 auto;
+}
+
+.data-table td:has(> input[type='checkbox']) {
+    width: 2.75rem;
+    text-align: center;
+    padding-inline: 0.75rem;
 }
 
 .teacher-section-nav {
@@ -864,7 +877,7 @@ h5 {
     margin-top: 0.72rem;
 }
 
-input,
+input:not([type='checkbox']):not([type='radio']),
 select,
 textarea {
     width: 100%;
@@ -874,6 +887,20 @@ textarea {
     font: inherit;
     color: var(--text);
     background: #fff;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+    width: 1.125rem;
+    height: 1.125rem;
+    min-width: 1.125rem;
+    min-height: 1.125rem;
+    padding: 0;
+    margin: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    accent-color: var(--brand-soft);
+    vertical-align: middle;
 }
 
 label {
@@ -1838,7 +1865,7 @@ body {
     min-width: 0;
 }
 
-input,
+input:not([type='checkbox']):not([type='radio']),
 select,
 textarea {
     height: 3.15rem;
