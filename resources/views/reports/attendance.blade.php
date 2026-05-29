@@ -71,7 +71,7 @@
 </div>
 <div class="card">
     <table>
-        <thead><tr><th>Fecha</th><th>Grupo</th><th>Alumno</th><th>Status</th></tr></thead>
+        <thead><tr><th>Fecha</th><th>Grupo</th><th>Alumno</th><th>Status</th><th>Comentario</th></tr></thead>
         <tbody>
         @forelse($records as $record)
             <tr>
@@ -79,10 +79,11 @@
                 <td>{{ $record->classSession->group->name ?? '' }}</td>
                 <td>{{ $record->enrollment->student->full_name ?? '' }}</td>
                 <td><span class="status-pill {{ $record->status === 'present' ? 'success' : ($record->status === 'absent' ? 'danger' : 'warn') }}">{{ $record->status }}</span></td>
+                <td>{{ $record->notes ?: '—' }}</td>
             </tr>
         @empty
             <tr>
-                <td colspan="4">
+                <td colspan="5">
                     <div class="empty-state-inline">Sin registros para el rango seleccionado.</div>
                 </td>
             </tr>

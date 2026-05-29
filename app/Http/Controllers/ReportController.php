@@ -245,13 +245,14 @@ class ReportController extends Controller
     {
         return response()->streamDownload(function () use ($records) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['date', 'group', 'student', 'status']);
+            fputcsv($out, ['date', 'group', 'student', 'status', 'notes']);
             foreach ($records as $record) {
                 fputcsv($out, [
                     $record->classSession->session_date?->format('Y-m-d'),
                     $record->classSession->group->name ?? '',
                     $record->enrollment->student->full_name ?? '',
                     $record->status,
+                    $record->notes ?? '',
                 ]);
             }
             fclose($out);

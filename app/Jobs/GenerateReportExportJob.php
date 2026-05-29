@@ -35,7 +35,7 @@ class GenerateReportExportJob implements ShouldQueue
             $handle = fopen('php://temp', 'w+');
 
             if ($export->type === 'attendance') {
-                fputcsv($handle, ['date', 'group', 'student', 'status']);
+                fputcsv($handle, ['date', 'group', 'student', 'status', 'notes']);
                 $query = AttendanceRecord::query()->with(['classSession.group', 'enrollment.student']);
                 if ($export->campus_id) {
                     $query->whereHas('classSession', fn ($q) => $q->where('campus_id', $export->campus_id));
@@ -56,6 +56,7 @@ class GenerateReportExportJob implements ShouldQueue
                         $record->classSession->group->name ?? '',
                         $record->enrollment->student->full_name ?? '',
                         $record->status,
+                        $record->notes ?? '',
                     ]);
                 }
             } elseif ($export->type === 'payments') {
