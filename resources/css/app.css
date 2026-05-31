@@ -505,6 +505,32 @@ h5 {
     cursor: pointer;
 }
 
+.confirm-modal-dialog {
+    width: min(560px, calc(100vw - 2rem));
+}
+
+.confirm-modal-body {
+    display: grid;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+    color: var(--text);
+    line-height: 1.55;
+}
+
+.confirm-modal-body p {
+    margin: 0;
+}
+
+.btn-danger {
+    background: linear-gradient(90deg, #dc2626, #b91c1c);
+    color: #fff;
+}
+
+.btn-danger:hover,
+.btn-danger:focus-visible {
+    filter: brightness(0.95);
+}
+
 .student-picker input[type='checkbox'],
 .data-table input[type='checkbox'] {
     display: inline-block;

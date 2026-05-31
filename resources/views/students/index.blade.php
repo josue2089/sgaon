@@ -99,6 +99,17 @@
                         <td>@include('partials.ui.status-badge', ['tone' => $student->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($student->status)])</td>
                         <td class="table-actions">
                             <a href="{{ route('students.show', $student) }}">Detalle</a>
+                            @if(auth()->user()?->isMasterAdmin())
+                                <button
+                                    type="button"
+                                    class="btn-link-danger"
+                                    data-student-delete-open
+                                    data-student-name="{{ $student->full_name }}"
+                                    data-delete-url="{{ route('students.destroy', $student) }}"
+                                >
+                                    Eliminar
+                                </button>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -110,5 +121,83 @@
 
 @if($students->hasPages())
     <div class="card">{{ $students->links() }}</div>
+@endif
+
+@if(auth()->user()?->isMasterAdmin())
+    <div class="student-picker-modal confirm-modal" data-student-delete-modal hidden>
+        <div class="student-picker-backdrop" data-student-delete-close></div>
+        <div class="student-picker-dialog confirm-modal-dialog card">
+            <div class="student-picker-head">
+                <div>
+                    <h3 class="section-title">Eliminar alumno</h3>
+                    <p class="page-subtitle">Esta acción no se puede deshacer.</p>
+                </div>
+                <button class="btn secondary" type="button" data-student-delete-close>Cerrar</button>
+            </div>
+            <div class="confirm-modal-body">
+                <p>
+                    Vas a eliminar permanentemente a <strong data-student-delete-name>este alumno</strong>.
+                </p>
+                <p>
+                    Se borrará toda su información en el sistema, incluyendo inscripciones, asistencia,
+                    cargos, pagos, representantes vinculados, adjuntos y demás datos relacionados.
+                </p>
+            </div>
+            <form method="POST" action="#" data-student-delete-form>
+                @csrf
+                @method('DELETE')
+                <div class="form-actions">
+                    <button class="btn secondary" type="button" data-student-delete-close>Cancelar</button>
+                    <button class="btn btn-danger" type="submit">Eliminar permanentemente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const modal = document.querySelector('[data-student-delete-modal]');
+            const form = document.querySelector('[data-student-delete-form]');
+            const nameNode = document.querySelector('[data-student-delete-name]');
+            const openButtons = Array.from(document.querySelectorAll('[data-student-delete-open]'));
+            const closeButtons = Array.from(document.querySelectorAll('[data-student-delete-close]'));
+
+            if (!modal || !form || !nameNode || openButtons.length === 0) {
+                return;
+            }
+
+            const openModal = (button) => {
+                form.action = button.dataset.deleteUrl || '#';
+                nameNode.textContent = button.dataset.studentName || 'este alumno';
+                modal.hidden = false;
+                document.body.style.overflow = 'hidden';
+            };
+
+            const closeModal = () => {
+                modal.hidden = true;
+                document.body.style.overflow = '';
+            };
+
+            openButtons.forEach((button) => {
+                button.addEventListener('click', () => openModal(button));
+            });
+
+            closeButtons.forEach((button) => {
+                button.addEventListener('click', closeModal);
+            });
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !modal.hidden) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
 @endif
 @endsection

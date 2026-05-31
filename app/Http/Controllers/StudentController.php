@@ -250,6 +250,10 @@ class StudentController extends Controller
 
     public function destroy(Request $request, Student $student): RedirectResponse
     {
+        if (! $request->user()?->isMasterAdmin()) {
+            abort(403);
+        }
+
         if ($student->profile_photo_path) {
             Storage::disk('public')->delete($student->profile_photo_path);
         }
