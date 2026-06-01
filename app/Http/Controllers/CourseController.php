@@ -13,6 +13,7 @@ use App\Models\ProgramLevel;
 use App\Models\ScheduleTemplate;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Support\AuditTrail;
 use App\Support\CoursePlanner;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -325,9 +326,19 @@ class CourseController extends Controller
             ->with('success', 'Alumno retirado del curso.');
     }
 
-    public function destroy(Course $course): RedirectResponse
+    public function destroy(Request $request, Course $course): RedirectResponse
     {
+        if (! $request->user()?->isMasterAdmin()) {
+            abort(403);
+        }
+
         $this->authorizeCourse($course);
+
+        AuditTrail::log($request, 'course.delete', $course, [
+            'name' => $course->name,
+            'code' => $course->code,
+        ]);
+
         $course->delete();
 
         return redirect()->route('courses.index')->with('success', 'Curso eliminado.');

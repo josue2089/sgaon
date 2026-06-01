@@ -79,6 +79,17 @@
                         <td class="table-actions">
                             <a href="{{ route('courses.show', $course) }}">Detalle</a>
                             <a href="{{ route('courses.edit', $course) }}">Editar</a>
+                            @if(auth()->user()?->isMasterAdmin())
+                                <button
+                                    type="button"
+                                    class="btn-link-danger"
+                                    data-course-delete-open
+                                    data-course-name="{{ $course->name }}"
+                                    data-delete-url="{{ route('courses.destroy', $course) }}"
+                                >
+                                    Eliminar
+                                </button>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -90,5 +101,86 @@
 
 @if($courses->hasPages())
     <div class="card">{{ $courses->links() }}</div>
+@endif
+
+@if(auth()->user()?->isMasterAdmin())
+    <div class="student-picker-modal confirm-modal" data-course-delete-modal hidden>
+        <div class="student-picker-backdrop" data-course-delete-close></div>
+        <div class="student-picker-dialog confirm-modal-dialog card">
+            <div class="student-picker-head">
+                <div>
+                    <h3 class="section-title">Eliminar curso</h3>
+                    <p class="page-subtitle">Esta acción no se puede deshacer.</p>
+                </div>
+                <button class="btn secondary" type="button" data-course-delete-close>Cerrar</button>
+            </div>
+            <div class="confirm-modal-body">
+                <p>
+                    Vas a eliminar permanentemente el curso <strong data-course-delete-name>este curso</strong>.
+                </p>
+                <p>
+                    Se borrará toda la información relacionada: grupo operativo, sesiones, asistencia,
+                    inscripciones de ese curso, evaluaciones y demás registros vinculados.
+                </p>
+                <p>
+                    Los alumnos <strong>no</strong> se eliminan del sistema; solo se quita su vínculo con este curso.
+                </p>
+            </div>
+            <form method="POST" action="#" data-course-delete-form>
+                @csrf
+                @method('DELETE')
+                <div class="form-actions">
+                    <button class="btn secondary" type="button" data-course-delete-close>Cancelar</button>
+                    <button class="btn btn-danger" type="submit">Eliminar permanentemente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const modal = document.querySelector('[data-course-delete-modal]');
+            const form = document.querySelector('[data-course-delete-form]');
+            const nameNode = document.querySelector('[data-course-delete-name]');
+            const openButtons = Array.from(document.querySelectorAll('[data-course-delete-open]'));
+            const closeButtons = Array.from(document.querySelectorAll('[data-course-delete-close]'));
+
+            if (!modal || !form || !nameNode || openButtons.length === 0) {
+                return;
+            }
+
+            const openModal = (button) => {
+                form.action = button.dataset.deleteUrl || '#';
+                nameNode.textContent = button.dataset.courseName || 'este curso';
+                modal.hidden = false;
+                document.body.style.overflow = 'hidden';
+            };
+
+            const closeModal = () => {
+                modal.hidden = true;
+                document.body.style.overflow = '';
+            };
+
+            openButtons.forEach((button) => {
+                button.addEventListener('click', () => openModal(button));
+            });
+
+            closeButtons.forEach((button) => {
+                button.addEventListener('click', closeModal);
+            });
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !modal.hidden) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
 @endif
 @endsection
