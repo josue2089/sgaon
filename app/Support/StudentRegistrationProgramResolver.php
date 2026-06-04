@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Program;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class StudentRegistrationProgramResolver
 {
@@ -44,25 +45,7 @@ class StudentRegistrationProgramResolver
             return null;
         }
 
-        $programs = $this->activePrograms();
-
-        if ($programCode === 'ROB') {
-            return $programs->first(function (Program $program) {
-                $normalizedCode = $this->normalizeLabel($program->code);
-                $normalizedName = $this->normalizeLabel($program->name);
-
-                return $normalizedCode === 'rob'
-                    || str_contains($normalizedName, 'robotica')
-                    || str_contains($normalizedName, 'robotics');
-            });
-        }
-
-        $program = $programs->firstWhere('code', $programCode);
-        if ($program) {
-            return $program;
-        }
-
-        return $programs->first(fn (Program $p) => $this->normalizeLabel($p->code) === $this->normalizeLabel($programCode));
+        return $this->findProgramByBucket($programCode);
     }
 
     public function resolveMessage(string $nivel): string
@@ -72,15 +55,79 @@ class StudentRegistrationProgramResolver
             return "No se reconoce el nivel «{$nivel}».";
         }
 
-        if ($programCode === 'ROB' && ! $this->resolve($nivel)) {
-            return 'El programa Robótica no existe o no está activo. Créelo en Programas antes de importar filas ROB*.';
-        }
-
         if (! $this->resolve($nivel)) {
-            return "No hay programa activo con código «{$programCode}» para el nivel «{$nivel}».";
+            return match ($programCode) {
+                'ROB' => 'No se encontró un programa activo de Robótica en la tabla programs (código o nombre compatible con ROB*).',
+                'HS' => 'No se encontró el programa High School activo (código HS).',
+                'PRIMARY' => 'No se encontró el programa Primary activo (código PRIMARY).',
+                'PREP' => 'No se encontró el programa Pre-Primary activo (código PREP).',
+                default => "No hay programa activo para el nivel «{$nivel}».",
+            };
         }
 
         return '';
+    }
+
+    private function findProgramByBucket(string $bucketCode): ?Program
+    {
+        $programs = $this->activePrograms();
+
+        $exactCodes = match ($bucketCode) {
+            'HS' => ['HS', 'HIGHSCHOOL', 'HIGH_SCHOOL'],
+            'PRIMARY' => ['PRIMARY'],
+            'PREP' => ['PREP', 'PREPRIMARY', 'PRE_PRIMARY'],
+            default => [],
+        };
+
+        foreach ($exactCodes as $code) {
+            $program = $programs->first(fn (Program $p) => $this->normalizeLabel($p->code) === $this->normalizeLabel($code));
+            if ($program) {
+                return $program;
+            }
+        }
+
+        return match ($bucketCode) {
+            'ROB' => $this->findRoboticsProgram($programs),
+            'HS' => $this->findByNameHints($programs, ['highschool', 'highschool', 'secundaria']),
+            'PRIMARY' => $this->findByNameHints($programs, ['primary', 'primaria']),
+            'PREP' => $this->findByNameHints($programs, ['preprimary', 'preescolar', 'preescolar']),
+            default => null,
+        };
+    }
+
+    /**
+     * @param  Collection<int, Program>  $programs
+     */
+    private function findRoboticsProgram(Collection $programs): ?Program
+    {
+        return $programs->first(function (Program $program) {
+            $code = $this->normalizeLabel($program->code);
+            $name = $this->normalizeLabel($program->name);
+
+            return str_starts_with($code, 'rob')
+                || str_contains($name, 'robotica')
+                || str_contains($name, 'robotics')
+                || str_contains($name, 'robot');
+        });
+    }
+
+    /**
+     * @param  Collection<int, Program>  $programs
+     * @param  list<string>  $hints
+     */
+    private function findByNameHints(Collection $programs, array $hints): ?Program
+    {
+        return $programs->first(function (Program $program) use ($hints) {
+            $name = $this->normalizeLabel($program->name);
+
+            foreach ($hints as $hint) {
+                if (str_contains($name, $this->normalizeLabel($hint))) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
     }
 
     /**
@@ -100,6 +147,8 @@ class StudentRegistrationProgramResolver
 
     private function normalizeLabel(?string $value): string
     {
-        return strtolower(preg_replace('/[^a-z0-9]/', '', (string) $value) ?? '');
+        $normalized = Str::lower(Str::ascii(trim((string) $value)));
+
+        return preg_replace('/[^a-z0-9]/', '', $normalized) ?? '';
     }
 }

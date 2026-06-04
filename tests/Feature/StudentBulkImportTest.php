@@ -68,6 +68,30 @@ class StudentBulkImportTest extends TestCase
         $this->assertStringContainsString('Robótica', implode(' ', $preview->rows[0]->errors));
     }
 
+    public function test_preview_maps_rob_nivel_to_robotics_program_in_database(): void
+    {
+        Program::query()->create([
+            'name' => 'Robótica',
+            'code' => 'ROB',
+            'status' => 'active',
+            'description' => null,
+        ]);
+
+        $campus = $this->createCampus();
+        $path = $this->makeSpreadsheet([
+            ['4', 'Max', '', 'Lee', '12', 'M', 'ROB6', 'Sab', 'Activo'],
+        ]);
+
+        $preview = app(StudentBulkImportService::class)->buildPreview($path, $campus->id);
+
+        $this->assertSame(1, $preview->validCount());
+        $this->assertSame('Robótica', $preview->rows[0]->programName);
+        $this->assertSame(
+            Program::query()->where('code', 'ROB')->value('id'),
+            $preview->rows[0]->registrationProgramId,
+        );
+    }
+
     public function test_import_updates_existing_student_by_name(): void
     {
         $campus = $this->createCampus();
