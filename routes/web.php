@@ -23,6 +23,7 @@ use App\Http\Controllers\ProgramLevelLessonController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleTemplateController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentImportController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +44,9 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     Route::middleware('role:admin')->group(function () {
+        Route::get('/students/import', [StudentImportController::class, 'create'])->name('students.import');
+        Route::post('/students/import/preview', [StudentImportController::class, 'preview'])->name('students.import.preview');
+        Route::post('/students/import', [StudentImportController::class, 'store'])->name('students.import.store');
         Route::resource('students', StudentController::class)->except('show');
         Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
         Route::post('/students/{student}/attachments', [StudentController::class, 'storeAttachment'])->name('students.attachments.store');

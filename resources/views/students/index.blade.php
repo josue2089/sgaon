@@ -5,7 +5,10 @@
         <h1 class="page-title">Alumnos</h1>
         <p class="page-subtitle">Gestiona todos los estudiantes</p>
     </div>
-    <a class="btn" href="{{ route('students.create') }}">Nuevo Alumno</a>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <a class="btn secondary" href="{{ route('students.import') }}">Importar</a>
+        <a class="btn" href="{{ route('students.create') }}">Nuevo Alumno</a>
+    </div>
 </div>
 
 <div class="soft-kpi-grid soft-kpi-grid-4">
