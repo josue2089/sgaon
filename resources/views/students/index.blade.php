@@ -6,7 +6,9 @@
         <p class="page-subtitle">Gestiona todos los estudiantes</p>
     </div>
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-        <a class="btn secondary" href="{{ route('students.import') }}">Importar</a>
+        @if(\Illuminate\Support\Facades\Route::has('students.import'))
+            <a class="btn secondary" href="{{ route('students.import') }}">Importar</a>
+        @endif
         <a class="btn" href="{{ route('students.create') }}">Nuevo Alumno</a>
     </div>
 </div>
