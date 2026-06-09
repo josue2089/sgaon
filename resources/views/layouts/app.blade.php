@@ -44,6 +44,24 @@
     $extraActive = in_array(explode('.', (string) $currentRoute)[0], $extraPrefixes, true);
     $configPrefixes = ['campuses', 'periods', 'schedules', 'holidays', 'programs', 'program-levels', 'program-level-lessons', 'settings'];
     $configActive = in_array(explode('.', (string) $currentRoute)[0], $configPrefixes, true);
+    $navItemActive = static function (string $route) use ($currentRoute): bool {
+        if ($currentRoute === null) {
+            return false;
+        }
+
+        if (str_starts_with($route, 'students.historical.')) {
+            return str_starts_with($currentRoute, 'students.historical.');
+        }
+
+        if (str_starts_with($route, 'students.')) {
+            return str_starts_with($currentRoute, 'students.')
+                && ! str_starts_with($currentRoute, 'students.historical.');
+        }
+
+        $prefix = explode('.', $route)[0];
+
+        return str_starts_with($currentRoute, $prefix);
+    };
 @endphp
 <div class="fi-shell">
     <header class="fi-header">
@@ -57,10 +75,7 @@
             <nav class="fi-nav">
                 @foreach($nav as $item)
                     @if($item['enabled'])
-                        @php
-                            $prefix = explode('.', $item['route'])[0];
-                        @endphp
-                        <a class="fi-nav-item {{ str_starts_with((string) $currentRoute, $prefix) ? 'active' : '' }}" href="{{ route($item['route']) }}">
+                        <a class="fi-nav-item {{ $navItemActive($item['route']) ? 'active' : '' }}" href="{{ route($item['route']) }}">
                             <span class="fi-nav-icon" aria-hidden="true">
                                 @switch($item['name'])
                                     @case('Dashboard')
