@@ -9,6 +9,60 @@ use ZipArchive;
 
 class XlsxReader
 {
+    /**
+     * @return list<array{name: string, index: int}>
+     */
+    public function listSheets(string $path): array
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($path) !== true) {
+            throw new RuntimeException('No se pudo abrir el archivo XLSX.');
+        }
+
+        try {
+            $workbook = $zip->getFromName('xl/workbook.xml');
+            if ($workbook === false) {
+                return [['name' => 'Sheet1', 'index' => 0]];
+            }
+
+            $doc = new DOMDocument();
+            if (! $doc->loadXML($workbook)) {
+                return [['name' => 'Sheet1', 'index' => 0]];
+            }
+
+            $xpath = new DOMXPath($doc);
+            $xpath->registerNamespace('x', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
+
+            $sheets = [];
+            foreach ($xpath->query('//x:sheet') as $index => $sheet) {
+                $sheets[] = [
+                    'name' => $sheet->getAttribute('name') ?: 'Sheet'.($index + 1),
+                    'index' => $index,
+                ];
+            }
+
+            return $sheets !== [] ? $sheets : [['name' => 'Sheet1', 'index' => 0]];
+        } finally {
+            $zip->close();
+        }
+    }
+
+    /**
+     * @return list<array{name: string, rows: list<list<string>>}>
+     */
+    public function readAllSheets(string $path): array
+    {
+        $sheets = [];
+        foreach ($this->listSheets($path) as $sheet) {
+            $sheets[] = [
+                'name' => $sheet['name'],
+                'rows' => $this->readRows($path, $sheet['index']),
+            ];
+        }
+
+        return $sheets;
+    }
+
     public function readRows(string $path, int $sheetIndex = 0): array
     {
         $zip = new ZipArchive();

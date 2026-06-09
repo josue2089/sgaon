@@ -8,8 +8,10 @@ use App\Models\ClassSession;
 use App\Models\Course;
 use App\Models\AuditLog;
 use App\Models\ScheduleTemplate;
+use App\Models\Student;
 use App\Models\Teacher;
 use App\Support\AuditTrail;
+use App\Support\CampusScope;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +24,7 @@ class TeacherController extends Controller
 {
     private function campusId(): ?int
     {
-        return request()->user()?->isMasterAdmin() ? null : request()->user()?->campus_id;
+        return CampusScope::campusIdFor(request()->user());
     }
 
     public function index(Request $request): View
@@ -74,11 +76,7 @@ class TeacherController extends Controller
                 ->pluck('courses_count', 'teacher_id');
         }
 
-        $studentsTotal = DB::table('groups')
-            ->join('enrollments', 'enrollments.group_id', '=', 'groups.id')
-            ->when($this->campusId(), fn ($builder) => $builder->where('groups.campus_id', $this->campusId()))
-            ->selectRaw('COUNT(DISTINCT enrollments.student_id) as students_count')
-            ->value('students_count');
+        $studentsTotal = CampusScope::apply(Student::query(), request()->user())->count();
 
         $specialties = DB::table('groups')
             ->join('courses', 'courses.id', '=', 'groups.course_id')

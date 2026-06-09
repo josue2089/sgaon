@@ -13,7 +13,7 @@
 
 <div class="metric-grid metric-grid-4">
     @include('partials.ui.metric-card', ['tone' => 'metric-purple', 'iconName' => 'users', 'label' => 'Total Profesores', 'value' => $summary['total']])
-    @include('partials.ui.metric-card', ['tone' => 'metric-blue', 'iconName' => 'teacher', 'label' => 'Total Estudiantes', 'value' => $summary['students_total']])
+    @include('partials.ui.metric-card', ['tone' => 'metric-blue', 'iconName' => 'teacher', 'label' => 'Total Alumnos', 'value' => $summary['students_total']])
     @include('partials.ui.metric-card', ['tone' => 'metric-orange', 'iconName' => 'award', 'label' => 'Rating Promedio', 'value' => 'N/D', 'subtitle' => 'Sin módulo de evaluación'])
     @include('partials.ui.metric-card', ['tone' => 'metric-green', 'iconName' => 'book', 'label' => 'Docentes Activos', 'value' => $summary['active']])
 </div>

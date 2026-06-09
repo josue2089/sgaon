@@ -6,6 +6,9 @@
         <p class="page-subtitle">Gestiona todos los estudiantes</p>
     </div>
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        @if(auth()->user()?->isMasterAdmin() && \Illuminate\Support\Facades\Route::has('students.export'))
+            <a class="btn secondary" href="{{ route('students.export', request()->query()) }}">Exportar CSV</a>
+        @endif
         @if(\Illuminate\Support\Facades\Route::has('students.import'))
             <a class="btn secondary" href="{{ route('students.import') }}">Importar</a>
         @endif
@@ -32,7 +35,7 @@
             @endforeach
         </select>
         <select name="status">
-            <option value="">Todos los estados</option>
+            <option value="">Solo activos (predeterminado)</option>
             <option value="active" @selected($filters['status'] === 'active')>Activos</option>
             <option value="inactive" @selected($filters['status'] === 'inactive')>Inactivos</option>
             <option value="withdrawn" @selected($filters['status'] === 'withdrawn')>Retirados</option>
@@ -104,6 +107,17 @@
                         <td>@include('partials.ui.status-badge', ['tone' => $student->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($student->status)])</td>
                         <td class="table-actions">
                             <a href="{{ route('students.show', $student) }}">Detalle</a>
+                            @if(\Illuminate\Support\Facades\Route::has('students.move-to-historical'))
+                                <button
+                                    type="button"
+                                    class="btn-link"
+                                    data-move-historical-open
+                                    data-student-name="{{ $student->full_name }}"
+                                    data-move-url="{{ route('students.move-to-historical', $student) }}"
+                                >
+                                    Mover a histórico
+                                </button>
+                            @endif
                             @if(auth()->user()?->isMasterAdmin())
                                 <button
                                     type="button"
@@ -126,6 +140,70 @@
 
 @if($students->hasPages())
     <div class="card">{{ $students->links() }}</div>
+@endif
+
+@if(\Illuminate\Support\Facades\Route::has('students.move-to-historical'))
+    <div class="student-picker-modal confirm-modal" data-move-historical-modal hidden>
+        <div class="student-picker-backdrop" data-move-historical-close></div>
+        <div class="student-picker-dialog confirm-modal-dialog card">
+            <div class="student-picker-head">
+                <div>
+                    <h3 class="section-title">Mover a histórico</h3>
+                    <p class="page-subtitle">El alumno dejará de aparecer en el listado de activos.</p>
+                </div>
+                <button class="btn secondary" type="button" data-move-historical-close>Cerrar</button>
+            </div>
+            <form method="POST" action="#" data-move-historical-form>
+                @csrf
+                <div class="form-grid">
+                    <label>
+                        Nuevo estado
+                        <select name="status" required>
+                            <option value="inactive">Inactivo</option>
+                            <option value="graduated">Graduado</option>
+                            <option value="withdrawn">Retirado</option>
+                        </select>
+                    </label>
+                </div>
+                <p style="margin-top:1rem;">Alumno: <strong data-move-historical-name>—</strong></p>
+                <div class="form-actions">
+                    <button class="btn secondary" type="button" data-move-historical-close>Cancelar</button>
+                    <button class="btn" type="submit">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const modal = document.querySelector('[data-move-historical-modal]');
+            const form = document.querySelector('[data-move-historical-form]');
+            const nameNode = document.querySelector('[data-move-historical-name]');
+            const openButtons = Array.from(document.querySelectorAll('[data-move-historical-open]'));
+            const closeButtons = Array.from(document.querySelectorAll('[data-move-historical-close]'));
+
+            if (!modal || !form || !nameNode) {
+                return;
+            }
+
+            const openModal = (button) => {
+                form.action = button.dataset.moveUrl || '#';
+                nameNode.textContent = button.dataset.studentName || '—';
+                modal.hidden = false;
+                document.body.style.overflow = 'hidden';
+            };
+
+            const closeModal = () => {
+                modal.hidden = true;
+                document.body.style.overflow = '';
+            };
+
+            openButtons.forEach((button) => button.addEventListener('click', () => openModal(button)));
+            closeButtons.forEach((button) => button.addEventListener('click', closeModal));
+            modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
+            document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !modal.hidden) closeModal(); });
+        })();
+    </script>
 @endif
 
 @if(auth()->user()?->isMasterAdmin())

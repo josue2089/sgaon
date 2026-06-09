@@ -12,6 +12,7 @@ use App\Models\Group;
 use App\Models\Payment;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Support\CampusScope;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
@@ -29,7 +30,7 @@ class DashboardController extends Controller
             return redirect()->route('portal.representative');
         }
 
-        $campusId = $user?->isMasterAdmin() ? null : $user?->campus_id;
+        $campusId = CampusScope::campusIdFor($user);
         $studentsQuery = Student::query();
         $teachersQuery = Teacher::query();
         $coursesQuery = Course::query();

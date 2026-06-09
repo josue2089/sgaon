@@ -21,6 +21,7 @@
     $nav = [
         ['name' => 'Dashboard', 'route' => 'dashboard', 'enabled' => $hasRoute('dashboard')],
         ['name' => 'Alumnos', 'route' => 'students.index', 'enabled' => $user?->role === 'admin' && $hasRoute('students.index')],
+        ['name' => 'Alumnos Históricos', 'route' => 'students.historical.index', 'enabled' => $user?->role === 'admin' && $hasRoute('students.historical.index')],
         ['name' => 'Asistencia', 'route' => 'attendance.index', 'enabled' => in_array($user?->role, ['admin', 'teacher'], true) && $hasRoute('attendance.index')],
         ['name' => 'Reportes', 'route' => 'reports.attendance', 'enabled' => $user?->role === 'admin' && $hasRoute('reports.attendance')],
     ];

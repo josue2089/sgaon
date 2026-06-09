@@ -13,8 +13,8 @@
 </div>
 
 <div class="soft-kpi-grid dashboard-quick-grid">
-    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'users', 'label' => 'Alumnos', 'value' => $studentsCount])
-    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'teacher', 'label' => 'Profesores', 'value' => $teachersCount])
+    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'users', 'label' => 'Alumnos', 'value' => $studentsCount, 'subtitle' => auth()->user()?->isMasterAdmin() ? 'Todas las sedes' : null])
+    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'teacher', 'label' => 'Profesores', 'value' => $teachersCount, 'subtitle' => auth()->user()?->isMasterAdmin() ? 'Todas las sedes' : null])
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'book', 'label' => 'Cursos', 'value' => $coursesCount])
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'check', 'label' => 'Asistencia', 'value' => is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%'])
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'payment', 'label' => 'Pagos Mes', 'value' => '$'.number_format($paymentsMonthAmount, 0)])

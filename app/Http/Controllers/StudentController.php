@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -33,50 +34,13 @@ class StudentController extends Controller
 
     public function index(Request $request): View
     {
-        $query = Student::query()
-            ->with(['campus', 'enrollments.group.course.level'])
-            ->latest();
+        $filters = $this->studentListFilters($request);
+        $query = $this->filteredStudentsQuery($request)
+            ->with(['campus', 'enrollments.group.course.level']);
 
         $baseStatsQuery = Student::query();
         if ($this->campusId()) {
-            $query->where('campus_id', $this->campusId());
             $baseStatsQuery->where('campus_id', $this->campusId());
-        }
-
-        $q = trim((string) $request->query('q', ''));
-        if ($q !== '') {
-            $query->where(function (Builder $builder) use ($q) {
-                $builder
-                    ->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$q}%"])
-                    ->orWhere('email', 'like', "%{$q}%");
-            });
-        }
-
-        $status = (string) $request->query('status', '');
-        if ($status !== '') {
-            $query->where('status', $status);
-        }
-
-        $levelFilter = (string) $request->query('level', '');
-        if ($levelFilter !== '') {
-            $query->whereHas('enrollments.group.course.level', function (Builder $builder) use ($levelFilter) {
-                $builder
-                    ->where('code', $levelFilter)
-                    ->orWhere('name', $levelFilter);
-            });
-        }
-
-        $paymentStatus = (string) $request->query('payment_status', '');
-        if ($paymentStatus === 'overdue') {
-            $query->whereHas('charges', fn (Builder $builder) => $builder->where('status', 'overdue'));
-        } elseif ($paymentStatus === 'pending') {
-            $query->whereHas('charges', fn (Builder $builder) => $builder->whereIn('status', ['pending', 'partial']));
-        } elseif ($paymentStatus === 'paid') {
-            $query
-                ->whereHas('charges')
-                ->whereDoesntHave('charges', fn (Builder $builder) => $builder->whereIn('status', ['pending', 'partial', 'overdue']));
-        } elseif ($paymentStatus === 'no_charges') {
-            $query->whereDoesntHave('charges');
         }
 
         $students = $query->paginate(20)->withQueryString();
@@ -143,14 +107,63 @@ class StudentController extends Controller
                 'inactive' => (clone $baseStatsQuery)->where('status', '!=', 'active')->count(),
                 'attendance_rate' => is_null($attendanceRate) ? null : (int) $attendanceRate,
             ],
-            'filters' => [
-                'q' => $q,
-                'level' => $levelFilter,
-                'status' => $status,
-                'payment_status' => $paymentStatus,
-            ],
+            'filters' => $filters,
             'levels' => $levels,
         ]);
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        if (! $request->user()?->isMasterAdmin()) {
+            abort(403);
+        }
+
+        $students = $this->filteredStudentsQuery($request)
+            ->with(['campus', 'registrationProgram'])
+            ->orderBy('campus_id')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+
+        $filename = 'alumnos_'.now()->format('Y-m-d_His').'.csv';
+
+        return Response::streamDownload(function () use ($students): void {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, [
+                'ID',
+                'Sede',
+                'Nombres',
+                'Apellidos',
+                'Email',
+                'Teléfono',
+                'Documento',
+                'N° Contrato',
+                'Programa de inscripción',
+                'Estado',
+                'Fecha de nacimiento',
+                'Fecha de inscripción',
+            ]);
+
+            foreach ($students as $student) {
+                fputcsv($out, [
+                    $student->id,
+                    $student->campus?->name ?? '',
+                    $student->first_name,
+                    $student->last_name,
+                    $student->email ?? '',
+                    $student->phone ?? $student->mobile_phone ?? '',
+                    $student->document_id ?? '',
+                    $student->contract_number ?? '',
+                    $student->registrationProgram?->name ?? '',
+                    $this->studentStatusLabel($student->status),
+                    $student->birth_date?->format('Y-m-d') ?? '',
+                    $student->enrollment_date?->format('Y-m-d') ?? '',
+                ]);
+            }
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function create(): View
@@ -558,5 +571,110 @@ class StudentController extends Controller
             ]);
             $student->authorizedContacts()->save($contact);
         }
+    }
+
+    /**
+     * @return array{q: string, level: string, status: string, payment_status: string}
+     */
+    private function studentListFilters(Request $request): array
+    {
+        return [
+            'q' => trim((string) $request->query('q', '')),
+            'level' => (string) $request->query('level', ''),
+            'status' => (string) $request->query('status', ''),
+            'payment_status' => (string) $request->query('payment_status', ''),
+        ];
+    }
+
+    private function filteredStudentsQuery(Request $request): Builder
+    {
+        $filters = $this->studentListFilters($request);
+
+        $query = Student::query()->latest();
+        if ($this->campusId()) {
+            $query->where('campus_id', $this->campusId());
+        }
+
+        if ($filters['q'] !== '') {
+            $q = $filters['q'];
+            $query->where(function (Builder $builder) use ($q) {
+                $builder
+                    ->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$q}%"])
+                    ->orWhere('email', 'like', "%{$q}%");
+            });
+        }
+
+        if ($filters['status'] !== '') {
+            $query->where('status', $filters['status']);
+        } else {
+            $query->where('status', 'active');
+        }
+
+        if ($filters['level'] !== '') {
+            $levelFilter = $filters['level'];
+            $query->whereHas('enrollments.group.course.level', function (Builder $builder) use ($levelFilter) {
+                $builder
+                    ->where('code', $levelFilter)
+                    ->orWhere('name', $levelFilter);
+            });
+        }
+
+        if ($filters['payment_status'] === 'overdue') {
+            $query->whereHas('charges', fn (Builder $builder) => $builder->where('status', 'overdue'));
+        } elseif ($filters['payment_status'] === 'pending') {
+            $query->whereHas('charges', fn (Builder $builder) => $builder->whereIn('status', ['pending', 'partial']));
+        } elseif ($filters['payment_status'] === 'paid') {
+            $query
+                ->whereHas('charges')
+                ->whereDoesntHave('charges', fn (Builder $builder) => $builder->whereIn('status', ['pending', 'partial', 'overdue']));
+        } elseif ($filters['payment_status'] === 'no_charges') {
+            $query->whereDoesntHave('charges');
+        }
+
+        return $query;
+    }
+
+    private function studentStatusLabel(string $status): string
+    {
+        return match ($status) {
+            'active' => 'Activo',
+            'inactive' => 'Inactivo',
+            'withdrawn' => 'Retirado',
+            'graduated' => 'Graduado',
+            default => $status,
+        };
+    }
+
+    public function moveToHistorical(Request $request, Student $student): RedirectResponse
+    {
+        if ($student->status !== 'active') {
+            abort(404);
+        }
+
+        $scoped = $this->campusId();
+        if ($scoped !== null && $student->campus_id !== $scoped) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'status' => ['required', 'in:inactive,graduated,withdrawn'],
+        ]);
+
+        $previousStatus = $student->status;
+        $student->update(['status' => $data['status']]);
+
+        AuditTrail::log($request, 'students.move_to_historical', $student, [
+            'previous_status' => $previousStatus,
+            'new_status' => $data['status'],
+        ]);
+
+        return redirect()
+            ->route('students.index', array_filter([
+                'q' => $request->query('q'),
+                'level' => $request->query('level'),
+                'status' => $request->query('status'),
+                'payment_status' => $request->query('payment_status'),
+            ], fn ($value) => $value !== null && $value !== ''))
+            ->with('success', "Alumno {$student->full_name} movido a históricos.");
     }
 }

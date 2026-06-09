@@ -22,6 +22,7 @@ use App\Http\Controllers\ProgramLevelController;
 use App\Http\Controllers\ProgramLevelLessonController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleTemplateController;
+use App\Http\Controllers\HistoricalStudentController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentImportController;
 use App\Http\Controllers\SystemSettingController;
@@ -47,6 +48,15 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/students/import', [StudentImportController::class, 'create'])->name('students.import');
         Route::post('/students/import/preview', [StudentImportController::class, 'preview'])->name('students.import.preview');
         Route::post('/students/import', [StudentImportController::class, 'store'])->name('students.import.store');
+        Route::get('/students/historical', [HistoricalStudentController::class, 'index'])->name('students.historical.index');
+        Route::get('/students/historical/import', [HistoricalStudentController::class, 'importForm'])->name('students.historical.import');
+        Route::post('/students/historical/import/preview', [HistoricalStudentController::class, 'importPreview'])->name('students.historical.import.preview');
+        Route::post('/students/historical/import', [HistoricalStudentController::class, 'importStore'])->name('students.historical.import.store');
+        Route::post('/students/historical/{student}/activate', [HistoricalStudentController::class, 'activate'])->name('students.historical.activate');
+        Route::get('/students/export', [StudentController::class, 'export'])
+            ->middleware('master.admin')
+            ->name('students.export');
+        Route::post('/students/{student}/move-to-historical', [StudentController::class, 'moveToHistorical'])->name('students.move-to-historical');
         Route::resource('students', StudentController::class)->except('show');
         Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
         Route::post('/students/{student}/attachments', [StudentController::class, 'storeAttachment'])->name('students.attachments.store');
