@@ -13,7 +13,7 @@
 </div>
 
 <div class="soft-kpi-grid dashboard-quick-grid">
-    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'users', 'label' => 'Alumnos', 'value' => $studentsCount, 'subtitle' => auth()->user()?->isMasterAdmin() ? 'Todas las sedes' : null])
+    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'users', 'label' => 'Alumnos', 'value' => $studentsCount, 'subtitle' => auth()->user()?->role === 'teacher' ? 'En tus cursos' : (auth()->user()?->isMasterAdmin() ? 'Todas las sedes' : null)])
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'teacher', 'label' => 'Profesores', 'value' => $teachersCount, 'subtitle' => auth()->user()?->isMasterAdmin() ? 'Todas las sedes' : null])
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'book', 'label' => 'Cursos', 'value' => $coursesCount])
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'check', 'label' => 'Asistencia', 'value' => is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%'])

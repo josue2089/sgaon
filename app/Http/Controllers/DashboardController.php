@@ -31,6 +31,14 @@ class DashboardController extends Controller
         }
 
         $campusId = CampusScope::campusIdFor($user);
+        $teacher = null;
+        if ($user?->role === 'teacher') {
+            $teacher = Teacher::query()
+                ->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('email', $user->email))
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+                ->first();
+        }
+
         $studentsQuery = Student::query();
         $teachersQuery = Teacher::query();
         $coursesQuery = Course::query();
@@ -62,6 +70,18 @@ class DashboardController extends Controller
             $paymentsQuery->where('campus_id', $campusId);
             $monthChargesQuery->where('campus_id', $campusId);
             $sessionsTodayQuery->where('campus_id', $campusId);
+        }
+
+        if ($teacher) {
+            $studentsQuery->whereIn('id', Enrollment::query()
+                ->select('student_id')
+                ->where('status', 'active')
+                ->whereHas('group', fn ($q) => $q->where('teacher_id', $teacher->id)));
+            $coursesQuery->where('teacher_id', $teacher->id);
+            $groupsQuery->where('teacher_id', $teacher->id);
+            $teachersQuery->where('id', $teacher->id);
+            $sessionsTodayQuery->whereHas('group', fn ($q) => $q->where('teacher_id', $teacher->id));
+            $attendanceQuery->whereHas('classSession.group', fn ($q) => $q->where('teacher_id', $teacher->id));
         }
 
         $attendanceStats = (clone $attendanceQuery)
@@ -102,6 +122,9 @@ class DashboardController extends Controller
         if ($campusId) {
             $weekSessionsQuery->where('campus_id', $campusId);
         }
+        if ($teacher) {
+            $weekSessionsQuery->whereHas('group', fn ($q) => $q->where('teacher_id', $teacher->id));
+        }
         $weekCounts = (clone $weekSessionsQuery)->pluck('total', 'session_date');
         $weekDays = collect(range(0, 6))->map(function (int $offset) use ($weekStart, $selectedDate, $weekCounts) {
             $day = $weekStart->copy()->addDays($offset);
@@ -114,13 +137,20 @@ class DashboardController extends Controller
             ];
         });
 
-        $bestGroupAttendance = (clone $attendanceQuery)
+        $bestGroupAttendanceQuery = (clone $attendanceQuery)
             ->select('class_sessions.group_id', DB::raw('COUNT(*) as total'), DB::raw("SUM(CASE WHEN attendance_records.status = 'present' THEN 1 ELSE 0 END) as present_count"))
             ->join('class_sessions', 'class_sessions.id', '=', 'attendance_records.class_session_id')
             ->whereNotNull('class_sessions.group_id')
             ->groupBy('class_sessions.group_id')
-            ->orderByDesc(DB::raw('CASE WHEN COUNT(*) > 0 THEN SUM(CASE WHEN attendance_records.status = \'present\' THEN 1 ELSE 0 END) / COUNT(*) ELSE 0 END'))
-            ->first();
+            ->orderByDesc(DB::raw('CASE WHEN COUNT(*) > 0 THEN SUM(CASE WHEN attendance_records.status = \'present\' THEN 1 ELSE 0 END) / COUNT(*) ELSE 0 END'));
+
+        if ($teacher) {
+            $bestGroupAttendanceQuery
+                ->join('groups', 'groups.id', '=', 'class_sessions.group_id')
+                ->where('groups.teacher_id', $teacher->id);
+        }
+
+        $bestGroupAttendance = $bestGroupAttendanceQuery->first();
 
         $bestGroup = null;
         $bestGroupRate = null;
@@ -142,6 +172,9 @@ class DashboardController extends Controller
         if ($campusId) {
             $attendanceByLevelQuery->where('class_sessions.campus_id', $campusId);
         }
+        if ($teacher) {
+            $attendanceByLevelQuery->where('groups.teacher_id', $teacher->id);
+        }
 
         $attendanceByTeacherQuery = AttendanceRecord::query()
             ->join('class_sessions', 'class_sessions.id', '=', 'attendance_records.class_session_id')
@@ -155,6 +188,9 @@ class DashboardController extends Controller
         if ($campusId) {
             $attendanceByTeacherQuery->where('class_sessions.campus_id', $campusId);
         }
+        if ($teacher) {
+            $attendanceByTeacherQuery->where('groups.teacher_id', $teacher->id);
+        }
 
         $attendanceByGroupQuery = AttendanceRecord::query()
             ->join('class_sessions', 'class_sessions.id', '=', 'attendance_records.class_session_id')
@@ -167,19 +203,17 @@ class DashboardController extends Controller
         if ($campusId) {
             $attendanceByGroupQuery->where('class_sessions.campus_id', $campusId);
         }
+        if ($teacher) {
+            $attendanceByGroupQuery->where('groups.teacher_id', $teacher->id);
+        }
 
         $teacherGradeCourses = collect();
-        if ($user?->role === 'teacher' && $campusId) {
-            $teacher = Teacher::query()
-                ->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('email', $user->email))
-                ->first();
-            if ($teacher) {
-                $teacherGradeCourses = Course::query()
-                    ->where('campus_id', $campusId)
-                    ->where('teacher_id', $teacher->id)
-                    ->orderBy('name')
-                    ->get(['id', 'name', 'code']);
-            }
+        if ($teacher && $campusId) {
+            $teacherGradeCourses = Course::query()
+                ->where('campus_id', $campusId)
+                ->where('teacher_id', $teacher->id)
+                ->orderBy('name')
+                ->get(['id', 'name', 'code']);
         }
 
         return view('dashboard', [
