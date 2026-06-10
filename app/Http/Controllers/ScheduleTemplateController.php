@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Campus;
+use App\Models\Course;
 use App\Models\ScheduleTemplate;
+use App\Support\CoursePlanner;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -81,9 +85,43 @@ class ScheduleTemplateController extends Controller
 
     public function update(Request $request, ScheduleTemplate $schedule): RedirectResponse
     {
+        $before = [
+            'days' => json_encode($schedule->days ?? []),
+            'starts_at' => CoursePlanner::normalizeTime($schedule->starts_at),
+            'ends_at' => CoursePlanner::normalizeTime($schedule->ends_at),
+        ];
+
         $schedule->update($this->validatedScheduleData($request));
+        $schedule->refresh();
+
+        $after = [
+            'days' => json_encode($schedule->days ?? []),
+            'starts_at' => CoursePlanner::normalizeTime($schedule->starts_at),
+            'ends_at' => CoursePlanner::normalizeTime($schedule->ends_at),
+        ];
+
+        if ($before !== $after) {
+            $this->syncCoursesUsingTemplate($schedule);
+        }
 
         return redirect()->route('schedules.index')->with('success', 'Horario actualizado.');
+    }
+
+    private function syncCoursesUsingTemplate(ScheduleTemplate $schedule): void
+    {
+        Course::query()
+            ->where('schedule_template_id', $schedule->id)
+            ->with(['teacher', 'period', 'scheduleTemplate', 'programLevel', 'managedGroup'])
+            ->each(function (Course $course): void {
+                try {
+                    CoursePlanner::sync($course, true);
+                } catch (ValidationException $exception) {
+                    Log::warning('No se pudo replanificar el curso tras actualizar horario.', [
+                        'course_id' => $course->id,
+                        'errors' => $exception->errors(),
+                    ]);
+                }
+            });
     }
 
     public function destroy(ScheduleTemplate $schedule): RedirectResponse

@@ -452,19 +452,47 @@ class CourseController extends Controller
 
     private function calendarSnapshot(Course $course): array
     {
+        $course->loadMissing('scheduleTemplate', 'managedGroup.sessions');
+
         return [
             'start_date' => $course->start_date?->toDateString(),
             'schedule_template_id' => (int) $course->schedule_template_id,
             'academic_hours' => (int) $course->academic_hours,
             'period_id' => (int) $course->period_id,
+            'schedule_starts_at' => CoursePlanner::normalizeTime($course->scheduleTemplate?->starts_at),
+            'schedule_ends_at' => CoursePlanner::normalizeTime($course->scheduleTemplate?->ends_at),
+            'schedule_days' => json_encode($course->scheduleTemplate?->days ?? []),
         ];
     }
 
     private function calendarFieldsChanged(array $before, Course $course): bool
     {
+        $course->loadMissing('scheduleTemplate');
+
         return $before['start_date'] !== $course->start_date?->toDateString()
             || $before['schedule_template_id'] !== (int) $course->schedule_template_id
             || $before['academic_hours'] !== (int) $course->academic_hours
-            || $before['period_id'] !== (int) $course->period_id;
+            || $before['period_id'] !== (int) $course->period_id
+            || $before['schedule_starts_at'] !== CoursePlanner::normalizeTime($course->scheduleTemplate?->starts_at)
+            || $before['schedule_ends_at'] !== CoursePlanner::normalizeTime($course->scheduleTemplate?->ends_at)
+            || $before['schedule_days'] !== json_encode($course->scheduleTemplate?->days ?? [])
+            || $this->sessionTimesDifferFromSchedule($course);
+    }
+
+    private function sessionTimesDifferFromSchedule(Course $course): bool
+    {
+        $course->loadMissing('scheduleTemplate', 'managedGroup.sessions');
+        $schedule = $course->scheduleTemplate;
+        $firstSession = $course->managedGroup?->sessions
+            ?->sortBy('session_date')
+            ?->sortBy('starts_at')
+            ?->first();
+
+        if (! $schedule || ! $firstSession) {
+            return false;
+        }
+
+        return CoursePlanner::normalizeTime($firstSession->starts_at) !== CoursePlanner::normalizeTime($schedule->starts_at)
+            || CoursePlanner::normalizeTime($firstSession->ends_at) !== CoursePlanner::normalizeTime($schedule->ends_at);
     }
 }

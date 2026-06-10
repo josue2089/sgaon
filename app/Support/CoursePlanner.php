@@ -98,30 +98,41 @@ class CoursePlanner
     private static function syncSessions(Course $course, Group $group, ScheduleTemplate $schedule, int $requiredSessions): ?Carbon
     {
         $existingSessions = $group->sessions()
-            ->withCount('attendanceRecords')
+            ->withCount(['attendanceRecords', 'makeupRequests'])
             ->orderBy('session_date')
             ->orderBy('starts_at')
             ->get();
 
-        $lockedSessions = $existingSessions->filter(fn (ClassSession $session) => $session->attendance_records_count > 0);
+        $protectedSessions = $existingSessions->filter(fn (ClassSession $session) => self::sessionIsProtected($session));
 
-        if ($lockedSessions->isNotEmpty()) {
-            $needsRegeneration = $existingSessions->count() !== $requiredSessions
-                || $existingSessions->first()?->session_date?->toDateString() !== $course->start_date?->toDateString()
-                || self::normalizeTime($existingSessions->first()?->starts_at) !== self::normalizeTime($schedule->starts_at)
-                || self::normalizeTime($existingSessions->first()?->ends_at) !== self::normalizeTime($schedule->ends_at);
-
-            if ($needsRegeneration) {
+        if ($protectedSessions->isNotEmpty()) {
+            $firstExistingDate = $existingSessions->first()?->session_date?->toDateString();
+            if ($firstExistingDate !== $course->start_date?->toDateString()) {
                 throw ValidationException::withMessages([
                     'start_date' => 'El curso ya tiene sesiones con asistencia registrada. No se puede regenerar el calendario automáticamente.',
                 ]);
             }
-
-            return $existingSessions->last()?->session_date;
         }
 
-        $group->sessions()->delete();
+        if ($existingSessions->isEmpty()) {
+            return self::insertFreshSessions($course, $group, $schedule, $requiredSessions);
+        }
 
+        return self::mergeSessions($course, $group, $schedule, $requiredSessions, $existingSessions);
+    }
+
+    private static function sessionIsProtected(ClassSession $session): bool
+    {
+        return ($session->attendance_records_count ?? 0) > 0
+            || ($session->makeup_requests_count ?? 0) > 0;
+    }
+
+    private static function insertFreshSessions(
+        Course $course,
+        Group $group,
+        ScheduleTemplate $schedule,
+        int $requiredSessions,
+    ): ?Carbon {
         $holidays = Holiday::query()
             ->active()
             ->forCampus($course->campus_id)
@@ -131,32 +142,136 @@ class CoursePlanner
         $plannedLessons = $course->programLevel?->lessons()->orderBy('sort_order')->get() ?? collect();
         $distribution = self::distributeLessons($plannedLessons, $requiredSessions);
         $payload = [];
+
         foreach ($dates as $index => $date) {
-            $assignedLessons = $distribution[$index] ?? collect();
-            $primaryLesson = $assignedLessons->first();
-            $payload[] = [
-                'campus_id' => $group->campus_id,
-                'group_id' => $group->id,
-                'program_level_lesson_id' => $primaryLesson?->id,
-                'planned_class_number' => $primaryLesson?->class_number,
-                'planned_class_label' => self::lessonLabel($assignedLessons),
-                'planned_unit' => self::lessonUnit($assignedLessons),
-                'planned_content' => self::lessonContent($assignedLessons),
-                'sequence' => $index + 1,
-                'session_date' => $date->toDateString(),
-                'starts_at' => $schedule->starts_at,
-                'ends_at' => $schedule->ends_at,
-                'topic' => null,
-                'program_status' => null,
-                'program_notes' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            $payload[] = self::sessionAttributes(
+                $course,
+                $group,
+                $schedule,
+                $date,
+                $index + 1,
+                $distribution[$index] ?? collect(),
+            );
         }
 
         ClassSession::insert($payload);
 
         return collect($dates)->last();
+    }
+
+    /**
+     * @param  Collection<int, ClassSession>  $existingSessions
+     */
+    private static function mergeSessions(
+        Course $course,
+        Group $group,
+        ScheduleTemplate $schedule,
+        int $requiredSessions,
+        Collection $existingSessions,
+    ): ?Carbon {
+        $holidays = Holiday::query()
+            ->active()
+            ->forCampus($course->campus_id)
+            ->get();
+
+        $dates = self::buildScheduleDates($course->start_date, $schedule, $requiredSessions, $holidays);
+        $plannedLessons = $course->programLevel?->lessons()->orderBy('sort_order')->get() ?? collect();
+        $distribution = self::distributeLessons($plannedLessons, $requiredSessions);
+
+        $availableByDate = $existingSessions
+            ->groupBy(fn (ClassSession $session) => $session->session_date?->toDateString() ?? '');
+
+        $usedSessionIds = [];
+
+        foreach ($dates as $index => $date) {
+            $dateKey = $date->toDateString();
+            $assignedLessons = $distribution[$index] ?? collect();
+            $attributes = self::sessionAttributes(
+                $course,
+                $group,
+                $schedule,
+                $date,
+                $index + 1,
+                $assignedLessons,
+                includeTimestamps: false,
+            );
+
+            $candidate = ($availableByDate->get($dateKey) ?? collect())
+                ->first(fn (ClassSession $session) => ! in_array($session->id, $usedSessionIds, true));
+
+            if ($candidate) {
+                $usedSessionIds[] = $candidate->id;
+                $update = $attributes;
+                if (self::sessionIsProtected($candidate)) {
+                    unset($update['topic'], $update['program_status'], $update['program_notes']);
+                }
+                $candidate->update($update);
+
+                continue;
+            }
+
+            ClassSession::create($attributes);
+        }
+
+        foreach ($existingSessions as $session) {
+            if (in_array($session->id, $usedSessionIds, true)) {
+                continue;
+            }
+
+            if (self::sessionIsProtected($session)) {
+                $session->update([
+                    'starts_at' => $schedule->starts_at,
+                    'ends_at' => $schedule->ends_at,
+                ]);
+
+                continue;
+            }
+
+            $session->delete();
+        }
+
+        $lastDate = $dates->last();
+
+        return $lastDate instanceof Carbon ? $lastDate : null;
+    }
+
+    /**
+     * @param  Collection<int, ProgramLevelLesson>  $assignedLessons
+     * @return array<string, mixed>
+     */
+    private static function sessionAttributes(
+        Course $course,
+        Group $group,
+        ScheduleTemplate $schedule,
+        Carbon $date,
+        int $sequence,
+        Collection $assignedLessons,
+        bool $includeTimestamps = true,
+    ): array {
+        $primaryLesson = $assignedLessons->first();
+        $attributes = [
+            'campus_id' => $group->campus_id,
+            'group_id' => $group->id,
+            'program_level_lesson_id' => $primaryLesson?->id,
+            'planned_class_number' => $primaryLesson?->class_number,
+            'planned_class_label' => self::lessonLabel($assignedLessons),
+            'planned_unit' => self::lessonUnit($assignedLessons),
+            'planned_content' => self::lessonContent($assignedLessons),
+            'sequence' => $sequence,
+            'session_date' => $date->toDateString(),
+            'starts_at' => $schedule->starts_at,
+            'ends_at' => $schedule->ends_at,
+            'topic' => null,
+            'program_status' => null,
+            'program_notes' => null,
+        ];
+
+        if ($includeTimestamps) {
+            $attributes['created_at'] = now();
+            $attributes['updated_at'] = now();
+        }
+
+        return $attributes;
     }
 
     private static function slotMinutes(ScheduleTemplate $schedule): int
@@ -206,7 +321,7 @@ class CoursePlanner
         return $dates;
     }
 
-    private static function normalizeTime(?string $time): string
+    public static function normalizeTime(?string $time): string
     {
         if (! $time) {
             return '00:00:00';
