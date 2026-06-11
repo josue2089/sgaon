@@ -69,6 +69,9 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/teachers/{teacher}', [TeacherController::class, 'show'])->name('teachers.show');
         Route::post('/courses/{course}/students', [CourseController::class, 'syncStudents'])->name('courses.students.sync');
         Route::delete('/courses/{course}/students/{enrollment}', [CourseController::class, 'removeStudent'])->name('courses.students.remove');
+        Route::get('/courses/{course}/report.pdf', [CourseController::class, 'reportPdf'])
+            ->middleware('master.admin')
+            ->name('courses.report.pdf');
         Route::resource('courses', CourseController::class);
         Route::resource('groups', GroupController::class)->except('show');
         Route::resource('enrollments', EnrollmentController::class)->except('show');

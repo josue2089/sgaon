@@ -6,6 +6,9 @@
         <p class="page-subtitle">Detalle operativo del curso, sesiones y avance del programa</p>
     </div>
     <div class="form-actions">
+        @if(auth()->user()?->isMasterAdmin())
+            <a class="btn secondary" href="{{ route('courses.report.pdf', $course) }}">Descargar PDF</a>
+        @endif
         <a class="btn" href="{{ route('courses.grades.index', $course) }}">Evaluaciones / Notas</a>
         <a class="btn secondary" href="{{ route('courses.edit', $course) }}">Editar curso</a>
         <a class="btn secondary" href="{{ route('courses.index') }}">Volver</a>

@@ -15,6 +15,7 @@ use App\Models\Student;
 use App\Models\Teacher;
 use App\Support\AuditTrail;
 use App\Support\CoursePlanner;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class CourseController extends Controller
 {
@@ -192,29 +194,8 @@ class CourseController extends Controller
     {
         $this->authorizeCourse($course);
 
-        $course->load([
-            'campus',
-            'level',
-            'program',
-            'programLevel.lessons',
-            'courseLevel',
-            'teacher',
-            'period',
-            'scheduleTemplate',
-            'managedGroup.teacher',
-            'managedGroup.enrollments.student',
-            'managedGroup.sessions' => fn ($query) => $query
-                ->with('plannedLesson')
-                ->withCount('attendanceRecords')
-                ->orderBy('sequence')
-                ->orderBy('session_date'),
-        ]);
-
-        $group = $course->managedGroup;
-        $sessions = $group?->sessions ?? collect();
-        $completedSessions = $sessions->where('attendance_records_count', '>', 0)->count();
-        $pendingSessions = max(0, $sessions->count() - $completedSessions);
-        $enrolledStudentIds = $group?->enrollments?->pluck('student_id')->all() ?? [];
+        $context = $this->courseDetailContext($course);
+        $enrolledStudentIds = $context['group']?->enrollments?->pluck('student_id')->all() ?? [];
 
         $availableStudents = Student::query()
             ->when($course->campus_id, fn (Builder $builder) => $builder->where('campus_id', $course->campus_id))
@@ -233,14 +214,24 @@ class CourseController extends Controller
             ->orderBy('last_name')
             ->get();
 
-        return view('courses.show', [
-            'course' => $course,
-            'group' => $group,
-            'sessions' => $sessions,
-            'completedSessions' => $completedSessions,
-            'pendingSessions' => $pendingSessions,
+        return view('courses.show', $context + [
             'availableStudents' => $availableStudents,
         ]);
+    }
+
+    public function reportPdf(Course $course): Response
+    {
+        $this->authorizeCourse($course);
+
+        $context = $this->courseDetailContext($course);
+        $filename = 'curso-'.($course->code ?: $course->id).'.pdf';
+
+        $pdf = Pdf::loadView('courses.course-report-pdf', $context + [
+            'logoDataUri' => $this->buildLogoDataUri(),
+            'generatedAt' => now(),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download($filename);
     }
 
     public function edit(Course $course): View
@@ -448,6 +439,55 @@ class CourseController extends Controller
         if ($this->campusId() && (int) $course->campus_id !== (int) $this->campusId()) {
             abort(403);
         }
+    }
+
+    private function courseDetailContext(Course $course): array
+    {
+        $course->load([
+            'campus',
+            'level',
+            'program',
+            'programLevel.lessons',
+            'courseLevel',
+            'teacher',
+            'period',
+            'scheduleTemplate',
+            'managedGroup.teacher',
+            'managedGroup.enrollments.student',
+            'managedGroup.sessions' => fn ($query) => $query
+                ->with('plannedLesson')
+                ->withCount('attendanceRecords')
+                ->orderBy('sequence')
+                ->orderBy('session_date'),
+        ]);
+
+        $group = $course->managedGroup;
+        $sessions = $group?->sessions ?? collect();
+        $completedSessions = $sessions->where('attendance_records_count', '>', 0)->count();
+        $pendingSessions = max(0, $sessions->count() - $completedSessions);
+
+        return [
+            'course' => $course,
+            'group' => $group,
+            'sessions' => $sessions,
+            'completedSessions' => $completedSessions,
+            'pendingSessions' => $pendingSessions,
+        ];
+    }
+
+    private function buildLogoDataUri(): ?string
+    {
+        $path = public_path('images/logo.png');
+        if (! is_file($path)) {
+            return null;
+        }
+
+        $contents = file_get_contents($path);
+        if ($contents === false) {
+            return null;
+        }
+
+        return 'data:image/png;base64,'.base64_encode($contents);
     }
 
     private function calendarSnapshot(Course $course): array
