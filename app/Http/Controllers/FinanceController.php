@@ -15,6 +15,7 @@ use App\Models\Receipt;
 use App\Models\Student;
 use App\Support\AlertEngine;
 use App\Support\AuditTrail;
+use App\Support\CampusScope;
 use App\Support\FinanceReconcile;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -28,31 +29,18 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FinanceController extends Controller
 {
-    private function campusId(Request $request): ?int
-    {
-        return $request->user()?->isMasterAdmin() ? null : $request->user()?->campus_id;
-    }
-
     public function index(Request $request): View|StreamedResponse
     {
-        $campusId = $this->campusId($request);
-        $chargesQuery = Charge::with(['student', 'payments', 'course', 'group', 'period', 'enrollment.group.course'])->latest();
-        $paymentsQuery = Payment::with(['student', 'receipt', 'allocations.charge'])->latest();
-        $studentsQuery = Student::orderBy('first_name');
-        $enrollmentsQuery = Enrollment::with(['student', 'group.course'])->latest();
-        $periodsQuery = Period::orderBy('code');
-        $paymentRequestsQuery = ChargePaymentRequest::query()
-            ->with(['student', 'representative', 'charge.course', 'validator'])
-            ->latest();
-
-        if ($campusId) {
-            $chargesQuery->where('campus_id', $campusId);
-            $paymentsQuery->where('campus_id', $campusId);
-            $studentsQuery->where('campus_id', $campusId);
-            $enrollmentsQuery->where('campus_id', $campusId);
-            $periodsQuery->where('campus_id', $campusId);
-            $paymentRequestsQuery->where('campus_id', $campusId);
-        }
+        $user = $request->user();
+        $chargesQuery = CampusScope::apply(Charge::with(['student', 'payments', 'course', 'group', 'period', 'enrollment.group.course'])->latest(), $user);
+        $paymentsQuery = CampusScope::apply(Payment::with(['student', 'receipt', 'allocations.charge'])->latest(), $user);
+        $studentsQuery = CampusScope::apply(Student::orderBy('first_name'), $user);
+        $enrollmentsQuery = CampusScope::apply(Enrollment::with(['student', 'group.course'])->latest(), $user);
+        $periodsQuery = CampusScope::apply(Period::orderBy('code'), $user);
+        $paymentRequestsQuery = CampusScope::apply(
+            ChargePaymentRequest::query()->with(['student', 'representative', 'charge.course', 'validator'])->latest(),
+            $user
+        );
 
         $focusStudentId = $request->integer('student_id') ?: null;
         if ($focusStudentId) {
@@ -90,10 +78,7 @@ class FinanceController extends Controller
             }, 'mora_report.csv', ['Content-Type' => 'text/csv']);
         }
 
-        $criticalOverdueQuery = Charge::query();
-        if ($campusId) {
-            $criticalOverdueQuery->where('campus_id', $campusId);
-        }
+        $criticalOverdueQuery = CampusScope::apply(Charge::query(), $user);
         if ($focusStudentId) {
             $criticalOverdueQuery->where('student_id', $focusStudentId);
         }
@@ -138,7 +123,7 @@ class FinanceController extends Controller
             $enrollment = Enrollment::query()
                 ->with(['group.course'])
                 ->findOrFail((int) $data['enrollment_id']);
-            if ($this->campusId($request) && (int) $enrollment->campus_id !== (int) $this->campusId($request)) {
+            if (! CampusScope::userCanAccessCampus($request->user(), (int) $enrollment->campus_id)) {
                 abort(403);
             }
 
@@ -156,7 +141,7 @@ class FinanceController extends Controller
             }
 
             $student = Student::findOrFail($studentId);
-            if ($this->campusId($request) && (int) $student->campus_id !== (int) $this->campusId($request)) {
+            if (! CampusScope::userCanAccessCampus($request->user(), (int) $student->campus_id)) {
                 abort(403);
             }
             $data['campus_id'] = $student->campus_id;
@@ -199,7 +184,7 @@ class FinanceController extends Controller
 
     public function studentHistory(Request $request, Student $student): View
     {
-        if ($this->campusId($request) && (int) $student->campus_id !== (int) $this->campusId($request)) {
+        if (! CampusScope::userCanAccessCampus($request->user(), (int) $student->campus_id)) {
             abort(403);
         }
 
@@ -265,7 +250,7 @@ class FinanceController extends Controller
         ]);
 
         $student = Student::findOrFail($data['student_id']);
-        if ($this->campusId($request) && (int) $student->campus_id !== (int) $this->campusId($request)) {
+        if (! CampusScope::userCanAccessCampus($request->user(), (int) $student->campus_id)) {
             abort(403);
         }
         $data['campus_id'] = $student->campus_id;
@@ -361,7 +346,7 @@ class FinanceController extends Controller
 
     public function reviewPaymentRequest(Request $request, ChargePaymentRequest $paymentRequest): RedirectResponse
     {
-        if ($this->campusId($request) && (int) $paymentRequest->campus_id !== (int) $this->campusId($request)) {
+        if (! CampusScope::userCanAccessCampus($request->user(), (int) $paymentRequest->campus_id)) {
             abort(403);
         }
 
@@ -575,7 +560,7 @@ class FinanceController extends Controller
             'payment.charge.period',
         ]);
 
-        if ($this->campusId($request) && (int) $receipt->campus_id !== (int) $this->campusId($request)) {
+        if (! CampusScope::userCanAccessCampus($request->user(), (int) $receipt->campus_id)) {
             abort(403);
         }
 

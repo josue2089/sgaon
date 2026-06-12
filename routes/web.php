@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AcademicLevelController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampusController;
@@ -86,6 +87,11 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/operations/wizard/session', [OperationWizardController::class, 'storeSession'])->name('operations.wizard.session');
         Route::post('/operations/wizard/enrollment', [OperationWizardController::class, 'storeEnrollment'])->name('operations.wizard.enrollment');
         Route::middleware('master.admin')->group(function () {
+            Route::resource('admin-users', AdminUserController::class)
+                ->except(['show'])
+                ->parameters(['admin-users' => 'user']);
+            Route::post('admin-users/{user}/resend-credentials', [AdminUserController::class, 'resendCredentials'])
+                ->name('admin-users.resend-credentials');
             Route::resource('campuses', CampusController::class)->except('show');
             Route::resource('periods', PeriodController::class)->except('show');
             Route::resource('schedules', ScheduleTemplateController::class)->except('show');

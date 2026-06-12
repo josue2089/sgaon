@@ -11,10 +11,10 @@
 @php
     $currentRoute = request()->route()?->getName();
     $user = auth()->user();
-    $alertsQuery = \App\Models\Alert::query()->where('status', 'open');
-    if ($user?->campus_id && ! $user?->isMasterAdmin()) {
-        $alertsQuery->where('campus_id', $user->campus_id);
-    }
+    $alertsQuery = \App\Support\CampusScope::apply(
+        \App\Models\Alert::query()->where('status', 'open'),
+        $user
+    );
     $openAlertsCount = (clone $alertsQuery)->count();
     $openAlerts = (clone $alertsQuery)->latest()->take(5)->get();
     $hasRoute = static fn (string $name): bool => \Illuminate\Support\Facades\Route::has($name);
@@ -33,6 +33,7 @@
         ['name' => 'Recuperativas', 'route' => 'makeups.index', 'enabled' => $user?->role === 'admin' && $hasRoute('makeups.index')],
     ];
     $configNav = [
+        ['name' => 'Usuarios admin', 'route' => 'admin-users.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('admin-users.index')],
         ['name' => 'Campus', 'route' => 'campuses.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('campuses.index')],
         ['name' => 'Períodos', 'route' => 'periods.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('periods.index')],
         ['name' => 'Horarios', 'route' => 'schedules.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('schedules.index')],
@@ -42,7 +43,7 @@
     ];
     $extraPrefixes = ['teachers', 'courses', 'finance', 'enrollments', 'makeups'];
     $extraActive = in_array(explode('.', (string) $currentRoute)[0], $extraPrefixes, true);
-    $configPrefixes = ['campuses', 'periods', 'schedules', 'holidays', 'programs', 'program-levels', 'program-level-lessons', 'settings'];
+    $configPrefixes = ['campuses', 'periods', 'schedules', 'holidays', 'programs', 'program-levels', 'program-level-lessons', 'settings', 'admin-users'];
     $configActive = in_array(explode('.', (string) $currentRoute)[0], $configPrefixes, true);
     $navItemActive = static function (string $route) use ($currentRoute): bool {
         if ($currentRoute === null) {

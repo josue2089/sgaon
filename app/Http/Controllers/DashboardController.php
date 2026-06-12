@@ -30,24 +30,26 @@ class DashboardController extends Controller
             return redirect()->route('portal.representative');
         }
 
-        $campusId = CampusScope::campusIdFor($user);
         $teacher = null;
         if ($user?->role === 'teacher') {
-            $teacher = Teacher::query()
-                ->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('email', $user->email))
-                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
-                ->first();
+            $teacher = CampusScope::apply(
+                Teacher::query()->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('email', $user->email)),
+                $user
+            )->first();
         }
 
-        $studentsQuery = Student::query();
-        $teachersQuery = Teacher::query();
-        $coursesQuery = Course::query();
-        $groupsQuery = Group::query();
-        $chargesQuery = Charge::where('status', '!=', 'paid');
-        $alertsQuery = Alert::where('status', 'open');
+        $studentsQuery = CampusScope::apply(Student::query(), $user);
+        $teachersQuery = CampusScope::apply(Teacher::query(), $user);
+        $coursesQuery = CampusScope::apply(Course::query(), $user);
+        $groupsQuery = CampusScope::apply(Group::query(), $user);
+        $chargesQuery = CampusScope::apply(Charge::where('status', '!=', 'paid'), $user);
+        $alertsQuery = CampusScope::apply(Alert::where('status', 'open'), $user);
         $attendanceQuery = AttendanceRecord::query();
-        $paymentsQuery = Payment::query();
-        $monthChargesQuery = Charge::query()->whereBetween('due_date', [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()]);
+        $paymentsQuery = CampusScope::apply(Payment::query(), $user);
+        $monthChargesQuery = CampusScope::apply(
+            Charge::query()->whereBetween('due_date', [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()]),
+            $user
+        );
         $selectedDate = request()->query('date');
         try {
             $selectedDate = $selectedDate ? Carbon::parse((string) $selectedDate)->startOfDay() : now()->startOfDay();
@@ -55,22 +57,14 @@ class DashboardController extends Controller
             $selectedDate = now()->startOfDay();
         }
 
-        $sessionsTodayQuery = ClassSession::with(['group.course', 'group.teacher'])
-            ->whereDate('session_date', $selectedDate->toDateString())
-            ->orderBy('starts_at');
+        $sessionsTodayQuery = CampusScope::apply(
+            ClassSession::with(['group.course', 'group.teacher'])
+                ->whereDate('session_date', $selectedDate->toDateString())
+                ->orderBy('starts_at'),
+            $user
+        );
 
-        if ($campusId) {
-            $studentsQuery->where('campus_id', $campusId);
-            $teachersQuery->where('campus_id', $campusId);
-            $coursesQuery->where('campus_id', $campusId);
-            $groupsQuery->where('campus_id', $campusId);
-            $chargesQuery->where('campus_id', $campusId);
-            $alertsQuery->where('campus_id', $campusId);
-            $attendanceQuery->whereHas('classSession', fn ($q) => $q->where('campus_id', $campusId));
-            $paymentsQuery->where('campus_id', $campusId);
-            $monthChargesQuery->where('campus_id', $campusId);
-            $sessionsTodayQuery->where('campus_id', $campusId);
-        }
+        $attendanceQuery->whereHas('classSession', fn ($q) => CampusScope::apply($q, $user));
 
         if ($teacher) {
             $studentsQuery->whereIn('id', Enrollment::query()
@@ -119,9 +113,7 @@ class DashboardController extends Controller
             ->selectRaw('session_date, COUNT(*) as total')
             ->whereBetween('session_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
             ->groupBy('session_date');
-        if ($campusId) {
-            $weekSessionsQuery->where('campus_id', $campusId);
-        }
+        CampusScope::apply($weekSessionsQuery, $user);
         if ($teacher) {
             $weekSessionsQuery->whereHas('group', fn ($q) => $q->where('teacher_id', $teacher->id));
         }
@@ -169,9 +161,7 @@ class DashboardController extends Controller
             ->selectRaw('COUNT(*) as total')
             ->groupBy('label')
             ->orderByDesc('rate');
-        if ($campusId) {
-            $attendanceByLevelQuery->where('class_sessions.campus_id', $campusId);
-        }
+        CampusScope::apply($attendanceByLevelQuery, $user, 'class_sessions.campus_id');
         if ($teacher) {
             $attendanceByLevelQuery->where('groups.teacher_id', $teacher->id);
         }
@@ -185,9 +175,7 @@ class DashboardController extends Controller
             ->selectRaw('COUNT(*) as total')
             ->groupBy('label')
             ->orderByDesc('rate');
-        if ($campusId) {
-            $attendanceByTeacherQuery->where('class_sessions.campus_id', $campusId);
-        }
+        CampusScope::apply($attendanceByTeacherQuery, $user, 'class_sessions.campus_id');
         if ($teacher) {
             $attendanceByTeacherQuery->where('groups.teacher_id', $teacher->id);
         }
@@ -200,20 +188,17 @@ class DashboardController extends Controller
             ->selectRaw('COUNT(*) as total')
             ->groupBy('label')
             ->orderByDesc('rate');
-        if ($campusId) {
-            $attendanceByGroupQuery->where('class_sessions.campus_id', $campusId);
-        }
+        CampusScope::apply($attendanceByGroupQuery, $user, 'class_sessions.campus_id');
         if ($teacher) {
             $attendanceByGroupQuery->where('groups.teacher_id', $teacher->id);
         }
 
         $teacherGradeCourses = collect();
-        if ($teacher && $campusId) {
-            $teacherGradeCourses = Course::query()
-                ->where('campus_id', $campusId)
-                ->where('teacher_id', $teacher->id)
-                ->orderBy('name')
-                ->get(['id', 'name', 'code']);
+        if ($teacher) {
+            $teacherGradeCourses = CampusScope::apply(
+                Course::query()->where('teacher_id', $teacher->id)->orderBy('name'),
+                $user
+            )->get(['id', 'name', 'code']);
         }
 
         return view('dashboard', [

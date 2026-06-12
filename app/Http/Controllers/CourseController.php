@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ScopesCampusAccess;
 use App\Models\AcademicLevel;
 use App\Models\Campus;
 use App\Models\Course;
@@ -27,10 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CourseController extends Controller
 {
-    private function campusId(): ?int
-    {
-        return request()->user()?->isMasterAdmin() ? null : request()->user()?->campus_id;
-    }
+    use ScopesCampusAccess;
 
     private function resolveAcademicLevelIdFromProgram(?Program $program, int $campusId): int
     {
@@ -436,9 +434,7 @@ class CourseController extends Controller
 
     private function authorizeCourse(Course $course): void
     {
-        if ($this->campusId() && (int) $course->campus_id !== (int) $this->campusId()) {
-            abort(403);
-        }
+        $this->authorizeCampus($course->campus_id);
     }
 
     private function courseDetailContext(Course $course): array

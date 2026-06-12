@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CampusScope;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -24,6 +25,7 @@ class User extends Authenticatable
         'password',
         'role',
         'is_master',
+        'access_all_campuses',
         'status',
     ];
 
@@ -37,6 +39,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'is_master' => 'boolean',
+            'access_all_campuses' => 'boolean',
             'password' => 'hashed',
         ];
     }
@@ -44,6 +47,11 @@ class User extends Authenticatable
     public function campus()
     {
         return $this->belongsTo(Campus::class);
+    }
+
+    public function campuses()
+    {
+        return $this->belongsToMany(Campus::class)->withTimestamps();
     }
 
     public function roles()
@@ -106,6 +114,19 @@ class User extends Authenticatable
     public function isMasterAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN && $this->is_master;
+    }
+
+    public function canAccessAllCampuses(): bool
+    {
+        return $this->isMasterAdmin() || (bool) $this->access_all_campuses;
+    }
+
+    /**
+     * @return null All campuses; array of IDs otherwise (empty = no access)
+     */
+    public function allowedCampusIds(): ?array
+    {
+        return CampusScope::allowedCampusIds($this);
     }
 
     public function sendPasswordResetNotification($token): void

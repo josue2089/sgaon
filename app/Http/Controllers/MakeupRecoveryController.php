@@ -20,7 +20,7 @@ class MakeupRecoveryController extends Controller
 {
     private function campusId(Request $request): ?int
     {
-        return $request->user()?->isMasterAdmin() ? null : $request->user()?->campus_id;
+        return \App\Support\CampusScope::campusIdFor($request->user());
     }
 
     public function index(Request $request): View

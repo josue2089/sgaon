@@ -48,7 +48,7 @@ class OperationWizardController extends Controller
 
     private function campusId(): ?int
     {
-        return request()->user()?->isMasterAdmin() ? null : request()->user()?->campus_id;
+        return \App\Support\CampusScope::campusIdFor(request()->user());
     }
 
     public function index(Request $request): View

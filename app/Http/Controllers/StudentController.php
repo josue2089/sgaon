@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ScopesCampusAccess;
 use App\Models\AcademicLevel;
 use App\Models\AttendanceRecord;
 use App\Models\AuditLog;
@@ -15,6 +16,7 @@ use App\Models\Representative;
 use App\Models\StudentAttachment;
 use App\Models\Student;
 use App\Support\AuditTrail;
+use App\Support\CampusScope;
 use App\Support\FinanceReconcile;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,10 +29,7 @@ use Illuminate\View\View;
 
 class StudentController extends Controller
 {
-    private function campusId(): ?int
-    {
-        return request()->user()?->isMasterAdmin() ? null : request()->user()?->campus_id;
-    }
+    use ScopesCampusAccess;
 
     public function index(Request $request): View
     {
@@ -38,10 +37,7 @@ class StudentController extends Controller
         $query = $this->filteredStudentsQuery($request)
             ->with(['campus', 'enrollments.group.course.level']);
 
-        $baseStatsQuery = Student::query();
-        if ($this->campusId()) {
-            $baseStatsQuery->where('campus_id', $this->campusId());
-        }
+        $baseStatsQuery = $this->applyCampusScope(Student::query());
 
         $students = $query->paginate(20)->withQueryString();
 
@@ -82,8 +78,7 @@ class StudentController extends Controller
             return [$student->id => 'paid'];
         });
 
-        $attendanceRate = Enrollment::query()
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+        $attendanceRate = $this->applyCampusScope(Enrollment::query())
             ->where('enrollments.status', 'active')
             ->join('attendance_records', 'attendance_records.enrollment_id', '=', 'enrollments.id')
             ->selectRaw(
@@ -91,8 +86,7 @@ class StudentController extends Controller
             )
             ->value('attendance_rate');
 
-        $levels = AcademicLevel::query()
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+        $levels = $this->applyCampusScope(AcademicLevel::query())
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get(['code', 'name']);
@@ -168,10 +162,7 @@ class StudentController extends Controller
 
     public function create(): View
     {
-        $campuses = Campus::orderBy('name');
-        if ($this->campusId()) {
-            $campuses->where('id', $this->campusId());
-        }
+        $campuses = $this->allowedCampusesQuery();
 
         $programs = Program::query()->where('status', 'active')->orderBy('name');
 
@@ -184,9 +175,7 @@ class StudentController extends Controller
 
     public function show(Student $student): View
     {
-        if ($this->campusId() && (int) $student->campus_id !== (int) $this->campusId()) {
-            abort(403);
-        }
+        $this->authorizeCampus($student->campus_id);
 
         return view('students.show', $this->detailData($student));
     }
@@ -195,8 +184,8 @@ class StudentController extends Controller
     {
         $data = $this->validatedData($request);
 
-        if ($this->campusId()) {
-            $data['campus_id'] = $this->campusId();
+        if ($this->singleAllowedCampusId()) {
+            $data['campus_id'] = $this->singleAllowedCampusId();
         }
 
         $data['phone'] = ($data['phone'] ?? null) ?: ($data['mobile_phone'] ?? null);
@@ -215,10 +204,7 @@ class StudentController extends Controller
 
     public function edit(Student $student): View
     {
-        $campuses = Campus::orderBy('name');
-        if ($this->campusId()) {
-            $campuses->where('id', $this->campusId());
-        }
+        $campuses = $this->allowedCampusesQuery();
 
         $programs = Program::query()->where('status', 'active')->orderBy('name')->get();
 
@@ -240,8 +226,8 @@ class StudentController extends Controller
     {
         $data = $this->validatedData($request);
 
-        if ($this->campusId()) {
-            $data['campus_id'] = $this->campusId();
+        if ($this->singleAllowedCampusId()) {
+            $data['campus_id'] = $this->singleAllowedCampusId();
         }
 
         $data['phone'] = ($data['phone'] ?? null) ?: ($data['mobile_phone'] ?? null);
@@ -441,9 +427,7 @@ class StudentController extends Controller
 
     private function authorizeStudent(Student $student): void
     {
-        if ($this->campusId() && (int) $student->campus_id !== (int) $this->campusId()) {
-            abort(403);
-        }
+        $this->authorizeCampus($student->campus_id);
     }
 
     private function buildLogoDataUri(): ?string
@@ -590,10 +574,7 @@ class StudentController extends Controller
     {
         $filters = $this->studentListFilters($request);
 
-        $query = Student::query()->latest();
-        if ($this->campusId()) {
-            $query->where('campus_id', $this->campusId());
-        }
+        $query = $this->applyCampusScope(Student::query()->latest());
 
         if ($filters['q'] !== '') {
             $q = $filters['q'];
@@ -651,10 +632,7 @@ class StudentController extends Controller
             abort(404);
         }
 
-        $scoped = $this->campusId();
-        if ($scoped !== null && $student->campus_id !== $scoped) {
-            abort(403);
-        }
+        $this->authorizeCampus($student->campus_id);
 
         $data = $request->validate([
             'status' => ['required', 'in:inactive,graduated,withdrawn'],

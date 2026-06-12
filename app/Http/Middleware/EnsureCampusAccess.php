@@ -7,6 +7,7 @@ use App\Models\Enrollment;
 use App\Models\GradeEntry;
 use App\Models\GradeEvaluationSet;
 use App\Models\Payment;
+use App\Support\CampusScope;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -18,13 +19,7 @@ class EnsureCampusAccess
     {
         $user = $request->user();
 
-        if (! $user || $user->isMasterAdmin()) {
-            return $next($request);
-        }
-
-        $campusId = $user->campus_id;
-
-        if (! $campusId) {
+        if (! $user) {
             return $next($request);
         }
 
@@ -35,7 +30,7 @@ class EnsureCampusAccess
 
             $recordCampusId = $this->resolveCampusId($parameter);
 
-            if ($recordCampusId !== null && (int) $recordCampusId !== (int) $campusId) {
+            if ($recordCampusId !== null && ! CampusScope::userCanAccessCampus($user, $recordCampusId)) {
                 abort(403);
             }
         }
