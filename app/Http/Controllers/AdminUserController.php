@@ -56,21 +56,21 @@ class AdminUserController extends Controller
             ->with('success', 'Usuario administrativo creado. Se enviaron las credenciales por email.');
     }
 
-    public function edit(User $adminUser): View
+    public function edit(User $user): View
     {
-        $this->guardManagedUser($adminUser);
+        $this->guardManagedUser($user);
 
-        return view('admin-users.edit', $this->formData($adminUser));
+        return view('admin-users.edit', $this->formData($user));
     }
 
-    public function update(Request $request, User $adminUser, AdminUserProvisioner $provisioner): RedirectResponse
+    public function update(Request $request, User $user, AdminUserProvisioner $provisioner): RedirectResponse
     {
-        $this->guardManagedUser($adminUser);
+        $this->guardManagedUser($user);
 
-        $data = $this->validatedData($request, $adminUser);
+        $data = $this->validatedData($request, $user);
 
         $user = $provisioner->update(
-            $adminUser,
+            $user,
             $data['name'],
             $data['phone'] ?? null,
             $data['status'],
@@ -89,17 +89,39 @@ class AdminUserController extends Controller
             ->with('success', 'Usuario administrativo actualizado.');
     }
 
-    public function resendCredentials(Request $request, User $adminUser, AdminUserProvisioner $provisioner): RedirectResponse
+    public function resendCredentials(Request $request, User $user, AdminUserProvisioner $provisioner): RedirectResponse
     {
-        $this->guardManagedUser($adminUser);
+        $this->guardManagedUser($user);
 
-        $provisioner->resendCredentials($adminUser);
+        $provisioner->resendCredentials($user);
 
-        AuditTrail::log($request, 'admin_user.resend_credentials', $adminUser, [
-            'email' => $adminUser->email,
+        AuditTrail::log($request, 'admin_user.resend_credentials', $user, [
+            'email' => $user->email,
         ]);
 
         return back()->with('success', 'Credenciales reenviadas por email.');
+    }
+
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        $this->guardManagedUser($user);
+
+        if ((int) $request->user()?->id === (int) $user->id) {
+            return back()->withErrors(['user' => 'No puedes eliminar tu propia cuenta desde este módulo.']);
+        }
+
+        AuditTrail::log($request, 'admin_user.delete', $user, [
+            'email' => $user->email,
+            'name' => $user->name,
+        ]);
+
+        $user->campuses()->detach();
+        $user->roles()->detach();
+        $user->delete();
+
+        return redirect()
+            ->route('admin-users.index')
+            ->with('success', 'Usuario administrativo eliminado.');
     }
 
     private function formData(?User $user = null): array

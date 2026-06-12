@@ -46,6 +46,13 @@
                                 @csrf
                                 <button type="submit" class="btn-link">Reenviar credenciales</button>
                             </form>
+                            @if((int) auth()->id() !== (int) $user->id)
+                                <form method="POST" action="{{ route('admin-users.destroy', $user) }}" style="display:inline;" onsubmit="return confirm('¿Eliminar este usuario administrativo?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-link-danger">Eliminar</button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

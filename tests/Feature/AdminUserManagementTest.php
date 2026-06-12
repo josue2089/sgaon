@@ -135,6 +135,29 @@ class AdminUserManagementTest extends TestCase
         $this->actingAs($master)->get(route('admin-users.edit', $master))->assertNotFound();
     }
 
+    public function test_master_admin_can_edit_campus_admin(): void
+    {
+        [$master, $picacho] = $this->masterAndCampuses();
+        $campusAdmin = $this->createCampusAdmin($picacho);
+
+        $response = $this->actingAs($master)->get(route('admin-users.edit', $campusAdmin));
+
+        $response->assertOk();
+        $response->assertSee($campusAdmin->email);
+    }
+
+    public function test_master_admin_can_delete_campus_admin(): void
+    {
+        [$master, $picacho] = $this->masterAndCampuses();
+        $campusAdmin = $this->createCampusAdmin($picacho);
+
+        $response = $this->actingAs($master)->delete(route('admin-users.destroy', $campusAdmin));
+
+        $response->assertRedirect(route('admin-users.index'));
+        $response->assertSessionHas('success');
+        $this->assertDatabaseMissing('users', ['id' => $campusAdmin->id]);
+    }
+
     /**
      * @return array{0: User, 1: Campus, 2?: Campus}
      */
