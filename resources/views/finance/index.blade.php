@@ -8,7 +8,15 @@
 <div class="module-head">
     <div>
         <h1 class="page-title">Financiero</h1>
-        <p class="page-subtitle">Control de cargos, pagos y cobranza</p>
+        <p class="page-subtitle">
+            Control de cargos, pagos y cobranza
+            @if(($bcvRate['rate'] ?? 0) > 0)
+                · Tasa BCV: Bs {{ number_format($bcvRate['rate'], 4, ',', '.') }}
+                @if(!empty($bcvRate['effective_at']))
+                    (vigente {{ $bcvRate['effective_at']->format('d/m/Y') }})
+                @endif
+            @endif
+        </p>
     </div>
     <a class="btn secondary" href="{{ route('finance.index', array_merge(request()->query(), ['export' => 'mora_csv'])) }}">Exportar mora CSV</a>
     @if($focusStudentId)
@@ -17,8 +25,8 @@
 </div>
 
 <div class="soft-kpi-grid soft-kpi-grid-4">
-    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Cargos (página)', 'value' => '$'.number_format($chargesTotal, 0)])
-    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Pagos recientes', 'value' => '$'.number_format($paymentsTotal, 0)])
+    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Cargos (página) USD', 'value' => '$'.number_format($chargesTotal, 0)])
+    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Pagos recientes USD', 'value' => '$'.number_format($paymentsTotal, 0)])
     @include('partials.ui.soft-kpi', ['iconName' => 'warning', 'label' => 'Cuentas en mora', 'value' => $overdueCount, 'valueClass' => 'value-danger'])
     @include('partials.ui.soft-kpi', ['iconName' => 'trend', 'label' => 'Mora crítica (30+ días)', 'value' => $criticalOverdueCount, 'valueClass' => 'value-danger'])
 </div>
@@ -120,17 +128,17 @@
                 </select>
                 <div class="form-hint">Puedes seleccionar uno o varios cargos del mismo alumno.</div>
             </div>
-            <div>
-                <label>Monto</label>
-                <input type="number" step="0.01" name="amount" id="payment-amount-input">
+            <div id="finance-payment-currency-wrap">
+                @include('partials.payment-currency-fields', [
+                    'prefix' => 'finance-payment',
+                    'balanceUsd' => 0,
+                    'exchangeRate' => $bcvRate['rate'] ?? 0,
+                    'paymentMethods' => $paymentMethods,
+                ])
             </div>
             <div>
                 <label>Fecha</label>
                 <input type="date" name="paid_at">
-            </div>
-            <div>
-                <label>Método</label>
-                <input name="method">
             </div>
             <div>
                 <label>Referencia</label>
@@ -177,7 +185,17 @@
                 </div>
                 <div class="finance-payment-request-meta">
                     <div><strong>Cargo:</strong> {{ $paymentRequest->charge?->concept ?? 'N/D' }}</div>
-                    <div><strong>Monto solicitado:</strong> ${{ number_format($paymentRequest->amount, 2) }}</div>
+                    <div><strong>Monto solicitado:</strong>
+                        @if(($paymentRequest->currency ?? 'USD') === 'VES')
+                            {{ \App\Support\MoneyFormat::ves((float) ($paymentRequest->original_amount ?? $paymentRequest->amount)) }}
+                            → {{ \App\Support\MoneyFormat::usd((float) $paymentRequest->amount) }}
+                            @if($paymentRequest->exchange_rate)
+                                <span class="table-sub">(tasa {{ number_format((float) $paymentRequest->exchange_rate, 4, ',', '.') }})</span>
+                            @endif
+                        @else
+                            {{ \App\Support\MoneyFormat::usd((float) $paymentRequest->amount) }}
+                        @endif
+                    </div>
                     <div><strong>Referencia:</strong> {{ $paymentRequest->reference ?: 'Sin referencia' }}</div>
                     @if($paymentRequest->payment_method)
                         <div><strong>Método declarado:</strong> {{ $paymentRequest->payment_method }}</div>
@@ -290,13 +308,22 @@
     <h3 class="section-title section-title-sm">Pagos recientes / Recibos</h3>
     <table>
         <thead>
-        <tr><th>Alumno</th><th>Monto</th><th>Fecha</th><th>Recibo</th></tr>
+        <tr><th>Alumno</th><th>Moneda</th><th>Monto original</th><th>USD aplicado</th><th>Tasa</th><th>Fecha</th><th>Recibo</th></tr>
         </thead>
         <tbody>
         @forelse($payments as $payment)
             <tr>
                 <td><a href="{{ route('finance.students.history', $payment->student) }}">{{ $payment->student->full_name ?? '' }}</a></td>
-                <td>${{ number_format($payment->amount,2) }}</td>
+                <td>{{ $payment->currency ?? 'USD' }}</td>
+                <td>
+                    @if(($payment->currency ?? 'USD') === 'VES')
+                        {{ \App\Support\MoneyFormat::ves((float) ($payment->original_amount ?? $payment->amount)) }}
+                    @else
+                        {{ \App\Support\MoneyFormat::usd((float) ($payment->original_amount ?? $payment->amount)) }}
+                    @endif
+                </td>
+                <td>{{ \App\Support\MoneyFormat::usd((float) $payment->amount) }}</td>
+                <td>{{ $payment->exchange_rate ? number_format((float) $payment->exchange_rate, 4, ',', '.') : '—' }}</td>
                 <td>{{ $payment->paid_at?->format('Y-m-d') }}</td>
                 <td>
                     @if($payment->receipt)
@@ -311,7 +338,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="4">
+                <td colspan="7">
                     <div class="empty-state-inline">Aún no hay pagos registrados.</div>
                 </td>
             </tr>
@@ -330,7 +357,8 @@
         const paymentStudent = document.getElementById('payment-student-select');
         const paymentCharge = document.getElementById('payment-charge-select');
         const paymentChargeSearch = document.getElementById('payment-charge-search');
-        const paymentAmount = document.getElementById('payment-amount-input');
+        const paymentCurrencyRoot = document.querySelector('[data-payment-currency-root="finance-payment"]');
+        const paymentOriginalAmount = paymentCurrencyRoot?.querySelector('.payment-original-amount');
 
         const filterSelect = (select, { studentId = '', term = '' } = {}) => {
             if (!select) return;
@@ -377,11 +405,13 @@
                 filterSelect(paymentCharge, { studentId, term: paymentChargeSearch?.value || '' });
             }
 
-            if (paymentAmount) {
-                const total = selectedOptions.reduce((sum, option) => sum + Number(option.dataset.balance || 0), 0);
-                if (total > 0) {
-                    paymentAmount.value = total.toFixed(2);
-                }
+            const total = selectedOptions.reduce((sum, option) => sum + Number(option.dataset.balance || 0), 0);
+            if (paymentCurrencyRoot) {
+                paymentCurrencyRoot.dataset.balanceUsd = total.toFixed(2);
+            }
+            if (paymentOriginalAmount && total > 0) {
+                paymentOriginalAmount.value = total.toFixed(2);
+                paymentOriginalAmount.dispatchEvent(new Event('input'));
             }
         };
 

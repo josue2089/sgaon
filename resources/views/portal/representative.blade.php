@@ -131,15 +131,20 @@
                                 <thead><tr><th>Cargo</th><th>Monto</th><th>Estado</th><th>Comprobante</th></tr></thead>
                                 <tbody>
                                 @foreach($pendingCharges as $charge)
+                                    @php($chargeBalance = \App\Support\FinanceReconcile::outstandingForCharge($charge))
                                     <tr>
                                         <td>{{ $charge->concept }}</td>
-                                        <td>${{ number_format($charge->amount, 2) }}</td>
+                                        <td>{{ \App\Support\MoneyFormat::usd($chargeBalance) }}</td>
                                         <td>{{ ucfirst($charge->status) }}</td>
                                         <td>
                                             <form method="POST" action="{{ route('portal.representative.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs">
                                                 @csrf
-                                                <input type="number" step="0.01" min="0.01" max="{{ number_format($charge->amount, 2, '.', '') }}" name="amount" placeholder="Monto" required>
-                                                <input name="payment_method" placeholder="Método">
+                                                @include('partials.payment-currency-fields', [
+                                                    'prefix' => 'rep-charge-'.$charge->id,
+                                                    'balanceUsd' => $chargeBalance,
+                                                    'exchangeRate' => $bcvRate['rate'] ?? 0,
+                                                    'paymentMethods' => $paymentMethods,
+                                                ])
                                                 <input name="reference" placeholder="Referencia">
                                                 <input type="file" name="payment_proof" required>
                                                 <input name="notes" placeholder="Observaciones">
@@ -167,7 +172,14 @@
                                     </div>
                                     <div class="charge-request-meta">
                                         <span>{{ $paymentRequest->submitted_at?->format('d/m/Y H:i') ?? 'N/D' }}</span>
-                                        <span>${{ number_format($paymentRequest->amount, 2) }}</span>
+                                        <span>
+                                            @if(($paymentRequest->currency ?? 'USD') === 'VES')
+                                                {{ \App\Support\MoneyFormat::ves((float) ($paymentRequest->original_amount ?? $paymentRequest->amount)) }}
+                                                · {{ \App\Support\MoneyFormat::usd((float) $paymentRequest->amount) }}
+                                            @else
+                                                {{ \App\Support\MoneyFormat::usd((float) $paymentRequest->amount) }}
+                                            @endif
+                                        </span>
                                     </div>
                                     @if($paymentRequest->rejection_reason)
                                         <div class="charge-request-reject"><strong>Motivo:</strong> {{ $paymentRequest->rejection_reason }}</div>

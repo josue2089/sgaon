@@ -12,6 +12,9 @@ use App\Models\MakeupRequest;
 use App\Models\MakeupSession;
 use App\Models\Student;
 use App\Models\SystemSetting;
+use App\Models\PaymentMethod;
+use App\Services\Bcv\ExchangeRateService;
+use App\Support\PaymentSubmission;
 use App\Support\MakeupRecoveryEngine;
 use App\Support\RenewalEnrollmentEligibility;
 use Illuminate\Http\Request;
@@ -140,7 +143,14 @@ class PortalController extends Controller
 
         $renewalOffers = $this->buildRenewalOffers($student);
 
-        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions', 'pendingCharges', 'chargePaymentRequests', 'portalGradeEntries', 'renewalOffers'));
+        $paymentMethods = PaymentMethod::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('label')
+            ->get();
+        $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
+
+        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions', 'pendingCharges', 'chargePaymentRequests', 'portalGradeEntries', 'renewalOffers', 'paymentMethods', 'bcvRate'));
     }
 
     public function enrollInRenewalCourse(Request $request, Course $course): RedirectResponse
@@ -303,7 +313,14 @@ class PortalController extends Controller
                 ->groupBy(fn ($entry) => (int) $entry->enrollment->student_id);
         }
 
-        return view('portal.representative', compact('representative', 'students', 'repGradeEntriesByStudentId'));
+        $paymentMethods = PaymentMethod::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('label')
+            ->get();
+        $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
+
+        return view('portal.representative', compact('representative', 'students', 'repGradeEntriesByStudentId', 'paymentMethods', 'bcvRate'));
     }
 
     public function submitChargePaymentAsStudent(Request $request, Charge $charge): RedirectResponse
@@ -354,13 +371,11 @@ class PortalController extends Controller
 
     private function storeChargePaymentRequest(Request $request, Charge $charge, Student $student, ?Representative $representative): void
     {
-        $data = $request->validate([
-            'amount' => ['required', 'numeric', 'min:0.01'],
-            'payment_method' => ['nullable', 'string', 'max:80'],
-            'reference' => ['nullable', 'string', 'max:120'],
-            'notes' => ['nullable', 'string'],
+        $request->validate([
             'payment_proof' => ['required', 'file', 'max:10240'],
         ]);
+
+        $payload = PaymentSubmission::validatedCurrencyPayload($request, $charge);
 
         $proof = $request->file('payment_proof');
         $proofPath = $proof->store('charge-payment-requests/'.$charge->id, 'public');
@@ -370,10 +385,15 @@ class PortalController extends Controller
             'student_id' => $student->id,
             'charge_id' => $charge->id,
             'representative_id' => $representative?->id,
-            'amount' => $data['amount'],
-            'payment_method' => $data['payment_method'] ?? null,
-            'reference' => $data['reference'] ?? null,
-            'notes' => $data['notes'] ?? null,
+            'amount' => $payload['amount'],
+            'currency' => $payload['currency'],
+            'original_amount' => $payload['original_amount'],
+            'exchange_rate' => $payload['exchange_rate'],
+            'exchange_rate_effective_at' => $payload['exchange_rate_effective_at'],
+            'payment_method_id' => $payload['payment_method_id'],
+            'payment_method' => $payload['payment_method'],
+            'reference' => $payload['reference'] ?? null,
+            'notes' => $payload['notes'] ?? null,
             'proof_path' => $proofPath,
             'proof_original_name' => $proof->getClientOriginalName(),
             'proof_mime_type' => $proof->getMimeType(),

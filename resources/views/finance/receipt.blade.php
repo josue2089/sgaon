@@ -20,7 +20,7 @@
             <div><strong>Número:</strong> {{ $receipt->receipt_number }}</div>
             <div><strong>Alumno:</strong> {{ $payment->student->full_name ?? 'N/D' }}</div>
             <div><strong>Fecha:</strong> {{ $receipt->issued_at?->format('d/m/Y') ?? 'N/D' }}</div>
-            <div><strong>Monto pagado:</strong> ${{ number_format($payment->amount, 2) }}</div>
+            <div><strong>Monto pagado:</strong> {{ \App\Support\MoneyFormat::dualLine($payment) }}</div>
             <div><strong>Método:</strong> {{ $payment->method ?: 'Sin método' }}</div>
             <div><strong>Referencia:</strong> {{ $payment->reference ?: 'Sin referencia' }}</div>
             <div><strong>Recibido por:</strong> {{ $payment->receivedBy?->name ?? 'N/D' }}</div>

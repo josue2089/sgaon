@@ -12,3 +12,4 @@ Schedule::command('generate:alerts')->dailyAt('06:00');
 Schedule::command('finance:reconcile-charges')->dailyAt('05:50');
 Schedule::command('finance:generate-recurring-charges')->monthlyOn(1, '06:10');
 Schedule::command('levels:send-renewal-reminders')->dailyAt('06:20');
+Schedule::command('bcv:sync-rates')->dailyAt('05:40');

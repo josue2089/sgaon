@@ -20,6 +20,11 @@ class ChargePaymentRequest extends Model
         'representative_id',
         'validated_by',
         'amount',
+        'currency',
+        'original_amount',
+        'exchange_rate',
+        'exchange_rate_effective_at',
+        'payment_method_id',
         'payment_method',
         'reference',
         'notes',
@@ -39,6 +44,9 @@ class ChargePaymentRequest extends Model
     {
         return [
             'amount' => 'float',
+            'original_amount' => 'float',
+            'exchange_rate' => 'float',
+            'exchange_rate_effective_at' => 'datetime',
             'submitted_at' => 'datetime',
             'validated_at' => 'datetime',
             'approved_emailed_at' => 'datetime',
@@ -59,6 +67,11 @@ class ChargePaymentRequest extends Model
     public function charge()
     {
         return $this->belongsTo(Charge::class);
+    }
+
+    public function paymentMethod()
+    {
+        return $this->belongsTo(PaymentMethod::class);
     }
 
     public function representative()

@@ -61,18 +61,18 @@ class GenerateReportExportJob implements ShouldQueue
                 }
             } elseif ($export->type === 'payments') {
                 fputcsv($handle, ['student', 'concept', 'amount', 'status', 'paid', 'balance']);
-                $query = Charge::query()->with(['student', 'payments']);
+                $chargesQuery = Charge::query()->with(['student', 'payments']);
                 if ($export->campus_id) {
-                    $query->where('campus_id', $export->campus_id);
+                    $chargesQuery->where('campus_id', $export->campus_id);
                 }
                 if (! empty($filters['status'])) {
-                    $query->where('status', $filters['status']);
+                    $chargesQuery->where('status', $filters['status']);
                 }
                 if (! empty($filters['only_overdue'])) {
-                    $query->where('status', 'overdue');
+                    $chargesQuery->where('status', 'overdue');
                 }
 
-                foreach ($query->latest()->cursor() as $charge) {
+                foreach ($chargesQuery->latest()->cursor() as $charge) {
                     $paid = (float) $charge->payments->sum('amount');
                     fputcsv($handle, [
                         $charge->student->full_name ?? '',
@@ -81,6 +81,25 @@ class GenerateReportExportJob implements ShouldQueue
                         $charge->status,
                         $paid,
                         max(0, (float) $charge->amount - $paid),
+                    ]);
+                }
+
+                fputcsv($handle, []);
+                fputcsv($handle, ['student', 'paid_at', 'currency', 'original_amount', 'exchange_rate', 'amount_usd', 'method', 'reference']);
+                $paymentsQuery = \App\Models\Payment::query()->with(['student'])->latest();
+                if ($export->campus_id) {
+                    $paymentsQuery->where('campus_id', $export->campus_id);
+                }
+                foreach ($paymentsQuery->cursor() as $payment) {
+                    fputcsv($handle, [
+                        $payment->student->full_name ?? '',
+                        optional($payment->paid_at)->format('Y-m-d'),
+                        $payment->currency ?? 'USD',
+                        $payment->original_amount ?? $payment->amount,
+                        $payment->exchange_rate,
+                        $payment->amount,
+                        $payment->method,
+                        $payment->reference,
                     ]);
                 }
             } else {

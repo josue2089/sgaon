@@ -1,4 +1,5 @@
 import './bootstrap';
+import './payment-currency';
 
 document.querySelectorAll('[data-student-picker]').forEach((form) => {
     const modal = form.querySelector('[data-picker-modal]');

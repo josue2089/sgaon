@@ -48,7 +48,8 @@
         </div>
         <div class="form-actions">
             <button class="btn" type="submit">Filtrar</button>
-            <a class="btn secondary" href="{{ route('reports.payments', array_merge(request()->query(), ['export' => 'csv'])) }}">Exportar CSV</a>
+            <a class="btn secondary" href="{{ route('reports.payments', array_merge(request()->query(), ['export' => 'csv'])) }}">Exportar CxC CSV</a>
+            <a class="btn secondary" href="{{ route('reports.payments', array_merge(request()->query(), ['export' => 'payments_detail_csv'])) }}">Exportar pagos CSV</a>
         </div>
     </form>
     <div class="form-actions">
@@ -128,5 +129,47 @@
     @if($charges->hasPages())
         {{ $charges->links() }}
     @endif
+</div>
+
+<div class="card">
+    <h3 class="section-title section-title-sm">Desglose de pagos recibidos</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Alumno</th>
+            <th>Fecha</th>
+            <th>Moneda</th>
+            <th>Monto original</th>
+            <th>Tasa</th>
+            <th>USD aplicado</th>
+            <th>Método</th>
+        </tr>
+        </thead>
+        <tbody>
+        @forelse($recentPayments ?? [] as $payment)
+            <tr>
+                <td>{{ $payment->student->full_name ?? '' }}</td>
+                <td>{{ $payment->paid_at?->format('Y-m-d') }}</td>
+                <td>{{ $payment->currency ?? 'USD' }}</td>
+                <td>
+                    @if(($payment->currency ?? 'USD') === 'VES')
+                        {{ \App\Support\MoneyFormat::ves((float) ($payment->original_amount ?? $payment->amount)) }}
+                    @else
+                        {{ \App\Support\MoneyFormat::usd((float) ($payment->original_amount ?? $payment->amount)) }}
+                    @endif
+                </td>
+                <td>{{ $payment->exchange_rate ? number_format((float) $payment->exchange_rate, 4, ',', '.') : '—' }}</td>
+                <td>{{ \App\Support\MoneyFormat::usd((float) $payment->amount) }}</td>
+                <td>{{ $payment->method }}</td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="7">
+                    <div class="empty-state-inline">No hay pagos registrados.</div>
+                </td>
+            </tr>
+        @endforelse
+        </tbody>
+    </table>
 </div>
 @endsection

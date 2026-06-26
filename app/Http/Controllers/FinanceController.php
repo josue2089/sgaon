@@ -17,6 +17,10 @@ use App\Support\AlertEngine;
 use App\Support\AuditTrail;
 use App\Support\CampusScope;
 use App\Support\FinanceReconcile;
+use App\Models\PaymentMethod;
+use App\Services\Bcv\ExchangeRateService;
+use App\Support\MoneyFormat;
+use App\Support\PaymentCurrencyConverter;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,12 +37,12 @@ class FinanceController extends Controller
     {
         $user = $request->user();
         $chargesQuery = CampusScope::apply(Charge::with(['student', 'payments', 'course', 'group', 'period', 'enrollment.group.course'])->latest(), $user);
-        $paymentsQuery = CampusScope::apply(Payment::with(['student', 'receipt', 'allocations.charge'])->latest(), $user);
+        $paymentsQuery = CampusScope::apply(Payment::with(['student', 'receipt', 'allocations.charge', 'paymentMethod'])->latest(), $user);
         $studentsQuery = CampusScope::apply(Student::orderBy('first_name'), $user);
         $enrollmentsQuery = CampusScope::apply(Enrollment::with(['student', 'group.course'])->latest(), $user);
         $periodsQuery = CampusScope::apply(Period::orderBy('code'), $user);
         $paymentRequestsQuery = CampusScope::apply(
-            ChargePaymentRequest::query()->with(['student', 'representative', 'charge.course', 'validator'])->latest(),
+            ChargePaymentRequest::query()->with(['student', 'representative', 'charge.course', 'validator', 'paymentMethod'])->latest(),
             $user
         );
 
@@ -90,6 +94,13 @@ class FinanceController extends Controller
             ->whereRaw($criticalOverdueCondition)
             ->count();
 
+        $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
+        $paymentMethods = PaymentMethod::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('label')
+            ->get();
+
         return view('finance.index', [
             'charges' => $chargesQuery->paginate(20)->withQueryString(),
             'payments' => $paymentsQuery->take(20)->get(),
@@ -101,6 +112,8 @@ class FinanceController extends Controller
             'paymentRequests' => $paymentRequestsQuery->take(20)->get(),
             'focusStudentId' => $focusStudentId,
             'criticalOverdueCount' => (int) $criticalOverdueCount,
+            'bcvRate' => $bcvRate,
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 
@@ -242,12 +255,28 @@ class FinanceController extends Controller
             'charge_id' => ['nullable', 'exists:charges,id'],
             'charge_ids' => ['nullable', 'array'],
             'charge_ids.*' => ['required', 'exists:charges,id'],
-            'amount' => ['required', 'numeric', 'min:0'],
+            'currency' => ['required', 'in:'.PaymentCurrencyConverter::CURRENCY_USD.','.PaymentCurrencyConverter::CURRENCY_VES],
+            'original_amount' => ['required', 'numeric', 'min:0.01'],
+            'payment_method_id' => ['required', 'exists:payment_methods,id'],
             'paid_at' => ['required', 'date'],
-            'method' => ['nullable', 'string', 'max:60'],
             'reference' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string'],
         ]);
+
+        $paymentMethod = PaymentMethod::query()
+            ->whereKey($data['payment_method_id'])
+            ->where('is_active', true)
+            ->first();
+
+        if (! $paymentMethod || $paymentMethod->currency !== $data['currency']) {
+            return back()->withErrors([
+                'payment_method_id' => 'El método de pago no corresponde a la moneda seleccionada.',
+            ])->withInput();
+        }
+
+        $converted = PaymentCurrencyConverter::resolve($data['currency'], (float) $data['original_amount']);
+        $data['amount'] = $converted['amount'];
+        $data['method'] = $paymentMethod->label;
 
         $student = Student::findOrFail($data['student_id']);
         if (! CampusScope::userCanAccessCampus($request->user(), (int) $student->campus_id)) {
@@ -292,7 +321,13 @@ class FinanceController extends Controller
             }
         }
 
-        $paymentPayload = $data;
+        $paymentPayload = array_merge($data, [
+            'currency' => $converted['currency'],
+            'original_amount' => $converted['original_amount'],
+            'exchange_rate' => $converted['exchange_rate'],
+            'exchange_rate_effective_at' => $converted['exchange_rate_effective_at'],
+            'payment_method_id' => $paymentMethod->id,
+        ]);
         if ($selectedChargeIds->count() !== 1) {
             $paymentPayload['charge_id'] = null;
         } else {
@@ -369,11 +404,20 @@ class FinanceController extends Controller
                 return back()->withErrors(['action' => 'El cargo seleccionado ya no tiene saldo pendiente.']);
             }
 
+            $requestAmountUsd = (float) $paymentRequest->amount;
+            $ratio = $requestAmountUsd > 0 ? $amountToApply / $requestAmountUsd : 1;
+            $originalApplied = round((float) ($paymentRequest->original_amount ?? $paymentRequest->amount) * $ratio, 2);
+
             $payment = Payment::create([
                 'campus_id' => $paymentRequest->campus_id,
                 'student_id' => $paymentRequest->student_id,
                 'charge_id' => $charge->id,
                 'amount' => $amountToApply,
+                'currency' => $paymentRequest->currency,
+                'original_amount' => $originalApplied,
+                'exchange_rate' => $paymentRequest->exchange_rate,
+                'exchange_rate_effective_at' => $paymentRequest->exchange_rate_effective_at,
+                'payment_method_id' => $paymentRequest->payment_method_id,
                 'paid_at' => now()->toDateString(),
                 'paid_at_datetime' => now(),
                 'method' => $paymentRequest->payment_method ?: 'Comprobante portal',
@@ -509,6 +553,8 @@ class FinanceController extends Controller
                 'amount' => (float) $payment->amount,
                 'meta' => [
                     'metodo' => $payment->method ?: 'Sin método',
+                    'moneda' => $payment->currency ?? PaymentCurrencyConverter::CURRENCY_USD,
+                    'monto' => MoneyFormat::dualLine($payment),
                     'referencia' => $payment->reference ?: 'Sin referencia',
                     'cargos' => $allocations->map(function ($allocation) {
                         $charge = $allocation->charge;

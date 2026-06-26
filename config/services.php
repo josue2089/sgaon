@@ -43,4 +43,10 @@ return [
         ],
     ],
 
+    'bcv_api' => [
+        'base_url' => env('BCV_API_BASE_URL', 'https://aerious.uk/api/exchange-rates/bcv'),
+        'api_key' => env('BCV_API_KEY'),
+        'timeout' => (int) env('BCV_API_TIMEOUT', 15),
+    ],
+
 ];

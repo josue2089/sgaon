@@ -228,7 +228,8 @@
                     </div>
                 </div>
                 <div class="charge-pending-meta">
-                    <div><strong>Monto cargo:</strong> ${{ number_format($charge->amount, 2) }}</div>
+                    @php($chargeBalance = \App\Support\FinanceReconcile::outstandingForCharge($charge))
+                    <div><strong>Saldo pendiente:</strong> {{ \App\Support\MoneyFormat::usd($chargeBalance) }}</div>
                 </div>
                 <div class="charge-pending-actions">
                     <button type="button" class="btn secondary" onclick="document.getElementById('charge-pay-dialog-{{ $charge->id }}').showModal()">Enviar comprobante</button>
@@ -239,17 +240,15 @@
                     <h3 class="charge-pay-dialog-title">Enviar comprobante</h3>
                     <button type="button" class="charge-pay-dialog-close" onclick="document.getElementById('charge-pay-dialog-{{ $charge->id }}').close()" aria-label="Cerrar">&times;</button>
                 </div>
-                <p class="charge-pay-dialog-summary">{{ $charge->concept }} · <strong>${{ number_format($charge->amount, 2) }}</strong></p>
+                <p class="charge-pay-dialog-summary">{{ $charge->concept }} · <strong>{{ \App\Support\MoneyFormat::usd($chargeBalance) }}</strong> pendiente</p>
                 <form method="POST" action="{{ route('portal.student.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs charge-pay-form">
                     @csrf
-                    <div>
-                        <label for="charge-amount-{{ $charge->id }}">Monto que pagaste</label>
-                        <input id="charge-amount-{{ $charge->id }}" type="number" step="0.01" min="0.01" max="{{ number_format($charge->amount, 2, '.', '') }}" name="amount" placeholder="Ej. {{ number_format($charge->amount, 2, '.', '') }}" required inputmode="decimal">
-                    </div>
-                    <div>
-                        <label for="charge-method-{{ $charge->id }}">Método</label>
-                        <input id="charge-method-{{ $charge->id }}" name="payment_method" placeholder="Transferencia, Pago móvil, etc.">
-                    </div>
+                    @include('partials.payment-currency-fields', [
+                        'prefix' => 'charge-'.$charge->id,
+                        'balanceUsd' => $chargeBalance,
+                        'exchangeRate' => $bcvRate['rate'] ?? 0,
+                        'paymentMethods' => $paymentMethods,
+                    ])
                     <div>
                         <label for="charge-ref-{{ $charge->id }}">Referencia</label>
                         <input id="charge-ref-{{ $charge->id }}" name="reference" placeholder="Número de operación o referencia">
@@ -286,7 +285,14 @@
                     </div>
                     <div class="charge-request-meta">
                         <span>{{ $paymentRequest->submitted_at?->format('d/m/Y H:i') ?? 'N/D' }}</span>
-                        <span>${{ number_format($paymentRequest->amount, 2) }}</span>
+                        <span>
+                            @if(($paymentRequest->currency ?? 'USD') === 'VES')
+                                {{ \App\Support\MoneyFormat::ves((float) ($paymentRequest->original_amount ?? $paymentRequest->amount)) }}
+                                · {{ \App\Support\MoneyFormat::usd((float) $paymentRequest->amount) }}
+                            @else
+                                {{ \App\Support\MoneyFormat::usd((float) $paymentRequest->amount) }}
+                            @endif
+                        </span>
                     </div>
                     @if($paymentRequest->rejection_reason)
                         <div class="charge-request-reject"><strong>Motivo:</strong> {{ $paymentRequest->rejection_reason }}</div>
@@ -298,7 +304,7 @@
     </div>
     <div class="grid-2">
     <div class="card table-card"><h3 class="section-title section-title-sm">Cargos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Concepto</th><th>Monto</th><th>Estado</th></tr></thead><tbody>@forelse($charges as $charge)<tr><td>{{ $charge->concept }}</td><td>${{ number_format($charge->amount,2) }}</td><td>{{ $charge->status }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin cargos</div></td></tr>@endforelse</tbody></table></div></div>
-    <div class="card table-card"><h3 class="section-title section-title-sm">Pagos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Monto</th><th>Método</th></tr></thead><tbody>@forelse($payments as $payment)<tr><td>{{ $payment->paid_at?->format('Y-m-d') }}</td><td>${{ number_format($payment->amount,2) }}</td><td>{{ $payment->method }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin pagos</div></td></tr>@endforelse</tbody></table></div></div>
+    <div class="card table-card"><h3 class="section-title section-title-sm">Pagos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Monto</th><th>Método</th></tr></thead><tbody>@forelse($payments as $payment)<tr><td>{{ $payment->paid_at?->format('Y-m-d') }}</td><td>{{ \App\Support\MoneyFormat::dualLine($payment) }}</td><td>{{ $payment->method }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin pagos</div></td></tr>@endforelse</tbody></table></div></div>
     </div>
 @endif
 </section>

@@ -116,7 +116,11 @@
                     <div class="row"><span class="label">Número:</span> {{ $receipt->receipt_number }}</div>
                     <div class="row"><span class="label">Alumno:</span> {{ $payment->student->full_name ?? 'N/D' }}</div>
                     <div class="row"><span class="label">Fecha:</span> {{ $receipt->issued_at?->format('d/m/Y') ?? 'N/D' }}</div>
-                    <div class="row"><span class="label">Monto pagado:</span> ${{ number_format($payment->amount, 2) }}</div>
+                    <div class="row"><span class="label">Monto pagado (USD aplicado):</span> {{ \App\Support\MoneyFormat::usd((float) $payment->amount) }}</div>
+                    @if(($payment->currency ?? 'USD') === 'VES')
+                        <div class="row"><span class="label">Monto en Bs:</span> {{ \App\Support\MoneyFormat::ves((float) ($payment->original_amount ?? 0)) }}</div>
+                        <div class="row"><span class="label">Tasa BCV:</span> {{ number_format((float) $payment->exchange_rate, 4, ',', '.') }}</div>
+                    @endif
                     <div class="row"><span class="label">Método:</span> {{ $payment->method ?: 'Sin método' }}</div>
                     <div class="row"><span class="label">Referencia:</span> {{ $payment->reference ?: 'Sin referencia' }}</div>
                     <div class="row"><span class="label">Recibido por:</span> {{ $payment->receivedBy?->name ?? 'N/D' }}</div>

@@ -7,6 +7,7 @@ use App\Models\Alert;
 use App\Models\AuditLog;
 use App\Models\AttendanceRecord;
 use App\Models\Charge;
+use App\Models\Payment;
 use App\Models\ReportExport;
 use App\Models\ReportPreset;
 use App\Support\FinanceReconcile;
@@ -94,8 +95,18 @@ class ReportController extends Controller
             return $this->paymentsCsv($query->get());
         }
 
+        if ($request->query('export') === 'payments_detail_csv') {
+            return $this->paymentsDetailCsv($request);
+        }
+
+        $paymentsQuery = Payment::query()->with(['student', 'paymentMethod'])->latest();
+        if ($this->campusId($request)) {
+            $paymentsQuery->where('campus_id', $this->campusId($request));
+        }
+
         return view('reports.payments', [
             'charges' => $query->paginate(40)->withQueryString(),
+            'recentPayments' => $paymentsQuery->take(50)->get(),
             'periods' => \App\Models\Period::query()
                 ->when($this->campusId($request), fn ($builder) => $builder->where('campus_id', $this->campusId($request)))
                 ->orderBy('code')
@@ -257,6 +268,32 @@ class ReportController extends Controller
             }
             fclose($out);
         }, 'attendance_report.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    private function paymentsDetailCsv(Request $request): StreamedResponse
+    {
+        $query = Payment::query()->with(['student'])->latest();
+        if ($this->campusId($request)) {
+            $query->where('campus_id', $this->campusId($request));
+        }
+
+        return response()->streamDownload(function () use ($query): void {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['student', 'paid_at', 'currency', 'original_amount', 'exchange_rate', 'amount_usd', 'method', 'reference']);
+            foreach ($query->cursor() as $payment) {
+                fputcsv($out, [
+                    $payment->student->full_name ?? '',
+                    optional($payment->paid_at)->format('Y-m-d'),
+                    $payment->currency ?? 'USD',
+                    $payment->original_amount ?? $payment->amount,
+                    $payment->exchange_rate,
+                    $payment->amount,
+                    $payment->method,
+                    $payment->reference,
+                ]);
+            }
+            fclose($out);
+        }, 'payments_detail_report.csv', ['Content-Type' => 'text/csv']);
     }
 
     private function paymentsCsv($charges): StreamedResponse

@@ -40,6 +40,7 @@
         ['name' => 'Feriados', 'route' => 'holidays.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('holidays.index')],
         ['name' => 'Programas', 'route' => 'programs.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('programs.index')],
         ['name' => 'Pago recuperativas', 'route' => 'settings.makeup-payment-instructions.edit', 'enabled' => $user?->isMasterAdmin() && $hasRoute('settings.makeup-payment-instructions.edit')],
+        ['name' => 'Métodos de pago', 'route' => 'settings.payment-methods.index', 'enabled' => $user?->isMasterAdmin() && $hasRoute('settings.payment-methods.index')],
     ];
     $extraPrefixes = ['teachers', 'courses', 'finance', 'enrollments', 'makeups'];
     $extraActive = in_array(explode('.', (string) $currentRoute)[0], $extraPrefixes, true);

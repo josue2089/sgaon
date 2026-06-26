@@ -17,6 +17,7 @@ use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\MakeupRecoveryController;
 use App\Http\Controllers\OperationWizardController;
 use App\Http\Controllers\PortalController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ProgramLevelController;
@@ -44,6 +45,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', 'campus.access'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/api/finance/exchange-rate', [\App\Http\Controllers\ExchangeRateController::class, 'latest'])->name('finance.exchange-rate');
 
     Route::middleware('role:admin')->group(function () {
         Route::get('/students/import', [StudentImportController::class, 'create'])->name('students.import');
@@ -101,6 +103,10 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::resource('programs', ProgramController::class);
             Route::get('/settings/makeup-payment-instructions', [SystemSettingController::class, 'editMakeupPaymentInstructions'])->name('settings.makeup-payment-instructions.edit');
             Route::put('/settings/makeup-payment-instructions', [SystemSettingController::class, 'updateMakeupPaymentInstructions'])->name('settings.makeup-payment-instructions.update');
+            Route::resource('settings/payment-methods', PaymentMethodController::class)
+                ->except(['show'])
+                ->names('settings.payment-methods')
+                ->parameters(['payment-methods' => 'paymentMethod']);
             Route::get('/programs/{program}/levels/create', [ProgramLevelController::class, 'create'])->name('program-levels.create');
             Route::post('/programs/{program}/levels', [ProgramLevelController::class, 'store'])->name('program-levels.store');
             Route::get('/program-levels/{programLevel}', [ProgramLevelController::class, 'show'])->name('program-levels.show');

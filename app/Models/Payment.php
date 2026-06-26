@@ -15,6 +15,11 @@ class Payment extends Model
         'charge_id',
         'makeup_request_id',
         'amount',
+        'currency',
+        'original_amount',
+        'exchange_rate',
+        'exchange_rate_effective_at',
+        'payment_method_id',
         'paid_at',
         'paid_at_datetime',
         'method',
@@ -31,6 +36,9 @@ class Payment extends Model
             'paid_at' => 'date',
             'paid_at_datetime' => 'datetime',
             'amount' => 'float',
+            'original_amount' => 'float',
+            'exchange_rate' => 'float',
+            'exchange_rate_effective_at' => 'datetime',
             'voided_at' => 'datetime',
         ];
     }
@@ -53,6 +61,11 @@ class Payment extends Model
     public function receivedBy()
     {
         return $this->belongsTo(User::class, 'received_by');
+    }
+
+    public function paymentMethod()
+    {
+        return $this->belongsTo(PaymentMethod::class);
     }
 
     public function receipt()
