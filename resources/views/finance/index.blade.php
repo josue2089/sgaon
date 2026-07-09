@@ -11,14 +11,15 @@
         <p class="page-subtitle">
             Control de cargos, pagos y cobranza
             @if(($bcvRate['rate'] ?? 0) > 0)
-                · Tasa BCV: Bs {{ number_format($bcvRate['rate'], 4, ',', '.') }}
-                @if(!empty($bcvRate['effective_at']))
-                    (vigente {{ $bcvRate['effective_at']->format('d/m/Y') }})
-                @endif
+                · Tasa BCV USD: Bs {{ number_format($bcvRate['rate'], 4, ',', '.') }}
+            @endif
+            @if(($bcvEurRate['rate'] ?? 0) > 0)
+                · Tasa BCV EUR: Bs {{ number_format($bcvEurRate['rate'], 4, ',', '.') }}
             @endif
         </p>
     </div>
     <a class="btn secondary" href="{{ route('finance.index', array_merge(request()->query(), ['export' => 'mora_csv'])) }}">Exportar mora CSV</a>
+    <a class="btn secondary" href="{{ route('finance.summary') }}">Resumen financiero</a>
     @if($focusStudentId)
         @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Enfocado en alumno #'.$focusStudentId])
     @endif
@@ -82,6 +83,13 @@
                 <input type="number" step="0.01" name="amount">
             </div>
             <div>
+                <label>Moneda</label>
+                <select name="currency">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                </select>
+            </div>
+            <div>
                 <label>Vencimiento</label>
                 <input type="date" name="due_date">
             </div>
@@ -121,9 +129,10 @@
                             value="{{ $charge->id }}"
                             data-student-id="{{ $charge->student_id }}"
                             data-balance="{{ number_format($balance, 2, '.', '') }}"
+                            data-currency="{{ $charge->currencyCode() }}"
                             data-search="{{ strtolower(($charge->student->full_name ?? '').' '.$charge->concept.' '.($charge->course->name ?? '').' '.($charge->group->name ?? '').' '.($charge->period->code ?? '')) }}"
                             @selected(in_array((string) $charge->id, array_map('strval', old('charge_ids', old('charge_id') ? [old('charge_id')] : [])), true))
-                        >{{ $charge->student->full_name ?? '' }} - {{ $charge->concept }} - Saldo ${{ number_format($balance, 2) }}</option>
+                        >{{ $charge->student->full_name ?? '' }} - {{ $charge->concept }} - Saldo {{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</option>
                     @endforeach
                 </select>
                 <div class="form-hint">Puedes seleccionar uno o varios cargos del mismo alumno.</div>
@@ -131,10 +140,17 @@
             <div id="finance-payment-currency-wrap">
                 @include('partials.payment-currency-fields', [
                     'prefix' => 'finance-payment',
-                    'balanceUsd' => 0,
-                    'exchangeRate' => $bcvRate['rate'] ?? 0,
+                    'chargeCurrency' => 'USD',
+                    'balanceAmount' => 0,
+                    'usdExchangeRate' => $bcvRate['rate'] ?? 0,
+                    'eurExchangeRate' => $bcvEurRate['rate'] ?? 0,
                     'paymentMethods' => $paymentMethods,
                 ])
+            </div>
+            <div>
+                <label>Nueva fecha de vencimiento del saldo</label>
+                <input type="date" name="balance_due_date" value="{{ old('balance_due_date') }}">
+                <div class="form-hint">Opcional. Úsala cuando el pago deje saldo pendiente.</div>
             </div>
             <div>
                 <label>Fecha</label>
@@ -284,9 +300,9 @@
                 <td>{{ $charge->group->name ?? 'Sin grupo' }}</td>
                 <td>{{ $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período') }}</td>
                 <td>{{ $charge->concept }}</td>
-                <td>${{ number_format($charge->amount,2) }}</td>
-                <td>${{ number_format($paidTotal,2) }}</td>
-                <td>${{ number_format($balance,2) }}</td>
+                <td>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</td>
+                <td>{{ \App\Support\MoneyFormat::formatLedgerAmount($paidTotal, $charge->currencyCode()) }}</td>
+                <td>{{ \App\Support\MoneyFormat::formatLedgerAmount($balance, $charge->currencyCode()) }}</td>
                 <td>@include('partials.ui.status-badge', ['tone' => $moraTone, 'text' => $moraText])</td>
                 <td><span class="status-pill {{ $charge->status === 'paid' ? 'success' : ($charge->status === 'overdue' ? 'danger' : 'warn') }}">{{ $charge->status }}</span></td>
             </tr>
@@ -308,7 +324,7 @@
     <h3 class="section-title section-title-sm">Pagos recientes / Recibos</h3>
     <table>
         <thead>
-        <tr><th>Alumno</th><th>Moneda</th><th>Monto original</th><th>USD aplicado</th><th>Tasa</th><th>Fecha</th><th>Recibo</th></tr>
+        <tr><th>Alumno</th><th>Moneda</th><th>Monto original</th><th>Monto aplicado</th><th>Tasa</th><th>Fecha</th><th>Recibo</th></tr>
         </thead>
         <tbody>
         @forelse($payments as $payment)
@@ -318,11 +334,13 @@
                 <td>
                     @if(($payment->currency ?? 'USD') === 'VES')
                         {{ \App\Support\MoneyFormat::ves((float) ($payment->original_amount ?? $payment->amount)) }}
+                    @elseif(($payment->currency ?? 'USD') === 'EUR')
+                        {{ \App\Support\MoneyFormat::eur((float) ($payment->original_amount ?? $payment->amount)) }}
                     @else
                         {{ \App\Support\MoneyFormat::usd((float) ($payment->original_amount ?? $payment->amount)) }}
                     @endif
                 </td>
-                <td>{{ \App\Support\MoneyFormat::usd((float) $payment->amount) }}</td>
+                <td>{{ \App\Support\MoneyFormat::formatLedgerAmount((float) $payment->amount, $payment->currency) }}</td>
                 <td>{{ $payment->exchange_rate ? number_format((float) $payment->exchange_rate, 4, ',', '.') : '—' }}</td>
                 <td>{{ $payment->paid_at?->format('Y-m-d') }}</td>
                 <td>
@@ -406,8 +424,15 @@
             }
 
             const total = selectedOptions.reduce((sum, option) => sum + Number(option.dataset.balance || 0), 0);
+            const chargeCurrency = selectedOptions[0]?.dataset.currency || 'USD';
             if (paymentCurrencyRoot) {
-                paymentCurrencyRoot.dataset.balanceUsd = total.toFixed(2);
+                paymentCurrencyRoot.dataset.balanceAmount = total.toFixed(2);
+                paymentCurrencyRoot.dataset.chargeCurrency = chargeCurrency;
+                const currencySelect = paymentCurrencyRoot.querySelector('.payment-currency-select');
+                if (currencySelect) {
+                    currencySelect.value = chargeCurrency === 'EUR' ? 'EUR' : 'USD';
+                    currencySelect.dispatchEvent(new Event('change'));
+                }
             }
             if (paymentOriginalAmount && total > 0) {
                 paymentOriginalAmount.value = total.toFixed(2);

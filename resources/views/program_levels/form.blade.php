@@ -20,6 +20,10 @@
         <input type="number" name="academic_hours" min="1" max="500" value="{{ old('academic_hours', $level->academic_hours ?? 40) }}" required>
     </div>
     <div>
+        <label>Precio base (EUR)</label>
+        <input type="number" name="base_price_eur" min="0" step="0.01" value="{{ old('base_price_eur', $level->base_price_eur ?? '') }}" placeholder="Ej. 240.00">
+    </div>
+    <div>
         <label>Días antes para recordatorio</label>
         <input type="number" name="reminder_days_before" min="0" max="90" value="{{ old('reminder_days_before', $level->reminder_days_before ?? 5) }}" required>
     </div>

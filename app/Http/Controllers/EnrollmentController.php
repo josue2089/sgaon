@@ -7,6 +7,7 @@ use App\Models\Group;
 use App\Models\Student;
 use App\Support\RenewalEnrollmentEligibility;
 use App\Support\AuditTrail;
+use App\Services\EnrollmentBillingService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -126,6 +127,7 @@ class EnrollmentController extends Controller
             $data,
         );
         AuditTrail::log($request, 'enrollment.upsert', $enrollment, $data);
+        app(EnrollmentBillingService::class)->createTuitionCharge($enrollment, $request);
 
         return redirect()->route('enrollments.index')->with('success', 'Inscripción guardada.');
     }

@@ -17,6 +17,7 @@ use App\Support\AlertEngine;
 use App\Support\AuditTrail;
 use App\Support\CampusScope;
 use App\Support\FinanceReconcile;
+use App\Support\FinanceSummary;
 use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
 use App\Support\MoneyFormat;
@@ -95,6 +96,7 @@ class FinanceController extends Controller
             ->count();
 
         $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
+        $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
         $paymentMethods = PaymentMethod::query()
             ->where('is_active', true)
             ->orderBy('sort_order')
@@ -113,7 +115,56 @@ class FinanceController extends Controller
             'focusStudentId' => $focusStudentId,
             'criticalOverdueCount' => (int) $criticalOverdueCount,
             'bcvRate' => $bcvRate,
+            'bcvEurRate' => $bcvEurRate,
             'paymentMethods' => $paymentMethods,
+        ]);
+    }
+
+    public function summary(Request $request): View|StreamedResponse
+    {
+        $filterData = $request->validate([
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'currency' => ['nullable', 'in:'.PaymentCurrencyConverter::CURRENCY_EUR.','.PaymentCurrencyConverter::CURRENCY_USD],
+        ]);
+
+        $startDate = ! empty($filterData['start_date']) ? Carbon::parse($filterData['start_date']) : null;
+        $endDate = ! empty($filterData['end_date']) ? Carbon::parse($filterData['end_date']) : null;
+        $currency = $filterData['currency'] ?? PaymentCurrencyConverter::CURRENCY_EUR;
+
+        $summary = FinanceSummary::build($request->user(), $startDate, $endDate, $currency);
+        $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
+        $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
+        $vesRate = $currency === PaymentCurrencyConverter::CURRENCY_EUR
+            ? (float) ($bcvEurRate['rate'] ?? 0)
+            : (float) ($bcvRate['rate'] ?? 0);
+
+        if ($request->query('export') === 'projection_csv') {
+            return response()->streamDownload(function () use ($summary, $vesRate): void {
+                $out = fopen('php://output', 'w');
+                fputcsv($out, ['periodo', 'monto', 'equivalente_bs', 'moneda']);
+                foreach ($summary['projection'] as $row) {
+                    fputcsv($out, [
+                        $row['label'],
+                        $row['amount'],
+                        $vesRate > 0 ? PaymentCurrencyConverter::eurVesEquivalent((float) $row['amount'], $vesRate) : 0,
+                        $summary['currency'],
+                    ]);
+                }
+                fclose($out);
+            }, 'proyeccion_cobros.csv', ['Content-Type' => 'text/csv']);
+        }
+
+        return view('finance.summary', [
+            'summary' => $summary,
+            'filters' => [
+                'start_date' => $filterData['start_date'] ?? null,
+                'end_date' => $filterData['end_date'] ?? null,
+                'currency' => $currency,
+            ],
+            'bcvEurRate' => $bcvEurRate,
+            'bcvRate' => $bcvRate,
+            'vesRate' => $vesRate,
         ]);
     }
 
@@ -126,6 +177,7 @@ class FinanceController extends Controller
             'charge_type' => ['nullable', 'in:tuition,materials,registration,makeup,other'],
             'billing_period_label' => ['nullable', 'string', 'max:60'],
             'amount' => ['required', 'numeric', 'min:0'],
+            'currency' => ['nullable', 'in:'.PaymentCurrencyConverter::CURRENCY_USD.','.PaymentCurrencyConverter::CURRENCY_EUR],
             'due_date' => ['nullable', 'date'],
             'status' => ['required', 'in:pending,partial,overdue'],
             'notes' => ['nullable', 'string'],
@@ -160,6 +212,8 @@ class FinanceController extends Controller
             $data['campus_id'] = $student->campus_id;
             $data['origin'] = 'manual';
         }
+
+        $data['currency'] = strtoupper((string) ($data['currency'] ?? PaymentCurrencyConverter::CURRENCY_USD));
 
         $charge = Charge::create($data);
         AuditTrail::log($request, 'finance.charge.create', $charge, $data);
@@ -237,6 +291,9 @@ class FinanceController extends Controller
         $timeline = $this->buildStudentFinanceTimeline($student);
         $summary = $this->buildStudentFinanceSummary($student);
 
+        $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
+        $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
+
         return view('finance.student-history', [
             'student' => $student,
             'timeline' => $timeline,
@@ -245,6 +302,8 @@ class FinanceController extends Controller
                 'start_date' => $filterData['start_date'] ?? null,
                 'end_date' => $filterData['end_date'] ?? null,
             ],
+            'bcvRate' => $bcvRate,
+            'bcvEurRate' => $bcvEurRate,
         ]);
     }
 
@@ -255,10 +314,11 @@ class FinanceController extends Controller
             'charge_id' => ['nullable', 'exists:charges,id'],
             'charge_ids' => ['nullable', 'array'],
             'charge_ids.*' => ['required', 'exists:charges,id'],
-            'currency' => ['required', 'in:'.PaymentCurrencyConverter::CURRENCY_USD.','.PaymentCurrencyConverter::CURRENCY_VES],
+            'currency' => ['required', 'in:'.PaymentCurrencyConverter::CURRENCY_USD.','.PaymentCurrencyConverter::CURRENCY_VES.','.PaymentCurrencyConverter::CURRENCY_EUR],
             'original_amount' => ['required', 'numeric', 'min:0.01'],
             'payment_method_id' => ['required', 'exists:payment_methods,id'],
             'paid_at' => ['required', 'date'],
+            'balance_due_date' => ['nullable', 'date', 'after_or_equal:paid_at'],
             'reference' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string'],
         ]);
@@ -274,8 +334,6 @@ class FinanceController extends Controller
             ])->withInput();
         }
 
-        $converted = PaymentCurrencyConverter::resolve($data['currency'], (float) $data['original_amount']);
-        $data['amount'] = $converted['amount'];
         $data['method'] = $paymentMethod->label;
 
         $student = Student::findOrFail($data['student_id']);
@@ -312,7 +370,14 @@ class FinanceController extends Controller
                     abort(403);
                 }
             }
+        }
 
+        $converted = $charges->isNotEmpty()
+            ? PaymentCurrencyConverter::resolveForCharge($data['currency'], (float) $data['original_amount'], $charges->first())
+            : PaymentCurrencyConverter::resolve($data['currency'], (float) $data['original_amount']);
+        $data['amount'] = $converted['amount'];
+
+        if ($selectedChargeIds->isNotEmpty()) {
             $availableToApply = $charges->sum(fn (Charge $charge) => FinanceReconcile::outstandingForCharge($charge));
             if ((float) $data['amount'] > (float) $availableToApply) {
                 return back()->withErrors([
@@ -327,12 +392,8 @@ class FinanceController extends Controller
             'exchange_rate' => $converted['exchange_rate'],
             'exchange_rate_effective_at' => $converted['exchange_rate_effective_at'],
             'payment_method_id' => $paymentMethod->id,
+            'charge_id' => null,
         ]);
-        if ($selectedChargeIds->count() !== 1) {
-            $paymentPayload['charge_id'] = null;
-        } else {
-            $paymentPayload['charge_id'] = $selectedChargeIds->first();
-        }
 
         $payment = Payment::create($paymentPayload);
         $payment->update([
@@ -364,6 +425,18 @@ class FinanceController extends Controller
 
             foreach ($charges as $charge) {
                 FinanceReconcile::syncCharge($charge);
+            }
+
+            if (! empty($data['balance_due_date'])) {
+                foreach ($charges as $charge) {
+                    if (FinanceReconcile::outstandingForCharge($charge) > 0) {
+                        $charge->update(['due_date' => $data['balance_due_date']]);
+                    }
+                }
+            }
+
+            if ($selectedChargeIds->count() === 1) {
+                $payment->update(['charge_id' => $selectedChargeIds->first()]);
             }
         }
 
@@ -525,6 +598,11 @@ class FinanceController extends Controller
                 'title' => 'Cargo generado',
                 'subtitle' => trim(($charge->course->name ?? 'Sin curso').' · '.($charge->group->name ?? 'Sin grupo')),
                 'amount' => (float) $charge->amount,
+                'currency' => $charge->currencyCode(),
+                'amount_label' => MoneyFormat::chargeAmount(
+                    $charge,
+                    $charge->isEur() ? (float) (app(ExchangeRateService::class)->getLatestEurRate()['rate'] ?? 0) : (float) (app(ExchangeRateService::class)->getLatestUsdRate()['rate'] ?? 0)
+                ),
                 'meta' => [
                     'concepto' => $charge->concept,
                     'periodo' => $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período'),

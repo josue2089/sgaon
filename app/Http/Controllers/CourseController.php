@@ -16,6 +16,7 @@ use App\Models\Student;
 use App\Models\Teacher;
 use App\Support\AuditTrail;
 use App\Support\CoursePlanner;
+use App\Services\EnrollmentBillingService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -417,7 +418,7 @@ class CourseController extends Controller
                 ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
                 ->findOrFail($studentId);
 
-            Enrollment::updateOrCreate(
+            $enrollment = Enrollment::updateOrCreate(
                 [
                     'group_id' => $course->managedGroup->id,
                     'student_id' => $student->id,
@@ -429,6 +430,8 @@ class CourseController extends Controller
                     'progress' => 0,
                 ],
             );
+
+            app(EnrollmentBillingService::class)->createTuitionCharge($enrollment, request());
         }
     }
 

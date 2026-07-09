@@ -1,3 +1,7 @@
+@php
+    use App\Support\MoneyFormat;
+    use App\Support\PaymentCurrencyConverter;
+@endphp
 @extends('layouts.app')
 @section('content')
 <div class="module-head">
@@ -27,17 +31,17 @@
 <div class="summary-grid">
     <div class="card summary-card">
         <div class="summary-label">Total facturado</div>
-        <div class="summary-value">${{ number_format($summary['total_charged'], 2) }}</div>
+        <div class="summary-value">{{ MoneyFormat::formatLedgerAmount($summary['total_charged'], PaymentCurrencyConverter::CURRENCY_EUR) }}</div>
         <div class="table-sub">{{ $summary['charges_count'] }} cargo(s)</div>
     </div>
     <div class="card summary-card">
         <div class="summary-label">Total cobrado</div>
-        <div class="summary-value">${{ number_format($summary['total_paid'], 2) }}</div>
+        <div class="summary-value">{{ MoneyFormat::formatLedgerAmount($summary['total_paid'], PaymentCurrencyConverter::CURRENCY_EUR) }}</div>
         <div class="table-sub">{{ $summary['payments_count'] }} pago(s)</div>
     </div>
     <div class="card summary-card">
         <div class="summary-label">Saldo pendiente</div>
-        <div class="summary-value">${{ number_format($summary['outstanding'], 2) }}</div>
+        <div class="summary-value">{{ MoneyFormat::formatLedgerAmount($summary['outstanding'], PaymentCurrencyConverter::CURRENCY_EUR) }}</div>
         <div class="table-sub">Pendiente acumulado</div>
     </div>
     <div class="card summary-card">
@@ -58,7 +62,7 @@
                             <div class="timeline-title">{{ $item['title'] }}</div>
                             <div class="table-sub">{{ $item['subtitle'] }}</div>
                         </div>
-                        <div class="timeline-amount">{{ $item['type'] === 'charge' ? '+' : '-' }}${{ number_format($item['amount'], 2) }}</div>
+                        <div class="timeline-amount">{{ $item['type'] === 'charge' ? '+' : '-' }}{{ $item['amount_label'] ?? MoneyFormat::usd($item['amount']) }}</div>
                     </div>
                     <div class="table-sub">{{ optional($item['date'])->format('d/m/Y H:i') ?: 'N/D' }}</div>
                     <div class="timeline-meta">

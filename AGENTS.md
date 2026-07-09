@@ -4,7 +4,7 @@ Guía para agentes y desarrolladores que trabajan en este repositorio.
 
 ## Stack
 
-- **Backend**: Laravel 11, PHP 8.2+
+- **Backend**: Laravel 12, PHP 8.2+
 - **Frontend**: Blade, Vite, CSS en `resources/css/app.css`
 - **PDF**: DomPDF (`barryvdh/laravel-dompdf`)
 - **Tests**: PHPUnit, `RefreshDatabase` en Feature tests
@@ -57,6 +57,16 @@ Guía para agentes y desarrolladores que trabajan en este repositorio.
 - Definidas en `routes/web.php`.
 - Grupo autenticado: `middleware(['auth', 'campus.access'])`.
 - Recursos master dentro de `middleware('master.admin')`.
+
+## Finanzas y precios EUR
+
+- Precio base por nivel: `program_levels.base_price_eur`.
+- Al inscribir un alumno se crea cargo `tuition` en EUR vía `App\Services\EnrollmentBillingService`.
+- Cargos tienen `currency` (`USD` legacy, `EUR` matrícula nueva) y `last_reminder_sent_at`.
+- Tasas BCV: `ExchangeRateService` sincroniza USD/VES y EUR/VES (`bcv:sync-rates`).
+- Pagos contra cargos EUR: `PaymentCurrencyConverter::resolveForCharge()` (EUR o VES).
+- Recordatorios: `finance:send-payment-reminders` (diario 07:00).
+- Resumen: ruta `finance.summary` y helper `App\Support\FinanceSummary`.
 
 ## Despliegue
 

@@ -122,6 +122,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         });
         Route::middleware('permission:finance.manage')->group(function () {
             Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
+            Route::get('/finance/summary', [FinanceController::class, 'summary'])->name('finance.summary');
             Route::get('/finance/receipts/{receipt}', [FinanceController::class, 'showReceipt'])->name('finance.receipts.show');
             Route::get('/finance/receipts/{receipt}/pdf', [FinanceController::class, 'downloadReceiptPdf'])->name('finance.receipts.pdf');
             Route::get('/finance/students/{student}/history', [FinanceController::class, 'studentHistory'])->name('finance.students.history');

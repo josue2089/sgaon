@@ -30,6 +30,13 @@
             <div><strong>Etapa:</strong> {{ $course->level?->name ?? 'N/D' }}</div>
             <div><strong>Programa:</strong> {{ $course->program?->name ?? 'N/D' }}</div>
             <div><strong>Nivel real:</strong> {{ $course->programLevel ? $course->programLevel->sort_order.'/'.$course->programLevel->program_total.' · '.$course->programLevel->name : ($course->courseLevel?->name ?? 'N/D') }}</div>
+            <div><strong>Precio base:</strong>
+                @if($course->programLevel?->base_price_eur)
+                    €{{ number_format($course->programLevel->base_price_eur, 2, ',', '.') }}
+                @else
+                    Sin definir
+                @endif
+            </div>
             <div><strong>Período:</strong> {{ $course->period?->code ?? 'N/D' }}</div>
             <div><strong>Horario:</strong> {{ $course->scheduleTemplate?->display_label ?? 'N/D' }}</div>
             <div><strong>Fecha inicio:</strong> {{ $course->start_date?->format('d/m/Y') ?? 'N/D' }}</div>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PaymentCurrencyConverter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,6 +23,7 @@ class Charge extends Model
         'billing_period_label',
         'origin',
         'amount',
+        'currency',
         'due_date',
         'status',
         'notes',
@@ -34,7 +36,18 @@ class Charge extends Model
             'due_date' => 'date',
             'amount' => 'float',
             'voided_at' => 'datetime',
+            'last_reminder_sent_at' => 'datetime',
         ];
+    }
+
+    public function currencyCode(): string
+    {
+        return strtoupper((string) ($this->currency ?: PaymentCurrencyConverter::CURRENCY_USD));
+    }
+
+    public function isEur(): bool
+    {
+        return $this->currencyCode() === PaymentCurrencyConverter::CURRENCY_EUR;
     }
 
     public function student()

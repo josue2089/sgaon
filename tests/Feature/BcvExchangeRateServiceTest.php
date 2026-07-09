@@ -25,7 +25,10 @@ class BcvExchangeRateServiceTest extends TestCase
             'aerious.uk/api/exchange-rates/bcv/latest' => Http::response([
                 'success' => true,
                 'provider' => 'bcv',
-                'rates' => ['USD' => '476.43420000'],
+                'rates' => [
+                    'USD' => '476.43420000',
+                    'EUR' => '520.12000000',
+                ],
                 'effective_at' => '2026-04-10T00:00:00-04:00',
                 'captured_at' => '2026-04-10T09:00:00-04:00',
             ]),
@@ -41,6 +44,51 @@ class BcvExchangeRateServiceTest extends TestCase
         $this->assertEquals($first['rate'], $second['rate']);
         $this->assertDatabaseCount('exchange_rates', 1);
         Http::assertSentCount(1);
+
+        Cache::flush();
+        Http::fake([
+            'aerious.uk/api/exchange-rates/bcv/latest' => Http::response([
+                'success' => true,
+                'provider' => 'bcv',
+                'rates' => [
+                    'USD' => '476.43420000',
+                    'EUR' => '520.12000000',
+                ],
+                'effective_at' => '2026-04-10T00:00:00-04:00',
+                'captured_at' => '2026-04-10T09:00:00-04:00',
+            ]),
+        ]);
+
+        $eur = $service->getLatestEurRate();
+        $this->assertEquals(520.12, $eur['rate']);
+        $this->assertDatabaseHas('exchange_rates', ['currency' => 'EUR', 'rate' => 520.12]);
+    }
+
+    public function test_sync_all_latest_persists_usd_and_eur(): void
+    {
+        config([
+            'services.bcv_api.base_url' => 'https://aerious.uk/api/exchange-rates/bcv',
+            'services.bcv_api.api_key' => 'test-key',
+        ]);
+
+        Http::fake([
+            'aerious.uk/api/exchange-rates/bcv/latest' => Http::response([
+                'success' => true,
+                'provider' => 'bcv',
+                'rates' => [
+                    'USD' => '90.00000000',
+                    'EUR' => '100.00000000',
+                ],
+                'effective_at' => '2026-04-10T00:00:00-04:00',
+                'captured_at' => '2026-04-10T09:00:00-04:00',
+            ]),
+        ]);
+
+        Cache::flush();
+
+        $rates = app(ExchangeRateService::class)->syncAllLatest();
+        $this->assertEquals(90.0, (float) $rates['USD']->rate);
+        $this->assertEquals(100.0, (float) $rates['EUR']->rate);
     }
 
     public function test_fallback_uses_local_rate_when_api_fails(): void

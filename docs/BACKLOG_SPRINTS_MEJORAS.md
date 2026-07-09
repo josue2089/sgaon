@@ -445,3 +445,11 @@ Objetivo: escalar productividad de análisis y operación.
 - `Responsable`: Codex
 - `Fecha objetivo`: 2026-04-13
 - `Notas`: se agregó módulo `Programas` en configuración, seeds base de Pre-Primary/Primary/HighSchool, planificador de sesiones con contenido distribuido, detalle de curso/alumno actualizado y comando `programs:backfill-course-program-levels`.
+
+### AO-31 Precios EUR por nivel y estado financiero por alumno
+- Alcance: definir precio base EUR en niveles de programa, generar cargo automático al inscribir, mostrar equivalente Bs vía BCV, abonos parciales con nueva fecha de vencimiento, recordatorios por correo y resumen financiero consolidado.
+- Criterio de aceptación: nivel con precio EUR crea cargo al inscribir; pagos EUR/VES concilian saldo; resumen muestra facturado/cobrado/pendiente/proyección; recordatorios programados.
+- `Estado`: Completado
+- `Responsable`: Codex
+- `Fecha objetivo`: 2026-07-09
+- `Notas`: migraciones `base_price_eur` y `charges.currency`, `EnrollmentBillingService`, `FinanceSummary`, comando `finance:send-payment-reminders`, vista `finance/summary`, tests en `EurPricingFinanceTest`.

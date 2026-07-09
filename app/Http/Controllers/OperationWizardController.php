@@ -12,6 +12,7 @@ use App\Models\Period;
 use App\Models\ScheduleTemplate;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Services\EnrollmentBillingService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -268,7 +269,7 @@ class OperationWizardController extends Controller
                 ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
                 ->findOrFail($studentId);
 
-            Enrollment::updateOrCreate(
+            $enrollment = Enrollment::updateOrCreate(
                 ['student_id' => $student->id, 'group_id' => $group->id],
                 [
                     'campus_id' => $this->campusId() ?: $student->campus_id,
@@ -278,6 +279,7 @@ class OperationWizardController extends Controller
                     'notes' => $data['notes'] ?? null,
                 ]
             );
+            app(EnrollmentBillingService::class)->createTuitionCharge($enrollment, $request);
             $createdOrUpdated++;
         }
 

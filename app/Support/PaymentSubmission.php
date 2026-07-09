@@ -16,7 +16,11 @@ class PaymentSubmission
     public static function validatedCurrencyPayload(Request $request, ?Charge $charge = null): array
     {
         $data = $request->validate([
-            'currency' => ['required', Rule::in([PaymentCurrencyConverter::CURRENCY_USD, PaymentCurrencyConverter::CURRENCY_VES])],
+            'currency' => ['required', Rule::in([
+                PaymentCurrencyConverter::CURRENCY_USD,
+                PaymentCurrencyConverter::CURRENCY_VES,
+                PaymentCurrencyConverter::CURRENCY_EUR,
+            ])],
             'original_amount' => ['required', 'numeric', 'min:0.01'],
             'payment_method_id' => ['required', 'exists:payment_methods,id'],
             'reference' => ['nullable', 'string', 'max:120'],
@@ -34,10 +38,9 @@ class PaymentSubmission
             ]);
         }
 
-        $converted = PaymentCurrencyConverter::resolve(
-            $data['currency'],
-            (float) $data['original_amount'],
-        );
+        $converted = $charge
+            ? PaymentCurrencyConverter::resolveForCharge($data['currency'], (float) $data['original_amount'], $charge)
+            : PaymentCurrencyConverter::resolve($data['currency'], (float) $data['original_amount']);
 
         if ($charge) {
             $outstanding = FinanceReconcile::outstandingForCharge($charge);

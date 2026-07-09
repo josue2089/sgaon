@@ -95,6 +95,7 @@ class ProgramLevelController extends Controller
             'program_total' => ['required', 'integer', 'min:1', 'max:99'],
             'academic_hours' => ['required', 'integer', 'min:1', 'max:500'],
             'reminder_days_before' => ['required', 'integer', 'min:0', 'max:90'],
+            'base_price_eur' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'description' => ['nullable', 'string'],
         ]) + ['program_id' => $program->id];

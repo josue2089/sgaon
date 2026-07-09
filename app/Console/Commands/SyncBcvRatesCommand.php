@@ -9,17 +9,20 @@ class SyncBcvRatesCommand extends Command
 {
     protected $signature = 'bcv:sync-rates';
 
-    protected $description = 'Sincroniza la tasa BCV USD/VES desde la API Aerious';
+    protected $description = 'Sincroniza las tasas BCV USD/VES y EUR/VES desde la API Aerious';
 
     public function handle(ExchangeRateService $exchangeRateService): int
     {
         try {
-            $rate = $exchangeRateService->syncLatest();
-            $this->info(sprintf(
-                'Tasa BCV sincronizada: Bs %s (vigente %s)',
-                number_format((float) $rate->rate, 4, '.', ''),
-                optional($rate->effective_at)->format('Y-m-d') ?? 'N/D'
-            ));
+            $rates = $exchangeRateService->syncAllLatest();
+            foreach ($rates as $currency => $rate) {
+                $this->info(sprintf(
+                    'Tasa BCV %s sincronizada: Bs %s (vigente %s)',
+                    $currency,
+                    number_format((float) $rate->rate, 4, '.', ''),
+                    optional($rate->effective_at)->format('Y-m-d') ?? 'N/D'
+                ));
+            }
 
             return self::SUCCESS;
         } catch (\Throwable $exception) {

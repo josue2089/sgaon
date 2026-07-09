@@ -149,8 +149,9 @@ class PortalController extends Controller
             ->orderBy('label')
             ->get();
         $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
+        $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
 
-        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions', 'pendingCharges', 'chargePaymentRequests', 'portalGradeEntries', 'renewalOffers', 'paymentMethods', 'bcvRate'));
+        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions', 'pendingCharges', 'chargePaymentRequests', 'portalGradeEntries', 'renewalOffers', 'paymentMethods', 'bcvRate', 'bcvEurRate'));
     }
 
     public function enrollInRenewalCourse(Request $request, Course $course): RedirectResponse
@@ -319,8 +320,9 @@ class PortalController extends Controller
             ->orderBy('label')
             ->get();
         $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
+        $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
 
-        return view('portal.representative', compact('representative', 'students', 'repGradeEntriesByStudentId', 'paymentMethods', 'bcvRate'));
+        return view('portal.representative', compact('representative', 'students', 'repGradeEntriesByStudentId', 'paymentMethods', 'bcvRate', 'bcvEurRate'));
     }
 
     public function submitChargePaymentAsStudent(Request $request, Charge $charge): RedirectResponse

@@ -12,10 +12,14 @@ class ExchangeRateController extends Controller
     {
         abort_unless($request->user(), 401);
 
-        $snapshot = $exchangeRateService->getLatestUsdRate();
+        $currency = strtoupper((string) $request->query('currency', 'USD'));
+        $snapshot = match ($currency) {
+            'EUR' => $exchangeRateService->getLatestEurRate(),
+            default => $exchangeRateService->getLatestUsdRate(),
+        };
 
         return response()->json([
-            'currency' => 'USD',
+            'currency' => $currency,
             'rate' => $snapshot['rate'],
             'effective_at' => $snapshot['effective_at']?->toIso8601String(),
             'captured_at' => $snapshot['captured_at']?->toIso8601String(),

@@ -134,15 +134,17 @@
                                     @php($chargeBalance = \App\Support\FinanceReconcile::outstandingForCharge($charge))
                                     <tr>
                                         <td>{{ $charge->concept }}</td>
-                                        <td>{{ \App\Support\MoneyFormat::usd($chargeBalance) }}</td>
+                                        <td>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</td>
                                         <td>{{ ucfirst($charge->status) }}</td>
                                         <td>
                                             <form method="POST" action="{{ route('portal.representative.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs">
                                                 @csrf
                                                 @include('partials.payment-currency-fields', [
                                                     'prefix' => 'rep-charge-'.$charge->id,
-                                                    'balanceUsd' => $chargeBalance,
-                                                    'exchangeRate' => $bcvRate['rate'] ?? 0,
+                                                    'chargeCurrency' => $charge->currencyCode(),
+                                                    'balanceAmount' => $chargeBalance,
+                                                    'usdExchangeRate' => $bcvRate['rate'] ?? 0,
+                                                    'eurExchangeRate' => $bcvEurRate['rate'] ?? 0,
                                                     'paymentMethods' => $paymentMethods,
                                                 ])
                                                 <input name="reference" placeholder="Referencia">

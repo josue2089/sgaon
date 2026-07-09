@@ -229,7 +229,7 @@
                 </div>
                 <div class="charge-pending-meta">
                     @php($chargeBalance = \App\Support\FinanceReconcile::outstandingForCharge($charge))
-                    <div><strong>Saldo pendiente:</strong> {{ \App\Support\MoneyFormat::usd($chargeBalance) }}</div>
+                    <div><strong>Saldo pendiente:</strong> {{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</div>
                 </div>
                 <div class="charge-pending-actions">
                     <button type="button" class="btn secondary" onclick="document.getElementById('charge-pay-dialog-{{ $charge->id }}').showModal()">Enviar comprobante</button>
@@ -240,13 +240,15 @@
                     <h3 class="charge-pay-dialog-title">Enviar comprobante</h3>
                     <button type="button" class="charge-pay-dialog-close" onclick="document.getElementById('charge-pay-dialog-{{ $charge->id }}').close()" aria-label="Cerrar">&times;</button>
                 </div>
-                <p class="charge-pay-dialog-summary">{{ $charge->concept }} · <strong>{{ \App\Support\MoneyFormat::usd($chargeBalance) }}</strong> pendiente</p>
+                <p class="charge-pay-dialog-summary">{{ $charge->concept }} · <strong>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</strong> pendiente</p>
                 <form method="POST" action="{{ route('portal.student.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs charge-pay-form">
                     @csrf
                     @include('partials.payment-currency-fields', [
                         'prefix' => 'charge-'.$charge->id,
-                        'balanceUsd' => $chargeBalance,
-                        'exchangeRate' => $bcvRate['rate'] ?? 0,
+                        'chargeCurrency' => $charge->currencyCode(),
+                        'balanceAmount' => $chargeBalance,
+                        'usdExchangeRate' => $bcvRate['rate'] ?? 0,
+                        'eurExchangeRate' => $bcvEurRate['rate'] ?? 0,
                         'paymentMethods' => $paymentMethods,
                     ])
                     <div>
@@ -303,7 +305,7 @@
     @endif
     </div>
     <div class="grid-2">
-    <div class="card table-card"><h3 class="section-title section-title-sm">Cargos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Concepto</th><th>Monto</th><th>Estado</th></tr></thead><tbody>@forelse($charges as $charge)<tr><td>{{ $charge->concept }}</td><td>${{ number_format($charge->amount,2) }}</td><td>{{ $charge->status }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin cargos</div></td></tr>@endforelse</tbody></table></div></div>
+    <div class="card table-card"><h3 class="section-title section-title-sm">Cargos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Concepto</th><th>Monto</th><th>Estado</th></tr></thead><tbody>@forelse($charges as $charge)<tr><td>{{ $charge->concept }}</td><td>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</td><td>{{ $charge->status }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin cargos</div></td></tr>@endforelse</tbody></table></div></div>
     <div class="card table-card"><h3 class="section-title section-title-sm">Pagos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Monto</th><th>Método</th></tr></thead><tbody>@forelse($payments as $payment)<tr><td>{{ $payment->paid_at?->format('Y-m-d') }}</td><td>{{ \App\Support\MoneyFormat::dualLine($payment) }}</td><td>{{ $payment->method }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin pagos</div></td></tr>@endforelse</tbody></table></div></div>
     </div>
 @endif

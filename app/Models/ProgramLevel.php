@@ -16,10 +16,18 @@ class ProgramLevel extends Model
         'sort_order',
         'program_total',
         'academic_hours',
+        'base_price_eur',
         'reminder_days_before',
         'status',
         'description',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'base_price_eur' => 'float',
+        ];
+    }
 
     public function program()
     {
