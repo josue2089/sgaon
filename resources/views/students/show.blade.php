@@ -367,6 +367,25 @@
 </div>
 
 <div class="detail-grid student-detail-grid" id="student-finance">
+    @if(!empty($canRegisterPayment))
+        <div class="card" style="grid-column:1/-1;">
+            <div class="section-head">
+                <h2 class="section-title section-title-md">Registrar pago</h2>
+                <div class="entity-sub">Solo disponible para administrador master</div>
+            </div>
+            @include('partials.finance.register-payment-form', [
+                'formAction' => route('students.payments.store', $student),
+                'formId' => 'student-payment-form',
+                'prefix' => 'student-payment',
+                'lockStudent' => true,
+                'studentId' => $student->id,
+                'charges' => $payableCharges,
+                'paymentMethods' => $paymentMethods,
+                'bcvRate' => $bcvRate,
+                'bcvEurRate' => $bcvEurRate,
+            ])
+        </div>
+    @endif
     <div class="card table-card">
         <div class="section-head">
             <h2 class="section-title section-title-md">Histórico de pagos</h2>

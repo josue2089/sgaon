@@ -112,66 +112,17 @@
 
     <div class="card">
         <h3 class="section-title section-title-sm">Registrar pago</h3>
-        <form class="stack-sm" method="POST" action="{{ route('finance.payments.store') }}" id="finance-payment-form">
-            @csrf
-            <div class="searchable-select searchable-select--combo" data-searchable-select data-searchable-combo>
-                <label>Alumno</label>
-                <input type="text" id="payment-student-search" class="searchable-select__search" placeholder="Buscar alumno por nombre, cédula o representante..." autocomplete="off">
-                <select name="student_id" id="payment-student-select" class="searchable-select__list" required>
-                    @foreach($students as $student)
-                        <option
-                            value="{{ $student->id }}"
-                            data-search="{{ \App\Support\StudentSearch::haystack($student) }}"
-                            @selected((int) old('student_id', $focusStudentId) === (int) $student->id)
-                        >{{ $student->full_name }}{{ $student->email ? ' · '.$student->email : '' }}{{ $student->document_id ? ' · '.$student->document_id : '' }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="searchable-select" data-searchable-select>
-                <label>Cargos a aplicar</label>
-                <input type="text" id="payment-charge-search" class="searchable-select__search" placeholder="Buscar cargo por concepto, curso o período">
-                <select name="charge_ids[]" id="payment-charge-select" class="searchable-select__list" multiple>
-                    @foreach($charges as $charge)
-                        @php
-                            $balance = \App\Support\FinanceReconcile::outstandingForCharge($charge);
-                        @endphp
-                        <option
-                            value="{{ $charge->id }}"
-                            data-student-id="{{ $charge->student_id }}"
-                            data-balance="{{ number_format($balance, 2, '.', '') }}"
-                            data-currency="{{ $charge->currencyCode() }}"
-                            data-search="{{ strtolower(($charge->student->full_name ?? '').' '.$charge->concept.' '.($charge->course->name ?? '').' '.($charge->group->name ?? '').' '.($charge->period->code ?? '')) }}"
-                            @selected(in_array((string) $charge->id, array_map('strval', old('charge_ids', old('charge_id') ? [old('charge_id')] : [])), true))
-                        >{{ $charge->student->full_name ?? '' }} — {{ $charge->concept }} — Saldo {{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</option>
-                    @endforeach
-                </select>
-                <div class="form-hint">Puedes seleccionar uno o varios cargos del mismo alumno.</div>
-            </div>
-            <div id="finance-payment-currency-wrap">
-                @include('partials.payment-currency-fields', [
-                    'prefix' => 'finance-payment',
-                    'chargeCurrency' => 'USD',
-                    'balanceAmount' => 0,
-                    'usdExchangeRate' => $bcvRate['rate'] ?? 0,
-                    'eurExchangeRate' => $bcvEurRate['rate'] ?? 0,
-                    'paymentMethods' => $paymentMethods,
-                ])
-            </div>
-            <div>
-                <label>Nueva fecha de vencimiento del saldo</label>
-                <input type="date" name="balance_due_date" value="{{ old('balance_due_date') }}">
-                <div class="form-hint">Opcional. Úsala cuando el pago deje saldo pendiente.</div>
-            </div>
-            <div>
-                <label>Fecha</label>
-                <input type="date" name="paid_at">
-            </div>
-            <div>
-                <label>Referencia</label>
-                <input name="reference">
-            </div>
-            <button class="btn" type="submit">Registrar pago</button>
-        </form>
+        @include('partials.finance.register-payment-form', [
+            'formAction' => route('finance.payments.store'),
+            'formId' => 'finance-payment-form',
+            'prefix' => 'finance-payment',
+            'students' => $students,
+            'charges' => $charges,
+            'paymentMethods' => $paymentMethods,
+            'bcvRate' => $bcvRate,
+            'bcvEurRate' => $bcvEurRate,
+            'focusStudentId' => $focusStudentId,
+        ])
     </div>
 </div>
 
@@ -379,15 +330,9 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-    (() => {
         const chargeStudent = document.getElementById('charge-student-select');
         const chargeEnrollment = document.getElementById('charge-enrollment-select');
         const chargeEnrollmentSearch = document.getElementById('charge-enrollment-search');
-        const paymentStudent = document.getElementById('payment-student-select');
-        const paymentCharge = document.getElementById('payment-charge-select');
-        const paymentChargeSearch = document.getElementById('payment-charge-search');
-        const paymentCurrencyRoot = document.querySelector('[data-payment-currency-root="finance-payment"]');
-        const paymentOriginalAmount = paymentCurrencyRoot?.querySelector('.payment-original-amount');
 
         const filterSelect = (select, { studentId = '', term = '' } = {}) => {
             if (!select) return;
@@ -395,31 +340,7 @@
             const wrap = select.closest('[data-searchable-select]');
             if (wrap?.searchableSelect?.filter) {
                 wrap.searchableSelect.filter({ studentId, term });
-                return;
             }
-
-            const normalizedTerm = term.trim().toLowerCase();
-
-            Array.from(select.options).forEach((option, index) => {
-                if (index === 0 && option.value === '') {
-                    option.hidden = false;
-                    return;
-                }
-
-                const optionStudentId = option.dataset.studentId || '';
-                const searchText = option.dataset.search || option.textContent.toLowerCase();
-                const studentMatch = !studentId || optionStudentId === String(studentId);
-                const termMatch = !normalizedTerm || searchText.includes(normalizedTerm);
-                const visible = studentMatch && termMatch;
-                option.hidden = !visible;
-
-                if (!visible && option.selected) {
-                    option.selected = false;
-                    if (!select.multiple) {
-                        select.value = '';
-                    }
-                }
-            });
         };
 
         const syncChargeStudentFromEnrollment = () => {
@@ -429,37 +350,6 @@
             chargeStudent.value = selected.dataset.studentId;
             chargeStudent.dispatchEvent(new Event('change', { bubbles: true }));
             filterSelect(chargeEnrollment, { studentId: selected.dataset.studentId, term: chargeEnrollmentSearch?.value || '' });
-        };
-
-        const syncPaymentStudentFromCharge = () => {
-            if (!paymentStudent || !paymentCharge) return;
-            const selectedOptions = Array.from(paymentCharge.selectedOptions);
-            if (selectedOptions.length === 0) return;
-
-            const studentId = selectedOptions[0].dataset.studentId || '';
-            if (studentId) {
-                paymentStudent.value = studentId;
-                paymentStudent.dispatchEvent(new Event('change', { bubbles: true }));
-                filterSelect(paymentCharge, { studentId, term: paymentChargeSearch?.value || '' });
-            }
-
-            const total = selectedOptions.reduce((sum, option) => sum + Number(option.dataset.balance || 0), 0);
-            const chargeCurrency = selectedOptions[0]?.dataset.currency || 'USD';
-            if (paymentCurrencyRoot?.configurePaymentCurrency) {
-                paymentCurrencyRoot.configurePaymentCurrency({
-                    chargeCurrency,
-                    balanceAmount: total,
-                });
-            } else if (window.configurePaymentCurrencyBlock) {
-                window.configurePaymentCurrencyBlock(paymentCurrencyRoot, {
-                    chargeCurrency,
-                    balanceAmount: total,
-                });
-            }
-            if (paymentOriginalAmount && total > 0) {
-                paymentOriginalAmount.value = total.toFixed(2);
-                paymentOriginalAmount.dispatchEvent(new Event('input'));
-            }
         };
 
         if (chargeStudent) {
@@ -482,26 +372,6 @@
             }
         }
 
-        if (paymentStudent) {
-            filterSelect(paymentCharge, { studentId: paymentStudent.value, term: paymentChargeSearch?.value || '' });
-            paymentStudent.addEventListener('change', () => {
-                filterSelect(paymentCharge, { studentId: paymentStudent.value, term: paymentChargeSearch?.value || '' });
-            });
-        }
-
-        if (paymentChargeSearch) {
-            paymentChargeSearch.addEventListener('input', () => {
-                filterSelect(paymentCharge, { studentId: paymentStudent?.value || '', term: paymentChargeSearch.value });
-            });
-        }
-
-        if (paymentCharge) {
-            paymentCharge.addEventListener('change', syncPaymentStudentFromCharge);
-            if (paymentCharge.selectedOptions.length > 0) {
-                syncPaymentStudentFromCharge();
-            }
-        }
-
         document.querySelectorAll('dialog.finance-proof-dialog').forEach(function (dlg) {
             dlg.addEventListener('click', function (e) {
                 if (e.target === dlg) {
@@ -509,7 +379,6 @@
                 }
             });
         });
-    })();
     });
 </script>
 @endpush

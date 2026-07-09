@@ -65,6 +65,8 @@ Guía para agentes y desarrolladores que trabajan en este repositorio.
 - Cargos tienen `currency` (`USD` legacy, `EUR` matrícula nueva) y `last_reminder_sent_at`.
 - Tasas BCV: `ExchangeRateService` sincroniza USD/VES y EUR/VES (`bcv:sync-rates`).
 - Pagos contra cargos EUR: `PaymentCurrencyConverter::resolveForCharge()` (EUR o VES).
+- Al registrar un pago (`PaymentRegistrationService`) se envía `PaymentReceiptMail` al alumno y representantes con PDF adjunto (`ReceiptPdfService`).
+- Master admin puede registrar pagos desde la ficha del alumno (`students.payments.store`).
 - Recordatorios: `finance:send-payment-reminders` (diario 07:00).
 - Resumen: ruta `finance.summary` y helper `App\Support\FinanceSummary`.
 

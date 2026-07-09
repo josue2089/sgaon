@@ -17,7 +17,10 @@ use App\Models\StudentAttachment;
 use App\Models\Student;
 use App\Support\AuditTrail;
 use App\Support\CampusScope;
-use App\Support\FinanceReconcile;
+use App\Models\PaymentMethod;
+use App\Services\Bcv\ExchangeRateService;
+use App\Services\PaymentRegistrationService;
+use App\Support\PaymentCurrencyConverter;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Support\StudentSearch;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,6 +29,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class StudentController extends Controller
@@ -174,11 +178,50 @@ class StudentController extends Controller
         ]);
     }
 
-    public function show(Student $student): View
+    public function show(Request $request, Student $student): View
     {
         $this->authorizeCampus($student->campus_id);
 
-        return view('students.show', $this->detailData($student));
+        $data = $this->detailData($student);
+        if ($request->user()?->isMasterAdmin()) {
+            $data = array_merge($data, $this->paymentFormData($student));
+        }
+
+        return view('students.show', $data);
+    }
+
+    public function storePayment(Request $request, Student $student): RedirectResponse
+    {
+        if (! $request->user()?->isMasterAdmin()) {
+            abort(403);
+        }
+
+        $this->authorizeCampus($student->campus_id);
+
+        $data = $request->validate([
+            'charge_id' => ['nullable', 'exists:charges,id'],
+            'charge_ids' => ['nullable', 'array'],
+            'charge_ids.*' => ['required', 'exists:charges,id'],
+            'currency' => ['required', 'in:'.PaymentCurrencyConverter::CURRENCY_USD.','.PaymentCurrencyConverter::CURRENCY_VES.','.PaymentCurrencyConverter::CURRENCY_EUR],
+            'original_amount' => ['required', 'numeric', 'min:0.01'],
+            'payment_method_id' => ['required', 'exists:payment_methods,id'],
+            'paid_at' => ['required', 'date'],
+            'balance_due_date' => ['nullable', 'date', 'after_or_equal:paid_at'],
+            'reference' => ['nullable', 'string', 'max:80'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $data['student_id'] = $student->id;
+
+        try {
+            app(PaymentRegistrationService::class)->register($data, $request);
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors())->withInput();
+        }
+
+        return redirect()
+            ->route('students.show', $student)
+            ->with('success', 'Pago registrado y recibo generado. Se envió el comprobante por email.');
     }
 
     public function store(Request $request): RedirectResponse
@@ -423,6 +466,31 @@ class StudentController extends Controller
                 ->latest()
                 ->limit(12)
                 ->get(),
+        ];
+    }
+
+    private function paymentFormData(Student $student): array
+    {
+        $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
+        $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
+
+        return [
+            'canRegisterPayment' => true,
+            'payableCharges' => Charge::query()
+                ->where('student_id', $student->id)
+                ->whereIn('status', ['pending', 'partial', 'overdue'])
+                ->with(['course', 'group', 'period', 'student'])
+                ->latest()
+                ->get()
+                ->filter(fn (Charge $charge) => FinanceReconcile::outstandingForCharge($charge) > 0)
+                ->values(),
+            'paymentMethods' => PaymentMethod::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('label')
+                ->get(),
+            'bcvRate' => $bcvRate,
+            'bcvEurRate' => $bcvEurRate,
         ];
     }
 

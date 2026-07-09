@@ -20,15 +20,18 @@ use App\Support\FinanceReconcile;
 use App\Support\FinanceSummary;
 use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
+use App\Services\PaymentRegistrationService;
+use App\Services\PaymentReceiptNotifier;
+use App\Services\ReceiptPdfService;
 use App\Support\MoneyFormat;
 use App\Support\PaymentCurrencyConverter;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -239,17 +242,14 @@ class FinanceController extends Controller
 
     public function downloadReceiptPdf(Request $request, Receipt $receipt)
     {
-        [$receipt, $payment, $allocations] = $this->resolveReceiptContext($request, $receipt);
-        $logoDataUri = $this->buildReceiptLogoDataUri();
+        [$receipt] = $this->resolveReceiptContext($request, $receipt);
+        $pdfService = app(ReceiptPdfService::class);
 
-        $pdf = Pdf::loadView('finance.receipt-pdf', [
-            'receipt' => $receipt,
-            'payment' => $payment,
-            'allocations' => $allocations,
-            'logoDataUri' => $logoDataUri,
-        ])->setPaper('a4');
-
-        return $pdf->download('recibo-'.$receipt->receipt_number.'.pdf');
+        return response()->streamDownload(
+            fn () => print($pdfService->renderBinary($receipt)),
+            $pdfService->filename($receipt),
+            ['Content-Type' => 'application/pdf'],
+        );
     }
 
     public function studentHistory(Request $request, Student $student): View
@@ -337,122 +337,18 @@ class FinanceController extends Controller
             ])->withInput();
         }
 
-        $data['method'] = $paymentMethod->label;
-
         $student = Student::findOrFail($data['student_id']);
         if (! CampusScope::userCanAccessCampus($request->user(), (int) $student->campus_id)) {
             abort(403);
         }
-        $data['campus_id'] = $student->campus_id;
 
-        $selectedChargeIds = collect($data['charge_ids'] ?? [])
-            ->push($data['charge_id'] ?? null)
-            ->filter()
-            ->map(fn ($id) => (int) $id)
-            ->unique()
-            ->values();
-
-        $charges = collect();
-        if ($selectedChargeIds->isNotEmpty()) {
-            $charges = Charge::query()
-                ->with(['paymentAllocations', 'payments'])
-                ->whereIn('id', $selectedChargeIds)
-                ->orderBy('due_date')
-                ->orderBy('id')
-                ->get();
-
-            if ($charges->count() !== $selectedChargeIds->count()) {
-                return back()->withErrors(['charge_ids' => 'Uno o más cargos seleccionados no existen.'])->withInput();
-            }
-
-            foreach ($charges as $charge) {
-                if ((int) $charge->campus_id !== (int) $data['campus_id']) {
-                    abort(403);
-                }
-                if ((int) $charge->student_id !== (int) $data['student_id']) {
-                    abort(403);
-                }
-            }
+        try {
+            app(PaymentRegistrationService::class)->register($data, $request);
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors())->withInput();
         }
 
-        $converted = $charges->isNotEmpty()
-            ? PaymentCurrencyConverter::resolveForCharge($data['currency'], (float) $data['original_amount'], $charges->first())
-            : PaymentCurrencyConverter::resolve($data['currency'], (float) $data['original_amount']);
-        $data['amount'] = $converted['amount'];
-
-        if ($selectedChargeIds->isNotEmpty()) {
-            $availableToApply = $charges->sum(fn (Charge $charge) => FinanceReconcile::outstandingForCharge($charge));
-            if ((float) $data['amount'] > (float) $availableToApply) {
-                return back()->withErrors([
-                    'amount' => 'El monto excede el saldo disponible de los cargos seleccionados.',
-                ])->withInput();
-            }
-        }
-
-        $paymentPayload = array_merge($data, [
-            'currency' => $converted['currency'],
-            'original_amount' => $converted['original_amount'],
-            'exchange_rate' => $converted['exchange_rate'],
-            'exchange_rate_effective_at' => $converted['exchange_rate_effective_at'],
-            'payment_method_id' => $paymentMethod->id,
-            'charge_id' => null,
-        ]);
-
-        $payment = Payment::create($paymentPayload);
-        $payment->update([
-            'paid_at_datetime' => now(),
-            'status' => 'confirmed',
-            'received_by' => $request->user()?->id,
-        ]);
-
-        if ($charges->isNotEmpty()) {
-            $remaining = (float) $data['amount'];
-            foreach ($charges as $charge) {
-                if ($remaining <= 0) {
-                    break;
-                }
-                $outstanding = FinanceReconcile::outstandingForCharge($charge);
-                if ($outstanding <= 0) {
-                    continue;
-                }
-
-                $applied = min($remaining, $outstanding);
-                PaymentAllocation::create([
-                    'payment_id' => $payment->id,
-                    'charge_id' => $charge->id,
-                    'amount_applied' => $applied,
-                ]);
-
-                $remaining -= $applied;
-            }
-
-            foreach ($charges as $charge) {
-                FinanceReconcile::syncCharge($charge);
-            }
-
-            if (! empty($data['balance_due_date'])) {
-                foreach ($charges as $charge) {
-                    if (FinanceReconcile::outstandingForCharge($charge) > 0) {
-                        $charge->update(['due_date' => $data['balance_due_date']]);
-                    }
-                }
-            }
-
-            if ($selectedChargeIds->count() === 1) {
-                $payment->update(['charge_id' => $selectedChargeIds->first()]);
-            }
-        }
-
-        Receipt::create([
-            'campus_id' => $data['campus_id'],
-            'payment_id' => $payment->id,
-            'receipt_number' => 'R-'.str_pad((string) $payment->id, 8, '0', STR_PAD_LEFT),
-            'issued_at' => $data['paid_at'],
-        ]);
-        AuditTrail::log($request, 'finance.payment.create', $payment, $data);
-        AlertEngine::evaluateFinanceForStudent((int) $data['student_id']);
-
-        return back()->with('success', 'Pago registrado y recibo generado.');
+        return back()->with('success', 'Pago registrado y recibo generado. Se envió el comprobante por email.');
     }
 
     public function reviewPaymentRequest(Request $request, ChargePaymentRequest $paymentRequest): RedirectResponse
@@ -525,9 +421,10 @@ class FinanceController extends Controller
             ])->save();
 
             AlertEngine::evaluateFinanceForStudent((int) $paymentRequest->student_id);
-            $this->emailPaymentRequestApproved($paymentRequest->fresh(['student.representatives', 'charge']));
+            $payment->load(['receipt', 'student.representatives', 'allocations.charge', 'paymentMethod', 'charge']);
+            app(PaymentReceiptNotifier::class)->notify($payment);
 
-            return back()->with('success', 'Solicitud aprobada y pago aplicado.');
+            return back()->with('success', 'Solicitud aprobada y pago aplicado. Se envió el recibo por email.');
         }
 
         $paymentRequest->forceFill([
@@ -704,21 +601,6 @@ class FinanceController extends Controller
         }
 
         return [$receipt, $payment, $allocations];
-    }
-
-    private function buildReceiptLogoDataUri(): ?string
-    {
-        $path = public_path('images/logo.png');
-        if (! is_file($path)) {
-            return null;
-        }
-
-        $contents = file_get_contents($path);
-        if ($contents === false) {
-            return null;
-        }
-
-        return 'data:image/png;base64,'.base64_encode($contents);
     }
 
     private function dateIsWithinRange($date, ?Carbon $startDate, ?Carbon $endDate): bool
