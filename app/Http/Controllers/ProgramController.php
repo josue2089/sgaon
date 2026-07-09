@@ -85,6 +85,7 @@ class ProgramController extends Controller
             'code' => ['required', 'string', 'max:40', Rule::unique('programs', 'code')->ignore($program?->id)],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'description' => ['nullable', 'string'],
+            'base_price_eur' => ['nullable', 'numeric', 'min:0'],
         ]);
     }
 }

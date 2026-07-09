@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Services\HistoricalStudentImportService;
 use App\Services\Import\HistoricalImportPreviewResult;
 use App\Support\AuditTrail;
+use App\Support\StudentSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -237,11 +238,8 @@ class HistoricalStudentController extends Controller
         if ($filters['q'] !== '') {
             $q = $filters['q'];
             $query->where(function (Builder $builder) use ($q) {
-                $builder
-                    ->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$q}%"])
-                    ->orWhere('email', 'like', "%{$q}%")
-                    ->orWhere('document_id', 'like', "%{$q}%")
-                    ->orWhere('contract_number', 'like', "%{$q}%");
+                StudentSearch::applyTerm($builder, $q);
+                $builder->orWhere('contract_number', 'like', "%{$q}%");
             });
         }
 

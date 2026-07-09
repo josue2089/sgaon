@@ -31,8 +31,12 @@
             <div><strong>Programa:</strong> {{ $course->program?->name ?? 'N/D' }}</div>
             <div><strong>Nivel real:</strong> {{ $course->programLevel ? $course->programLevel->sort_order.'/'.$course->programLevel->program_total.' · '.$course->programLevel->name : ($course->courseLevel?->name ?? 'N/D') }}</div>
             <div><strong>Precio base:</strong>
-                @if($course->programLevel?->base_price_eur)
-                    €{{ number_format($course->programLevel->base_price_eur, 2, ',', '.') }}
+                @php $resolvedPrice = $course->programLevel?->resolvedBasePriceEur(); @endphp
+                @if($resolvedPrice)
+                    €{{ number_format($resolvedPrice, 2, ',', '.') }}
+                    @if(! $course->programLevel?->base_price_eur)
+                        <span class="entity-sub">(programa)</span>
+                    @endif
                 @else
                     Sin definir
                 @endif
@@ -84,7 +88,7 @@
 
                         @if($availableStudents->count() > 0)
                             <div class="student-picker-toolbar">
-                                <input type="text" placeholder="Buscar por nombre o email" data-picker-search>
+                                <input type="text" placeholder="Buscar por nombre, email, cédula o representante" data-picker-search>
                                 <label class="student-picker-toggle">
                                     <input type="checkbox" data-picker-toggle-all>
                                     <span>Seleccionar visibles</span>
@@ -108,7 +112,7 @@
                                             $currentEnrollment = $student->enrollments->firstWhere('status', 'active') ?: $student->enrollments->first();
                                             $currentLevel = $currentEnrollment?->group?->course?->programLevel ?: $currentEnrollment?->group?->course?->courseLevel;
                                         @endphp
-                                        <tr data-picker-row data-search="{{ strtolower($student->full_name.' '.$student->email) }}">
+                                        <tr data-picker-row data-search="{{ \App\Support\StudentSearch::haystack($student) }}">
                                             <td>
                                                 <input
                                                     type="checkbox"

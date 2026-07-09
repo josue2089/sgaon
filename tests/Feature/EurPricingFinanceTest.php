@@ -98,6 +98,112 @@ class EurPricingFinanceTest extends TestCase
         ]);
     }
 
+    public function test_enrollment_uses_program_price_when_level_has_none(): void
+    {
+        Mail::fake();
+        ['group' => $group, 'student' => $student, 'program' => $program, 'level' => $level] = $this->seedPricingContext(0);
+        $level->update(['base_price_eur' => null]);
+        $program->update(['base_price_eur' => 200]);
+
+        $enrollment = Enrollment::create([
+            'campus_id' => $group->campus_id,
+            'student_id' => $student->id,
+            'group_id' => $group->id,
+            'enrolled_at' => now()->toDateString(),
+            'status' => 'active',
+            'progress' => 0,
+        ]);
+
+        $charge = app(EnrollmentBillingService::class)->createTuitionCharge($enrollment);
+
+        $this->assertNotNull($charge);
+        $this->assertEquals(200.0, (float) $charge->amount);
+    }
+
+    public function test_level_price_overrides_program_default(): void
+    {
+        Mail::fake();
+        ['group' => $group, 'student' => $student, 'program' => $program] = $this->seedPricingContext(180);
+        $program->update(['base_price_eur' => 200]);
+
+        $enrollment = Enrollment::create([
+            'campus_id' => $group->campus_id,
+            'student_id' => $student->id,
+            'group_id' => $group->id,
+            'enrolled_at' => now()->toDateString(),
+            'status' => 'active',
+            'progress' => 0,
+        ]);
+
+        $charge = app(EnrollmentBillingService::class)->createTuitionCharge($enrollment);
+
+        $this->assertNotNull($charge);
+        $this->assertEquals(180.0, (float) $charge->amount);
+    }
+
+    public function test_finance_payment_form_accepts_eur_for_eur_charge(): void
+    {
+        ['admin' => $admin, 'student' => $student, 'group' => $group] = $this->seedPricingContext();
+        $methods = $this->createPaymentMethods();
+
+        $enrollment = Enrollment::create([
+            'campus_id' => $group->campus_id,
+            'student_id' => $student->id,
+            'group_id' => $group->id,
+            'enrolled_at' => now()->toDateString(),
+            'status' => 'active',
+            'progress' => 0,
+        ]);
+        $charge = app(EnrollmentBillingService::class)->createTuitionCharge($enrollment);
+
+        $this->actingAs($admin)->post('/finance/payments', [
+            'student_id' => $student->id,
+            'charge_ids' => [$charge->id],
+            'currency' => PaymentCurrencyConverter::CURRENCY_EUR,
+            'original_amount' => 100,
+            'payment_method_id' => $methods['eur']->id,
+            'paid_at' => now()->toDateString(),
+        ])->assertRedirect();
+
+        $this->assertEquals(100.0, FinanceReconcile::paidTotalForCharge($charge->fresh()));
+    }
+
+    public function test_finance_payment_rejects_usd_for_eur_charge(): void
+    {
+        ['admin' => $admin, 'student' => $student, 'group' => $group] = $this->seedPricingContext();
+        $methods = $this->createPaymentMethods();
+        $usdMethod = PaymentMethod::create([
+            'currency' => PaymentCurrencyConverter::CURRENCY_USD,
+            'method_type' => PaymentMethod::TYPE_ZELLE,
+            'label' => 'Transferencia USD',
+            'email' => 'usd@example.com',
+            'is_active' => true,
+            'sort_order' => 2,
+        ]);
+
+        $enrollment = Enrollment::create([
+            'campus_id' => $group->campus_id,
+            'student_id' => $student->id,
+            'group_id' => $group->id,
+            'enrolled_at' => now()->toDateString(),
+            'status' => 'active',
+            'progress' => 0,
+        ]);
+        $charge = app(EnrollmentBillingService::class)->createTuitionCharge($enrollment);
+
+        $this->actingAs($admin)->from('/finance')
+            ->post('/finance/payments', [
+                'student_id' => $student->id,
+                'charge_ids' => [$charge->id],
+                'currency' => PaymentCurrencyConverter::CURRENCY_USD,
+                'original_amount' => 100,
+                'payment_method_id' => $usdMethod->id,
+                'paid_at' => now()->toDateString(),
+            ])
+            ->assertRedirect('/finance')
+            ->assertSessionHasErrors('currency');
+    }
+
     public function test_master_admin_can_store_program_level_price(): void
     {
         ['admin' => $admin, 'program' => $program] = $this->seedPricingContext();

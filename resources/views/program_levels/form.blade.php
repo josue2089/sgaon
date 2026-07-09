@@ -22,6 +22,7 @@
     <div>
         <label>Precio base (EUR)</label>
         <input type="number" name="base_price_eur" min="0" step="0.01" value="{{ old('base_price_eur', $level->base_price_eur ?? '') }}" placeholder="Ej. 240.00">
+        <p class="entity-sub">Opcional. Si se deja vacío, se usa el precio por defecto del programa.</p>
     </div>
     <div>
         <label>Días antes para recordatorio</label>

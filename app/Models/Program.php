@@ -14,7 +14,15 @@ class Program extends Model
         'code',
         'status',
         'description',
+        'base_price_eur',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'base_price_eur' => 'float',
+        ];
+    }
 
     public function levels()
     {

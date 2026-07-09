@@ -24,7 +24,7 @@
 <form method="GET" action="{{ route('enrollments.index') }}" class="card">
     <div class="fi-filter-bar">
         <div class="search">
-            <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar alumno, grupo o curso...">
+            <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar alumno (nombre, cédula, representante), grupo o curso...">
         </div>
         <select name="group_id" style="max-width:260px;">
             <option value="">Todos los grupos</option>

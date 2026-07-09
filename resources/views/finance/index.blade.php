@@ -46,20 +46,22 @@
                     @endforeach
                 </select>
             </div>
-            <div>
+            <div class="searchable-select" data-searchable-select>
                 <label>Inscripción / curso</label>
-                <input type="text" id="charge-enrollment-search" placeholder="Buscar inscripción por alumno, curso o grupo">
-                <select name="enrollment_id" id="charge-enrollment-select">
+                <input type="text" id="charge-enrollment-search" class="searchable-select__search" placeholder="Buscar inscripción por alumno, cédula, representante, curso o grupo">
+                <div class="searchable-select__list-wrap">
+                    <select name="enrollment_id" id="charge-enrollment-select" class="searchable-select__list">
                     <option value="">Sin vínculo académico</option>
                     @foreach($enrollments as $enrollment)
                         <option
                             value="{{ $enrollment->id }}"
                             data-student-id="{{ $enrollment->student_id }}"
-                            data-search="{{ strtolower(($enrollment->student->full_name ?? 'alumno').' '.($enrollment->group->course->name ?? 'curso').' '.($enrollment->group->name ?? 'grupo')) }}"
+                            data-search="{{ \App\Support\StudentSearch::enrollmentHaystack($enrollment) }}"
                             @selected((int) old('enrollment_id') === (int) $enrollment->id)
                         >{{ $enrollment->student->full_name ?? 'Alumno' }} · {{ $enrollment->group->course->name ?? 'Curso' }} · {{ $enrollment->group->name ?? 'Grupo' }}</option>
                     @endforeach
-                </select>
+                    </select>
+                </div>
             </div>
             <div>
                 <label>Concepto</label>
@@ -117,10 +119,11 @@
                     @endforeach
                 </select>
             </div>
-            <div>
+            <div class="searchable-select" data-searchable-select>
                 <label>Cargos a aplicar</label>
-                <input type="text" id="payment-charge-search" placeholder="Buscar cargo por concepto, curso o período">
-                <select name="charge_ids[]" id="payment-charge-select" multiple size="8">
+                <input type="text" id="payment-charge-search" class="searchable-select__search" placeholder="Buscar cargo por concepto, curso o período">
+                <div class="searchable-select__list-wrap">
+                    <select name="charge_ids[]" id="payment-charge-select" class="searchable-select__list" multiple>
                     @foreach($charges as $charge)
                         @php
                             $balance = \App\Support\FinanceReconcile::outstandingForCharge($charge);
@@ -134,7 +137,8 @@
                             @selected(in_array((string) $charge->id, array_map('strval', old('charge_ids', old('charge_id') ? [old('charge_id')] : [])), true))
                         >{{ $charge->student->full_name ?? '' }} - {{ $charge->concept }} - Saldo {{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</option>
                     @endforeach
-                </select>
+                    </select>
+                </div>
                 <div class="form-hint">Puedes seleccionar uno o varios cargos del mismo alumno.</div>
             </div>
             <div id="finance-payment-currency-wrap">
@@ -402,6 +406,11 @@
                     }
                 }
             });
+
+            const wrap = select.closest('[data-searchable-select]');
+            if (wrap?.searchableSelect) {
+                wrap.searchableSelect.syncSize();
+            }
         };
 
         const syncChargeStudentFromEnrollment = () => {
@@ -425,14 +434,16 @@
 
             const total = selectedOptions.reduce((sum, option) => sum + Number(option.dataset.balance || 0), 0);
             const chargeCurrency = selectedOptions[0]?.dataset.currency || 'USD';
-            if (paymentCurrencyRoot) {
-                paymentCurrencyRoot.dataset.balanceAmount = total.toFixed(2);
-                paymentCurrencyRoot.dataset.chargeCurrency = chargeCurrency;
-                const currencySelect = paymentCurrencyRoot.querySelector('.payment-currency-select');
-                if (currencySelect) {
-                    currencySelect.value = chargeCurrency === 'EUR' ? 'EUR' : 'USD';
-                    currencySelect.dispatchEvent(new Event('change'));
-                }
+            if (paymentCurrencyRoot?.configurePaymentCurrency) {
+                paymentCurrencyRoot.configurePaymentCurrency({
+                    chargeCurrency,
+                    balanceAmount: total,
+                });
+            } else if (window.configurePaymentCurrencyBlock) {
+                window.configurePaymentCurrencyBlock(paymentCurrencyRoot, {
+                    chargeCurrency,
+                    balanceAmount: total,
+                });
             }
             if (paymentOriginalAmount && total > 0) {
                 paymentOriginalAmount.value = total.toFixed(2);

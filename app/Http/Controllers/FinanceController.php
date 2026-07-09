@@ -40,7 +40,7 @@ class FinanceController extends Controller
         $chargesQuery = CampusScope::apply(Charge::with(['student', 'payments', 'course', 'group', 'period', 'enrollment.group.course'])->latest(), $user);
         $paymentsQuery = CampusScope::apply(Payment::with(['student', 'receipt', 'allocations.charge', 'paymentMethod'])->latest(), $user);
         $studentsQuery = CampusScope::apply(Student::orderBy('first_name'), $user);
-        $enrollmentsQuery = CampusScope::apply(Enrollment::with(['student', 'group.course'])->latest(), $user);
+        $enrollmentsQuery = CampusScope::apply(Enrollment::with(['student.representatives', 'group.course'])->latest(), $user);
         $periodsQuery = CampusScope::apply(Period::orderBy('code'), $user);
         $paymentRequestsQuery = CampusScope::apply(
             ChargePaymentRequest::query()->with(['student', 'representative', 'charge.course', 'validator', 'paymentMethod'])->latest(),

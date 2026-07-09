@@ -7,6 +7,7 @@ use App\Models\Group;
 use App\Models\Student;
 use App\Support\RenewalEnrollmentEligibility;
 use App\Support\AuditTrail;
+use App\Support\StudentSearch;
 use App\Services\EnrollmentBillingService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -32,9 +33,7 @@ class EnrollmentController extends Controller
         if ($q !== '') {
             $query->where(function (Builder $builder) use ($q) {
                 $builder
-                    ->whereHas('student', fn (Builder $studentBuilder) => $studentBuilder
-                        ->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$q}%"])
-                        ->orWhere('email', 'like', "%{$q}%"))
+                    ->whereHas('student', fn (Builder $studentBuilder) => StudentSearch::applyTerm($studentBuilder, $q))
                     ->orWhereHas('group', fn (Builder $groupBuilder) => $groupBuilder
                         ->where('name', 'like', "%{$q}%")
                         ->orWhereHas('course', fn (Builder $courseBuilder) => $courseBuilder->where('name', 'like', "%{$q}%")));

@@ -23,7 +23,15 @@
             <div><strong>Código:</strong> {{ $level->code }}</div>
             <div><strong>Orden:</strong> {{ $level->sort_order }}/{{ $level->program_total }}</div>
             <div><strong>Horas:</strong> {{ $level->academic_hours }}</div>
-            <div><strong>Precio base:</strong> @if($level->base_price_eur) €{{ number_format($level->base_price_eur, 2, ',', '.') }} @else Sin definir @endif</div>
+            <div><strong>Precio base:</strong>
+                @if($level->base_price_eur)
+                    €{{ number_format($level->base_price_eur, 2, ',', '.') }}
+                @elseif($level->resolvedBasePriceEur())
+                    €{{ number_format($level->resolvedBasePriceEur(), 2, ',', '.') }} <span class="entity-sub">(heredado del programa)</span>
+                @else
+                    Sin definir
+                @endif
+            </div>
             <div><strong>Recordatorio:</strong> {{ $level->reminder_days_before }} días</div>
             <div><strong>Estatus:</strong> {{ ucfirst($level->status) }}</div>
         </div>

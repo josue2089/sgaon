@@ -915,6 +915,56 @@ h5 {
     margin-top: 0.72rem;
 }
 
+.searchable-select {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.searchable-select > label {
+    margin-bottom: -0.15rem;
+}
+
+.searchable-select__search {
+    width: 100%;
+}
+
+.searchable-select__list-wrap {
+    border: 2px solid var(--line);
+    border-radius: 16px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.searchable-select__list {
+    width: 100%;
+    border: none;
+    border-radius: 0;
+    height: auto !important;
+    min-height: 6rem;
+    padding: 0.35rem 0.45rem;
+    background: transparent;
+    box-shadow: none;
+}
+
+.searchable-select__list:focus {
+    outline: none;
+}
+
+.searchable-select__list option {
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    margin: 0.1rem 0;
+}
+
+.searchable-select__list option:checked {
+    background: linear-gradient(0deg, var(--brand-soft), var(--brand-soft));
+    color: #fff;
+}
+
+.searchable-select__list option[hidden] {
+    display: none;
+}
+
 input:not([type='checkbox']):not([type='radio']),
 select,
 textarea {

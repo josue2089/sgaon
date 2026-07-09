@@ -208,6 +208,7 @@ class CourseController extends Controller
                     ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
                     ->orderByDesc('enrolled_at')
                     ->orderByDesc('id'),
+                'representatives',
             ])
             ->orderBy('first_name')
             ->orderBy('last_name')
@@ -446,6 +447,7 @@ class CourseController extends Controller
             'campus',
             'level',
             'program',
+            'programLevel.program',
             'programLevel.lessons',
             'courseLevel',
             'teacher',

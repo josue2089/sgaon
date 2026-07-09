@@ -37,7 +37,7 @@ class AttendanceController extends Controller
 
         $sessionId = $request->integer('class_session_id');
         $session = $sessionId ? (clone $sessionsQuery)->where('id', $sessionId)->first() : null;
-        $enrollments = $session ? Enrollment::with('student')->where('group_id', $session->group_id)->get() : collect();
+        $enrollments = $session ? Enrollment::with(['student.representatives'])->where('group_id', $session->group_id)->get() : collect();
 
         $records = $session
             ? AttendanceRecord::where('class_session_id', $session->id)->get()->keyBy('enrollment_id')

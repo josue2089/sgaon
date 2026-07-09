@@ -17,7 +17,7 @@ class EnrollmentBillingService
 {
     public function createTuitionCharge(Enrollment $enrollment, ?Request $request = null): ?Charge
     {
-        $enrollment->loadMissing(['group.course.programLevel', 'group.course.period', 'student.representatives']);
+        $enrollment->loadMissing(['group.course.programLevel.program', 'group.course.period', 'student.representatives']);
 
         $course = $enrollment->group?->course;
         if (! $course) {
@@ -25,7 +25,7 @@ class EnrollmentBillingService
         }
 
         $programLevel = $course->programLevel;
-        $basePriceEur = (float) ($programLevel?->base_price_eur ?? 0);
+        $basePriceEur = (float) ($programLevel?->resolvedBasePriceEur() ?? 0);
         if ($basePriceEur <= 0) {
             return null;
         }

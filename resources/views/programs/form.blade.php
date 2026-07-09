@@ -19,4 +19,9 @@
         <label>Descripción</label>
         <textarea name="description">{{ old('description', $program->description ?? '') }}</textarea>
     </div>
+    <div>
+        <label>Precio base por defecto (EUR)</label>
+        <input type="number" name="base_price_eur" min="0" step="0.01" value="{{ old('base_price_eur', $program->base_price_eur ?? '') }}" placeholder="Ej. 240.00">
+        <p class="entity-sub">Se usa cuando un nivel no tiene precio propio definido.</p>
+    </div>
 </div>

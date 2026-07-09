@@ -25,7 +25,7 @@
 <form method="GET" action="{{ route('students.historical.index') }}" class="card">
     <div class="fi-filter-bar">
         <div class="search">
-            <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Nombre, email, documento o contrato...">
+            <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Nombre, email, cédula, representante o contrato...">
         </div>
         <select name="year">
             <option value="">Todos los años</option>

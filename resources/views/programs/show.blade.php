@@ -20,6 +20,13 @@
             <div><strong>Código:</strong> {{ $program->code }}</div>
             <div><strong>Estatus:</strong> {{ ucfirst($program->status) }}</div>
             <div><strong>Descripción:</strong> {{ $program->description ?: 'Sin descripción' }}</div>
+            <div><strong>Precio base por defecto:</strong>
+                @if($program->base_price_eur)
+                    €{{ number_format($program->base_price_eur, 2, ',', '.') }}
+                @else
+                    Sin definir
+                @endif
+            </div>
         </div>
     </div>
     <div class="card">

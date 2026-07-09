@@ -19,6 +19,7 @@ use App\Support\AuditTrail;
 use App\Support\CampusScope;
 use App\Support\FinanceReconcile;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\StudentSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -577,12 +578,7 @@ class StudentController extends Controller
         $query = $this->applyCampusScope(Student::query()->latest());
 
         if ($filters['q'] !== '') {
-            $q = $filters['q'];
-            $query->where(function (Builder $builder) use ($q) {
-                $builder
-                    ->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$q}%"])
-                    ->orWhere('email', 'like', "%{$q}%");
-            });
+            StudentSearch::applyTerm($query, $filters['q']);
         }
 
         if ($filters['status'] !== '') {

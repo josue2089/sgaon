@@ -60,7 +60,7 @@ Guía para agentes y desarrolladores que trabajan en este repositorio.
 
 ## Finanzas y precios EUR
 
-- Precio base por nivel: `program_levels.base_price_eur`.
+- Precio base EUR: `programs.base_price_eur` (por defecto del programa) y `program_levels.base_price_eur` (override por nivel; si el nivel no tiene precio, se usa el del programa).
 - Al inscribir un alumno se crea cargo `tuition` en EUR vía `App\Services\EnrollmentBillingService`.
 - Cargos tienen `currency` (`USD` legacy, `EUR` matrícula nueva) y `last_reminder_sent_at`.
 - Tasas BCV: `ExchangeRateService` sincroniza USD/VES y EUR/VES (`bcv:sync-rates`).

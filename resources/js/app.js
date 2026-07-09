@@ -1,5 +1,10 @@
 import './bootstrap';
 import './payment-currency';
+import { initSearchableSelect } from './searchable-select';
+
+document.querySelectorAll('[data-searchable-select]').forEach((container) => {
+    container.searchableSelect = initSearchableSelect(container);
+});
 
 document.querySelectorAll('[data-student-picker]').forEach((form) => {
     const modal = form.querySelector('[data-picker-modal]');

@@ -26,7 +26,7 @@
 <form method="GET" action="{{ route('students.index') }}" class="card">
     <div class="fi-filter-bar">
         <div class="search">
-            <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar por nombre o email...">
+            <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar por nombre, email, cédula o representante...">
         </div>
         <select name="level">
             <option value="">Todos los niveles</option>

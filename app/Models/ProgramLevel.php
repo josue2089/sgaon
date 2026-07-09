@@ -53,4 +53,17 @@ class ProgramLevel extends Model
             ->orderBy('sort_order')
             ->first();
     }
+
+    public function resolvedBasePriceEur(): ?float
+    {
+        $levelPrice = (float) ($this->base_price_eur ?? 0);
+        if ($levelPrice > 0) {
+            return $levelPrice;
+        }
+
+        $program = $this->relationLoaded('program') ? $this->program : $this->program()->first();
+        $programPrice = (float) ($program?->base_price_eur ?? 0);
+
+        return $programPrice > 0 ? $programPrice : null;
+    }
 }

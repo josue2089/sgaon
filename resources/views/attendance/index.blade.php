@@ -95,7 +95,7 @@
             <div class="attendance-toolbar">
                 <div class="attendance-toolbar-main">
                     <div class="search attendance-search">
-                        <input type="text" id="attendance-search" placeholder="Buscar alumno por nombre...">
+                        <input type="text" id="attendance-search" placeholder="Buscar por nombre, cédula o representante...">
                     </div>
                     <div class="attendance-shortcuts">
                         <span class="badge-pill badge-info">Atajos: P / A / T / J</span>
@@ -135,7 +135,7 @@
                             $currentStatus = $records[$enrollment->id]->status ?? 'present';
                             $previousStatus = $previousRecords[$enrollment->id]->status ?? null;
                         @endphp
-                        <tr class="attendance-row attendance-row--{{ $currentStatus }}" data-student-name="{{ strtolower($enrollment->student->full_name) }}">
+                        <tr class="attendance-row attendance-row--{{ $currentStatus }}" data-student-name="{{ \App\Support\StudentSearch::haystack($enrollment->student) }}">
                             <td>{{ $loop->iteration }}</td>
                             <td>
                                 <input type="hidden" name="records[{{ $i }}][enrollment_id]" value="{{ $enrollment->id }}">
