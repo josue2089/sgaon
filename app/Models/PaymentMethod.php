@@ -14,6 +14,8 @@ class PaymentMethod extends Model
 
     public const CURRENCY_VES = 'VES';
 
+    public const CURRENCY_EUR = 'EUR';
+
     public const TYPE_ZELLE = 'zelle';
 
     public const TYPE_PAGO_MOVIL = 'pago_movil';
@@ -59,6 +61,7 @@ class PaymentMethod extends Model
     {
         return [
             self::CURRENCY_USD => 'USD (dólares)',
+            self::CURRENCY_EUR => 'EUR (euros)',
             self::CURRENCY_VES => 'Bs (bolívares)',
         ];
     }

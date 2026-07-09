@@ -3,7 +3,7 @@
 <div class="module-head">
     <div>
         <h1 class="page-title">Métodos y cuentas de pago</h1>
-        <p class="page-subtitle">Configuración global por moneda (USD / Bs) visible en portal y financiero.</p>
+        <p class="page-subtitle">Configuración global por moneda (USD / EUR / Bs) visible en portal y financiero.</p>
     </div>
     <a class="btn" href="{{ route('settings.payment-methods.create') }}">Nuevo método</a>
 </div>

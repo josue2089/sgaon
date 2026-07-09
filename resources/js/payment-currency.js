@@ -71,6 +71,22 @@ function initPaymentCurrencyBlock(root) {
 
     const renderMethods = () => {
         const items = currentMethods();
+        methodSelect.innerHTML = '';
+
+        if (items.length === 0) {
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = `No hay métodos configurados para ${currentCurrency()}`;
+            emptyOption.disabled = true;
+            emptyOption.selected = true;
+            methodSelect.appendChild(emptyOption);
+            methodSelect.required = false;
+            accountLines.textContent = 'Configura un método de pago para esta moneda en Ajustes → Métodos de pago.';
+            updateHints();
+            return;
+        }
+
+        methodSelect.required = true;
         methodSelect.innerHTML = '<option value="">Selecciona método</option>';
         items.forEach((item) => {
             const option = document.createElement('option');

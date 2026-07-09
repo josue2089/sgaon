@@ -87,7 +87,11 @@ class PaymentMethodController extends Controller
     private function validatedData(Request $request): array
     {
         return $request->validate([
-            'currency' => ['required', Rule::in([PaymentMethod::CURRENCY_USD, PaymentMethod::CURRENCY_VES])],
+            'currency' => ['required', Rule::in([
+                PaymentMethod::CURRENCY_USD,
+                PaymentMethod::CURRENCY_EUR,
+                PaymentMethod::CURRENCY_VES,
+            ])],
             'method_type' => ['required', Rule::in(array_keys(PaymentMethod::typeLabels()))],
             'label' => ['required', 'string', 'max:120'],
             'bank_name' => ['nullable', 'string', 'max:120'],

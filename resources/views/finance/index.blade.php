@@ -49,8 +49,7 @@
             <div class="searchable-select" data-searchable-select>
                 <label>Inscripción / curso</label>
                 <input type="text" id="charge-enrollment-search" class="searchable-select__search" placeholder="Buscar inscripción por alumno, cédula, representante, curso o grupo">
-                <div class="searchable-select__list-wrap">
-                    <select name="enrollment_id" id="charge-enrollment-select" class="searchable-select__list">
+                <select name="enrollment_id" id="charge-enrollment-select" class="searchable-select__list">
                     <option value="">Sin vínculo académico</option>
                     @foreach($enrollments as $enrollment)
                         <option
@@ -60,8 +59,7 @@
                             @selected((int) old('enrollment_id') === (int) $enrollment->id)
                         >{{ $enrollment->student->full_name ?? 'Alumno' }} · {{ $enrollment->group->course->name ?? 'Curso' }} · {{ $enrollment->group->name ?? 'Grupo' }}</option>
                     @endforeach
-                    </select>
-                </div>
+                </select>
             </div>
             <div>
                 <label>Concepto</label>
@@ -122,8 +120,7 @@
             <div class="searchable-select" data-searchable-select>
                 <label>Cargos a aplicar</label>
                 <input type="text" id="payment-charge-search" class="searchable-select__search" placeholder="Buscar cargo por concepto, curso o período">
-                <div class="searchable-select__list-wrap">
-                    <select name="charge_ids[]" id="payment-charge-select" class="searchable-select__list" multiple>
+                <select name="charge_ids[]" id="payment-charge-select" class="searchable-select__list" multiple>
                     @foreach($charges as $charge)
                         @php
                             $balance = \App\Support\FinanceReconcile::outstandingForCharge($charge);
@@ -135,10 +132,9 @@
                             data-currency="{{ $charge->currencyCode() }}"
                             data-search="{{ strtolower(($charge->student->full_name ?? '').' '.$charge->concept.' '.($charge->course->name ?? '').' '.($charge->group->name ?? '').' '.($charge->period->code ?? '')) }}"
                             @selected(in_array((string) $charge->id, array_map('strval', old('charge_ids', old('charge_id') ? [old('charge_id')] : [])), true))
-                        >{{ $charge->student->full_name ?? '' }} - {{ $charge->concept }} - Saldo {{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</option>
+                        >{{ $charge->student->full_name ?? '' }} — {{ $charge->concept }} — Saldo {{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</option>
                     @endforeach
-                    </select>
-                </div>
+                </select>
                 <div class="form-hint">Puedes seleccionar uno o varios cargos del mismo alumno.</div>
             </div>
             <div id="finance-payment-currency-wrap">
@@ -372,6 +368,7 @@
 
 @push('scripts')
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
     (() => {
         const chargeStudent = document.getElementById('charge-student-select');
         const chargeEnrollment = document.getElementById('charge-enrollment-select');
@@ -384,6 +381,13 @@
 
         const filterSelect = (select, { studentId = '', term = '' } = {}) => {
             if (!select) return;
+
+            const wrap = select.closest('[data-searchable-select]');
+            if (wrap?.searchableSelect?.filter) {
+                wrap.searchableSelect.filter({ studentId, term });
+                return;
+            }
+
             const normalizedTerm = term.trim().toLowerCase();
 
             Array.from(select.options).forEach((option, index) => {
@@ -406,11 +410,6 @@
                     }
                 }
             });
-
-            const wrap = select.closest('[data-searchable-select]');
-            if (wrap?.searchableSelect) {
-                wrap.searchableSelect.syncSize();
-            }
         };
 
         const syncChargeStudentFromEnrollment = () => {
@@ -499,5 +498,6 @@
             });
         });
     })();
+    });
 </script>
 @endpush

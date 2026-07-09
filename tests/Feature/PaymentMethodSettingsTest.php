@@ -49,6 +49,25 @@ class PaymentMethodSettingsTest extends TestCase
         $this->assertDatabaseMissing('payment_methods', ['id' => $method->id]);
     }
 
+    public function test_master_admin_can_create_eur_payment_method(): void
+    {
+        $master = User::factory()->create(['role' => 'admin', 'is_master' => true]);
+
+        $this->actingAs($master)->post(route('settings.payment-methods.store'), [
+            'currency' => PaymentMethod::CURRENCY_EUR,
+            'method_type' => PaymentMethod::TYPE_TRANSFERENCIA,
+            'label' => 'Transferencia EUR',
+            'email' => 'eur@onenglish.test',
+            'is_active' => true,
+            'sort_order' => 1,
+        ])->assertRedirect(route('settings.payment-methods.index'));
+
+        $this->assertDatabaseHas('payment_methods', [
+            'currency' => PaymentMethod::CURRENCY_EUR,
+            'label' => 'Transferencia EUR',
+        ]);
+    }
+
     public function test_non_master_admin_cannot_access_payment_method_settings(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'is_master' => false]);
