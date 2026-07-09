@@ -367,7 +367,20 @@
 </div>
 
 <div class="detail-grid student-detail-grid" id="student-finance">
-    @if(!empty($canRegisterPayment))
+    @if(!empty($canManageStudentFinance))
+        <div class="card" style="grid-column:1/-1;">
+            <div class="section-head">
+                <h2 class="section-title section-title-md">Nuevo cargo</h2>
+                <div class="entity-sub">Solo disponible para administrador master</div>
+            </div>
+            @include('partials.finance.register-charge-form', [
+                'formAction' => route('students.charges.store', $student),
+                'formId' => 'student-charge-form',
+                'lockStudent' => true,
+                'studentId' => $student->id,
+                'enrollments' => $studentEnrollments,
+            ])
+        </div>
         <div class="card" style="grid-column:1/-1;">
             <div class="section-head">
                 <h2 class="section-title section-title-md">Registrar pago</h2>

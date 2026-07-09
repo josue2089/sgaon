@@ -20,6 +20,7 @@ use App\Support\FinanceReconcile;
 use App\Support\FinanceSummary;
 use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
+use App\Services\ChargeRegistrationService;
 use App\Services\PaymentRegistrationService;
 use App\Services\PaymentReceiptNotifier;
 use App\Services\ReceiptPdfService;
@@ -189,42 +190,11 @@ class FinanceController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $enrollment = null;
-        if (! empty($data['enrollment_id'])) {
-            $enrollment = Enrollment::query()
-                ->with(['group.course'])
-                ->findOrFail((int) $data['enrollment_id']);
-            if (! CampusScope::userCanAccessCampus($request->user(), (int) $enrollment->campus_id)) {
-                abort(403);
-            }
-
-            $data['student_id'] = $enrollment->student_id;
-            $data['campus_id'] = $enrollment->campus_id;
-            $data['group_id'] = $enrollment->group_id;
-            $data['course_id'] = $enrollment->group?->course_id;
-            $data['period_id'] = $enrollment->group?->course?->period_id;
-            $data['origin'] = 'manual';
-            $data['billing_period_label'] = $data['billing_period_label'] ?: ($enrollment->group?->course?->period?->code ?? null);
-        } else {
-            $studentId = (int) ($data['student_id'] ?? 0);
-            if (! $studentId) {
-                return back()->withErrors(['student_id' => 'Debes seleccionar un alumno o una inscripción.'])->withInput();
-            }
-
-            $student = Student::findOrFail($studentId);
-            if (! CampusScope::userCanAccessCampus($request->user(), (int) $student->campus_id)) {
-                abort(403);
-            }
-            $data['campus_id'] = $student->campus_id;
-            $data['origin'] = 'manual';
+        try {
+            app(ChargeRegistrationService::class)->register($data, $request);
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors())->withInput();
         }
-
-        $data['currency'] = strtoupper((string) ($data['currency'] ?? PaymentCurrencyConverter::CURRENCY_USD));
-
-        $charge = Charge::create($data);
-        AuditTrail::log($request, 'finance.charge.create', $charge, $data);
-        AlertEngine::evaluateFinanceForStudent((int) $data['student_id']);
-        $this->emailChargePendingIfPossible($charge->fresh('student.representatives'));
 
         return back()->with('success', 'Cargo creado.');
     }

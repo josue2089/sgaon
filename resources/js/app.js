@@ -2,6 +2,7 @@ import './bootstrap';
 import './payment-currency';
 import './searchable-select';
 import './finance-payment-form';
+import './finance-charge-form';
 
 document.querySelectorAll('[data-student-picker]').forEach((form) => {
     const modal = form.querySelector('[data-picker-modal]');

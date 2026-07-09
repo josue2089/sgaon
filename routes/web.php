@@ -70,6 +70,9 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/students/{student}/payments', [StudentController::class, 'storePayment'])
             ->middleware('master.admin')
             ->name('students.payments.store');
+        Route::post('/students/{student}/charges', [StudentController::class, 'storeCharge'])
+            ->middleware('master.admin')
+            ->name('students.charges.store');
         Route::resource('teachers', TeacherController::class)->except('show');
         Route::get('/teachers-calendar', [TeacherController::class, 'calendar'])->name('teachers.calendar');
         Route::get('/teachers/{teacher}', [TeacherController::class, 'show'])->name('teachers.show');

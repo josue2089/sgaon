@@ -67,6 +67,7 @@ Guía para agentes y desarrolladores que trabajan en este repositorio.
 - Pagos contra cargos EUR: `PaymentCurrencyConverter::resolveForCharge()` (EUR o VES).
 - Al registrar un pago (`PaymentRegistrationService`) se envía `PaymentReceiptMail` al alumno y representantes con PDF adjunto (`ReceiptPdfService`).
 - Master admin puede registrar pagos desde la ficha del alumno (`students.payments.store`).
+- Master admin puede crear cargos desde la ficha del alumno (`students.charges.store`).
 - Recordatorios: `finance:send-payment-reminders` (diario 07:00).
 - Resumen: ruta `finance.summary` y helper `App\Support\FinanceSummary`.
 

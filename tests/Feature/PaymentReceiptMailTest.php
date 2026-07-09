@@ -146,4 +146,38 @@ class PaymentReceiptMailTest extends TestCase
         Mail::assertSent(PaymentReceiptMail::class);
         $this->assertDatabaseHas('payments', ['student_id' => $student->id, 'amount' => 75]);
     }
+
+    public function test_master_admin_can_create_charge_from_student_profile(): void
+    {
+        Mail::fake();
+
+        $campus = Campus::create(['name' => 'Picacho', 'code' => 'PIC', 'status' => 'active']);
+        $master = User::factory()->create(['role' => 'admin', 'campus_id' => $campus->id, 'is_master' => true]);
+        $student = Student::create([
+            'campus_id' => $campus->id,
+            'first_name' => 'Carla',
+            'last_name' => 'Ruiz',
+            'email' => 'carla@student.test',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($master)
+            ->post(route('students.charges.store', $student), [
+                'concept' => 'Materiales Q3',
+                'charge_type' => 'materials',
+                'amount' => 45,
+                'currency' => PaymentCurrencyConverter::CURRENCY_USD,
+                'due_date' => now()->addDays(15)->toDateString(),
+                'status' => 'pending',
+            ])
+            ->assertRedirect(route('students.show', $student));
+
+        $this->assertDatabaseHas('charges', [
+            'student_id' => $student->id,
+            'concept' => 'Materiales Q3',
+            'amount' => 45,
+            'currency' => PaymentCurrencyConverter::CURRENCY_USD,
+            'status' => 'pending',
+        ]);
+    }
 }

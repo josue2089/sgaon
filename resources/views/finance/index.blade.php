@@ -35,79 +35,13 @@
 <div class="grid-2">
     <div class="card">
         <h3 class="section-title section-title-sm">Nuevo cargo</h3>
-        <form class="stack-sm" method="POST" action="{{ route('finance.charges.store') }}" id="finance-charge-form">
-            @csrf
-            <div class="searchable-select searchable-select--combo" data-searchable-select data-searchable-combo>
-                <label>Alumno</label>
-                <input type="text" id="charge-student-search" class="searchable-select__search" placeholder="Buscar alumno por nombre, cédula o representante..." autocomplete="off">
-                <select name="student_id" id="charge-student-select" class="searchable-select__list">
-                    <option value="" data-search="">Derivar por inscripción</option>
-                    @foreach($students as $student)
-                        <option
-                            value="{{ $student->id }}"
-                            data-search="{{ \App\Support\StudentSearch::haystack($student) }}"
-                            @selected((int) old('student_id', $focusStudentId) === (int) $student->id)
-                        >{{ $student->full_name }}{{ $student->email ? ' · '.$student->email : '' }}{{ $student->document_id ? ' · '.$student->document_id : '' }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="searchable-select" data-searchable-select>
-                <label>Inscripción / curso</label>
-                <input type="text" id="charge-enrollment-search" class="searchable-select__search" placeholder="Buscar inscripción por alumno, cédula, representante, curso o grupo">
-                <select name="enrollment_id" id="charge-enrollment-select" class="searchable-select__list">
-                    <option value="">Sin vínculo académico</option>
-                    @foreach($enrollments as $enrollment)
-                        <option
-                            value="{{ $enrollment->id }}"
-                            data-student-id="{{ $enrollment->student_id }}"
-                            data-search="{{ \App\Support\StudentSearch::enrollmentHaystack($enrollment) }}"
-                            @selected((int) old('enrollment_id') === (int) $enrollment->id)
-                        >{{ $enrollment->student->full_name ?? 'Alumno' }} · {{ $enrollment->group->course->name ?? 'Curso' }} · {{ $enrollment->group->name ?? 'Grupo' }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label>Concepto</label>
-                <input name="concept">
-            </div>
-            <div>
-                <label>Tipo de cargo</label>
-                <select name="charge_type">
-                    <option value="">Sin clasificar</option>
-                    @foreach(['tuition' => 'Mensualidad', 'materials' => 'Materiales', 'registration' => 'Inscripción', 'makeup' => 'Recuperación', 'other' => 'Otro'] as $value => $label)
-                        <option value="{{ $value }}" @selected(old('charge_type') === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label>Periodo de cobro</label>
-                <input name="billing_period_label" value="{{ old('billing_period_label') }}" placeholder="Ej. 2026-Q2">
-            </div>
-            <div>
-                <label>Monto</label>
-                <input type="number" step="0.01" name="amount">
-            </div>
-            <div>
-                <label>Moneda</label>
-                <select name="currency">
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                </select>
-            </div>
-            <div>
-                <label>Vencimiento</label>
-                <input type="date" name="due_date">
-            </div>
-            <div>
-                <label>Status</label>
-                <select name="status">
-                    @foreach(['pending','partial','overdue'] as $status)
-                        <option>{{ $status }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <button class="btn" type="submit">Crear cargo</button>
-        </form>
+        @include('partials.finance.register-charge-form', [
+            'formAction' => route('finance.charges.store'),
+            'formId' => 'finance-charge-form',
+            'students' => $students,
+            'enrollments' => $enrollments,
+            'focusStudentId' => $focusStudentId,
+        ])
     </div>
 
     <div class="card">
@@ -330,48 +264,6 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const chargeStudent = document.getElementById('charge-student-select');
-        const chargeEnrollment = document.getElementById('charge-enrollment-select');
-        const chargeEnrollmentSearch = document.getElementById('charge-enrollment-search');
-
-        const filterSelect = (select, { studentId = '', term = '' } = {}) => {
-            if (!select) return;
-
-            const wrap = select.closest('[data-searchable-select]');
-            if (wrap?.searchableSelect?.filter) {
-                wrap.searchableSelect.filter({ studentId, term });
-            }
-        };
-
-        const syncChargeStudentFromEnrollment = () => {
-            if (!chargeStudent || !chargeEnrollment) return;
-            const selected = chargeEnrollment.selectedOptions[0];
-            if (!selected || !selected.dataset.studentId) return;
-            chargeStudent.value = selected.dataset.studentId;
-            chargeStudent.dispatchEvent(new Event('change', { bubbles: true }));
-            filterSelect(chargeEnrollment, { studentId: selected.dataset.studentId, term: chargeEnrollmentSearch?.value || '' });
-        };
-
-        if (chargeStudent) {
-            filterSelect(chargeEnrollment, { studentId: chargeStudent.value, term: chargeEnrollmentSearch?.value || '' });
-            chargeStudent.addEventListener('change', () => {
-                filterSelect(chargeEnrollment, { studentId: chargeStudent.value, term: chargeEnrollmentSearch?.value || '' });
-            });
-        }
-
-        if (chargeEnrollmentSearch) {
-            chargeEnrollmentSearch.addEventListener('input', () => {
-                filterSelect(chargeEnrollment, { studentId: chargeStudent?.value || '', term: chargeEnrollmentSearch.value });
-            });
-        }
-
-        if (chargeEnrollment) {
-            chargeEnrollment.addEventListener('change', syncChargeStudentFromEnrollment);
-            if (chargeEnrollment.value) {
-                syncChargeStudentFromEnrollment();
-            }
-        }
-
         document.querySelectorAll('dialog.finance-proof-dialog').forEach(function (dlg) {
             dlg.addEventListener('click', function (e) {
                 if (e.target === dlg) {

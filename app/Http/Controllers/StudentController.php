@@ -17,8 +17,10 @@ use App\Models\StudentAttachment;
 use App\Models\Student;
 use App\Support\AuditTrail;
 use App\Support\CampusScope;
+use App\Support\FinanceReconcile;
 use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
+use App\Services\ChargeRegistrationService;
 use App\Services\PaymentRegistrationService;
 use App\Support\PaymentCurrencyConverter;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -222,6 +224,39 @@ class StudentController extends Controller
         return redirect()
             ->route('students.show', $student)
             ->with('success', 'Pago registrado y recibo generado. Se envió el comprobante por email.');
+    }
+
+    public function storeCharge(Request $request, Student $student): RedirectResponse
+    {
+        if (! $request->user()?->isMasterAdmin()) {
+            abort(403);
+        }
+
+        $this->authorizeCampus($student->campus_id);
+
+        $data = $request->validate([
+            'enrollment_id' => ['nullable', 'exists:enrollments,id'],
+            'concept' => ['required', 'string', 'max:150'],
+            'charge_type' => ['nullable', 'in:tuition,materials,registration,makeup,other'],
+            'billing_period_label' => ['nullable', 'string', 'max:60'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'currency' => ['nullable', 'in:'.PaymentCurrencyConverter::CURRENCY_USD.','.PaymentCurrencyConverter::CURRENCY_EUR],
+            'due_date' => ['nullable', 'date'],
+            'status' => ['required', 'in:pending,partial,overdue'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $data['student_id'] = $student->id;
+
+        try {
+            app(ChargeRegistrationService::class)->register($data, $request);
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors())->withInput();
+        }
+
+        return redirect()
+            ->route('students.show', $student)
+            ->with('success', 'Cargo creado.');
     }
 
     public function store(Request $request): RedirectResponse
@@ -475,7 +510,13 @@ class StudentController extends Controller
         $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
 
         return [
-            'canRegisterPayment' => true,
+            'canManageStudentFinance' => true,
+            'studentEnrollments' => Enrollment::query()
+                ->with(['student', 'group.course'])
+                ->where('student_id', $student->id)
+                ->whereIn('status', ['active', 'inactive', 'completed', 'withdrawn'])
+                ->latest()
+                ->get(),
             'payableCharges' => Charge::query()
                 ->where('student_id', $student->id)
                 ->whereIn('status', ['pending', 'partial', 'overdue'])
