@@ -1,6 +1,7 @@
 function initSearchableSelect(container) {
     const select = container?.querySelector('.searchable-select__list');
     const search = container.querySelector('.searchable-select__search');
+    const isCombo = container.hasAttribute('data-searchable-combo') && !select?.multiple;
 
     if (!select) {
         return null;
@@ -11,6 +12,10 @@ function initSearchableSelect(container) {
         optionsRoot = document.createElement('div');
         optionsRoot.className = 'searchable-select__options';
         select.insertAdjacentElement('afterend', optionsRoot);
+    }
+
+    if (isCombo) {
+        optionsRoot.classList.add('searchable-select__options--combo');
     }
 
     select.classList.add('searchable-select__native');
@@ -29,6 +34,32 @@ function initSearchableSelect(container) {
                 }
             }
         });
+    };
+
+    const syncComboSearchLabel = () => {
+        if (!isCombo || !search) {
+            return;
+        }
+
+        const selected = select.selectedOptions[0];
+        if (selected && selected.value !== '') {
+            search.value = selected.textContent.trim();
+        } else {
+            search.value = '';
+        }
+    };
+
+    const openCombo = () => {
+        if (isCombo) {
+            optionsRoot.classList.add('is-open');
+        }
+    };
+
+    const closeCombo = () => {
+        if (isCombo) {
+            optionsRoot.classList.remove('is-open');
+            syncComboSearchLabel();
+        }
     };
 
     Array.from(select.options).forEach((option, index) => {
@@ -59,6 +90,10 @@ function initSearchableSelect(container) {
                 option.selected = true;
                 select.value = option.value;
                 updateSelectedState();
+                if (isCombo) {
+                    syncComboSearchLabel();
+                    closeCombo();
+                }
                 select.dispatchEvent(new Event('change', { bubbles: true }));
             });
         }
@@ -73,7 +108,7 @@ function initSearchableSelect(container) {
     });
 
     const filter = ({ studentId = '', term = '' } = {}) => {
-        const normalizedTerm = (term || search?.value || '').trim().toLowerCase();
+        const normalizedTerm = (term || (isCombo ? '' : search?.value) || '').trim().toLowerCase();
 
         items.forEach(({ option, item, index }) => {
             if (index === 0 && option.value === '') {
@@ -100,12 +135,35 @@ function initSearchableSelect(container) {
         updateSelectedState();
     };
 
-    search?.addEventListener('input', () => filter());
+    if (isCombo && search) {
+        search.addEventListener('focus', () => {
+            search.value = '';
+            openCombo();
+            filter({ term: '' });
+        });
+
+        search.addEventListener('input', () => {
+            openCombo();
+            filter({ term: search.value });
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!container.contains(event.target)) {
+                closeCombo();
+            }
+        });
+
+        select.addEventListener('change', syncComboSearchLabel);
+        syncComboSearchLabel();
+    } else {
+        search?.addEventListener('input', () => filter());
+    }
 
     updateSelectedState();
 
     return {
         filter,
+        syncFromSelect: syncComboSearchLabel,
         syncSize: () => {},
         select,
     };

@@ -921,6 +921,10 @@ h5 {
     position: relative;
 }
 
+.searchable-select--combo .searchable-select__search {
+    cursor: text;
+}
+
 .searchable-select > label {
     margin-bottom: -0.15rem;
 }
@@ -950,6 +954,21 @@ h5 {
     padding: 0.4rem;
     display: grid;
     gap: 0.35rem;
+}
+
+.searchable-select__options--combo {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% - 0.15rem);
+    z-index: 30;
+    margin-top: 0;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.14);
+}
+
+.searchable-select__options--combo.is-open {
+    display: grid;
 }
 
 .searchable-select__option {

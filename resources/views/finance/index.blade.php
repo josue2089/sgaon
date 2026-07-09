@@ -37,12 +37,17 @@
         <h3 class="section-title section-title-sm">Nuevo cargo</h3>
         <form class="stack-sm" method="POST" action="{{ route('finance.charges.store') }}" id="finance-charge-form">
             @csrf
-            <div>
+            <div class="searchable-select searchable-select--combo" data-searchable-select data-searchable-combo>
                 <label>Alumno</label>
-                <select name="student_id" id="charge-student-select">
-                    <option value="">Derivar por inscripción</option>
+                <input type="text" id="charge-student-search" class="searchable-select__search" placeholder="Buscar alumno por nombre, cédula o representante..." autocomplete="off">
+                <select name="student_id" id="charge-student-select" class="searchable-select__list">
+                    <option value="" data-search="">Derivar por inscripción</option>
                     @foreach($students as $student)
-                        <option value="{{ $student->id }}" @selected((int) old('student_id', $focusStudentId) === (int) $student->id)>{{ $student->full_name }}</option>
+                        <option
+                            value="{{ $student->id }}"
+                            data-search="{{ \App\Support\StudentSearch::haystack($student) }}"
+                            @selected((int) old('student_id', $focusStudentId) === (int) $student->id)
+                        >{{ $student->full_name }}{{ $student->email ? ' · '.$student->email : '' }}{{ $student->document_id ? ' · '.$student->document_id : '' }}</option>
                     @endforeach
                 </select>
             </div>
@@ -109,11 +114,16 @@
         <h3 class="section-title section-title-sm">Registrar pago</h3>
         <form class="stack-sm" method="POST" action="{{ route('finance.payments.store') }}" id="finance-payment-form">
             @csrf
-            <div>
+            <div class="searchable-select searchable-select--combo" data-searchable-select data-searchable-combo>
                 <label>Alumno</label>
-                <select name="student_id" id="payment-student-select">
+                <input type="text" id="payment-student-search" class="searchable-select__search" placeholder="Buscar alumno por nombre, cédula o representante..." autocomplete="off">
+                <select name="student_id" id="payment-student-select" class="searchable-select__list" required>
                     @foreach($students as $student)
-                        <option value="{{ $student->id }}" @selected((int) old('student_id', $focusStudentId) === (int) $student->id)>{{ $student->full_name }}</option>
+                        <option
+                            value="{{ $student->id }}"
+                            data-search="{{ \App\Support\StudentSearch::haystack($student) }}"
+                            @selected((int) old('student_id', $focusStudentId) === (int) $student->id)
+                        >{{ $student->full_name }}{{ $student->email ? ' · '.$student->email : '' }}{{ $student->document_id ? ' · '.$student->document_id : '' }}</option>
                     @endforeach
                 </select>
             </div>
@@ -417,6 +427,7 @@
             const selected = chargeEnrollment.selectedOptions[0];
             if (!selected || !selected.dataset.studentId) return;
             chargeStudent.value = selected.dataset.studentId;
+            chargeStudent.dispatchEvent(new Event('change', { bubbles: true }));
             filterSelect(chargeEnrollment, { studentId: selected.dataset.studentId, term: chargeEnrollmentSearch?.value || '' });
         };
 
@@ -428,6 +439,7 @@
             const studentId = selectedOptions[0].dataset.studentId || '';
             if (studentId) {
                 paymentStudent.value = studentId;
+                paymentStudent.dispatchEvent(new Event('change', { bubbles: true }));
                 filterSelect(paymentCharge, { studentId, term: paymentChargeSearch?.value || '' });
             }
 
