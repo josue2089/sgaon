@@ -368,7 +368,7 @@
 
 <div class="detail-grid student-detail-grid" id="student-finance">
     @if(!empty($canManageStudentFinance))
-        <div class="card" style="grid-column:1/-1;">
+        <div class="card student-finance-form-card">
             <div class="section-head">
                 <h2 class="section-title section-title-md">Nuevo cargo</h2>
                 <div class="entity-sub">Solo disponible para administrador master</div>
@@ -381,7 +381,7 @@
                 'enrollments' => $studentEnrollments,
             ])
         </div>
-        <div class="card" style="grid-column:1/-1;">
+        <div class="card student-finance-form-card">
             <div class="section-head">
                 <h2 class="section-title section-title-md">Registrar pago</h2>
                 <div class="entity-sub">Solo disponible para administrador master</div>

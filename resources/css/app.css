@@ -2542,6 +2542,10 @@ textarea {
     align-items: start;
 }
 
+.student-finance-form-card {
+    height: 100%;
+}
+
 .section-head-tight {
     padding: 0 0 1rem;
 }
