@@ -7,6 +7,8 @@ Guía para agentes y desarrolladores que trabajan en este repositorio.
 - **Backend**: Laravel 12, PHP 8.2+
 - **Frontend**: Blade, Vite, CSS en `resources/css/app.css`
 - **PDF**: DomPDF (`barryvdh/laravel-dompdf`)
+- **Excel**: PhpSpreadsheet (`phpoffice/phpspreadsheet`)
+- **Formato de montos**: punto para miles y coma para decimales en toda la UI (`App\Support\MoneyFormat::number`, `usd`, `eur`, `ves`). Usar `MoneyFormat::raw()` solo en atributos `data-*` para JS.
 - **Tests**: PHPUnit, `RefreshDatabase` en Feature tests
 - **DB**: MySQL en producción; SQLite en tests
 
@@ -70,6 +72,7 @@ Guía para agentes y desarrolladores que trabajan en este repositorio.
 - Master admin puede crear cargos desde la ficha del alumno (`students.charges.store`).
 - Recordatorios: `finance:send-payment-reminders` (diario 07:00).
 - Resumen: ruta `finance.summary` y helper `App\Support\FinanceSummary`.
+- Resumen financiero: filtros por fecha, moneda y sede; exportación CSV, Excel (`.xlsx`) y PDF de cargos creados, cobros realizados y proyección (`charges_*`, `payments_*`, `projection_*` con sufijo `csv`, `xlsx` o `pdf`).
 
 ## Despliegue
 

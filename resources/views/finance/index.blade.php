@@ -1,3 +1,4 @@
+@php use App\Support\MoneyFormat; @endphp
 @extends('layouts.app')
 @section('content')
 @php
@@ -11,10 +12,10 @@
         <p class="page-subtitle">
             Control de cargos, pagos y cobranza
             @if(($bcvRate['rate'] ?? 0) > 0)
-                · Tasa BCV USD: Bs {{ number_format($bcvRate['rate'], 4, ',', '.') }}
+                · Tasa BCV USD: Bs {{ MoneyFormat::rate($bcvRate['rate']) }}
             @endif
             @if(($bcvEurRate['rate'] ?? 0) > 0)
-                · Tasa BCV EUR: Bs {{ number_format($bcvEurRate['rate'], 4, ',', '.') }}
+                · Tasa BCV EUR: Bs {{ MoneyFormat::rate($bcvEurRate['rate']) }}
             @endif
         </p>
     </div>
@@ -26,8 +27,8 @@
 </div>
 
 <div class="soft-kpi-grid soft-kpi-grid-4">
-    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Cargos (página) USD', 'value' => '$'.number_format($chargesTotal, 0)])
-    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Pagos recientes USD', 'value' => '$'.number_format($paymentsTotal, 0)])
+    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Cargos (página) USD', 'value' => MoneyFormat::usd($chargesTotal)])
+    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Pagos recientes USD', 'value' => MoneyFormat::usd($paymentsTotal)])
     @include('partials.ui.soft-kpi', ['iconName' => 'warning', 'label' => 'Cuentas en mora', 'value' => $overdueCount, 'valueClass' => 'value-danger'])
     @include('partials.ui.soft-kpi', ['iconName' => 'trend', 'label' => 'Mora crítica (30+ días)', 'value' => $criticalOverdueCount, 'valueClass' => 'value-danger'])
 </div>
@@ -101,7 +102,7 @@
                             {{ \App\Support\MoneyFormat::ves((float) ($paymentRequest->original_amount ?? $paymentRequest->amount)) }}
                             → {{ \App\Support\MoneyFormat::usd((float) $paymentRequest->amount) }}
                             @if($paymentRequest->exchange_rate)
-                                <span class="table-sub">(tasa {{ number_format((float) $paymentRequest->exchange_rate, 4, ',', '.') }})</span>
+                                <span class="table-sub">(tasa {{ MoneyFormat::rate((float) $paymentRequest->exchange_rate) }})</span>
                             @endif
                         @else
                             {{ \App\Support\MoneyFormat::usd((float) $paymentRequest->amount) }}
@@ -236,7 +237,7 @@
                     @endif
                 </td>
                 <td>{{ \App\Support\MoneyFormat::formatLedgerAmount((float) $payment->amount, $payment->currency) }}</td>
-                <td>{{ $payment->exchange_rate ? number_format((float) $payment->exchange_rate, 4, ',', '.') : '—' }}</td>
+                <td>{{ $payment->exchange_rate ? MoneyFormat::rate((float) $payment->exchange_rate) : '—' }}</td>
                 <td>{{ $payment->paid_at?->format('Y-m-d') }}</td>
                 <td>
                     @if($payment->receipt)

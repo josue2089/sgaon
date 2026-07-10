@@ -1,3 +1,4 @@
+@php use App\Support\MoneyFormat; @endphp
 @extends('layouts.app')
 @section('content')
 <div class="module-head">
@@ -20,8 +21,8 @@
 <div class="summary-grid student-summary-grid">
     <div class="card summary-card"><div class="summary-label">Inscripciones</div><div class="summary-value">{{ $enrollments->count() }}</div></div>
     <div class="card summary-card"><div class="summary-label">Recuperativas abiertas</div><div class="summary-value">{{ $makeupRequests->whereIn('status', ['pending_payment','pending_validation','approved_for_booking','booked'])->count() }}</div></div>
-    <div class="card summary-card"><div class="summary-label">Cargos</div><div class="summary-value">${{ number_format($charges->sum('amount'), 2) }}</div></div>
-    <div class="card summary-card"><div class="summary-label">Pagos</div><div class="summary-value">${{ number_format($payments->sum('amount'), 2) }}</div></div>
+    <div class="card summary-card"><div class="summary-label">Cargos</div><div class="summary-value">{{ MoneyFormat::usd($charges->sum('amount')) }}</div></div>
+    <div class="card summary-card"><div class="summary-label">Pagos</div><div class="summary-value">{{ MoneyFormat::usd($payments->sum('amount')) }}</div></div>
 </div>
 
 <div class="portal-tabs" role="tablist" aria-label="Secciones del portal del alumno">
@@ -160,7 +161,7 @@
             @php($course = $makeupRequest->enrollment?->group?->course)
             <article class="makeup-student-card">
                 <div class="makeup-student-head"><div><div class="table-title">{{ $course?->name ?? 'N/D' }}</div><div class="table-sub">{{ $makeupRequest->missedSession?->session_date?->format('d/m/Y') ?? 'N/D' }} · {{ ucfirst($makeupRequest->request_type) }}</div></div><div>@include('partials.ui.status-badge', ['tone' => in_array($makeupRequest->status, ['approved_for_booking','completed'], true) ? 'ok' : ($makeupRequest->status === 'rejected' ? 'danger' : 'warn'), 'text' => ucfirst(str_replace('_', ' ', $makeupRequest->status))])</div></div>
-                <div class="makeup-student-meta"><div><strong>Programa:</strong> {{ $course?->program?->name ?? 'N/D' }}</div><div><strong>Nivel:</strong> {{ $course?->programLevel?->name ?? 'N/D' }}</div><div><strong>Monto:</strong> ${{ number_format($makeupRequest->price, 2) }}</div></div>
+                <div class="makeup-student-meta"><div><strong>Programa:</strong> {{ $course?->program?->name ?? 'N/D' }}</div><div><strong>Nivel:</strong> {{ $course?->programLevel?->name ?? 'N/D' }}</div><div><strong>Monto:</strong> {{ MoneyFormat::usd($makeupRequest->price) }}</div></div>
                 <div class="grid-2">
                     <div class="makeup-student-pane">
                         <h4>Pago / Reposo</h4>

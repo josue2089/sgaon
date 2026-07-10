@@ -27,9 +27,9 @@
     class="payment-currency-block"
     data-payment-currency-root="{{ $prefix }}"
     data-charge-currency="{{ $chargeCurrency }}"
-    data-balance-amount="{{ number_format($balanceAmount, 2, '.', '') }}"
-    data-usd-exchange-rate="{{ number_format($usdExchangeRate, 8, '.', '') }}"
-    data-eur-exchange-rate="{{ number_format($eurExchangeRate, 8, '.', '') }}"
+    data-balance-amount="{{ \App\Support\MoneyFormat::raw($balanceAmount) }}"
+    data-usd-exchange-rate="{{ \App\Support\MoneyFormat::raw($usdExchangeRate, 8) }}"
+    data-eur-exchange-rate="{{ \App\Support\MoneyFormat::raw($eurExchangeRate, 8) }}"
     data-methods='@json($methodsPayload)'
 >
     <div>

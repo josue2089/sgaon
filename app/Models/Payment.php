@@ -48,6 +48,11 @@ class Payment extends Model
         return $this->belongsTo(Student::class);
     }
 
+    public function campus()
+    {
+        return $this->belongsTo(Campus::class);
+    }
+
     public function charge()
     {
         return $this->belongsTo(Charge::class);

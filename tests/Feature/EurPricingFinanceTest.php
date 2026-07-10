@@ -399,6 +399,98 @@ class EurPricingFinanceTest extends TestCase
             ->get(route('finance.summary', ['currency' => 'EUR']))
             ->assertOk()
             ->assertSee('Resumen financiero')
-            ->assertSee('Total facturado');
+            ->assertSee('Cargos creados')
+            ->assertSee('Cobros realizados');
+    }
+
+    public function test_finance_summary_filters_by_campus_and_exports_csv(): void
+    {
+        ['admin' => $admin, 'student' => $student] = $this->seedPricingContext();
+
+        $otherCampus = \App\Models\Campus::create(['name' => 'La Trinidad', 'code' => 'LT', 'status' => 'active']);
+        $otherStudent = \App\Models\Student::create([
+            'campus_id' => $otherCampus->id,
+            'first_name' => 'Otro',
+            'last_name' => 'Alumno',
+            'email' => 'otro@student.test',
+            'status' => 'active',
+        ]);
+
+        Charge::create([
+            'campus_id' => $student->campus_id,
+            'student_id' => $student->id,
+            'concept' => 'Cargo Picacho',
+            'amount' => 100,
+            'currency' => PaymentCurrencyConverter::CURRENCY_EUR,
+            'due_date' => now()->addDays(10)->toDateString(),
+            'status' => 'pending',
+        ]);
+
+        Charge::create([
+            'campus_id' => $otherCampus->id,
+            'student_id' => $otherStudent->id,
+            'concept' => 'Cargo Trinidad',
+            'amount' => 200,
+            'currency' => PaymentCurrencyConverter::CURRENCY_EUR,
+            'due_date' => now()->addDays(10)->toDateString(),
+            'status' => 'pending',
+        ]);
+
+        \App\Models\Payment::create([
+            'campus_id' => $student->campus_id,
+            'student_id' => $student->id,
+            'amount' => 50,
+            'currency' => PaymentCurrencyConverter::CURRENCY_EUR,
+            'original_amount' => 50,
+            'paid_at' => now()->toDateString(),
+            'status' => 'confirmed',
+        ]);
+
+        \App\Models\Payment::create([
+            'campus_id' => $otherCampus->id,
+            'student_id' => $otherStudent->id,
+            'amount' => 80,
+            'currency' => PaymentCurrencyConverter::CURRENCY_EUR,
+            'original_amount' => 80,
+            'paid_at' => now()->toDateString(),
+            'status' => 'confirmed',
+        ]);
+
+        $summary = FinanceSummary::build(
+            $admin,
+            null,
+            null,
+            PaymentCurrencyConverter::CURRENCY_EUR,
+            (int) $student->campus_id,
+        );
+        $this->assertEquals(100.0, $summary['total_invoiced']);
+        $this->assertEquals(50.0, $summary['total_collected']);
+
+        $this->actingAs($admin)
+            ->get(route('finance.summary', [
+                'currency' => 'EUR',
+                'campus_id' => $student->campus_id,
+                'export' => 'charges_csv',
+            ]))
+            ->assertOk()
+            ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+        $this->actingAs($admin)
+            ->get(route('finance.summary', [
+                'currency' => 'EUR',
+                'campus_id' => $student->campus_id,
+                'export' => 'payments_xlsx',
+            ]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $this->actingAs($admin)
+            ->get(route('finance.summary', [
+                'currency' => 'EUR',
+                'campus_id' => $student->campus_id,
+                'export' => 'payments_pdf',
+            ]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
     }
 }

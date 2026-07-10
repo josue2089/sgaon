@@ -1,13 +1,20 @@
+function formatAmount(amount, decimals = 2) {
+    return Number(amount || 0).toLocaleString('es-VE', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    });
+}
+
 function formatUsd(amount) {
-    return '$' + Number(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return '$' + formatAmount(amount);
 }
 
 function formatEur(amount) {
-    return '€' + Number(amount || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return '€' + formatAmount(amount);
 }
 
 function formatVes(amount) {
-    return 'Bs ' + Number(amount || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return 'Bs ' + formatAmount(amount);
 }
 
 const CURRENCY_LABELS = {

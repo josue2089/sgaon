@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('content')
+@php use App\Support\MoneyFormat; @endphp
 <div class="module-head">
     <div>
         <h1 class="page-title">Detalle de alumno</h1>
@@ -74,7 +75,7 @@
     </div>
     <div class="card summary-card">
         <div class="summary-label">Saldo pendiente</div>
-        <div class="summary-value">${{ number_format($summary['outstanding_total'], 2) }}</div>
+        <div class="summary-value">{{ MoneyFormat::usd($summary['outstanding_total']) }}</div>
         <div class="table-sub">{{ is_null($summary['attendance_rate']) ? 'Asistencia N/D' : 'Asistencia '.$summary['attendance_rate'].'%' }}</div>
     </div>
 </div>
@@ -402,7 +403,7 @@
     <div class="card table-card">
         <div class="section-head">
             <h2 class="section-title section-title-md">Histórico de pagos</h2>
-            <div class="entity-sub">${{ number_format($summary['paid_total'], 2) }} cobrados</div>
+            <div class="entity-sub">{{ MoneyFormat::usd($summary['paid_total']) }} cobrados</div>
         </div>
         @if($paymentHistory->count() > 0)
             <div class="table-wrap">
@@ -419,7 +420,7 @@
                     @foreach($paymentHistory as $payment)
                         <tr>
                             <td>{{ ($payment->paid_at_datetime ?? $payment->paid_at)?->format('d/m/Y') ?? 'N/D' }}</td>
-                            <td>${{ number_format($payment->amount, 2) }}</td>
+                            <td>{{ MoneyFormat::formatLedgerAmount((float) $payment->amount, $payment->currency) }}</td>
                             <td>{{ $payment->method ?: 'Sin método' }}</td>
                             <td>
                                 @if($payment->receipt)
@@ -441,7 +442,7 @@
     <div class="card table-card">
         <div class="section-head">
             <h2 class="section-title section-title-md">Cargos y saldo</h2>
-            <div class="entity-sub">${{ number_format($summary['charged_total'], 2) }} facturados</div>
+            <div class="entity-sub">{{ MoneyFormat::usd($summary['charged_total']) }} facturados</div>
         </div>
         @if($chargeHistory->count() > 0)
             <div class="table-wrap">
@@ -460,8 +461,8 @@
                         <tr>
                             <td>{{ $charge->concept }}</td>
                             <td>{{ $charge->course?->name ?? 'N/D' }}</td>
-                            <td>${{ number_format($charge->amount, 2) }}</td>
-                            <td>${{ number_format(\App\Support\FinanceReconcile::outstandingForCharge($charge), 2) }}</td>
+                            <td>{{ MoneyFormat::chargeAmount($charge) }}</td>
+                            <td>{{ MoneyFormat::formatLedgerAmount(\App\Support\FinanceReconcile::outstandingForCharge($charge), $charge->currency) }}</td>
                             <td>@include('partials.ui.status-badge', ['tone' => $charge->status === 'paid' ? 'ok' : ($charge->status === 'overdue' ? 'danger' : 'warn'), 'text' => ucfirst($charge->status)])</td>
                         </tr>
                     @endforeach

@@ -119,7 +119,7 @@
                     <div class="row"><span class="label">Monto pagado (USD aplicado):</span> {{ \App\Support\MoneyFormat::usd((float) $payment->amount) }}</div>
                     @if(($payment->currency ?? 'USD') === 'VES')
                         <div class="row"><span class="label">Monto en Bs:</span> {{ \App\Support\MoneyFormat::ves((float) ($payment->original_amount ?? 0)) }}</div>
-                        <div class="row"><span class="label">Tasa BCV:</span> {{ number_format((float) $payment->exchange_rate, 4, ',', '.') }}</div>
+                        <div class="row"><span class="label">Tasa BCV:</span> {{ \App\Support\MoneyFormat::rate((float) $payment->exchange_rate) }}</div>
                     @endif
                     <div class="row"><span class="label">Método:</span> {{ $payment->method ?: 'Sin método' }}</div>
                     <div class="row"><span class="label">Referencia:</span> {{ $payment->reference ?: 'Sin referencia' }}</div>
@@ -130,7 +130,7 @@
                 <div class="card">
                     <div class="section-title">Resumen de aplicación</div>
                     <div class="row"><span class="label">Cargos impactados:</span> {{ $allocations->count() }}</div>
-                    <div class="row"><span class="label">Total aplicado:</span> ${{ number_format($allocations->sum(fn ($item) => (float) ($item->amount_applied ?? 0)), 2) }}</div>
+                    <div class="row"><span class="label">Total aplicado:</span> {{ \App\Support\MoneyFormat::formatLedgerAmount($allocations->sum(fn ($item) => (float) ($item->amount_applied ?? 0)), $payment->currency) }}</div>
                     <div class="row"><span class="label">Observación:</span> {{ $payment->notes ?: 'Sin observaciones' }}</div>
                 </div>
             </td>
@@ -154,7 +154,7 @@
                     <td>{{ $allocation->charge->course->name ?? 'Sin curso' }}</td>
                     <td>{{ $allocation->charge->group->name ?? 'Sin grupo' }}</td>
                     <td>{{ $allocation->charge->period->code ?? ($allocation->charge->billing_period_label ?? 'Sin período') }}</td>
-                    <td class="amount">${{ number_format((float) ($allocation->amount_applied ?? 0), 2) }}</td>
+                    <td class="amount">{{ \App\Support\MoneyFormat::formatLedgerAmount((float) ($allocation->amount_applied ?? 0), $allocation->charge?->currency) }}</td>
                 </tr>
             @endforeach
         </tbody>

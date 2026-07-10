@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ScopesCampusAccess;
 use App\Mail\ChargePaymentApprovedMail;
 use App\Mail\ChargePaymentRejectedMail;
 use App\Mail\ChargePendingMail;
@@ -22,12 +23,14 @@ use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
 use App\Services\ChargeRegistrationService;
 use App\Services\PaymentRegistrationService;
+use App\Services\FinanceSummaryExportService;
 use App\Services\PaymentReceiptNotifier;
 use App\Services\ReceiptPdfService;
 use App\Support\MoneyFormat;
 use App\Support\PaymentCurrencyConverter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +41,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FinanceController extends Controller
 {
+    use ScopesCampusAccess;
+
     public function index(Request $request): View|StreamedResponse
     {
         $user = $request->user();
@@ -127,39 +132,47 @@ class FinanceController extends Controller
         ]);
     }
 
-    public function summary(Request $request): View|StreamedResponse
+    public function summary(Request $request): View|StreamedResponse|Response
     {
         $filterData = $request->validate([
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'currency' => ['nullable', 'in:'.PaymentCurrencyConverter::CURRENCY_EUR.','.PaymentCurrencyConverter::CURRENCY_USD],
+            'campus_id' => ['nullable', 'integer', 'exists:campuses,id'],
         ]);
 
         $startDate = ! empty($filterData['start_date']) ? Carbon::parse($filterData['start_date']) : null;
         $endDate = ! empty($filterData['end_date']) ? Carbon::parse($filterData['end_date']) : null;
         $currency = $filterData['currency'] ?? PaymentCurrencyConverter::CURRENCY_EUR;
+        $campusId = ! empty($filterData['campus_id']) ? (int) $filterData['campus_id'] : null;
 
-        $summary = FinanceSummary::build($request->user(), $startDate, $endDate, $currency);
+        if ($campusId) {
+            $this->authorizeCampus($campusId);
+        }
+
+        $summary = FinanceSummary::build($request->user(), $startDate, $endDate, $currency, $campusId);
         $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
         $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
         $vesRate = $currency === PaymentCurrencyConverter::CURRENCY_EUR
             ? (float) ($bcvEurRate['rate'] ?? 0)
             : (float) ($bcvRate['rate'] ?? 0);
 
-        if ($request->query('export') === 'projection_csv') {
-            return response()->streamDownload(function () use ($summary, $vesRate): void {
-                $out = fopen('php://output', 'w');
-                fputcsv($out, ['periodo', 'monto', 'equivalente_bs', 'moneda']);
-                foreach ($summary['projection'] as $row) {
-                    fputcsv($out, [
-                        $row['label'],
-                        $row['amount'],
-                        $vesRate > 0 ? PaymentCurrencyConverter::eurVesEquivalent((float) $row['amount'], $vesRate) : 0,
-                        $summary['currency'],
-                    ]);
-                }
-                fclose($out);
-            }, 'proyeccion_cobros.csv', ['Content-Type' => 'text/csv']);
+        $allowedCampusIds = CampusScope::allowedCampusIds($request->user());
+        $showCampusFilter = $allowedCampusIds === null || count($allowedCampusIds) > 1;
+
+        $export = (string) $request->query('export', '');
+        if (preg_match('/^(charges|payments|projection)_(csv|xlsx|pdf)$/', $export, $matches)) {
+            return app(FinanceSummaryExportService::class)->export(
+                $matches[1],
+                $matches[2],
+                $request->user(),
+                $startDate,
+                $endDate,
+                $currency,
+                $campusId,
+                $summary,
+                $vesRate,
+            );
         }
 
         return view('finance.summary', [
@@ -168,7 +181,10 @@ class FinanceController extends Controller
                 'start_date' => $filterData['start_date'] ?? null,
                 'end_date' => $filterData['end_date'] ?? null,
                 'currency' => $currency,
+                'campus_id' => $campusId ? (string) $campusId : null,
             ],
+            'campuses' => $this->allowedCampusesQuery()->where('status', 'active')->get(),
+            'showCampusFilter' => $showCampusFilter,
             'bcvEurRate' => $bcvEurRate,
             'bcvRate' => $bcvRate,
             'vesRate' => $vesRate,
@@ -477,7 +493,7 @@ class FinanceController extends Controller
                     'concepto' => $charge->concept,
                     'periodo' => $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período'),
                     'estado' => $charge->status,
-                    'saldo' => number_format(FinanceReconcile::outstandingForCharge($charge), 2),
+                    'saldo' => MoneyFormat::number(FinanceReconcile::outstandingForCharge($charge)),
                 ],
             ];
         });
@@ -507,7 +523,7 @@ class FinanceController extends Controller
                     'cargos' => $allocations->map(function ($allocation) {
                         $charge = $allocation->charge;
 
-                        return trim(($charge?->concept ?? 'Cargo').' · '.number_format((float) ($allocation->amount_applied ?? 0), 2));
+                        return trim(($charge?->concept ?? 'Cargo').' · '.MoneyFormat::number((float) ($allocation->amount_applied ?? 0)));
                     })->implode(' | '),
                 ],
                 'receipt_id' => $payment->receipt?->id,

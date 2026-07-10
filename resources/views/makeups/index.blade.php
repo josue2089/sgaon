@@ -149,7 +149,7 @@
                 <div class="makeup-admin-meta">
                     <div><strong>Clase perdida:</strong> {{ $course?->name ?? 'N/D' }} · {{ $makeupRequest->missedSession?->session_date?->format('d/m/Y') ?? 'N/D' }}</div>
                     <div><strong>Programa:</strong> {{ $course?->program?->name ?? 'N/D' }} · {{ $course?->programLevel?->name ?? 'N/D' }}</div>
-                    <div><strong>Costo:</strong> ${{ number_format($makeupRequest->price, 2) }}</div>
+                    <div><strong>Costo:</strong> {{ \App\Support\MoneyFormat::usd($makeupRequest->price) }}</div>
                 </div>
 
                 <div class="grid-3">

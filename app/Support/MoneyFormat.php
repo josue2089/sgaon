@@ -7,19 +7,37 @@ use App\Models\Payment;
 
 class MoneyFormat
 {
+    public static function number(float $amount, int $decimals = 2): string
+    {
+        return number_format($amount, $decimals, ',', '.');
+    }
+
+    /**
+     * Valor numérico para atributos data-* y parsers JS (sin separador de miles).
+     */
+    public static function raw(float $amount, int $decimals = 2): string
+    {
+        return number_format($amount, $decimals, '.', '');
+    }
+
+    public static function rate(float $rate): string
+    {
+        return self::number($rate, 4);
+    }
+
     public static function usd(float $amount): string
     {
-        return '$'.number_format($amount, 2);
+        return '$'.self::number($amount);
     }
 
     public static function eur(float $amount): string
     {
-        return '€'.number_format($amount, 2, ',', '.');
+        return '€'.self::number($amount);
     }
 
     public static function ves(float $amount): string
     {
-        return 'Bs '.number_format($amount, 2, ',', '.');
+        return 'Bs '.self::number($amount);
     }
 
     public static function chargeAmount(Charge $charge, ?float $eurVesRate = null): string
@@ -46,7 +64,7 @@ class MoneyFormat
         $originalAmount = (float) ($payment->original_amount ?? $payment->amount);
 
         if ($currency === PaymentCurrencyConverter::CURRENCY_VES) {
-            $rate = $payment->exchange_rate ? number_format((float) $payment->exchange_rate, 4, ',', '.') : 'N/D';
+            $rate = $payment->exchange_rate ? self::rate((float) $payment->exchange_rate) : 'N/D';
 
             return self::ves($originalAmount).' (tasa '.$rate.') → '.self::formatLedgerAmount($ledgerAmount, $payment->charge?->currencyCode());
         }

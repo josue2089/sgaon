@@ -31,7 +31,7 @@
         <h2 class="section-title">Resumen de aplicación</h2>
         <div class="detail-list">
             <div><strong>Total cargos impactados:</strong> {{ $allocations->count() }}</div>
-            <div><strong>Total aplicado:</strong> ${{ number_format($allocations->sum(fn ($item) => (float) ($item->amount_applied ?? 0)), 2) }}</div>
+            <div><strong>Total aplicado:</strong> {{ \App\Support\MoneyFormat::formatLedgerAmount($allocations->sum(fn ($item) => (float) ($item->amount_applied ?? 0)), $payment->currency) }}</div>
             <div><strong>Observación:</strong> {{ $payment->notes ?: 'Sin observaciones' }}</div>
         </div>
     </div>
@@ -59,7 +59,7 @@
                     <td>{{ $allocation->charge->course->name ?? 'Sin curso' }}</td>
                     <td>{{ $allocation->charge->group->name ?? 'Sin grupo' }}</td>
                     <td>{{ $allocation->charge->period->code ?? ($allocation->charge->billing_period_label ?? 'Sin período') }}</td>
-                    <td>${{ number_format((float) ($allocation->amount_applied ?? 0), 2) }}</td>
+                    <td>{{ \App\Support\MoneyFormat::formatLedgerAmount((float) ($allocation->amount_applied ?? 0), $allocation->charge?->currency) }}</td>
                 </tr>
             @endforeach
             </tbody>

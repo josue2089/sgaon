@@ -1,3 +1,4 @@
+@php use App\Support\MoneyFormat; @endphp
 @extends('layouts.app')
 @section('content')
 <div class="module-head dashboard-head">
@@ -7,7 +8,7 @@
     </div>
     <div class="soft-kpi-grid dashboard-achievements">
         @include('partials.ui.soft-kpi', ['label' => 'Mejor Asistencia', 'value' => is_null($bestGroupRate) ? 'N/D' : $bestGroupRate.'%', 'subtitle' => $bestGroup?->name ? 'Grupo '.$bestGroup->name : 'Sin data'])
-        @include('partials.ui.soft-kpi', ['label' => 'Pagos del Mes', 'value' => is_null($paymentsRate) ? 'N/D' : $paymentsRate.'%', 'subtitle' => '$'.number_format($paymentsMonthAmount, 2).' recaudado'])
+        @include('partials.ui.soft-kpi', ['label' => 'Pagos del Mes', 'value' => is_null($paymentsRate) ? 'N/D' : $paymentsRate.'%', 'subtitle' => MoneyFormat::usd($paymentsMonthAmount).' recaudado'])
         @include('partials.ui.soft-kpi', ['label' => 'Satisfacción', 'value' => 'N/D', 'subtitle' => 'Sin módulo de encuestas'])
     </div>
 </div>
@@ -17,7 +18,7 @@
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'teacher', 'label' => 'Profesores', 'value' => $teachersCount, 'subtitle' => auth()->user()?->isMasterAdmin() ? 'Todas las sedes' : null])
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'book', 'label' => 'Cursos', 'value' => $coursesCount])
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'check', 'label' => 'Asistencia', 'value' => is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%'])
-    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'payment', 'label' => 'Pagos Mes', 'value' => '$'.number_format($paymentsMonthAmount, 0)])
+    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'payment', 'label' => 'Pagos Mes', 'value' => MoneyFormat::usd($paymentsMonthAmount)])
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'alert', 'label' => 'Alertas', 'value' => $openAlertsCount])
 </div>
 

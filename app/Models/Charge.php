@@ -55,6 +55,11 @@ class Charge extends Model
         return $this->belongsTo(Student::class);
     }
 
+    public function campus()
+    {
+        return $this->belongsTo(Campus::class);
+    }
+
     public function enrollment()
     {
         return $this->belongsTo(Enrollment::class);

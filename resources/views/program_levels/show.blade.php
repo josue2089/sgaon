@@ -25,9 +25,9 @@
             <div><strong>Horas:</strong> {{ $level->academic_hours }}</div>
             <div><strong>Precio base:</strong>
                 @if($level->base_price_eur)
-                    €{{ number_format($level->base_price_eur, 2, ',', '.') }}
+                    {{ \App\Support\MoneyFormat::eur($level->base_price_eur) }}
                 @elseif($level->resolvedBasePriceEur())
-                    €{{ number_format($level->resolvedBasePriceEur(), 2, ',', '.') }} <span class="entity-sub">(heredado del programa)</span>
+                    {{ \App\Support\MoneyFormat::eur($level->resolvedBasePriceEur()) }} <span class="entity-sub">(heredado del programa)</span>
                 @else
                     Sin definir
                 @endif

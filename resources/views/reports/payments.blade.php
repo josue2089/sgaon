@@ -1,3 +1,4 @@
+@php use App\Support\MoneyFormat; @endphp
 @extends('layouts.app')
 @section('content')
 <div class="card">
@@ -112,10 +113,10 @@
                 <td>{{ $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período') }}</td>
                 <td>{{ $charge->charge_type ?: 'N/D' }}</td>
                 <td>{{ $charge->concept }}</td>
-                <td>${{ number_format($charge->amount,2) }}</td>
+                <td>{{ MoneyFormat::chargeAmount($charge) }}</td>
                 <td><span class="status-pill {{ $charge->status === 'paid' ? 'success' : ($charge->status === 'overdue' ? 'danger' : 'warn') }}">{{ $charge->status }}</span></td>
-                <td>${{ number_format($paidTotal,2) }}</td>
-                <td>${{ number_format($balance,2) }}</td>
+                <td>{{ MoneyFormat::formatLedgerAmount($paidTotal, $charge->currency) }}</td>
+                <td>{{ MoneyFormat::formatLedgerAmount($balance, $charge->currency) }}</td>
             </tr>
         @empty
             <tr>
@@ -158,7 +159,7 @@
                         {{ \App\Support\MoneyFormat::usd((float) ($payment->original_amount ?? $payment->amount)) }}
                     @endif
                 </td>
-                <td>{{ $payment->exchange_rate ? number_format((float) $payment->exchange_rate, 4, ',', '.') : '—' }}</td>
+                <td>{{ $payment->exchange_rate ? MoneyFormat::rate((float) $payment->exchange_rate) : '—' }}</td>
                 <td>{{ \App\Support\MoneyFormat::usd((float) $payment->amount) }}</td>
                 <td>{{ $payment->method }}</td>
             </tr>

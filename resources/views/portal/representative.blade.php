@@ -1,3 +1,4 @@
+@php use App\Support\MoneyFormat; @endphp
 @extends('layouts.app')
 @section('content')
 <div class="card module-head">
@@ -41,7 +42,7 @@
             </div>
             <div class="card summary-card">
                 <div class="summary-label">Saldo</div>
-                <div class="summary-value">${{ number_format($student->charges->sum('amount') - $student->payments->sum('amount'), 2) }}</div>
+                <div class="summary-value">{{ MoneyFormat::usd($student->charges->sum('amount') - $student->payments->sum('amount')) }}</div>
             </div>
         </div>
 
@@ -61,9 +62,9 @@
                             <thead><tr><th>Cargos</th><th>Pagos</th><th>Saldo</th></tr></thead>
                             <tbody>
                                 <tr>
-                                    <td>${{ number_format($student->charges->sum('amount'), 2) }}</td>
-                                    <td>${{ number_format($student->payments->sum('amount'), 2) }}</td>
-                                    <td>${{ number_format($student->charges->sum('amount') - $student->payments->sum('amount'), 2) }}</td>
+                                    <td>{{ MoneyFormat::usd($student->charges->sum('amount')) }}</td>
+                                    <td>{{ MoneyFormat::usd($student->payments->sum('amount')) }}</td>
+                                    <td>{{ MoneyFormat::usd($student->charges->sum('amount') - $student->payments->sum('amount')) }}</td>
                                 </tr>
                             </tbody>
                         </table>

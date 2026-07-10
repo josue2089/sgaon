@@ -33,7 +33,7 @@
             <div><strong>Precio base:</strong>
                 @php $resolvedPrice = $course->programLevel?->resolvedBasePriceEur(); @endphp
                 @if($resolvedPrice)
-                    €{{ number_format($resolvedPrice, 2, ',', '.') }}
+                    {{ \App\Support\MoneyFormat::eur($resolvedPrice) }}
                     @if(! $course->programLevel?->base_price_eur)
                         <span class="entity-sub">(programa)</span>
                     @endif

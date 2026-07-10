@@ -82,7 +82,7 @@
             <div><strong>Teléfono:</strong> {{ $teacher->phone ?: 'N/D' }}</div>
             <div><strong>Campus:</strong> {{ $teacher->campus?->name ?? 'N/D' }}</div>
             <div><strong>Cursos activos:</strong> {{ $summary['active_courses'] }}</div>
-            <div><strong>Volumen financiero ligado:</strong> ${{ number_format($summary['finance_total'], 2) }}</div>
+            <div><strong>Volumen financiero ligado:</strong> {{ \App\Support\MoneyFormat::usd($summary['finance_total']) }}</div>
         </div>
     </div>
 

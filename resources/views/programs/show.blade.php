@@ -22,7 +22,7 @@
             <div><strong>Descripción:</strong> {{ $program->description ?: 'Sin descripción' }}</div>
             <div><strong>Precio base por defecto:</strong>
                 @if($program->base_price_eur)
-                    €{{ number_format($program->base_price_eur, 2, ',', '.') }}
+                    {{ \App\Support\MoneyFormat::eur($program->base_price_eur) }}
                 @else
                     Sin definir
                 @endif
