@@ -100,7 +100,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
                 ->parameters(['admin-users' => 'user']);
             Route::post('admin-users/{user}/resend-credentials', [AdminUserController::class, 'resendCredentials'])
                 ->name('admin-users.resend-credentials');
-            Route::resource('campuses', CampusController::class)->except('show');
+            Route::resource('campuses', CampusController::class);
             Route::resource('periods', PeriodController::class)->except('show');
             Route::resource('schedules', ScheduleTemplateController::class)->except('show');
             Route::resource('holidays', HolidayController::class)->except('show');
@@ -140,6 +140,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::get('/reports/attendance', [ReportController::class, 'attendance'])->name('reports.attendance');
             Route::get('/reports/payments', [ReportController::class, 'payments'])->name('reports.payments');
             Route::get('/reports/level-renewals', [ReportController::class, 'levelRenewals'])->name('reports.level-renewals');
+            Route::get('/reports/campus-totals', [ReportController::class, 'campusTotals'])->name('reports.campus-totals');
             Route::post('/reports/presets', [ReportController::class, 'storePreset'])->name('reports.presets.store');
             Route::delete('/reports/presets/{preset}', [ReportController::class, 'destroyPreset'])->name('reports.presets.destroy');
             Route::post('/reports/exports', [ReportController::class, 'queueExport'])->name('reports.exports.queue');

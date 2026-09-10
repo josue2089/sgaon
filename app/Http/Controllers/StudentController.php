@@ -98,6 +98,15 @@ class StudentController extends Controller
             ->orderBy('name')
             ->get(['code', 'name']);
 
+        $user = $request->user();
+        $allowedIds = CampusScope::allowedCampusIds($user);
+        $campusesQuery = Campus::query()->orderBy('name');
+        if (is_array($allowedIds)) {
+            $campusesQuery->whereIn('id', $allowedIds ?: [0]);
+        }
+        $campuses = $campusesQuery->get(['id', 'name']);
+        $canFilterByCampus = $user?->canAccessAllCampuses() || (is_array($allowedIds) && count($allowedIds) > 1);
+
         return view('students.index', [
             'students' => $students,
             'attendanceByStudent' => $attendanceByStudent,
@@ -110,6 +119,8 @@ class StudentController extends Controller
             ],
             'filters' => $filters,
             'levels' => $levels,
+            'campuses' => $campuses,
+            'canFilterByCampus' => $canFilterByCampus,
         ]);
     }
 
@@ -273,10 +284,22 @@ class StudentController extends Controller
             $data['profile_photo_path'] = $request->file('profile_photo')->store('profiles/students', 'public');
         }
 
-        $student = Student::create($data);
-        $this->syncRepresentative($student, $request->input('representative', []));
-        $this->syncAuthorizedContacts($student, $request->input('authorized_contacts', []));
-        AuditTrail::log($request, 'student.create', $student, $data);
+        $userId = (int) ($request->user()?->id ?? 0);
+        $signature = md5(($data['first_name'] ?? '').'|'.($data['last_name'] ?? '').'|'.($data['document_id'] ?? '').'|'.($data['campus_id'] ?? ''));
+        $lock = \Illuminate\Support\Facades\Cache::lock("student.create.{$userId}.{$signature}", 10);
+
+        if (! $lock->get()) {
+            return redirect()->route('students.index')->with('info', 'Este alumno se está creando; verifica en el listado.');
+        }
+
+        try {
+            $student = Student::create($data);
+            $this->syncRepresentative($student, $request->input('representative', []));
+            $this->syncAuthorizedContacts($student, $request->input('authorized_contacts', []));
+            AuditTrail::log($request, 'student.create', $student, $data);
+        } finally {
+            optional($lock)->release();
+        }
 
         return redirect()->route('students.index')->with('success', 'Alumno creado.');
     }
@@ -677,6 +700,7 @@ class StudentController extends Controller
             'level' => (string) $request->query('level', ''),
             'status' => (string) $request->query('status', ''),
             'payment_status' => (string) $request->query('payment_status', ''),
+            'campus_id' => (string) $request->query('campus_id', ''),
         ];
     }
 
@@ -715,6 +739,10 @@ class StudentController extends Controller
                 ->whereDoesntHave('charges', fn (Builder $builder) => $builder->whereIn('status', ['pending', 'partial', 'overdue']));
         } elseif ($filters['payment_status'] === 'no_charges') {
             $query->whereDoesntHave('charges');
+        }
+
+        if (! empty($filters['campus_id']) && CampusScope::userCanAccessCampus($request->user(), (int) $filters['campus_id'])) {
+            $query->where('campus_id', (int) $filters['campus_id']);
         }
 
         return $query;

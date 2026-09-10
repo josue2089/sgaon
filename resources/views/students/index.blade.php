@@ -48,6 +48,14 @@
             <option value="overdue" @selected($filters['payment_status'] === 'overdue')>En mora</option>
             <option value="no_charges" @selected($filters['payment_status'] === 'no_charges')>Sin cargos</option>
         </select>
+        @if(($canFilterByCampus ?? false) && ($campuses ?? collect())->count() > 1)
+            <select name="campus_id">
+                <option value="">Todas las sedes</option>
+                @foreach($campuses as $campus)
+                    <option value="{{ $campus->id }}" @selected((string) ($filters['campus_id'] ?? '') === (string) $campus->id)>{{ $campus->name }}</option>
+                @endforeach
+            </select>
+        @endif
         <button class="btn secondary" type="submit">Filtros</button>
     </div>
 </form>

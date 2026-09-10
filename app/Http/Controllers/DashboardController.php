@@ -201,7 +201,20 @@ class DashboardController extends Controller
             )->get(['id', 'name', 'code']);
         }
 
+        $campusBreakdown = collect();
+        if ($user?->canAccessAllCampuses() && ! $teacher) {
+            $campusBreakdown = \App\Models\Campus::query()
+                ->withCount([
+                    'students as students_active_count' => fn ($q) => $q->where('status', 'active'),
+                    'groups as groups_active_count' => fn ($q) => $q->where('status', 'active'),
+                    'teachers as teachers_count',
+                ])
+                ->orderBy('name')
+                ->get();
+        }
+
         return view('dashboard', [
+            'campusBreakdown' => $campusBreakdown,
             'studentsCount' => $studentsQuery->count(),
             'teachersCount' => $teachersQuery->count(),
             'coursesCount' => $coursesQuery->count(),

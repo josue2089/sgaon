@@ -186,6 +186,92 @@ class ReportController extends Controller
         ]);
     }
 
+    public function campusTotals(Request $request): View|StreamedResponse
+    {
+        $user = $request->user();
+        $allowedIds = \App\Support\CampusScope::allowedCampusIds($user);
+
+        $campuses = \App\Models\Campus::query()
+            ->when(is_array($allowedIds), fn ($q) => $q->whereIn('id', $allowedIds ?: [0]))
+            ->orderBy('name')
+            ->get();
+
+        $ids = $campuses->pluck('id');
+
+        $studentsByCampus = \App\Models\Student::query()
+            ->whereIn('campus_id', $ids)
+            ->selectRaw("campus_id, SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_count, COUNT(*) as total_count")
+            ->groupBy('campus_id')
+            ->get()
+            ->keyBy('campus_id');
+
+        $groupsByCampus = \App\Models\Group::query()
+            ->whereIn('campus_id', $ids)
+            ->selectRaw("campus_id, SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_count, COUNT(*) as total_count")
+            ->groupBy('campus_id')
+            ->get()
+            ->keyBy('campus_id');
+
+        $teachersByCampus = \App\Models\Teacher::query()
+            ->whereIn('campus_id', $ids)
+            ->selectRaw('campus_id, COUNT(*) as total_count')
+            ->groupBy('campus_id')
+            ->pluck('total_count', 'campus_id');
+
+        $coursesByCampus = \App\Models\Course::query()
+            ->whereIn('campus_id', $ids)
+            ->selectRaw('campus_id, COUNT(*) as total_count')
+            ->groupBy('campus_id')
+            ->pluck('total_count', 'campus_id');
+
+        $enrollmentsByCampus = \App\Models\Enrollment::query()
+            ->whereIn('campus_id', $ids)
+            ->where('status', 'active')
+            ->selectRaw('campus_id, COUNT(*) as total_count')
+            ->groupBy('campus_id')
+            ->pluck('total_count', 'campus_id');
+
+        $rows = $campuses->map(function ($campus) use ($studentsByCampus, $groupsByCampus, $teachersByCampus, $coursesByCampus, $enrollmentsByCampus) {
+            $students = $studentsByCampus->get($campus->id);
+            $groups = $groupsByCampus->get($campus->id);
+
+            return [
+                'campus' => $campus,
+                'students_total' => (int) ($students->total_count ?? 0),
+                'students_active' => (int) ($students->active_count ?? 0),
+                'groups_total' => (int) ($groups->total_count ?? 0),
+                'groups_active' => (int) ($groups->active_count ?? 0),
+                'teachers_total' => (int) ($teachersByCampus->get($campus->id) ?? 0),
+                'courses_total' => (int) ($coursesByCampus->get($campus->id) ?? 0),
+                'enrollments_active' => (int) ($enrollmentsByCampus->get($campus->id) ?? 0),
+            ];
+        });
+
+        if ($request->query('export') === 'csv') {
+            return response()->streamDownload(function () use ($rows): void {
+                $out = fopen('php://output', 'w');
+                fwrite($out, "\xEF\xBB\xBF");
+                fputcsv($out, ['Sede', 'Código', 'Alumnos activos', 'Alumnos totales', 'Grupos activos', 'Grupos totales', 'Docentes', 'Cursos', 'Inscripciones activas']);
+                foreach ($rows as $row) {
+                    fputcsv($out, [
+                        $row['campus']->name,
+                        $row['campus']->code,
+                        $row['students_active'],
+                        $row['students_total'],
+                        $row['groups_active'],
+                        $row['groups_total'],
+                        $row['teachers_total'],
+                        $row['courses_total'],
+                        $row['enrollments_active'],
+                    ]);
+                }
+                fclose($out);
+            }, 'totales_por_sede_'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv']);
+        }
+
+        return view('reports.campus-totals', ['rows' => $rows]);
+    }
+
     public function storePreset(Request $request): RedirectResponse
     {
         $data = $request->validate([

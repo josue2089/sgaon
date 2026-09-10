@@ -11,12 +11,16 @@ class ReceiptPdfService
     public function allocationsFor(Receipt $receipt): Collection
     {
         $receipt->loadMissing([
-            'payment.allocations.charge.course',
+            'payment.allocations.charge.course.programLevel',
             'payment.allocations.charge.group',
             'payment.allocations.charge.period',
-            'payment.charge.course',
+            'payment.allocations.charge.enrollment.group.course.programLevel',
+            'payment.allocations.charge.enrollment.group.course.period',
+            'payment.charge.course.programLevel',
             'payment.charge.group',
             'payment.charge.period',
+            'payment.charge.enrollment.group.course.programLevel',
+            'payment.charge.enrollment.group.course.period',
         ]);
 
         $payment = $receipt->payment;

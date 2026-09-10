@@ -44,6 +44,14 @@
             <option value="inactive" @selected($filters['status'] === 'inactive')>Inactivos</option>
             <option value="completed" @selected($filters['status'] === 'completed')>Completados</option>
         </select>
+        @if(($canFilterByCampus ?? false) && ($campuses ?? collect())->count() > 1)
+            <select name="campus_id" style="max-width:220px;">
+                <option value="">Todas las sedes</option>
+                @foreach($campuses as $campus)
+                    <option value="{{ $campus->id }}" @selected((string) $filters['campus_id'] === (string) $campus->id)>{{ $campus->name }}</option>
+                @endforeach
+            </select>
+        @endif
         <button class="btn secondary" type="submit">Filtros</button>
         <a class="btn secondary" href="{{ route('groups.index', array_merge($filters, ['export' => 'csv'])) }}">Exportar CSV</a>
     </div>
@@ -60,6 +68,9 @@
                     <span class="badge-pill {{ $group->status === 'active' ? 'badge-ok' : 'badge-warn' }}">{{ $group->status }}</span>
                 </div>
                 <div class="entity-title">{{ $group->name }}</div>
+                @if($canFilterByCampus ?? false)
+                    <div class="entity-sub" style="font-weight:600;">🏫 {{ $group->campus->name ?? 'Sin sede' }}</div>
+                @endif
                 <div class="entity-sub">{{ $group->course->name ?? 'Sin curso' }}</div>
                 <div class="entity-sub">{{ $group->teacher->full_name ?? 'Sin asignar' }}</div>
                 <div class="entity-sub">{{ $group->schedule ?: 'Horario pendiente' }}</div>

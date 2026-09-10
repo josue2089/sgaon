@@ -23,7 +23,8 @@ class CoursePlanner
                 return $course;
             }
 
-            self::syncManagedGroup($course);
+            $group = self::syncManagedGroup($course);
+            self::persistManagedGroupId($course, $group);
 
             return $course->fresh(['teacher', 'period', 'scheduleTemplate', 'managedGroup']);
         }
@@ -36,7 +37,8 @@ class CoursePlanner
         }
 
         if (! $regenerateSessions) {
-            self::syncManagedGroup($course);
+            $group = self::syncManagedGroup($course);
+            self::persistManagedGroupId($course, $group);
 
             return $course->fresh(['teacher', 'period', 'scheduleTemplate', 'managedGroup']);
         }
@@ -72,7 +74,9 @@ class CoursePlanner
 
     private static function syncManagedGroup(Course $course): Group
     {
-        $group = $course->managedGroup ?: new Group();
+        $group = $course->managedGroup
+            ?: Group::where('course_id', $course->id)->orderBy('id')->first()
+            ?: new Group();
 
         $group->fill([
             'campus_id' => $course->campus_id,
@@ -93,6 +97,15 @@ class CoursePlanner
         $group->save();
 
         return $group;
+    }
+
+    private static function persistManagedGroupId(Course $course, Group $group): void
+    {
+        if ($course->managed_group_id === $group->id) {
+            return;
+        }
+
+        $course->forceFill(['managed_group_id' => $group->id])->saveQuietly();
     }
 
     private static function syncSessions(Course $course, Group $group, ScheduleTemplate $schedule, int $requiredSessions): ?Carbon

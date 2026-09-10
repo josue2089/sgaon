@@ -52,6 +52,15 @@ class ChargeRegistrationService
 
             $data['campus_id'] = $student->campus_id;
             $data['origin'] = 'manual';
+
+            $context = $this->resolveAcademicContext($data, $student);
+            $data['enrollment_id'] = $data['enrollment_id'] ?? $context['enrollment_id'];
+            $data['group_id'] = $data['group_id'] ?? $context['group_id'];
+            $data['course_id'] = $data['course_id'] ?? $context['course_id'];
+            $data['period_id'] = $data['period_id'] ?? $context['period_id'];
+            if (empty($data['billing_period_label']) && ! empty($context['billing_period_label'])) {
+                $data['billing_period_label'] = $context['billing_period_label'];
+            }
         }
 
         $data['currency'] = strtoupper((string) ($data['currency'] ?? PaymentCurrencyConverter::CURRENCY_USD));
@@ -66,6 +75,45 @@ class ChargeRegistrationService
         $this->notifyChargePending($charge->fresh('student.representatives'));
 
         return $charge;
+    }
+
+    /**
+     * Deriva course_id, group_id, period_id y enrollment_id para cargos manuales
+     * cuando el operador no envía enrollment_id pero el alumno tiene inscripciones.
+     * Prioridad: request explícito → inscripción activa única del alumno.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{enrollment_id: int|null, group_id: int|null, course_id: int|null, period_id: int|null, billing_period_label: string|null}
+     */
+    private function resolveAcademicContext(array $data, Student $student): array
+    {
+        $context = [
+            'enrollment_id' => null,
+            'group_id' => isset($data['group_id']) ? (int) $data['group_id'] : null,
+            'course_id' => isset($data['course_id']) ? (int) $data['course_id'] : null,
+            'period_id' => isset($data['period_id']) ? (int) $data['period_id'] : null,
+            'billing_period_label' => null,
+        ];
+
+        $enrollment = Enrollment::query()
+            ->with(['group.course.period'])
+            ->where('student_id', $student->id)
+            ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
+            ->orderByDesc('enrolled_at')
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $enrollment) {
+            return $context;
+        }
+
+        $context['enrollment_id'] = $enrollment->id;
+        $context['group_id'] = $context['group_id'] ?: $enrollment->group_id;
+        $context['course_id'] = $context['course_id'] ?: $enrollment->group?->course_id;
+        $context['period_id'] = $context['period_id'] ?: $enrollment->group?->course?->period_id;
+        $context['billing_period_label'] = $enrollment->group?->course?->period?->code;
+
+        return $context;
     }
 
     private function notifyChargePending(Charge $charge): void

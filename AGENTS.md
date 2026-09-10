@@ -2,6 +2,14 @@
 
 Guía para agentes y desarrolladores que trabajan en este repositorio.
 
+## Ubicación en el monorepo
+
+- Raíz del proyecto: `/Volumes/DevSSD/Developer/Projects/WEBS/OnEnglish/`
+  - `sgaon/` — aplicación Laravel (este directorio, el código productivo).
+  - `docs/` — documentación no-código: matriz de competencias, propuesta, SQL histórico (`sgaon.sql`), matrículas Picacho.
+  - `recursos/` y `resources/` (raíz) — materiales de marketing/branding (BIO 2026, flyers, historias). No confundir con `sgaon/resources/` (Blade + assets).
+  - `UI_UX Diseño Plataforma Académica/` — mockups y referencias de diseño.
+
 ## Stack
 
 - **Backend**: Laravel 12, PHP 8.2+
@@ -74,8 +82,51 @@ Guía para agentes y desarrolladores que trabajan en este repositorio.
 - Resumen: ruta `finance.summary` y helper `App\Support\FinanceSummary`.
 - Resumen financiero: filtros por fecha, moneda y sede; exportación CSV, Excel (`.xlsx`) y PDF de cargos creados, cobros realizados y proyección (`charges_*`, `payments_*`, `projection_*` con sufijo `csv`, `xlsx` o `pdf`).
 
+## Módulos funcionales
+
+- **Portal**: estudiantes (`role:student`, `permission:portal.student.view`) y representantes (`role:representative`) — `PortalController`, vistas en `resources/views/portal/`.
+- **Asistencia**: `AttendanceController` + `ClassSession` + `AttendanceRecord`. Permiso: `attendance.manage`. Reportes exportables (CSV/PDF).
+- **Evaluaciones y notas**: `CourseGradeController`, `GradeEvaluationSet`, `GradeEntry`, rubrica en `App\Support\GradeRubric`, autorización en `GradeAuthorization`. Permiso: `grades.manage`.
+- **Recuperaciones (makeups)**: `MakeupRequest`, `MakeupBooking`, `MakeupSession`, adjuntos; motor en `App\Support\MakeupRecoveryEngine`; controlador `MakeupRecoveryController`.
+- **Alertas**: motor `App\Support\AlertEngine` + modelo `Alert`, generadas por comando `alerts:generate` (`GenerateAlerts`).
+- **Operation Wizard**: `OperationWizardController` — flujo guiado de operaciones (inscripción, matrícula, cambios).
+- **Importaciones**:
+  - Estudiantes CCL: `ImportStudentsCcl` + `CclActiveStudentsSpreadsheet`.
+  - Estudiantes históricos (varios formatos): `ImportStudentsHistorical*`, `HistoricalStudentImportService`.
+  - Cursos: `ImportCoursesMatrix`.
+  - Inscripciones históricas: `ImportEnrollmentsHistorical`.
+  - Ledger financiero: `ImportFinanceLedger` + `HistoricalLedgerSpreadsheet`.
+  - Bulk estudiantes: `StudentBulkImportService`.
+- **Auditoría**: `AuditLog` + `AuditTrail::log()`. Permiso: `audit.view`.
+- **Reportes**: `ReportController`, exports en CSV/XLSX/PDF vía PhpSpreadsheet y DomPDF.
+
+## Comandos y programación
+
+Comandos artisan personalizados (`app/Console/Commands/`):
+- `bcv:sync-rates` — `SyncBcvRatesCommand` (BCV USD/VES, EUR/VES).
+- `finance:send-payment-reminders` — recordatorios diarios 07:00.
+- `alerts:generate` — genera alertas del sistema.
+- `finance:reconcile-charges` — reconciliación de cargos.
+- `renewals:send-reminders` — recordatorios de renovación de nivel.
+- `charges:generate-recurring` — cargos recurrentes.
+- Backfills: `charges:backfill-academic-context`, `course-levels:backfill`, `program-levels:backfill`.
+- Data reconcile: `data:reconcile` (`DataReconcile`).
+
+## Frontend / assets
+
+- Blade en `resources/views/` organizado por módulo.
+- Estilos en `resources/css/app.css`; JS en `resources/js/`.
+- Build: `npm run dev` (Vite) o incluido en `composer dev`.
+
+## Base de datos
+
+- Migraciones en `database/migrations/` — timestamps 2024/2025/2026.
+- MySQL en producción; SQLite en tests (`RefreshDatabase`).
+- Dump histórico: `docs/sgaon.sql`.
+
 ## Despliegue
 
 Tras cambios de rutas/vistas: `php artisan route:clear`, `php artisan view:clear`.
 Migraciones: `php artisan migrate`.
 Correo en producción: configurar `MAIL_*` en `.env`.
+Desarrollo local: `composer dev` levanta `serve`, `queue:listen`, `pail` y `vite` en paralelo.

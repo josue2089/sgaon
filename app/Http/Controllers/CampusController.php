@@ -56,6 +56,36 @@ class CampusController extends Controller
         ]);
     }
 
+    public function show(Campus $campus): View
+    {
+        $studentsQuery = Student::query()->where('campus_id', $campus->id);
+        $groupsQuery = Group::query()->where('campus_id', $campus->id);
+        $teachersQuery = Teacher::query()->where('campus_id', $campus->id);
+        $usersQuery = User::query()->where('campus_id', $campus->id);
+        $coursesQuery = Course::query()->where('campus_id', $campus->id);
+        $enrollmentsQuery = Enrollment::query()->where('campus_id', $campus->id);
+
+        $stats = [
+            'students_total' => (clone $studentsQuery)->count(),
+            'students_active' => (clone $studentsQuery)->where('status', 'active')->count(),
+            'students_inactive' => (clone $studentsQuery)->where('status', '!=', 'active')->count(),
+            'groups_total' => (clone $groupsQuery)->count(),
+            'groups_active' => (clone $groupsQuery)->where('status', 'active')->count(),
+            'teachers_total' => (clone $teachersQuery)->count(),
+            'courses_total' => (clone $coursesQuery)->count(),
+            'users_total' => (clone $usersQuery)->count(),
+            'enrollments_active' => (clone $enrollmentsQuery)->where('status', 'active')->count(),
+        ];
+
+        $usersByRole = $usersQuery->selectRaw('role, COUNT(*) as total')->groupBy('role')->pluck('total', 'role');
+
+        return view('campuses.show', [
+            'campus' => $campus,
+            'stats' => $stats,
+            'usersByRole' => $usersByRole,
+        ]);
+    }
+
     public function create(): View
     {
         return view('campuses.create', [

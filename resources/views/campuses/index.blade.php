@@ -45,6 +45,7 @@
                         <td>{{ collect([$campus->city, $campus->state, $campus->country])->filter()->implode(', ') ?: 'Sin ubicación' }}</td>
                         <td>@include('partials.ui.status-badge', ['tone' => $campus->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($campus->status)])</td>
                         <td class="table-actions">
+                            <a href="{{ route('campuses.show', $campus) }}">Ver</a>
                             <a href="{{ route('campuses.edit', $campus) }}">Editar</a>
                             <form method="POST" action="{{ route('campuses.destroy', $campus) }}" onsubmit="return confirm('¿Eliminar este campus?');">
                                 @csrf

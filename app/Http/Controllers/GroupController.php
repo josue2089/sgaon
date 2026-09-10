@@ -51,9 +51,13 @@ class GroupController extends Controller
 
     public function index(Request $request): View|StreamedResponse
     {
+        $user = $request->user();
         $query = Group::with(['campus', 'course', 'teacher'])->withCount('enrollments')->latest();
-        if ($this->campusId()) {
-            $query->where('campus_id', $this->campusId());
+        \App\Support\CampusScope::apply($query, $user);
+
+        $campusFilter = (string) $request->query('campus_id', '');
+        if ($campusFilter !== '' && \App\Support\CampusScope::userCanAccessCampus($user, (int) $campusFilter)) {
+            $query->where('campus_id', (int) $campusFilter);
         }
 
         $q = trim((string) $request->query('q', ''));
@@ -119,15 +123,24 @@ class GroupController extends Controller
             }, 'groups_report.csv', ['Content-Type' => 'text/csv']);
         }
 
+        $campusesQuery = Campus::query()->orderBy('name');
+        $allowedIds = \App\Support\CampusScope::allowedCampusIds($user);
+        if (is_array($allowedIds)) {
+            $campusesQuery->whereIn('id', $allowedIds ?: [0]);
+        }
+
         return view('groups.index', [
             'groups' => $query->paginate(20)->withQueryString(),
             'courses' => $courses,
             'teachers' => $teachers,
+            'campuses' => $campusesQuery->get(['id', 'name']),
+            'canFilterByCampus' => $user?->canAccessAllCampuses() || (is_array($allowedIds) && count($allowedIds) > 1),
             'filters' => [
                 'q' => $q,
                 'course_id' => $courseId,
                 'teacher_id' => $teacherId,
                 'status' => $status,
+                'campus_id' => $campusFilter,
             ],
         ]);
     }

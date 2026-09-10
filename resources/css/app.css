@@ -3662,3 +3662,26 @@ dialog.finance-proof-dialog[open] {
         font-size: 0.82rem;
     }
 }
+
+/* Spinner + estado deshabilitado para forms al enviar (evita doble submit) */
+.spinner {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: sgaon-spin 0.7s linear infinite;
+    vertical-align: -0.15em;
+    margin-right: 0.4em;
+}
+
+@keyframes sgaon-spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn[aria-busy="true"] {
+    opacity: 0.7;
+    cursor: progress;
+    pointer-events: none;
+}

@@ -4,6 +4,21 @@ import './searchable-select';
 import './finance-payment-form';
 import './finance-charge-form';
 
+// Bloquea el botón submit y muestra spinner mientras el form se envía.
+// Evita duplicados por doble click / doble submit.
+document.querySelectorAll('form[data-guard-submit]').forEach((form) => {
+    form.addEventListener('submit', () => {
+        form.querySelectorAll('button[type="submit"], button:not([type])').forEach((button) => {
+            if (button.dataset.submitLabel !== undefined) return;
+            button.dataset.submitLabel = button.innerHTML;
+            button.setAttribute('aria-busy', 'true');
+            button.disabled = true;
+            const busy = button.dataset.submitBusyLabel || 'Guardando…';
+            button.innerHTML = `<span class="spinner" aria-hidden="true"></span>${busy}`;
+        });
+    });
+});
+
 document.querySelectorAll('[data-student-picker]').forEach((form) => {
     const modal = form.querySelector('[data-picker-modal]');
     const openButton = form.querySelector('[data-picker-open]');

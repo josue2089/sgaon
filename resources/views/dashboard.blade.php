@@ -22,6 +22,41 @@
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'alert', 'label' => 'Alertas', 'value' => $openAlertsCount])
 </div>
 
+@if(isset($campusBreakdown) && $campusBreakdown->isNotEmpty())
+<div class="card">
+    <div class="section-head">
+        <h2 class="section-title">Por sede</h2>
+        <a class="btn secondary" href="{{ route('reports.campus-totals') }}">Reporte completo</a>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Sede</th>
+                    <th>Alumnos activos</th>
+                    <th>Grupos activos</th>
+                    <th>Docentes</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($campusBreakdown as $campus)
+                    <tr>
+                        <td class="table-title">{{ $campus->name }}</td>
+                        <td>{{ $campus->students_active_count }}</td>
+                        <td>{{ $campus->groups_active_count }}</td>
+                        <td>{{ $campus->teachers_count }}</td>
+                        <td class="table-actions">
+                            <a href="{{ route('campuses.show', $campus) }}">Ver ficha</a>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
 @if(auth()->user()?->role === 'teacher' && $teacherGradeCourses->isNotEmpty())
 <div class="card grades-dashboard-card">
     <div class="section-head section-head-tight">

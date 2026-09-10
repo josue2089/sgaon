@@ -142,6 +142,7 @@
             <tr>
                 <th>Concepto</th>
                 <th>Curso</th>
+                <th>Nivel</th>
                 <th>Grupo</th>
                 <th>Período</th>
                 <th class="amount">Monto aplicado</th>
@@ -149,12 +150,30 @@
         </thead>
         <tbody>
             @foreach($allocations as $allocation)
+                @php
+                    $charge = $allocation->charge;
+                    $enrollment = $charge?->enrollment;
+                    $courseName = $charge?->course?->name
+                        ?? $enrollment?->group?->course?->name
+                        ?? 'Sin curso';
+                    $levelName = $charge?->course?->programLevel?->name
+                        ?? $enrollment?->group?->course?->programLevel?->name
+                        ?? 'Sin nivel';
+                    $groupName = $charge?->group?->name
+                        ?? $enrollment?->group?->name
+                        ?? 'Sin grupo';
+                    $periodCode = $charge?->period?->code
+                        ?? $charge?->billing_period_label
+                        ?? $enrollment?->group?->course?->period?->code
+                        ?? 'Sin período';
+                @endphp
                 <tr>
-                    <td>{{ $allocation->charge->concept ?? 'Cargo legacy' }}</td>
-                    <td>{{ $allocation->charge->course->name ?? 'Sin curso' }}</td>
-                    <td>{{ $allocation->charge->group->name ?? 'Sin grupo' }}</td>
-                    <td>{{ $allocation->charge->period->code ?? ($allocation->charge->billing_period_label ?? 'Sin período') }}</td>
-                    <td class="amount">{{ \App\Support\MoneyFormat::formatLedgerAmount((float) ($allocation->amount_applied ?? 0), $allocation->charge?->currency) }}</td>
+                    <td>{{ $charge->concept ?? 'Cargo legacy' }}</td>
+                    <td>{{ $courseName }}</td>
+                    <td>{{ $levelName }}</td>
+                    <td>{{ $groupName }}</td>
+                    <td>{{ $periodCode }}</td>
+                    <td class="amount">{{ \App\Support\MoneyFormat::formatLedgerAmount((float) ($allocation->amount_applied ?? 0), $charge?->currency) }}</td>
                 </tr>
             @endforeach
         </tbody>
