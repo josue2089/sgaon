@@ -194,6 +194,11 @@
                             @if($hasRoute('reports.audit'))<a href="{{ route('reports.audit') }}" class="fi-menu-link">Auditoría</a>@endif
                             @if($hasRoute('reports.payments'))<a href="{{ route('reports.payments') }}" class="fi-menu-link">Reporte financiero</a>@endif
                             @if($hasRoute('reports.level-renewals'))<a href="{{ route('reports.level-renewals') }}" class="fi-menu-link">Renovación de niveles</a>@endif
+                            @if($hasRoute('reports.campus-totals'))<a href="{{ route('reports.campus-totals') }}" class="fi-menu-link">Totales por sede</a>@endif
+                            @if($user?->isMasterAdmin())
+                                @if($hasRoute('reports.campus-projection'))<a href="{{ route('reports.campus-projection') }}" class="fi-menu-link">Proyección por sede</a>@endif
+                                @if($hasRoute('settings.billing.edit'))<a href="{{ route('settings.billing.edit') }}" class="fi-menu-link">Tarifa mensual</a>@endif
+                            @endif
                         @endif
                     </div>
                 </details>

@@ -272,6 +272,76 @@ class ReportController extends Controller
         return view('reports.campus-totals', ['rows' => $rows]);
     }
 
+    public function campusProjection(Request $request): View|StreamedResponse
+    {
+        $user = $request->user();
+        $allowedIds = \App\Support\CampusScope::allowedCampusIds($user);
+
+        $fee = (float) \App\Models\SystemSetting::getValue(
+            SystemSettingController::BILLING_MONTHLY_FEE_KEY,
+            SystemSettingController::BILLING_MONTHLY_FEE_DEFAULT,
+        );
+
+        $campuses = \App\Models\Campus::query()
+            ->when(is_array($allowedIds), fn ($q) => $q->whereIn('id', $allowedIds ?: [0]))
+            ->orderBy('name')
+            ->get();
+
+        $ids = $campuses->pluck('id');
+
+        $stats = \App\Models\Enrollment::query()
+            ->where('status', 'active')
+            ->whereIn('campus_id', $ids)
+            ->selectRaw('campus_id, COUNT(*) as active_enrollments, COUNT(DISTINCT student_id) as unique_students')
+            ->groupBy('campus_id')
+            ->get()
+            ->keyBy('campus_id');
+
+        $rows = $campuses->map(function ($campus) use ($stats, $fee) {
+            $s = $stats->get($campus->id);
+            $active = (int) ($s->active_enrollments ?? 0);
+            $unique = (int) ($s->unique_students ?? 0);
+
+            return [
+                'campus' => $campus,
+                'unique_students' => $unique,
+                'active_enrollments' => $active,
+                'monthly_projection' => $active * $fee,
+                'annual_projection' => $active * $fee * 10,
+            ];
+        });
+
+        if ($request->query('export') === 'csv') {
+            return response()->streamDownload(function () use ($rows, $fee): void {
+                $out = fopen('php://output', 'w');
+                fwrite($out, "\xEF\xBB\xBF");
+                fputcsv($out, ['Sede', 'Código', 'Alumnos únicos activos', 'Inscripciones activas', 'Tarifa mensual (USD)', 'Proyección mensual (USD)', 'Proyección anual estimada (USD)']);
+                foreach ($rows as $row) {
+                    fputcsv($out, [
+                        $row['campus']->name,
+                        $row['campus']->code,
+                        $row['unique_students'],
+                        $row['active_enrollments'],
+                        number_format($fee, 2, '.', ''),
+                        number_format($row['monthly_projection'], 2, '.', ''),
+                        number_format($row['annual_projection'], 2, '.', ''),
+                    ]);
+                }
+                fclose($out);
+            }, 'proyeccion_por_sede_'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv']);
+        }
+
+        return view('reports.campus-projection', [
+            'rows' => $rows,
+            'fee' => $fee,
+            'totalEnrollments' => (int) $rows->sum('active_enrollments'),
+            'totalStudents' => (int) $rows->sum('unique_students'),
+            'totalMonthly' => (float) $rows->sum('monthly_projection'),
+            'totalAnnual' => (float) $rows->sum('annual_projection'),
+            'generatedAt' => now(),
+        ]);
+    }
+
     public function storePreset(Request $request): RedirectResponse
     {
         $data = $request->validate([

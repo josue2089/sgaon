@@ -109,6 +109,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::resource('programs', ProgramController::class);
             Route::get('/settings/makeup-payment-instructions', [SystemSettingController::class, 'editMakeupPaymentInstructions'])->name('settings.makeup-payment-instructions.edit');
             Route::put('/settings/makeup-payment-instructions', [SystemSettingController::class, 'updateMakeupPaymentInstructions'])->name('settings.makeup-payment-instructions.update');
+            Route::get('/settings/billing', [SystemSettingController::class, 'editBilling'])->name('settings.billing.edit');
+            Route::put('/settings/billing', [SystemSettingController::class, 'updateBilling'])->name('settings.billing.update');
             Route::resource('settings/payment-methods', PaymentMethodController::class)
                 ->except(['show'])
                 ->names('settings.payment-methods')
@@ -141,6 +143,9 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::get('/reports/payments', [ReportController::class, 'payments'])->name('reports.payments');
             Route::get('/reports/level-renewals', [ReportController::class, 'levelRenewals'])->name('reports.level-renewals');
             Route::get('/reports/campus-totals', [ReportController::class, 'campusTotals'])->name('reports.campus-totals');
+            Route::get('/reports/campus-projection', [ReportController::class, 'campusProjection'])
+                ->middleware('master.admin')
+                ->name('reports.campus-projection');
             Route::post('/reports/presets', [ReportController::class, 'storePreset'])->name('reports.presets.store');
             Route::delete('/reports/presets/{preset}', [ReportController::class, 'destroyPreset'])->name('reports.presets.destroy');
             Route::post('/reports/exports', [ReportController::class, 'queueExport'])->name('reports.exports.queue');
