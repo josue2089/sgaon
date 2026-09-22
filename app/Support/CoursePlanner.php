@@ -134,6 +134,34 @@ class CoursePlanner
         return self::mergeSessions($course, $group, $schedule, $requiredSessions, $existingSessions);
     }
 
+    /**
+     * Sesiones del curso que caen en un feriado activo de su sede.
+     *
+     * @return Collection<int, ClassSession>
+     */
+    public static function sessionsOnHolidays(Course $course, bool $onlyProtected = false): Collection
+    {
+        $groupId = $course->managed_group_id;
+        if (! $groupId) {
+            return collect();
+        }
+
+        $holidays = Holiday::query()->active()->forCampus($course->campus_id)->get();
+        if ($holidays->isEmpty()) {
+            return collect();
+        }
+
+        return ClassSession::query()
+            ->where('group_id', $groupId)
+            ->withCount(['attendanceRecords', 'makeupRequests'])
+            ->orderBy('session_date')
+            ->get()
+            ->filter(fn (ClassSession $session) => $session->session_date
+                && self::isHoliday($session->session_date, $holidays)
+                && (! $onlyProtected || self::sessionIsProtected($session)))
+            ->values();
+    }
+
     private static function sessionIsProtected(ClassSession $session): bool
     {
         return ($session->attendance_records_count ?? 0) > 0
@@ -215,9 +243,7 @@ class CoursePlanner
             if ($candidate) {
                 $usedSessionIds[] = $candidate->id;
                 $update = $attributes;
-                if (self::sessionIsProtected($candidate)) {
-                    unset($update['topic'], $update['program_status'], $update['program_notes']);
-                }
+                unset($update['topic'], $update['program_status'], $update['program_notes']);
                 $candidate->update($update);
 
                 continue;

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Campus;
 use App\Models\Holiday;
+use App\Services\HolidayCalendarSync;
+use App\Support\AuditTrail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -59,9 +61,9 @@ class HolidayController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatedData($request);
-        Holiday::create($data);
+        $holiday = Holiday::create($data);
 
-        return redirect()->route('holidays.index')->with('success', 'Feriado creado.');
+        return $this->resyncAndRedirect($request, $holiday, [$holiday->campus_id], 'Feriado creado.');
     }
 
     public function edit(Holiday $holiday): View
@@ -75,16 +77,58 @@ class HolidayController extends Controller
 
     public function update(Request $request, Holiday $holiday): RedirectResponse
     {
+        $previousCampusId = $holiday->campus_id;
+        $previousFrom = $this->resyncFromDate($holiday);
         $holiday->update($this->validatedData($request));
+        $newFrom = $this->resyncFromDate($holiday);
 
-        return redirect()->route('holidays.index')->with('success', 'Feriado actualizado.');
+        return $this->resyncAndRedirect(
+            $request,
+            $holiday,
+            [$previousCampusId, $holiday->campus_id],
+            'Feriado actualizado.',
+            $previousFrom->lt($newFrom) ? $previousFrom : $newFrom,
+        );
     }
 
-    public function destroy(Holiday $holiday): RedirectResponse
+    public function destroy(Request $request, Holiday $holiday): RedirectResponse
     {
         $holiday->delete();
 
-        return redirect()->route('holidays.index')->with('success', 'Feriado eliminado.');
+        return $this->resyncAndRedirect($request, $holiday, [$holiday->campus_id], 'Feriado eliminado.');
+    }
+
+    /**
+     * @param  array<int, int|null>  $campusIds
+     */
+    private function resyncFromDate(Holiday $holiday): \Carbon\Carbon
+    {
+        return $holiday->is_recurring || ! $holiday->holiday_date
+            ? now()->startOfYear()
+            : $holiday->holiday_date->copy()->startOfDay();
+    }
+
+    private function resyncAndRedirect(Request $request, Holiday $holiday, array $campusIds, string $prefix, ?\Carbon\Carbon $fromDate = null): RedirectResponse
+    {
+        $sync = app(HolidayCalendarSync::class);
+        $fromDate ??= $this->resyncFromDate($holiday);
+
+        // Un feriado global (null) afecta a todas las sedes, así que basta con una pasada.
+        $campusIds = in_array(null, $campusIds, true) ? [null] : array_values(array_unique($campusIds));
+
+        $result = ['updated' => 0, 'skipped' => [], 'conflicts' => []];
+        foreach ($campusIds as $campusId) {
+            $partial = $sync->resyncForHoliday($campusId, $fromDate);
+            $result['updated'] += $partial['updated'];
+            $result['skipped'] += $partial['skipped'];
+            $result['conflicts'] += $partial['conflicts'];
+        }
+
+        AuditTrail::log($request, 'holiday.resync', $holiday, $result);
+
+        return redirect()
+            ->route('holidays.index')
+            ->with(HolidayCalendarSync::flashMessages($result, $prefix));
     }
 
     private function validatedData(Request $request): array

@@ -233,6 +233,12 @@
             @if(session('success'))
                 <div class="flash ok">{{ session('success') }}</div>
             @endif
+            @if(session('warning'))
+                <div class="flash warn">{{ session('warning') }}</div>
+            @endif
+            @if(session('info'))
+                <div class="flash info">{{ session('info') }}</div>
+            @endif
             @if($errors->any())
                 <div class="flash err"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
             @endif

@@ -10,6 +10,11 @@
             <a class="btn secondary" href="{{ route('courses.report.pdf', $course) }}">Descargar PDF</a>
         @endif
         <a class="btn" href="{{ route('courses.grades.index', $course) }}">Evaluaciones / Notas</a>
+        <form method="POST" action="{{ route('courses.recalculate-calendar', $course) }}" data-guard-submit
+              onsubmit="return confirm('Se recalculará el calendario con los feriados vigentes. Las clases sin asistencia que caigan en feriado se moverán y la fecha de fin puede cambiar. ¿Continuar?');">
+            @csrf
+            <button class="btn secondary" type="submit" data-submit-busy-label="Recalculando…">Recalcular calendario</button>
+        </form>
         <a class="btn secondary" href="{{ route('courses.edit', $course) }}">Editar curso</a>
         <a class="btn secondary" href="{{ route('courses.index') }}">Volver</a>
     </div>
@@ -226,7 +231,12 @@
                 @foreach($sessions as $session)
                     <tr>
                         <td>{{ $session->sequence ?: $loop->iteration }}</td>
-                        <td>{{ $session->session_date?->format('d/m/Y') ?? 'N/D' }}</td>
+                        <td>
+                            {{ $session->session_date?->format('d/m/Y') ?? 'N/D' }}
+                            @if(in_array($session->id, $holidaySessionIds ?? [], true))
+                                @include('partials.ui.status-badge', ['tone' => 'warn', 'text' => 'Feriado'])
+                            @endif
+                        </td>
                         <td>{{ ($session->starts_at && $session->ends_at) ? substr($session->starts_at, 0, 5).' - '.substr($session->ends_at, 0, 5) : 'N/D' }}</td>
                         <td>
                             <div class="table-title">{{ $session->planned_class_label ?: 'Clase pendiente' }}</div>
@@ -250,6 +260,7 @@
                             @else
                                 <a href="{{ route('attendance.index', ['class_session_id' => $session->id]) }}">Ver sesión</a>
                             @endif
+                            <a href="{{ route('sessions.edit', ['session' => $session, 'redirect_to' => 'course']) }}">Editar fecha</a>
                         </td>
                     </tr>
                 @endforeach

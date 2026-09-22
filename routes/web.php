@@ -77,6 +77,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/teachers-calendar', [TeacherController::class, 'calendar'])->name('teachers.calendar');
         Route::get('/teachers/{teacher}', [TeacherController::class, 'show'])->name('teachers.show');
         Route::post('/courses/{course}/students', [CourseController::class, 'syncStudents'])->name('courses.students.sync');
+        Route::post('/courses/{course}/recalculate-calendar', [CourseController::class, 'recalculateCalendar'])->name('courses.recalculate-calendar');
         Route::delete('/courses/{course}/students/{enrollment}', [CourseController::class, 'removeStudent'])->name('courses.students.remove');
         Route::get('/courses/{course}/report.pdf', [CourseController::class, 'reportPdf'])
             ->middleware('master.admin')

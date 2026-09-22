@@ -17,6 +17,7 @@ use App\Models\Teacher;
 use App\Support\AuditTrail;
 use App\Support\CoursePlanner;
 use App\Services\EnrollmentBillingService;
+use App\Services\HolidayCalendarSync;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -216,7 +217,23 @@ class CourseController extends Controller
 
         return view('courses.show', $context + [
             'availableStudents' => $availableStudents,
+            'holidaySessionIds' => CoursePlanner::sessionsOnHolidays($course)->pluck('id')->all(),
         ]);
+    }
+
+    public function recalculateCalendar(Request $request, Course $course): RedirectResponse
+    {
+        $this->authorizeCourse($course);
+
+        $result = app(HolidayCalendarSync::class)->resyncCourse($course);
+        AuditTrail::log($request, 'course.calendar.recalculate', $course, $result);
+
+        $messages = HolidayCalendarSync::flashMessages($result, 'Calendario recalculado.');
+        if ($result['updated'] === 0) {
+            unset($messages['success']);
+        }
+
+        return redirect()->route('courses.show', $course)->with($messages);
     }
 
     public function reportPdf(Course $course): Response

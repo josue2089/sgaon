@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClassSession;
+use App\Models\Course;
 use App\Models\Group;
+use App\Models\Holiday;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -151,16 +154,59 @@ class ClassSessionController extends Controller
                 'session_date' => 'La sesión no puede ser antes de la fecha de inicio del grupo.',
             ]);
         }
-        if ($group->end_date && $data['session_date'] > $group->end_date->toDateString()) {
+
+        $sessionDate = Carbon::parse($data['session_date']);
+        $holiday = Holiday::query()
+            ->active()
+            ->forCampus((int) $group->campus_id)
+            ->get()
+            ->first(fn (Holiday $holiday) => $holiday->occursOn($sessionDate));
+        if ($holiday) {
             throw ValidationException::withMessages([
-                'session_date' => 'La sesión no puede ser después de la fecha de fin del grupo.',
+                'session_date' => "Esa fecha es feriado ({$holiday->name}). Elige otra.",
             ]);
         }
+
         $data['campus_id'] = $this->campusId() ?: $group->campus_id;
 
+        $previousGroupId = $session->group_id;
         $session->update($data);
 
+        $this->syncEndDates($group);
+        if ($previousGroupId && (int) $previousGroupId !== (int) $group->id) {
+            $previousGroup = Group::find($previousGroupId);
+            if ($previousGroup) {
+                $this->syncEndDates($previousGroup);
+            }
+        }
+
+        if ($request->input('redirect_to') === 'course') {
+            $course = Course::query()->where('managed_group_id', $group->id)->first() ?? $group->course;
+            if ($course) {
+                return redirect()->route('courses.show', $course)->with('success', 'Sesión actualizada.');
+            }
+        }
+
         return redirect()->route('sessions.index')->with('success', 'Sesión actualizada.');
+    }
+
+    private function syncEndDates(Group $group): void
+    {
+        $lastDate = ClassSession::query()->where('group_id', $group->id)->max('session_date');
+        $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : null;
+
+        if ($group->end_date?->toDateString() !== $lastDate) {
+            $group->forceFill(['end_date' => $lastDate])->saveQuietly();
+        }
+
+        Course::query()
+            ->where('managed_group_id', $group->id)
+            ->get()
+            ->each(function (Course $course) use ($lastDate): void {
+                if ($course->end_date?->toDateString() !== $lastDate) {
+                    $course->forceFill(['end_date' => $lastDate])->saveQuietly();
+                }
+            });
     }
 
     public function destroy(ClassSession $session): RedirectResponse
