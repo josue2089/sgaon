@@ -70,6 +70,33 @@ class HolidayCalendarSyncTest extends TestCase
             ->assertSee('Editar fecha');
     }
 
+    public function test_moving_conflicting_session_then_recalculating_leaves_no_extra_session(): void
+    {
+        [$admin, $course, $enrollment] = $this->fridayCourse();
+        $originalCount = $this->sessionCount($course);
+        $session = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-19')->firstOrFail();
+        AttendanceRecord::query()->create([
+            'class_session_id' => $session->id,
+            'enrollment_id' => $enrollment->id,
+            'status' => AttendanceRecord::STATUS_PRESENT,
+        ]);
+
+        $this->actingAs($admin)->post(route('holidays.store'), $this->holidayPayload($course, '2026-06-19'));
+        $this->assertSame($originalCount + 1, $this->sessionCount($course));
+
+        $this->actingAs($admin)
+            ->put(route('sessions.update', $session), $this->sessionPayload($session, '2026-06-26'))
+            ->assertSessionHasNoErrors();
+        $this->actingAs($admin)->post(route('courses.recalculate-calendar', $course->fresh()));
+
+        $this->assertSame($originalCount, $this->sessionCount($course));
+        $this->assertFalse($this->hasSessionOn($course, '2026-06-19'));
+        $onDate = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-26')->get();
+        $this->assertCount(1, $onDate);
+        $this->assertSame($session->id, $onDate->first()->id);
+        $this->assertSame(1, AttendanceRecord::query()->where('class_session_id', $session->id)->count());
+    }
+
     public function test_deleting_holiday_resyncs_courses(): void
     {
         [$admin, $course] = $this->fridayCourse();

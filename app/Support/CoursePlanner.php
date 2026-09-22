@@ -237,8 +237,11 @@ class CoursePlanner
                 includeTimestamps: false,
             );
 
+            // Si dos sesiones comparten fecha, conservar la que tiene asistencia; la otra se descarta.
             $candidate = ($availableByDate->get($dateKey) ?? collect())
-                ->first(fn (ClassSession $session) => ! in_array($session->id, $usedSessionIds, true));
+                ->reject(fn (ClassSession $session) => in_array($session->id, $usedSessionIds, true))
+                ->sortByDesc(fn (ClassSession $session) => self::sessionIsProtected($session) ? 1 : 0)
+                ->first();
 
             if ($candidate) {
                 $usedSessionIds[] = $candidate->id;
