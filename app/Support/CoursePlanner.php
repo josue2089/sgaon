@@ -119,10 +119,23 @@ class CoursePlanner
         $protectedSessions = $existingSessions->filter(fn (ClassSession $session) => self::sessionIsProtected($session));
 
         if ($protectedSessions->isNotEmpty()) {
-            $firstExistingDate = $existingSessions->first()?->session_date?->toDateString();
-            if ($firstExistingDate !== $course->start_date?->toDateString()) {
+            $holidays = self::holidaysFor($course);
+            $excludedDates = self::excludedDates($existingSessions);
+            $firstScheduled = self::buildScheduleDates($course->start_date, $schedule, 1, $holidays, $excludedDates)->first();
+
+            // Se ignoran las clases movidas a mano y las que caen en feriado/fecha excluida: no definen el inicio del curso.
+            $firstRegular = $existingSessions->first(fn (ClassSession $session) => ! $session->date_locked
+                && $session->session_date
+                && ! self::isHoliday($session->session_date, $holidays)
+                && ! in_array($session->session_date->toDateString(), $excludedDates, true));
+
+            if ($firstRegular && $firstScheduled && $firstRegular->session_date->toDateString() !== $firstScheduled->toDateString()) {
                 throw ValidationException::withMessages([
-                    'start_date' => 'El curso ya tiene sesiones con asistencia registrada. No se puede regenerar el calendario automáticamente.',
+                    'start_date' => sprintf(
+                        'La primera clase del curso (%s) no coincide con su fecha de inicio (%s) y ya hay asistencia registrada. Ajusta la fecha de inicio en "Editar curso" para que coincida con la primera clase real.',
+                        $firstRegular->session_date->format('d/m/Y'),
+                        $firstScheduled->format('d/m/Y'),
+                    ),
                 ]);
             }
         }
@@ -132,6 +145,30 @@ class CoursePlanner
         }
 
         return self::mergeSessions($course, $group, $schedule, $requiredSessions, $existingSessions);
+    }
+
+    private static function holidaysFor(Course $course): Collection
+    {
+        return Holiday::query()
+            ->active()
+            ->forCampus($course->campus_id)
+            ->get();
+    }
+
+    /**
+     * Fechas de las que se movieron clases a mano: el horario no debe volver a usarlas.
+     *
+     * @param  Collection<int, ClassSession>  $sessions
+     * @return array<int, string>
+     */
+    private static function excludedDates(Collection $sessions): array
+    {
+        return $sessions
+            ->filter(fn (ClassSession $session) => $session->date_locked && $session->rescheduled_from)
+            ->map(fn (ClassSession $session) => $session->rescheduled_from->toDateString())
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**
@@ -164,7 +201,8 @@ class CoursePlanner
 
     private static function sessionIsProtected(ClassSession $session): bool
     {
-        return ($session->attendance_records_count ?? 0) > 0
+        return (bool) $session->date_locked
+            || ($session->attendance_records_count ?? 0) > 0
             || ($session->makeup_requests_count ?? 0) > 0;
     }
 
@@ -210,14 +248,27 @@ class CoursePlanner
         int $requiredSessions,
         Collection $existingSessions,
     ): ?Carbon {
-        $holidays = Holiday::query()
-            ->active()
-            ->forCampus($course->campus_id)
-            ->get();
+        $holidays = self::holidaysFor($course);
+        $excludedDates = self::excludedDates($existingSessions);
+        $locked = $existingSessions->filter(fn (ClassSession $session) => (bool) $session->date_locked);
 
-        $dates = self::buildScheduleDates($course->start_date, $schedule, $requiredSessions, $holidays);
-        $plannedLessons = $course->programLevel?->lessons()->orderBy('sort_order')->get() ?? collect();
-        $distribution = self::distributeLessons($plannedLessons, $requiredSessions);
+        // Las clases movidas a mano fuera del horario ocupan el lugar de la clase original: el horario
+        // genera solo las que faltan. Las que tienen asistencia en un feriado NO cuentan (se agrega la
+        // clase al final), para no adelantar la fecha de fin ni disparar renovaciones antes de tiempo.
+        $slots = $requiredSessions;
+        for ($guard = 0; $guard <= $requiredSessions; $guard++) {
+            $dates = self::buildScheduleDates($course->start_date, $schedule, $slots, $holidays, $excludedDates);
+            $dateKeys = $dates->map(fn (Carbon $date) => $date->toDateString())->flip();
+            $offSchedule = $locked
+                ->groupBy(fn (ClassSession $session) => $session->session_date?->toDateString() ?? '')
+                ->map(fn (Collection $sameDay, $dateKey) => $dateKeys->has((string) $dateKey) ? $sameDay->count() - 1 : $sameDay->count())
+                ->sum();
+            $nextSlots = max(0, $requiredSessions - $offSchedule);
+            if ($nextSlots === $slots) {
+                break;
+            }
+            $slots = $nextSlots;
+        }
 
         $availableByDate = $existingSessions
             ->groupBy(fn (ClassSession $session) => $session->session_date?->toDateString() ?? '');
@@ -226,18 +277,17 @@ class CoursePlanner
 
         foreach ($dates as $index => $date) {
             $dateKey = $date->toDateString();
-            $assignedLessons = $distribution[$index] ?? collect();
             $attributes = self::sessionAttributes(
                 $course,
                 $group,
                 $schedule,
                 $date,
                 $index + 1,
-                $assignedLessons,
+                collect(),
                 includeTimestamps: false,
             );
 
-            // Si dos sesiones comparten fecha, conservar la que tiene asistencia; la otra se descarta.
+            // Si dos sesiones comparten fecha, conservar la protegida; la otra se descarta.
             $candidate = ($availableByDate->get($dateKey) ?? collect())
                 ->reject(fn (ClassSession $session) => in_array($session->id, $usedSessionIds, true))
                 ->sortByDesc(fn (ClassSession $session) => self::sessionIsProtected($session) ? 1 : 0)
@@ -247,6 +297,9 @@ class CoursePlanner
                 $usedSessionIds[] = $candidate->id;
                 $update = $attributes;
                 unset($update['topic'], $update['program_status'], $update['program_notes']);
+                if ($candidate->date_locked) {
+                    unset($update['starts_at'], $update['ends_at']);
+                }
                 $candidate->update($update);
 
                 continue;
@@ -261,10 +314,12 @@ class CoursePlanner
             }
 
             if (self::sessionIsProtected($session)) {
-                $session->update([
-                    'starts_at' => $schedule->starts_at,
-                    'ends_at' => $schedule->ends_at,
-                ]);
+                if (! $session->date_locked) {
+                    $session->update([
+                        'starts_at' => $schedule->starts_at,
+                        'ends_at' => $schedule->ends_at,
+                    ]);
+                }
 
                 continue;
             }
@@ -272,9 +327,41 @@ class CoursePlanner
             $session->delete();
         }
 
-        $lastDate = $dates->last();
+        return self::resequence($course, $group, $requiredSessions);
+    }
 
-        return $lastDate instanceof Carbon ? $lastDate : null;
+    /**
+     * Numera las clases en orden cronológico y reparte el programa planificado sobre ese orden.
+     */
+    private static function resequence(Course $course, Group $group, int $requiredSessions): ?Carbon
+    {
+        $sessions = ClassSession::query()
+            ->where('group_id', $group->id)
+            ->orderBy('session_date')
+            ->orderBy('starts_at')
+            ->orderBy('id')
+            ->get();
+
+        $plannedLessons = $course->programLevel?->lessons()->orderBy('sort_order')->get() ?? collect();
+        $distribution = self::distributeLessons($plannedLessons, max($requiredSessions, $sessions->count()));
+
+        foreach ($sessions as $index => $session) {
+            $lessons = $distribution[$index] ?? collect();
+            $primary = $lessons->first();
+            $session->fill([
+                'sequence' => $index + 1,
+                'program_level_lesson_id' => $primary?->id,
+                'planned_class_number' => $primary?->class_number,
+                'planned_class_label' => self::lessonLabel($lessons),
+                'planned_unit' => self::lessonUnit($lessons),
+                'planned_content' => self::lessonContent($lessons),
+            ]);
+            if ($session->isDirty()) {
+                $session->save();
+            }
+        }
+
+        return $sessions->last()?->session_date?->copy();
     }
 
     /**
@@ -324,7 +411,10 @@ class CoursePlanner
         return (int) $start->diffInMinutes($end, false);
     }
 
-    private static function buildScheduleDates(Carbon $startDate, ScheduleTemplate $schedule, int $requiredSessions, Collection $holidays): Collection
+    /**
+     * @param  array<int, string>  $excludedDates  Fechas Y-m-d que no deben usarse (clases movidas a mano).
+     */
+    private static function buildScheduleDates(Carbon $startDate, ScheduleTemplate $schedule, int $requiredSessions, Collection $holidays, array $excludedDates = []): Collection
     {
         $isoWeekdays = collect($schedule->days ?? [])
             ->map(fn (string $day) => match ($day) {
@@ -354,6 +444,7 @@ class CoursePlanner
                 $isoWeekdays->contains($cursor->dayOfWeekIso)
                 && $cursor->greaterThanOrEqualTo($startDate->copy()->startOfDay())
                 && ! self::isHoliday($cursor, $holidays)
+                && ! in_array($cursor->toDateString(), $excludedDates, true)
             ) {
                 $dates->push($cursor->copy());
             }

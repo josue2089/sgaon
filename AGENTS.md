@@ -82,6 +82,15 @@ Guía para agentes y desarrolladores que trabajan en este repositorio.
 - Resumen: ruta `finance.summary` y helper `App\Support\FinanceSummary`.
 - Resumen financiero: filtros por fecha, moneda y sede; exportación CSV, Excel (`.xlsx`) y PDF de cargos creados, cobros realizados y proyección (`charges_*`, `payments_*`, `projection_*` con sufijo `csv`, `xlsx` o `pdf`).
 
+## Calendario de cursos y feriados
+
+- Generación/recálculo: `App\Support\CoursePlanner::sync($course, true)`; salta feriados activos (`Holiday::forCampus`, globales si `campus_id` es null).
+- Guardar/borrar un feriado recalcula los cursos activos (`App\Services\HolidayCalendarSync`); botón "Recalcular calendario" por curso; comando `courses:apply-holidays`.
+- Sesiones protegidas (nunca se borran ni se mueven al recalcular): con asistencia, con recuperativas o `date_locked`.
+- Mover una clase a mano (`App\Services\SessionRescheduler`, desde `sessions.edit` o desde Asistencia): marca `date_locked` y guarda `rescheduled_from`; esa fecha original queda excluida del horario y la clase movida ocupa su lugar (el total no crece).
+- Clases con asistencia en un feriado NO ocupan lugar: se mantienen, se avisan y se agrega la clase al final. No cambiar esto sin revisar `SendLevelRenewalReminders` (usa `courses.end_date`).
+- Si hay asistencia y la primera clase regular no coincide con la primera fecha válida del horario, el recálculo se omite con un mensaje: se corrige ajustando la fecha de inicio del curso.
+
 ## Módulos funcionales
 
 - **Portal**: estudiantes (`role:student`, `permission:portal.student.view`) y representantes (`role:representative`) — `PortalController`, vistas en `resources/views/portal/`.

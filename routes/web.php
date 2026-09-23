@@ -160,6 +160,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
     Route::middleware(['role:admin,teacher', 'permission:attendance.manage'])->group(function () {
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+        Route::post('/attendance/reschedule', [AttendanceController::class, 'reschedule'])->name('attendance.reschedule');
     });
 
     Route::middleware(['role:admin,teacher', 'permission:grades.manage'])->group(function () {

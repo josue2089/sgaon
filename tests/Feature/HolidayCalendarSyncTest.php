@@ -60,7 +60,9 @@ class HolidayCalendarSyncTest extends TestCase
 
         $this->assertTrue($this->hasSessionOn($course, '2026-06-19'));
         $this->assertSame(1, AttendanceRecord::query()->where('class_session_id', $session->id)->count());
+        // Se mantiene y se agrega la clase que falta al final (la fecha de fin no se adelanta).
         $this->assertSame($count + 1, $this->sessionCount($course));
+        $this->assertSame('2026-08-07', $course->fresh()->end_date->toDateString());
 
         $this->actingAs($admin)
             ->get(route('courses.show', $course))
@@ -177,6 +179,139 @@ class HolidayCalendarSyncTest extends TestCase
             ->assertSessionHasErrors('session_date');
 
         $this->assertSame('2026-06-05', $session->fresh()->session_date->toDateString());
+    }
+
+    public function test_session_edit_accepts_times_with_seconds(): void
+    {
+        [$admin, $course] = $this->fridayCourse();
+        $session = ClassSession::query()->where('group_id', $course->managed_group_id)->orderBy('session_date')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->put(route('sessions.update', $session), [
+                'group_id' => $session->group_id,
+                'session_date' => '2026-06-05',
+                'starts_at' => '14:20:00',
+                'ends_at' => '17:40:00',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('14:20', substr((string) $session->fresh()->starts_at, 0, 5));
+    }
+
+    public function test_manually_moved_session_survives_recalculation(): void
+    {
+        [$admin, $course] = $this->fridayCourse();
+        $count = $this->sessionCount($course);
+        $session = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-12')->firstOrFail();
+
+        // Se da el sábado en lugar del viernes (fuera del horario del curso).
+        $this->actingAs($admin)
+            ->put(route('sessions.update', $session), $this->sessionPayload($session, '2026-06-13'))
+            ->assertSessionHasNoErrors();
+        $this->assertTrue($session->fresh()->date_locked);
+        $this->assertSame('2026-06-12', $session->fresh()->rescheduled_from->toDateString());
+
+        $this->actingAs($admin)->post(route('courses.recalculate-calendar', $course->fresh()))->assertSessionHas('success');
+        $this->actingAs($admin)->post(route('holidays.store'), $this->holidayPayload($course, '2026-07-03'));
+
+        $this->assertSame('2026-06-13', $session->fresh()->session_date->toDateString());
+        $this->assertFalse($this->hasSessionOn($course, '2026-06-12'), 'No debe regenerarse la clase en la fecha original.');
+        $this->assertSame($count, $this->sessionCount($course));
+        $sequences = ClassSession::query()->where('group_id', $course->managed_group_id)->orderBy('session_date')->pluck('sequence')->all();
+        $this->assertSame(range(1, $count), $sequences);
+    }
+
+    public function test_teacher_can_move_own_session_from_attendance_screen(): void
+    {
+        [, $course] = $this->fridayCourse();
+        $teacherUser = $this->teacherUserFor($course);
+        $session = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-19')->firstOrFail();
+
+        $this->actingAs($teacherUser)
+            ->get(route('attendance.index', ['class_session_id' => $session->id]))
+            ->assertOk()
+            ->assertSee('Cambiar fecha');
+
+        $this->actingAs($teacherUser)
+            ->post(route('attendance.reschedule'), ['class_session_id' => $session->id, 'session_date' => '2026-06-20'])
+            ->assertRedirect(route('attendance.index', ['class_session_id' => $session->id]))
+            ->assertSessionHas('success');
+
+        $this->assertSame('2026-06-20', $session->fresh()->session_date->toDateString());
+        $this->assertTrue($session->fresh()->date_locked);
+    }
+
+    public function test_teacher_cannot_move_another_teachers_session(): void
+    {
+        [, $course] = $this->fridayCourse();
+        $session = ClassSession::query()->where('group_id', $course->managed_group_id)->orderBy('session_date')->firstOrFail();
+
+        $otherTeacher = Teacher::query()->create([
+            'campus_id' => $course->campus_id,
+            'first_name' => 'Otro',
+            'last_name' => 'Docente',
+            'email' => 'otro-docente@test.dev',
+            'status' => 'active',
+        ]);
+        $otherUser = $this->makeTeacherUser($otherTeacher);
+
+        $this->actingAs($otherUser)
+            ->post(route('attendance.reschedule'), ['class_session_id' => $session->id, 'session_date' => '2026-06-06'])
+            ->assertForbidden();
+
+        $this->assertSame('2026-06-05', $session->fresh()->session_date->toDateString());
+    }
+
+    public function test_attendance_reschedule_rejects_holiday(): void
+    {
+        [$admin, $course] = $this->fridayCourse();
+        Holiday::query()->create(['campus_id' => null, 'name' => 'Carnaval', 'holiday_date' => '2026-06-20', 'is_recurring' => false, 'status' => 'active']);
+        $session = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-19')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->post(route('attendance.reschedule'), ['class_session_id' => $session->id, 'session_date' => '2026-06-20'])
+            ->assertSessionHasErrors('session_date');
+
+        $this->assertSame('2026-06-19', $session->fresh()->session_date->toDateString());
+    }
+
+    public function test_course_starting_on_a_holiday_with_attendance_can_be_recalculated(): void
+    {
+        [$admin, $course, $enrollment] = $this->fridayCourse();
+        // El inicio del curso (05/06) pasa a ser feriado y ya hay asistencia en una clase posterior.
+        $this->actingAs($admin)->post(route('holidays.store'), $this->holidayPayload($course, '2026-06-05'));
+        $session = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-19')->firstOrFail();
+        AttendanceRecord::query()->create([
+            'class_session_id' => $session->id,
+            'enrollment_id' => $enrollment->id,
+            'status' => AttendanceRecord::STATUS_PRESENT,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('holidays.store'), $this->holidayPayload($course, '2026-07-03'))
+            ->assertSessionMissing('info');
+
+        $this->assertFalse($this->hasSessionOn($course, '2026-07-03'));
+        $this->assertFalse($this->hasSessionOn($course, '2026-06-05'));
+    }
+
+    private function teacherUserFor(Course $course): User
+    {
+        return $this->makeTeacherUser(Teacher::query()->findOrFail($course->teacher_id));
+    }
+
+    private function makeTeacherUser(Teacher $teacher): User
+    {
+        $user = User::factory()->create([
+            'campus_id' => $teacher->campus_id,
+            'role' => 'teacher',
+            'email' => $teacher->email,
+        ]);
+        $role = Role::query()->firstOrCreate(['name' => 'teacher'], ['label' => 'Profesor']);
+        $user->roles()->syncWithoutDetaching([$role->id]);
+        $teacher->forceFill(['user_id' => $user->id])->save();
+
+        return $user;
     }
 
     private function holidayPayload(Course $course, string $date): array

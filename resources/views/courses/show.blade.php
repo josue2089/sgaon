@@ -236,6 +236,9 @@
                             @if(in_array($session->id, $holidaySessionIds ?? [], true))
                                 @include('partials.ui.status-badge', ['tone' => 'warn', 'text' => 'Feriado'])
                             @endif
+                            @if($session->date_locked && $session->rescheduled_from)
+                                @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Movida · antes '.$session->rescheduled_from->format('d/m')])
+                            @endif
                         </td>
                         <td>{{ ($session->starts_at && $session->ends_at) ? substr($session->starts_at, 0, 5).' - '.substr($session->ends_at, 0, 5) : 'N/D' }}</td>
                         <td>

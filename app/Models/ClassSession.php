@@ -21,6 +21,8 @@ class ClassSession extends Model
         'session_date',
         'starts_at',
         'ends_at',
+        'date_locked',
+        'rescheduled_from',
         'topic',
         'program_status',
         'program_notes',
@@ -30,6 +32,8 @@ class ClassSession extends Model
     {
         return [
             'session_date' => 'date',
+            'date_locked' => 'boolean',
+            'rescheduled_from' => 'date',
         ];
     }
 

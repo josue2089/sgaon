@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ClassSession;
 use App\Models\Course;
 use App\Models\Group;
-use App\Models\Holiday;
+use App\Services\SessionRescheduler;
+use App\Support\AuditTrail;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -15,6 +16,8 @@ use Illuminate\View\View;
 
 class ClassSessionController extends Controller
 {
+    private const TIME_RULE = 'regex:/^\d{2}:\d{2}(:\d{2})?$/';
+
     private function campusId(): ?int
     {
         return \App\Support\CampusScope::campusIdFor(request()->user());
@@ -82,12 +85,13 @@ class ClassSessionController extends Controller
         $data = $request->validate([
             'group_id' => ['required', 'exists:groups,id'],
             'session_date' => ['required', 'date'],
-            'starts_at' => ['nullable', 'date_format:H:i'],
-            'ends_at' => ['nullable', 'date_format:H:i'],
+            'starts_at' => ['nullable', self::TIME_RULE],
+            'ends_at' => ['nullable', self::TIME_RULE],
             'topic' => ['nullable', 'string'],
             'program_status' => ['nullable', 'in:on_track,delayed'],
             'program_notes' => ['nullable', 'string'],
         ]);
+        $data = $this->normalizeTimes($data);
 
         $group = Group::findOrFail($data['group_id']);
         if ($this->campusId() && (int) $group->campus_id !== (int) $this->campusId()) {
@@ -128,17 +132,18 @@ class ClassSessionController extends Controller
         ]);
     }
 
-    public function update(Request $request, ClassSession $session): RedirectResponse
+    public function update(Request $request, ClassSession $session, SessionRescheduler $rescheduler): RedirectResponse
     {
         $data = $request->validate([
             'group_id' => ['required', 'exists:groups,id'],
             'session_date' => ['required', 'date'],
-            'starts_at' => ['nullable', 'date_format:H:i'],
-            'ends_at' => ['nullable', 'date_format:H:i'],
+            'starts_at' => ['nullable', self::TIME_RULE],
+            'ends_at' => ['nullable', self::TIME_RULE],
             'topic' => ['nullable', 'string'],
             'program_status' => ['nullable', 'in:on_track,delayed'],
             'program_notes' => ['nullable', 'string'],
         ]);
+        $data = $this->normalizeTimes($data);
 
         $group = Group::findOrFail($data['group_id']);
         if ($this->campusId() && (int) $group->campus_id !== (int) $this->campusId()) {
@@ -149,34 +154,23 @@ class ClassSessionController extends Controller
                 'group_id' => 'No se pueden crear sesiones para grupos inactivos.',
             ]);
         }
-        if ($group->start_date && $data['session_date'] < $group->start_date->toDateString()) {
-            throw ValidationException::withMessages([
-                'session_date' => 'La sesión no puede ser antes de la fecha de inicio del grupo.',
-            ]);
-        }
 
-        $sessionDate = Carbon::parse($data['session_date']);
-        $holiday = Holiday::query()
-            ->active()
-            ->forCampus((int) $group->campus_id)
-            ->get()
-            ->first(fn (Holiday $holiday) => $holiday->occursOn($sessionDate));
-        if ($holiday) {
-            throw ValidationException::withMessages([
-                'session_date' => "Esa fecha es feriado ({$holiday->name}). Elige otra.",
-            ]);
-        }
+        $sessionDate = Carbon::parse($data['session_date'])->startOfDay();
+        $rescheduler->assertDateAllowed($group, $sessionDate);
 
         $data['campus_id'] = $this->campusId() ?: $group->campus_id;
 
         $previousGroupId = $session->group_id;
-        $session->update($data);
+        $session->fill($data);
+        $rescheduler->markMoved($session, $sessionDate);
+        $session->save();
+        AuditTrail::log($request, 'session.update', $session, $data);
 
-        $this->syncEndDates($group);
+        $rescheduler->syncEndDates($group);
         if ($previousGroupId && (int) $previousGroupId !== (int) $group->id) {
             $previousGroup = Group::find($previousGroupId);
             if ($previousGroup) {
-                $this->syncEndDates($previousGroup);
+                $rescheduler->syncEndDates($previousGroup);
             }
         }
 
@@ -190,23 +184,21 @@ class ClassSessionController extends Controller
         return redirect()->route('sessions.index')->with('success', 'Sesión actualizada.');
     }
 
-    private function syncEndDates(Group $group): void
+    /**
+     * Los inputs de hora pueden enviar segundos (14:20:00) cuando el valor viene de la BD.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function normalizeTimes(array $data): array
     {
-        $lastDate = ClassSession::query()->where('group_id', $group->id)->max('session_date');
-        $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : null;
-
-        if ($group->end_date?->toDateString() !== $lastDate) {
-            $group->forceFill(['end_date' => $lastDate])->saveQuietly();
+        foreach (['starts_at', 'ends_at'] as $field) {
+            if (! empty($data[$field])) {
+                $data[$field] = substr((string) $data[$field], 0, 5);
+            }
         }
 
-        Course::query()
-            ->where('managed_group_id', $group->id)
-            ->get()
-            ->each(function (Course $course) use ($lastDate): void {
-                if ($course->end_date?->toDateString() !== $lastDate) {
-                    $course->forceFill(['end_date' => $lastDate])->saveQuietly();
-                }
-            });
+        return $data;
     }
 
     public function destroy(ClassSession $session): RedirectResponse

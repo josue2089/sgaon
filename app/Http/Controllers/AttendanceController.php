@@ -5,13 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\AttendanceRecord;
 use App\Models\ClassSession;
 use App\Models\Enrollment;
+use App\Models\Holiday;
 use App\Models\Teacher;
+use App\Services\SessionRescheduler;
 use App\Support\AlertEngine;
 use App\Support\AuditTrail;
 use App\Support\MakeupRecoveryEngine;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AttendanceController extends Controller
@@ -69,9 +73,15 @@ class AttendanceController extends Controller
             }
         }
 
+        $sessionHoliday = $session?->session_date
+            ? Holiday::query()->active()->forCampus((int) $session->campus_id)->get()
+                ->first(fn (Holiday $holiday) => $holiday->occursOn($session->session_date))
+            : null;
+
         return view('attendance.index', [
             'sessions' => $sessionsQuery->latest('session_date')->take(100)->get(),
             'selectedSession' => $session,
+            'sessionHoliday' => $sessionHoliday,
             'canRecordAttendance' => $session?->canRecordAttendance() ?? false,
             'enrollments' => $enrollments,
             'records' => $records,
@@ -84,6 +94,60 @@ class AttendanceController extends Controller
                 AttendanceRecord::STATUS_JUSTIFIED,
             ],
         ]);
+    }
+
+    public function reschedule(Request $request, SessionRescheduler $rescheduler): RedirectResponse
+    {
+        $data = $request->validate([
+            'class_session_id' => ['required', 'exists:class_sessions,id'],
+            'session_date' => ['required', 'date'],
+        ]);
+
+        $this->authorizeSession($request, (int) $data['class_session_id']);
+
+        $session = ClassSession::query()->findOrFail($data['class_session_id']);
+        $previousDate = $session->session_date?->format('d/m/Y');
+        $newDate = Carbon::parse($data['session_date'])->startOfDay();
+
+        try {
+            $rescheduler->reschedule($session, $newDate);
+        } catch (ValidationException $exception) {
+            return redirect()
+                ->route('attendance.index', ['class_session_id' => $session->id])
+                ->withErrors($exception->errors());
+        }
+
+        AuditTrail::log($request, 'session.reschedule', $session, [
+            'from' => $previousDate,
+            'to' => $newDate->toDateString(),
+        ]);
+
+        return redirect()
+            ->route('attendance.index', ['class_session_id' => $session->id])
+            ->with('success', "Clase movida del {$previousDate} al {$newDate->format('d/m/Y')}.");
+    }
+
+    private function authorizeSession(Request $request, int $sessionId): void
+    {
+        if ($request->user()?->role === 'teacher') {
+            $teacher = Teacher::where('user_id', $request->user()->id)->orWhere('email', $request->user()->email)->first();
+            $allowed = ClassSession::where('id', $sessionId)
+                ->whereHas('group', fn ($q) => $q->where('teacher_id', $teacher?->id ?? -1))
+                ->exists();
+
+            if (! $allowed) {
+                abort(403);
+            }
+        }
+
+        if ($this->campusId($request)) {
+            $sessionCampusMatches = ClassSession::where('id', $sessionId)
+                ->where('campus_id', $this->campusId($request))
+                ->exists();
+            if (! $sessionCampusMatches) {
+                abort(403);
+            }
+        }
     }
 
     public function store(Request $request): RedirectResponse
@@ -99,25 +163,7 @@ class AttendanceController extends Controller
             'records.*.notes' => ['nullable', 'string'],
         ]);
 
-        if ($request->user()?->role === 'teacher') {
-            $teacher = Teacher::where('user_id', $request->user()->id)->orWhere('email', $request->user()->email)->first();
-            $allowed = ClassSession::where('id', $data['class_session_id'])
-                ->whereHas('group', fn ($q) => $q->where('teacher_id', $teacher?->id ?? -1))
-                ->exists();
-
-            if (! $allowed) {
-                abort(403);
-            }
-        }
-
-        if ($this->campusId($request)) {
-            $sessionCampusMatches = ClassSession::where('id', $data['class_session_id'])
-                ->where('campus_id', $this->campusId($request))
-                ->exists();
-            if (! $sessionCampusMatches) {
-                abort(403);
-            }
-        }
+        $this->authorizeSession($request, (int) $data['class_session_id']);
 
         $session = ClassSession::query()->findOrFail($data['class_session_id']);
         if (! $session->canRecordAttendance()) {

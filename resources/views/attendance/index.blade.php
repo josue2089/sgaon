@@ -53,6 +53,33 @@
 
 @if($selectedSession)
     <div class="card">
+        <div class="section-head">
+            <h2 class="section-title">Fecha de la clase</h2>
+            <div class="entity-sub">
+                Si la clase se dio (o se dará) otro día, cámbiala aquí. La asistencia se mueve con ella y el recálculo automático respetará el cambio.
+            </div>
+        </div>
+        @if($sessionHoliday)
+            <div class="flash warn">
+                Esta clase cae en feriado ({{ $sessionHoliday->name }}). Cámbiala al día en que realmente se dio.
+            </div>
+        @endif
+        <form method="POST" action="{{ route('attendance.reschedule') }}" data-guard-submit class="fi-filter-bar">
+            @csrf
+            <input type="hidden" name="class_session_id" value="{{ $selectedSession->id }}">
+            <div>
+                <label for="reschedule-date">Fecha</label>
+                <input id="reschedule-date" type="date" name="session_date" required
+                       value="{{ old('session_date', $selectedSession->session_date?->format('Y-m-d')) }}">
+            </div>
+            <button class="btn secondary" type="submit" data-submit-busy-label="Moviendo…">Cambiar fecha</button>
+            @if($selectedSession->date_locked && $selectedSession->rescheduled_from)
+                @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Movida desde el '.$selectedSession->rescheduled_from->format('d/m/Y')])
+            @endif
+        </form>
+    </div>
+
+    <div class="card">
         @unless($canRecordAttendance)
             <div class="flash warn attendance-locked-notice">
                 Esta sesión está programada para el {{ $selectedSession->session_date?->format('d/m/Y') }}.
