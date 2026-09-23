@@ -147,7 +147,7 @@ class CoursePlanner
         return self::mergeSessions($course, $group, $schedule, $requiredSessions, $existingSessions);
     }
 
-    private static function holidaysFor(Course $course): Collection
+    public static function holidaysFor(Course $course): Collection
     {
         return Holiday::query()
             ->active()
@@ -161,7 +161,7 @@ class CoursePlanner
      * @param  Collection<int, ClassSession>  $sessions
      * @return array<int, string>
      */
-    private static function excludedDates(Collection $sessions): array
+    public static function excludedDates(Collection $sessions): array
     {
         return $sessions
             ->filter(fn (ClassSession $session) => $session->date_locked && $session->rescheduled_from)
@@ -169,6 +169,21 @@ class CoursePlanner
             ->unique()
             ->values()
             ->all();
+    }
+
+    /**
+     * Primer día del horario del curso posterior a $after que no sea feriado ni fecha excluida.
+     *
+     * @param  array<int, string>  $excludedDates
+     */
+    public static function scheduleDateAfter(Course $course, Carbon $after, Collection $holidays, array $excludedDates = []): ?Carbon
+    {
+        $schedule = $course->scheduleTemplate;
+        if (! $schedule) {
+            return null;
+        }
+
+        return self::buildScheduleDates($after->copy()->startOfDay()->addDay(), $schedule, 1, $holidays, $excludedDates)->first();
     }
 
     /**

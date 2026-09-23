@@ -69,6 +69,85 @@ class SessionRescheduler
     }
 
     /**
+     * Mueve la clase a $newDate y empuja las clases siguientes del grupo que choquen:
+     * cada una pasa al próximo día válido del horario (sin feriados), con su asistencia,
+     * tema y observaciones. El corrimiento se detiene cuando encuentra un hueco.
+     *
+     * @return int Cantidad de clases siguientes que se corrieron.
+     */
+    public function rescheduleWithCascade(ClassSession $session, Carbon $newDate): int
+    {
+        $group = $session->group()->firstOrFail();
+        $this->assertDateAllowed($group, $newDate);
+
+        $course = Course::query()->with('scheduleTemplate')->where('managed_group_id', $group->id)->first();
+        if (! $course || ! $course->scheduleTemplate) {
+            throw ValidationException::withMessages([
+                'session_date' => 'Este grupo no tiene un horario asignado, así que no se pueden correr las clases siguientes. Mueve solo esta clase.',
+            ]);
+        }
+
+        $holidays = CoursePlanner::holidaysFor($course);
+        $groupSessions = ClassSession::query()->where('group_id', $group->id)->get();
+        $excludedDates = CoursePlanner::excludedDates($groupSessions);
+        $oldDate = $session->session_date?->toDateString();
+        if ($oldDate && $oldDate !== $newDate->toDateString()) {
+            $excludedDates[] = $oldDate;
+        }
+
+        $chain = ClassSession::query()
+            ->where('group_id', $group->id)
+            ->where('id', '!=', $session->id)
+            ->whereDate('session_date', '>=', $newDate->toDateString())
+            ->orderBy('session_date')
+            ->orderBy('starts_at')
+            ->orderBy('id')
+            ->get();
+
+        $moves = [];
+        $previous = $newDate->copy()->startOfDay();
+        foreach ($chain as $other) {
+            $current = $other->session_date->copy()->startOfDay();
+            if ($current->gt($previous)) {
+                $previous = $current;
+
+                continue;
+            }
+
+            $next = CoursePlanner::scheduleDateAfter($course, $previous, $holidays, $excludedDates);
+            if (! $next) {
+                throw ValidationException::withMessages([
+                    'session_date' => 'No se encontró una fecha disponible en el horario para correr las clases siguientes.',
+                ]);
+            }
+            $moves[$other->id] = $next;
+            $previous = $next;
+        }
+
+        DB::transaction(function () use ($session, $newDate, $moves): void {
+            // Fechas temporales únicas para no chocar con el índice (grupo, fecha, hora) mientras se reordena.
+            // La clase que se mueve no lo necesita: su fecha original nunca es destino de otra.
+            foreach (array_keys($moves) as $id) {
+                ClassSession::query()->whereKey($id)->update([
+                    'session_date' => Carbon::create(1900, 1, 1)->addDays($id)->toDateString(),
+                ]);
+            }
+
+            foreach ($moves as $id => $date) {
+                ClassSession::query()->whereKey($id)->update(['session_date' => $date->toDateString()]);
+            }
+
+            $session->session_date = $newDate->toDateString();
+            $this->markMoved($session, $newDate);
+            $session->save();
+        });
+
+        $this->afterMove($group);
+
+        return count($moves);
+    }
+
+    /**
      * Un grupo no puede tener dos clases el mismo día a la misma hora (índice único).
      * Si la que ocupa ese lugar no tiene asistencia, es la clase planificada que la movida
      * viene a reemplazar: se elimina. Si tiene asistencia o recuperativas, se rechaza el cambio.
@@ -92,7 +171,7 @@ class SessionRescheduler
             if ($other->date_locked || $other->attendance_records_count > 0 || $other->makeup_requests_count > 0) {
                 throw ValidationException::withMessages([
                     'session_date' => sprintf(
-                        'Ya hay otra clase de este grupo el %s a las %s con asistencia registrada. Elige otra fecha u hora.',
+                        'Ya hay otra clase de este grupo el %s a las %s con asistencia registrada. Elige otra fecha u hora, o marca "Correr también las clases siguientes" en Asistencia.',
                         $date->format('d/m/Y'),
                         substr($time, 0, 5),
                     ),

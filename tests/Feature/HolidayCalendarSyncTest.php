@@ -362,6 +362,74 @@ class HolidayCalendarSyncTest extends TestCase
         $this->assertNotNull($target->fresh());
     }
 
+    public function test_cascade_moves_holiday_class_onto_attended_class_and_pushes_the_rest(): void
+    {
+        [, $course, $enrollment] = $this->fridayCourse();
+        $teacherUser = $this->teacherUserFor($course);
+        $count = $this->sessionCount($course);
+        $holidayClass = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-19')->firstOrFail();
+        $nextClass = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-26')->firstOrFail();
+        foreach ([$holidayClass, $nextClass] as $session) {
+            AttendanceRecord::query()->create([
+                'class_session_id' => $session->id,
+                'enrollment_id' => $enrollment->id,
+                'status' => $session->is($holidayClass) ? AttendanceRecord::STATUS_PRESENT : AttendanceRecord::STATUS_ABSENT,
+            ]);
+        }
+        $nextClass->update(['topic' => 'Unit 3']);
+        Holiday::query()->create(['campus_id' => null, 'name' => 'Feriado', 'holiday_date' => '2026-06-19', 'is_recurring' => false, 'status' => 'active']);
+        $this->actingAs($teacherUser)->post(route('courses.recalculate-calendar', $course))->assertForbidden();
+        CoursePlanner::sync($course->fresh(), true);
+        $this->assertSame($count + 1, $this->sessionCount($course));
+
+        // Sin cascada se rechaza (el 26/06 ya tiene asistencia).
+        $this->actingAs($teacherUser)
+            ->post(route('attendance.reschedule'), ['class_session_id' => $holidayClass->id, 'session_date' => '2026-06-26'])
+            ->assertSessionHasErrors('session_date');
+
+        // Con cascada: la del feriado pasa al 26/06 y la del 26/06 al 03/07, cada una con su asistencia.
+        $this->actingAs($teacherUser)
+            ->post(route('attendance.reschedule'), ['class_session_id' => $holidayClass->id, 'session_date' => '2026-06-26', 'cascade' => 1])
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('success', fn (string $message) => str_contains($message, 'Se corrieron'));
+
+        $this->assertSame('2026-06-26', $holidayClass->fresh()->session_date->toDateString());
+        $this->assertSame('2026-07-03', $nextClass->fresh()->session_date->toDateString());
+        $this->assertSame(AttendanceRecord::STATUS_PRESENT, AttendanceRecord::query()->where('class_session_id', $holidayClass->id)->value('status'));
+        $this->assertSame(AttendanceRecord::STATUS_ABSENT, AttendanceRecord::query()->where('class_session_id', $nextClass->id)->value('status'));
+        $this->assertSame('Unit 3', $nextClass->fresh()->topic);
+
+        // La clase extra que compensaba el feriado ya no hace falta: vuelve al total y a la fecha de fin originales.
+        $this->assertSame($count, $this->sessionCount($course));
+        $this->assertSame('2026-08-07', $course->fresh()->end_date->toDateString());
+        $dates = ClassSession::query()->where('group_id', $course->managed_group_id)->orderBy('session_date')->pluck('session_date')->map->toDateString()->all();
+        $this->assertSame(['2026-06-05', '2026-06-12', '2026-06-26', '2026-07-03', '2026-07-10', '2026-07-17', '2026-07-24', '2026-07-31', '2026-08-07'], $dates);
+        $this->assertSame(range(1, $count), ClassSession::query()->where('group_id', $course->managed_group_id)->orderBy('session_date')->pluck('sequence')->all());
+
+        // Estable: recalcular de nuevo no cambia nada.
+        CoursePlanner::sync($course->fresh(), true);
+        $this->assertSame($dates, ClassSession::query()->where('group_id', $course->managed_group_id)->orderBy('session_date')->pluck('session_date')->map->toDateString()->all());
+    }
+
+    public function test_cascade_skips_holidays_when_pushing(): void
+    {
+        [$admin, $course, $enrollment] = $this->fridayCourse();
+        $first = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-12')->firstOrFail();
+        $second = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-19')->firstOrFail();
+        AttendanceRecord::query()->create(['class_session_id' => $second->id, 'enrollment_id' => $enrollment->id, 'status' => AttendanceRecord::STATUS_PRESENT]);
+        // El 26/06 pasa a ser feriado sin recalcular todavía: la cascada no debe caer ahí.
+        Holiday::query()->create(['campus_id' => null, 'name' => 'Feriado', 'holiday_date' => '2026-06-26', 'is_recurring' => false, 'status' => 'active']);
+        ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-26')->delete();
+
+        $this->actingAs($admin)
+            ->post(route('attendance.reschedule'), ['class_session_id' => $first->id, 'session_date' => '2026-06-19', 'cascade' => 1])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('2026-06-19', $first->fresh()->session_date->toDateString());
+        $this->assertSame('2026-07-03', $second->fresh()->session_date->toDateString());
+        $this->assertFalse($this->hasSessionOn($course, '2026-06-26'));
+    }
+
     private function teacherUserFor(Course $course): User
     {
         return $this->makeTeacherUser(Teacher::query()->findOrFail($course->teacher_id));

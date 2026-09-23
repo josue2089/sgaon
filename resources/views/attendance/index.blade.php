@@ -56,7 +56,8 @@
         <div class="section-head">
             <h2 class="section-title">Fecha de la clase</h2>
             <div class="entity-sub">
-                Si la clase se dio (o se dará) otro día, cámbiala aquí. La asistencia se mueve con ella y el recálculo automático respetará el cambio.
+                Si la clase se dio (o se dará) otro día, cámbiala aquí. La asistencia se mueve con ella.
+                Si ese día el grupo ya tiene clase, marca "Correr también las clases siguientes": cada clase pasa al próximo día del horario con su asistencia.
             </div>
         </div>
         @if($sessionHoliday)
@@ -72,6 +73,10 @@
                 <input id="reschedule-date" type="date" name="session_date" required
                        value="{{ old('session_date', $selectedSession->session_date?->format('Y-m-d')) }}">
             </div>
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600;">
+                <input type="checkbox" name="cascade" value="1" @checked(old('cascade'))>
+                Correr también las clases siguientes
+            </label>
             <button class="btn secondary" type="submit" data-submit-busy-label="Moviendo…">Cambiar fecha</button>
             @if($selectedSession->date_locked && $selectedSession->rescheduled_from)
                 @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Movida desde el '.$selectedSession->rescheduled_from->format('d/m/Y')])

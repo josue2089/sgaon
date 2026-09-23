@@ -101,6 +101,7 @@ class AttendanceController extends Controller
         $data = $request->validate([
             'class_session_id' => ['required', 'exists:class_sessions,id'],
             'session_date' => ['required', 'date'],
+            'cascade' => ['nullable', 'boolean'],
         ]);
 
         $this->authorizeSession($request, (int) $data['class_session_id']);
@@ -108,23 +109,35 @@ class AttendanceController extends Controller
         $session = ClassSession::query()->findOrFail($data['class_session_id']);
         $previousDate = $session->session_date?->format('d/m/Y');
         $newDate = Carbon::parse($data['session_date'])->startOfDay();
+        $cascade = (bool) ($data['cascade'] ?? false);
 
         try {
-            $rescheduler->reschedule($session, $newDate);
+            $shifted = $cascade
+                ? $rescheduler->rescheduleWithCascade($session, $newDate)
+                : tap(0, fn () => $rescheduler->reschedule($session, $newDate));
         } catch (ValidationException $exception) {
             return redirect()
                 ->route('attendance.index', ['class_session_id' => $session->id])
-                ->withErrors($exception->errors());
+                ->withErrors($exception->errors())
+                ->withInput();
         }
 
-        AuditTrail::log($request, 'session.reschedule', $session, [
+        AuditTrail::log($request, $cascade ? 'session.reschedule.cascade' : 'session.reschedule', $session, [
             'from' => $previousDate,
             'to' => $newDate->toDateString(),
+            'shifted_following' => $shifted,
         ]);
+
+        $message = "Clase movida del {$previousDate} al {$newDate->format('d/m/Y')}.";
+        if ($cascade) {
+            $message .= $shifted > 0
+                ? " Se corrieron {$shifted} clase(s) siguiente(s) con su asistencia."
+                : ' No hizo falta correr otras clases.';
+        }
 
         return redirect()
             ->route('attendance.index', ['class_session_id' => $session->id])
-            ->with('success', "Clase movida del {$previousDate} al {$newDate->format('d/m/Y')}.");
+            ->with('success', $message);
     }
 
     private function authorizeSession(Request $request, int $sessionId): void
