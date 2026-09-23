@@ -7,7 +7,9 @@ use App\Models\Course;
 use App\Models\Group;
 use App\Services\SessionRescheduler;
 use App\Support\AuditTrail;
+use App\Support\CoursePlanner;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -114,6 +116,16 @@ class ClassSessionController extends Controller
         }
         $data['campus_id'] = $this->campusId() ?: $group->campus_id;
 
+        if (! empty($data['starts_at']) && ClassSession::query()
+            ->where('group_id', $group->id)
+            ->whereDate('session_date', $data['session_date'])
+            ->where('starts_at', $data['starts_at'])
+            ->exists()) {
+            throw ValidationException::withMessages([
+                'session_date' => 'Ya existe una clase de este grupo en esa fecha y hora.',
+            ]);
+        }
+
         ClassSession::create($data);
 
         return redirect()->route('sessions.index')->with('success', 'Sesión creada.');
@@ -161,16 +173,19 @@ class ClassSessionController extends Controller
         $data['campus_id'] = $this->campusId() ?: $group->campus_id;
 
         $previousGroupId = $session->group_id;
-        $session->fill($data);
-        $rescheduler->markMoved($session, $sessionDate);
-        $session->save();
+        DB::transaction(function () use ($session, $data, $group, $sessionDate, $rescheduler): void {
+            $rescheduler->freeSlot($session, (int) $group->id, $sessionDate, $data['starts_at'] ?? $session->starts_at);
+            $session->fill($data);
+            $rescheduler->markMoved($session, $sessionDate);
+            $session->save();
+        });
         AuditTrail::log($request, 'session.update', $session, $data);
 
-        $rescheduler->syncEndDates($group);
+        $rescheduler->afterMove($group);
         if ($previousGroupId && (int) $previousGroupId !== (int) $group->id) {
             $previousGroup = Group::find($previousGroupId);
             if ($previousGroup) {
-                $rescheduler->syncEndDates($previousGroup);
+                $rescheduler->afterMove($previousGroup);
             }
         }
 
@@ -194,7 +209,7 @@ class ClassSessionController extends Controller
     {
         foreach (['starts_at', 'ends_at'] as $field) {
             if (! empty($data[$field])) {
-                $data[$field] = substr((string) $data[$field], 0, 5);
+                $data[$field] = CoursePlanner::normalizeTime(substr((string) $data[$field], 0, 5));
             }
         }
 

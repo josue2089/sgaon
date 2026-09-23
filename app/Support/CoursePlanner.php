@@ -273,10 +273,30 @@ class CoursePlanner
         $availableByDate = $existingSessions
             ->groupBy(fn (ClassSession $session) => $session->session_date?->toDateString() ?? '');
 
+        // 1) Decidir qué sesión existente ocupa cada fecha (si dos comparten fecha, gana la protegida).
         $usedSessionIds = [];
-
+        $plan = [];
         foreach ($dates as $index => $date) {
-            $dateKey = $date->toDateString();
+            $candidate = ($availableByDate->get($date->toDateString()) ?? collect())
+                ->reject(fn (ClassSession $session) => in_array($session->id, $usedSessionIds, true))
+                ->sortByDesc(fn (ClassSession $session) => self::sessionIsProtected($session) ? 1 : 0)
+                ->first();
+            if ($candidate) {
+                $usedSessionIds[] = $candidate->id;
+            }
+            $plan[] = [$index, $date, $candidate];
+        }
+
+        // 2) Borrar primero las sobrantes sin protección, para no chocar con el índice único
+        //    (grupo, fecha, hora) al actualizar o crear las demás.
+        foreach ($existingSessions as $session) {
+            if (! in_array($session->id, $usedSessionIds, true) && ! self::sessionIsProtected($session)) {
+                $session->delete();
+            }
+        }
+
+        // 3) Aplicar el plan.
+        foreach ($plan as [$index, $date, $candidate]) {
             $attributes = self::sessionAttributes(
                 $course,
                 $group,
@@ -287,14 +307,7 @@ class CoursePlanner
                 includeTimestamps: false,
             );
 
-            // Si dos sesiones comparten fecha, conservar la protegida; la otra se descarta.
-            $candidate = ($availableByDate->get($dateKey) ?? collect())
-                ->reject(fn (ClassSession $session) => in_array($session->id, $usedSessionIds, true))
-                ->sortByDesc(fn (ClassSession $session) => self::sessionIsProtected($session) ? 1 : 0)
-                ->first();
-
             if ($candidate) {
-                $usedSessionIds[] = $candidate->id;
                 $update = $attributes;
                 unset($update['topic'], $update['program_status'], $update['program_notes']);
                 if ($candidate->date_locked) {
@@ -309,22 +322,13 @@ class CoursePlanner
         }
 
         foreach ($existingSessions as $session) {
-            if (in_array($session->id, $usedSessionIds, true)) {
-                continue;
+            $sharesDate = ($availableByDate->get($session->session_date?->toDateString() ?? '') ?? collect())->count() > 1;
+            if (! in_array($session->id, $usedSessionIds, true) && self::sessionIsProtected($session) && ! $session->date_locked && ! $sharesDate) {
+                $session->update([
+                    'starts_at' => $schedule->starts_at,
+                    'ends_at' => $schedule->ends_at,
+                ]);
             }
-
-            if (self::sessionIsProtected($session)) {
-                if (! $session->date_locked) {
-                    $session->update([
-                        'starts_at' => $schedule->starts_at,
-                        'ends_at' => $schedule->ends_at,
-                    ]);
-                }
-
-                continue;
-            }
-
-            $session->delete();
         }
 
         return self::resequence($course, $group, $requiredSessions);

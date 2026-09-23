@@ -295,6 +295,73 @@ class HolidayCalendarSyncTest extends TestCase
         $this->assertFalse($this->hasSessionOn($course, '2026-06-05'));
     }
 
+    public function test_moving_onto_an_occupied_date_replaces_the_planned_class(): void
+    {
+        [$admin, $course, $enrollment] = $this->fridayCourse();
+        $count = $this->sessionCount($course);
+        $session = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-19')->firstOrFail();
+        AttendanceRecord::query()->create([
+            'class_session_id' => $session->id,
+            'enrollment_id' => $enrollment->id,
+            'status' => AttendanceRecord::STATUS_PRESENT,
+        ]);
+        $this->actingAs($admin)->post(route('holidays.store'), $this->holidayPayload($course, '2026-06-19'));
+
+        // Mismo grupo, misma fecha y misma hora que la clase planificada del 26/06 (índice único en BD).
+        $this->actingAs($admin)
+            ->put(route('sessions.update', $session), $this->sessionPayload($session, '2026-06-26'))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $onDate = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-26')->get();
+        $this->assertCount(1, $onDate);
+        $this->assertSame($session->id, $onDate->first()->id);
+        $this->assertSame($count, $this->sessionCount($course));
+        $this->assertSame(1, AttendanceRecord::query()->where('class_session_id', $session->id)->count());
+    }
+
+    public function test_attendance_reschedule_onto_occupied_date_works_for_teacher(): void
+    {
+        [, $course] = $this->fridayCourse();
+        $teacherUser = $this->teacherUserFor($course);
+        $count = $this->sessionCount($course);
+        $session = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-19')->firstOrFail();
+
+        $this->actingAs($teacherUser)
+            ->post(route('attendance.reschedule'), ['class_session_id' => $session->id, 'session_date' => '2026-06-26'])
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('success');
+
+        $this->assertSame('2026-06-26', $session->fresh()->session_date->toDateString());
+        $this->assertSame(1, ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-26')->count());
+        $this->assertFalse($this->hasSessionOn($course, '2026-06-19'));
+        $this->assertSame($count, $this->sessionCount($course));
+    }
+
+    public function test_moving_onto_a_class_with_attendance_is_rejected_without_error_500(): void
+    {
+        [$admin, $course, $enrollment] = $this->fridayCourse();
+        $target = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-26')->firstOrFail();
+        AttendanceRecord::query()->create([
+            'class_session_id' => $target->id,
+            'enrollment_id' => $enrollment->id,
+            'status' => AttendanceRecord::STATUS_PRESENT,
+        ]);
+        $session = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-19')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->post(route('attendance.reschedule'), ['class_session_id' => $session->id, 'session_date' => '2026-06-26'])
+            ->assertRedirect()
+            ->assertSessionHasErrors('session_date');
+
+        $this->actingAs($admin)
+            ->put(route('sessions.update', $session), $this->sessionPayload($session, '2026-06-26'))
+            ->assertSessionHasErrors('session_date');
+
+        $this->assertSame('2026-06-19', $session->fresh()->session_date->toDateString());
+        $this->assertNotNull($target->fresh());
+    }
+
     private function teacherUserFor(Course $course): User
     {
         return $this->makeTeacherUser(Teacher::query()->findOrFail($course->teacher_id));
