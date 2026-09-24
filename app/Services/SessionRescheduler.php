@@ -63,9 +63,8 @@ class SessionRescheduler
             $session->session_date = $newDate->toDateString();
             $this->markMoved($session, $newDate);
             $session->save();
+            $this->afterMove($group);
         });
-
-        $this->afterMove($group);
     }
 
     /**
@@ -124,7 +123,7 @@ class SessionRescheduler
             $previous = $next;
         }
 
-        DB::transaction(function () use ($session, $newDate, $moves): void {
+        DB::transaction(function () use ($session, $group, $newDate, $moves): void {
             // Fechas temporales únicas para no chocar con el índice (grupo, fecha, hora) mientras se reordena.
             // La clase que se mueve no lo necesita: su fecha original nunca es destino de otra.
             foreach (array_keys($moves) as $id) {
@@ -140,9 +139,8 @@ class SessionRescheduler
             $session->session_date = $newDate->toDateString();
             $this->markMoved($session, $newDate);
             $session->save();
+            $this->afterMove($group);
         });
-
-        $this->afterMove($group);
 
         return count($moves);
     }
@@ -184,6 +182,8 @@ class SessionRescheduler
 
     /**
      * Tras mover una clase, recalcula el curso (mantiene el total de clases y la fecha de fin).
+     * Debe llamarse dentro de la misma transacción que el movimiento: si el recálculo falla,
+     * se lanza el error y se revierte todo (así nunca queda una clase planificada borrada sin reponer).
      */
     public function afterMove(Group $group): void
     {
@@ -192,8 +192,11 @@ class SessionRescheduler
         if ($course && $course->status === 'active' && $course->schedule_template_id && $course->start_date && $course->academic_hours) {
             try {
                 CoursePlanner::sync($course, true);
-            } catch (ValidationException) {
-                // Curso con datos inconsistentes (se reporta en "Recalcular calendario"); el cambio manual se conserva.
+            } catch (ValidationException $exception) {
+                throw ValidationException::withMessages([
+                    'session_date' => 'No se pudo mover la clase porque el calendario del curso no se puede recalcular: '
+                        .(collect($exception->errors())->flatten()->first() ?? 'datos inconsistentes.'),
+                ]);
             }
         }
 

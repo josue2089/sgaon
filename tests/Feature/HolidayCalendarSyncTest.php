@@ -430,6 +430,47 @@ class HolidayCalendarSyncTest extends TestCase
         $this->assertFalse($this->hasSessionOn($course, '2026-06-26'));
     }
 
+    public function test_move_in_course_whose_classes_start_before_its_start_date_keeps_all_classes(): void
+    {
+        // Caso Primary 3A: el curso dice que empieza una semana después de su primera clase.
+        [$admin, $course, $enrollment] = $this->fridayCourse();
+        $count = $this->sessionCount($course);
+        Course::query()->whereKey($course->id)->update(['start_date' => '2026-06-12']);
+        $attended = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-19')->firstOrFail();
+        AttendanceRecord::query()->create(['class_session_id' => $attended->id, 'enrollment_id' => $enrollment->id, 'status' => AttendanceRecord::STATUS_PRESENT]);
+
+        // Se mueve la clase con asistencia sobre la clase planificada del 26/06 (que se reemplaza).
+        $this->actingAs($admin)
+            ->put(route('sessions.update', $attended), $this->sessionPayload($attended, '2026-06-26'))
+            ->assertSessionHasNoErrors();
+
+        $sequences = ClassSession::query()->where('group_id', $course->managed_group_id)->orderBy('session_date')->pluck('sequence')->all();
+        $this->assertSame($count, $this->sessionCount($course), 'No debe perderse ninguna clase.');
+        $this->assertSame(range(1, $count), $sequences, 'La numeración no debe tener saltos.');
+        $this->assertSame('2026-06-26', $attended->fresh()->session_date->toDateString());
+    }
+
+    public function test_move_is_rolled_back_when_course_cannot_be_recalculated(): void
+    {
+        [$admin, $course, $enrollment] = $this->fridayCourse();
+        $count = $this->sessionCount($course);
+        $first = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-05')->firstOrFail();
+        AttendanceRecord::query()->create(['class_session_id' => $first->id, 'enrollment_id' => $enrollment->id, 'status' => AttendanceRecord::STATUS_PRESENT]);
+        // Asistencia antes de la fecha de inicio: el curso no se puede recalcular.
+        Course::query()->whereKey($course->id)->update(['start_date' => '2026-06-12']);
+        $session = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-19')->firstOrFail();
+        $planned = ClassSession::query()->where('group_id', $course->managed_group_id)->whereDate('session_date', '2026-06-26')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->post(route('attendance.reschedule'), ['class_session_id' => $session->id, 'session_date' => '2026-06-26'])
+            ->assertSessionHasErrors('session_date');
+
+        $this->assertSame('2026-06-19', $session->fresh()->session_date->toDateString());
+        $this->assertFalse((bool) $session->fresh()->date_locked);
+        $this->assertNotNull($planned->fresh(), 'La clase planificada no debe borrarse si el movimiento no se completa.');
+        $this->assertSame($count, $this->sessionCount($course));
+    }
+
     private function teacherUserFor(Course $course): User
     {
         return $this->makeTeacherUser(Teacher::query()->findOrFail($course->teacher_id));

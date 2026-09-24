@@ -173,21 +173,21 @@ class ClassSessionController extends Controller
         $data['campus_id'] = $this->campusId() ?: $group->campus_id;
 
         $previousGroupId = $session->group_id;
-        DB::transaction(function () use ($session, $data, $group, $sessionDate, $rescheduler): void {
+        DB::transaction(function () use ($session, $data, $group, $sessionDate, $rescheduler, $previousGroupId): void {
             $rescheduler->freeSlot($session, (int) $group->id, $sessionDate, $data['starts_at'] ?? $session->starts_at);
             $session->fill($data);
             $rescheduler->markMoved($session, $sessionDate);
             $session->save();
+
+            $rescheduler->afterMove($group);
+            if ($previousGroupId && (int) $previousGroupId !== (int) $group->id) {
+                $previousGroup = Group::find($previousGroupId);
+                if ($previousGroup) {
+                    $rescheduler->afterMove($previousGroup);
+                }
+            }
         });
         AuditTrail::log($request, 'session.update', $session, $data);
-
-        $rescheduler->afterMove($group);
-        if ($previousGroupId && (int) $previousGroupId !== (int) $group->id) {
-            $previousGroup = Group::find($previousGroupId);
-            if ($previousGroup) {
-                $rescheduler->afterMove($previousGroup);
-            }
-        }
 
         if ($request->input('redirect_to') === 'course') {
             $course = Course::query()->where('managed_group_id', $group->id)->first() ?? $group->course;

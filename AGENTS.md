@@ -91,7 +91,8 @@ Guía para agentes y desarrolladores que trabajan en este repositorio.
 - Índice único `(group_id, session_date, starts_at)` en `class_sessions`: al mover, `SessionRescheduler::freeSlot` reemplaza la clase planificada sin asistencia o rechaza si la tiene. Horas siempre `H:i:s`.
 - Cascada (`SessionRescheduler::rescheduleWithCascade`, casilla "Correr también las clases siguientes" en Asistencia): la clase entra en la fecha y las siguientes que chocan pasan al próximo día del horario (sin feriados) con su asistencia, tema y notas; luego se recalcula el curso.
 - Clases con asistencia en un feriado NO ocupan lugar: se mantienen, se avisan y se agrega la clase al final. No cambiar esto sin revisar `SendLevelRenewalReminders` (usa `courses.end_date`).
-- Si hay asistencia y la primera clase regular no coincide con la primera fecha válida del horario, el recálculo se omite con un mensaje: se corrige ajustando la fecha de inicio del curso.
+- El recálculo solo se bloquea si hay clases con asistencia (no movidas a mano) ANTES de la fecha de inicio del curso; se corrige ajustando la fecha de inicio. Clases sin asistencia antes del inicio se eliminan al recalcular.
+- Mover una clase y recalcular el curso es atómico (`SessionRescheduler::afterMove` dentro de la transacción): si el recálculo falla, se revierte todo y se muestra el motivo. Nunca tragarse ese error: dejaría una clase planificada borrada sin reponer.
 
 ## Módulos funcionales
 

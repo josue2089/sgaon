@@ -120,20 +120,20 @@ class CoursePlanner
 
         if ($protectedSessions->isNotEmpty()) {
             $holidays = self::holidaysFor($course);
-            $excludedDates = self::excludedDates($existingSessions);
-            $firstScheduled = self::buildScheduleDates($course->start_date, $schedule, 1, $holidays, $excludedDates)->first();
+            $firstScheduled = self::buildScheduleDates($course->start_date, $schedule, 1, $holidays)->first();
 
-            // Se ignoran las clases movidas a mano y las que caen en feriado/fecha excluida: no definen el inicio del curso.
-            $firstRegular = $existingSessions->first(fn (ClassSession $session) => ! $session->date_locked
+            // Solo se bloquea si hay asistencia ANTES del inicio del curso: regenerar dejaría esas clases
+            // fuera del calendario. Las clases movidas a mano no cuentan (fueron decisión del usuario).
+            $attendedBeforeStart = $protectedSessions->first(fn (ClassSession $session) => ! $session->date_locked
                 && $session->session_date
-                && ! self::isHoliday($session->session_date, $holidays)
-                && ! in_array($session->session_date->toDateString(), $excludedDates, true));
+                && $firstScheduled
+                && $session->session_date->lt($firstScheduled));
 
-            if ($firstRegular && $firstScheduled && $firstRegular->session_date->toDateString() !== $firstScheduled->toDateString()) {
+            if ($attendedBeforeStart) {
                 throw ValidationException::withMessages([
                     'start_date' => sprintf(
-                        'La primera clase del curso (%s) no coincide con su fecha de inicio (%s) y ya hay asistencia registrada. Ajusta la fecha de inicio en "Editar curso" para que coincida con la primera clase real.',
-                        $firstRegular->session_date->format('d/m/Y'),
+                        'Hay una clase con asistencia el %s, antes de la fecha de inicio del curso (%s). Ajusta la fecha de inicio en "Editar curso" para que incluya esa clase.',
+                        $attendedBeforeStart->session_date->format('d/m/Y'),
                         $firstScheduled->format('d/m/Y'),
                     ),
                 ]);
