@@ -137,6 +137,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::get('/finance/students/{student}/history', [FinanceController::class, 'studentHistory'])->name('finance.students.history');
             Route::post('/finance/charges', [FinanceController::class, 'storeCharge'])->name('finance.charges.store');
             Route::post('/finance/payments', [FinanceController::class, 'storePayment'])->name('finance.payments.store');
+            Route::post('/finance/payments/{payment}/void', [FinanceController::class, 'voidPayment'])->name('finance.payments.void');
         Route::patch('/finance/payment-requests/{paymentRequest}', [FinanceController::class, 'reviewPaymentRequest'])->name('finance.payment-requests.review');
         });
         Route::middleware('permission:reports.view')->group(function () {

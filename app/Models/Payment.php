@@ -28,6 +28,8 @@ class Payment extends Model
         'received_by',
         'notes',
         'voided_at',
+        'voided_by',
+        'void_reason',
     ];
 
     protected function casts(): array
@@ -61,6 +63,11 @@ class Payment extends Model
     public function makeupRequest()
     {
         return $this->belongsTo(MakeupRequest::class);
+    }
+
+    public function voidedBy()
+    {
+        return $this->belongsTo(User::class, 'voided_by');
     }
 
     public function receivedBy()

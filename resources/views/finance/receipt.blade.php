@@ -9,9 +9,16 @@
         <button class="btn secondary" type="button" onclick="window.print()">Imprimir</button>
         <a class="btn secondary" href="{{ route('finance.receipts.pdf', $receipt) }}">Exportar PDF</a>
         <a class="btn secondary" href="{{ route('finance.students.history', $payment->student) }}">Historial del alumno</a>
+        @include('partials.finance.void-payment', ['payment' => $payment])
         <a class="btn secondary" href="{{ route('finance.index') }}">Volver</a>
     </div>
 </div>
+
+@if($payment->voided_at)
+    <div class="flash warn">
+        Pago ANULADO el {{ $payment->voided_at->format('d/m/Y') }}{{ $payment->voidedBy ? ' por '.$payment->voidedBy->name : '' }}. Motivo: {{ $payment->void_reason ?: 'Sin motivo' }}
+    </div>
+@endif
 
 <div class="detail-grid">
     <div class="card">

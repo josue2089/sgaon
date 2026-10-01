@@ -494,8 +494,8 @@ class StudentController extends Controller
                 ? $currentCourse->end_date->copy()->subDays((int) $currentCourseLevel->reminder_days_before)
                 : null,
             'attendance_rate' => $attendanceRate,
-            'charged_total' => (float) $student->charges->sum('amount'),
-            'paid_total' => (float) $student->payments->sum('amount'),
+            'charged_total' => (float) $student->charges->whereNull('voided_at')->sum('amount'),
+            'paid_total' => (float) $student->payments->whereNull('voided_at')->sum('amount'),
             'outstanding_total' => (float) $student->charges->sum(fn (Charge $charge) => FinanceReconcile::outstandingForCharge($charge)),
         ];
 

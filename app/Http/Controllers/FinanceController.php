@@ -23,6 +23,7 @@ use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
 use App\Services\ChargeRegistrationService;
 use App\Services\PaymentRegistrationService;
+use App\Services\PaymentVoidService;
 use App\Services\FinanceSummaryExportService;
 use App\Services\PaymentReceiptNotifier;
 use App\Services\ReceiptPdfService;
@@ -337,6 +338,21 @@ class FinanceController extends Controller
         return back()->with('success', 'Pago registrado y recibo generado. Se envió el comprobante por email.');
     }
 
+    public function voidPayment(Request $request, Payment $payment, PaymentVoidService $voidService): RedirectResponse
+    {
+        if (! CampusScope::userCanAccessCampus($request->user(), (int) $payment->campus_id)) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $voidService->void($payment, $request->user(), $data['reason'], $request);
+
+        return back()->with('success', 'Pago anulado. Los cargos asociados se recalcularon.');
+    }
+
     public function reviewPaymentRequest(Request $request, ChargePaymentRequest $paymentRequest): RedirectResponse
     {
         if (! CampusScope::userCanAccessCampus($request->user(), (int) $paymentRequest->campus_id)) {
@@ -512,7 +528,7 @@ class FinanceController extends Controller
             return [
                 'type' => 'payment',
                 'date' => $payment->paid_at_datetime ?? $payment->paid_at ?? $payment->created_at,
-                'title' => 'Pago registrado',
+                'title' => $payment->voided_at ? 'Pago anulado' : 'Pago registrado',
                 'subtitle' => $payment->receipt->receipt_number ?? 'Sin recibo',
                 'amount' => (float) $payment->amount,
                 'meta' => [
@@ -520,6 +536,9 @@ class FinanceController extends Controller
                     'moneda' => $payment->currency ?? PaymentCurrencyConverter::CURRENCY_USD,
                     'monto' => MoneyFormat::dualLine($payment),
                     'referencia' => $payment->reference ?: 'Sin referencia',
+                    'anulacion' => $payment->voided_at
+                        ? $payment->voided_at->format('d/m/Y').' · '.($payment->void_reason ?: 'Sin motivo')
+                        : null,
                     'cargos' => $allocations->map(function ($allocation) {
                         $charge = $allocation->charge;
 
@@ -538,8 +557,8 @@ class FinanceController extends Controller
 
     private function buildStudentFinanceSummary(Student $student): array
     {
-        $totalCharged = (float) $student->charges->sum('amount');
-        $totalPaid = (float) $student->payments->sum('amount');
+        $totalCharged = (float) $student->charges->whereNull('voided_at')->sum('amount');
+        $totalPaid = (float) $student->payments->whereNull('voided_at')->sum('amount');
         $outstanding = (float) $student->charges->sum(
             fn (Charge $charge) => FinanceReconcile::outstandingForCharge($charge)
         );
