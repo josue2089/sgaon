@@ -40,7 +40,7 @@ class PortalController extends Controller
             ])->get();
 
         $charges = $student->charges()->latest('due_date')->get();
-        $payments = $student->payments()->latest('paid_at')->get();
+        $payments = $student->payments()->whereNull('voided_at')->latest('paid_at')->get();
         $makeupRequests = $student->makeupRequests()
             ->with([
                 'missedSession.group.course.program',

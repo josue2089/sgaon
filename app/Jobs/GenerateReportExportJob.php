@@ -86,7 +86,7 @@ class GenerateReportExportJob implements ShouldQueue
 
                 fputcsv($handle, []);
                 fputcsv($handle, ['student', 'paid_at', 'currency', 'original_amount', 'exchange_rate', 'amount_usd', 'method', 'reference']);
-                $paymentsQuery = \App\Models\Payment::query()->with(['student'])->latest();
+                $paymentsQuery = \App\Models\Payment::query()->whereNull('voided_at')->with(['student'])->latest();
                 if ($export->campus_id) {
                     $paymentsQuery->where('campus_id', $export->campus_id);
                 }
