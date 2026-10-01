@@ -99,7 +99,7 @@ class ReportController extends Controller
             return $this->paymentsDetailCsv($request);
         }
 
-        $paymentsQuery = Payment::query()->with(['student', 'paymentMethod'])->latest();
+        $paymentsQuery = Payment::query()->whereNull('voided_at')->with(['student', 'paymentMethod'])->latest();
         if ($this->campusId($request)) {
             $paymentsQuery->where('campus_id', $this->campusId($request));
         }
@@ -428,7 +428,7 @@ class ReportController extends Controller
 
     private function paymentsDetailCsv(Request $request): StreamedResponse
     {
-        $query = Payment::query()->with(['student'])->latest();
+        $query = Payment::query()->whereNull('voided_at')->with(['student'])->latest();
         if ($this->campusId($request)) {
             $query->where('campus_id', $this->campusId($request));
         }

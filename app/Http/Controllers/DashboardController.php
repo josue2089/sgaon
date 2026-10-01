@@ -45,7 +45,7 @@ class DashboardController extends Controller
         $chargesQuery = CampusScope::apply(Charge::where('status', '!=', 'paid'), $user);
         $alertsQuery = CampusScope::apply(Alert::where('status', 'open'), $user);
         $attendanceQuery = AttendanceRecord::query();
-        $paymentsQuery = CampusScope::apply(Payment::query(), $user);
+        $paymentsQuery = CampusScope::apply(Payment::query()->whereNull('voided_at'), $user);
         $monthChargesQuery = CampusScope::apply(
             Charge::query()->whereBetween('due_date', [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()]),
             $user

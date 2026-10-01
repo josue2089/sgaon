@@ -22,7 +22,7 @@ class DataReconcile extends Command
         $activeStudentsQuery = Student::where('status', 'active');
         $enrollmentsQuery = Enrollment::query();
         $chargesQuery = Charge::query();
-        $paymentsQuery = Payment::query();
+        $paymentsQuery = Payment::query()->whereNull('voided_at');
 
         if ($year !== null) {
             $studentsQuery->whereYear('created_at', $year);

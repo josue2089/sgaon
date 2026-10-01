@@ -11,10 +11,13 @@ class FinanceReconcile
     {
         $directPaid = (float) Payment::query()
             ->where('charge_id', $charge->id)
+            ->whereNull('voided_at')
             ->whereDoesntHave('allocations')
             ->sum('amount');
 
-        $allocatedPaid = (float) $charge->paymentAllocations()->sum('amount_applied');
+        $allocatedPaid = (float) $charge->paymentAllocations()
+            ->whereHas('payment', fn ($query) => $query->whereNull('voided_at'))
+            ->sum('amount_applied');
 
         return $directPaid + $allocatedPaid;
     }
