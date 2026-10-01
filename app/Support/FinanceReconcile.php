@@ -26,6 +26,10 @@ class FinanceReconcile
 
     public static function syncCharge(Charge $charge): Charge
     {
+        if ($charge->voided_at) {
+            return $charge;
+        }
+
         $paidTotal = self::paidTotalForCharge($charge);
         $amount = (float) $charge->amount;
 
