@@ -18,6 +18,11 @@
             <option value="active" @selected($filters['status'] === 'active')>Activos</option>
             <option value="inactive" @selected($filters['status'] === 'inactive')>Inactivos</option>
         </select>
+        <select name="type">
+            <option value="">Todos los tipos</option>
+            <option value="regular" @selected($filters['type'] === 'regular')>Regulares</option>
+            <option value="extracurricular" @selected($filters['type'] === 'extracurricular')>Extracurriculares</option>
+        </select>
         <button class="btn secondary" type="submit">Filtrar</button>
     </div>
 </form>
@@ -42,7 +47,12 @@
                 @foreach($programs as $program)
                     <tr>
                         <td>
-                            <div class="table-title">{{ $program->name }}</div>
+                            <div class="table-title">
+                                {{ $program->name }}
+                                @if($program->is_extracurricular)
+                                    <span class="status-pill info">Extracurricular</span>
+                                @endif
+                            </div>
                             <div class="table-sub">{{ $program->description ?: 'Sin descripción' }}</div>
                         </td>
                         <td>{{ $program->code }}</td>
