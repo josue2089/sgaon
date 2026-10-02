@@ -103,6 +103,7 @@ class VoidLegacyRecurringCharges extends Command
         foreach ($fakePayments as $payment) {
             $payment->update([
                 'voided_at' => now(),
+                'void_reason' => self::PAYMENT_VOID_REASON,
                 'status' => self::VOID_STATUS,
                 'notes' => trim(($payment->notes ?? '')."\nAnulado: ".self::PAYMENT_VOID_REASON),
             ]);
@@ -114,6 +115,7 @@ class VoidLegacyRecurringCharges extends Command
         Charge::query()->whereIn('id', $ids)->each(function (Charge $charge) use (&$studentIds): void {
             $charge->update([
                 'voided_at' => now(),
+                'void_reason' => self::VOID_REASON,
                 'status' => self::VOID_STATUS,
                 'notes' => trim($charge->notes."\nAnulado: ".self::VOID_REASON),
             ]);

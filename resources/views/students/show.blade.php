@@ -456,6 +456,7 @@
                         <th>Monto</th>
                         <th>Saldo</th>
                         <th>Estado</th>
+                        <th></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -465,7 +466,14 @@
                             <td>{{ $charge->course?->name ?? 'N/D' }}</td>
                             <td>{{ MoneyFormat::chargeAmount($charge) }}</td>
                             <td>{{ MoneyFormat::formatLedgerAmount(\App\Support\FinanceReconcile::outstandingForCharge($charge), $charge->currency) }}</td>
-                            <td>@include('partials.ui.status-badge', ['tone' => $charge->status === 'paid' ? 'ok' : ($charge->status === 'overdue' ? 'danger' : 'warn'), 'text' => ucfirst($charge->status)])</td>
+                            <td>
+                                @if($charge->voided_at)
+                                    <span class="table-sub">{{ $charge->void_reason ?: 'Anulado' }}</span>
+                                @else
+                                    @include('partials.ui.status-badge', ['tone' => $charge->status === 'paid' ? 'ok' : ($charge->status === 'overdue' ? 'danger' : 'warn'), 'text' => ucfirst($charge->status)])
+                                @endif
+                            </td>
+                            <td>@include('partials.finance.void-charge', ['charge' => $charge])</td>
                         </tr>
                     @endforeach
                     </tbody>
