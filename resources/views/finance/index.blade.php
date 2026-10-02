@@ -176,10 +176,15 @@
 </div>
 
 <div class="card">
-    <h3 class="section-title section-title-sm">Cuentas por cobrar</h3>
+    <div class="section-head">
+        <h3 class="section-title section-title-sm">{{ $showVoided ? 'Cargos anulados' : 'Cuentas por cobrar' }}</h3>
+        <a href="{{ route('finance.index', array_filter(['student_id' => $focusStudentId, 'anulados' => $showVoided ? null : 1])) }}">
+            {{ $showVoided ? 'Ver cuentas por cobrar' : 'Ver cargos anulados' }}
+        </a>
+    </div>
     <table>
         <thead>
-        <tr><th>Alumno</th><th>Curso</th><th>Grupo</th><th>Periodo</th><th>Concepto</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Mora</th><th>Status</th></tr>
+        <tr><th>Alumno</th><th>Curso</th><th>Grupo</th><th>Periodo</th><th>Concepto</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Mora</th><th>Status</th><th></th></tr>
         </thead>
         <tbody>
         @forelse($charges as $charge)
@@ -200,11 +205,18 @@
                 <td>{{ \App\Support\MoneyFormat::formatLedgerAmount($paidTotal, $charge->currencyCode()) }}</td>
                 <td>{{ \App\Support\MoneyFormat::formatLedgerAmount($balance, $charge->currencyCode()) }}</td>
                 <td>@include('partials.ui.status-badge', ['tone' => $moraTone, 'text' => $moraText])</td>
-                <td><span class="status-pill {{ $charge->status === 'paid' ? 'success' : ($charge->status === 'overdue' ? 'danger' : 'warn') }}">{{ $charge->status }}</span></td>
+                <td>
+                    @if($charge->voided_at)
+                        <div class="table-sub">{{ $charge->voided_at->format('d/m/Y') }} · {{ $charge->void_reason ?: 'Sin motivo' }}</div>
+                    @else
+                        <span class="status-pill {{ $charge->status === 'paid' ? 'success' : ($charge->status === 'overdue' ? 'danger' : 'warn') }}">{{ $charge->status }}</span>
+                    @endif
+                </td>
+                <td>@include('partials.finance.void-charge', ['charge' => $charge])</td>
             </tr>
         @empty
             <tr>
-                <td colspan="10">
+                <td colspan="11">
                     <div class="empty-state-inline">No hay cargos para el contexto seleccionado.</div>
                 </td>
             </tr>

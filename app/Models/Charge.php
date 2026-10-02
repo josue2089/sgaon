@@ -28,6 +28,8 @@ class Charge extends Model
         'status',
         'notes',
         'voided_at',
+        'voided_by',
+        'void_reason',
     ];
 
     protected function casts(): array
@@ -48,6 +50,11 @@ class Charge extends Model
     public function isEur(): bool
     {
         return $this->currencyCode() === PaymentCurrencyConverter::CURRENCY_EUR;
+    }
+
+    public function voidedBy()
+    {
+        return $this->belongsTo(User::class, 'voided_by');
     }
 
     public function student()

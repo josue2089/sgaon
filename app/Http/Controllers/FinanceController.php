@@ -22,6 +22,7 @@ use App\Support\FinanceSummary;
 use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
 use App\Services\ChargeRegistrationService;
+use App\Services\ChargeVoidService;
 use App\Services\PaymentRegistrationService;
 use App\Services\PaymentVoidService;
 use App\Services\FinanceSummaryExportService;
@@ -59,6 +60,9 @@ class FinanceController extends Controller
             ChargePaymentRequest::query()->with(['student', 'representative', 'charge.course', 'validator', 'paymentMethod'])->latest(),
             $user
         );
+
+        $showVoided = $request->boolean('anulados');
+        $showVoided ? $chargesQuery->whereNotNull('voided_at') : $chargesQuery->whereNull('voided_at');
 
         $focusStudentId = $request->integer('student_id') ?: null;
         if ($focusStudentId) {
@@ -126,6 +130,7 @@ class FinanceController extends Controller
             'periods' => $periodsQuery->get(),
             'paymentRequests' => $paymentRequestsQuery->take(20)->get(),
             'focusStudentId' => $focusStudentId,
+            'showVoided' => $showVoided,
             'criticalOverdueCount' => (int) $criticalOverdueCount,
             'bcvRate' => $bcvRate,
             'bcvEurRate' => $bcvEurRate,
@@ -338,6 +343,21 @@ class FinanceController extends Controller
         return back()->with('success', 'Pago registrado y recibo generado. Se envió el comprobante por email.');
     }
 
+    public function voidCharge(Request $request, Charge $charge, ChargeVoidService $voidService): RedirectResponse
+    {
+        if (! CampusScope::userCanAccessCampus($request->user(), (int) $charge->campus_id)) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $voidService->void($charge, $request->user(), $data['reason'], $request);
+
+        return back()->with('success', 'Cargo anulado. Ya no suma al saldo del alumno.');
+    }
+
     public function voidPayment(Request $request, Payment $payment, PaymentVoidService $voidService): RedirectResponse
     {
         if (! CampusScope::userCanAccessCampus($request->user(), (int) $payment->campus_id)) {
@@ -497,7 +517,7 @@ class FinanceController extends Controller
             return [
                 'type' => 'charge',
                 'date' => $charge->created_at,
-                'title' => 'Cargo generado',
+                'title' => $charge->voided_at ? 'Cargo anulado' : 'Cargo generado',
                 'subtitle' => trim(($charge->course->name ?? 'Sin curso').' · '.($charge->group->name ?? 'Sin grupo')),
                 'amount' => (float) $charge->amount,
                 'currency' => $charge->currencyCode(),
@@ -510,6 +530,9 @@ class FinanceController extends Controller
                     'periodo' => $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período'),
                     'estado' => $charge->status,
                     'saldo' => MoneyFormat::number(FinanceReconcile::outstandingForCharge($charge)),
+                    'anulacion' => $charge->voided_at
+                        ? $charge->voided_at->format('d/m/Y').' · '.($charge->void_reason ?: 'Sin motivo')
+                        : null,
                 ],
             ];
         });
