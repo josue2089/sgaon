@@ -15,12 +15,14 @@ class Program extends Model
         'status',
         'description',
         'base_price_eur',
+        'is_extracurricular',
     ];
 
     protected function casts(): array
     {
         return [
             'base_price_eur' => 'float',
+            'is_extracurricular' => 'boolean',
         ];
     }
 

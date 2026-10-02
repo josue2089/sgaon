@@ -19,6 +19,7 @@
             <div><strong>Nombre:</strong> {{ $program->name }}</div>
             <div><strong>Código:</strong> {{ $program->code }}</div>
             <div><strong>Estatus:</strong> {{ ucfirst($program->status) }}</div>
+            <div><strong>Tipo:</strong> {{ $program->is_extracurricular ? 'Extracurricular' : 'Regular' }}</div>
             <div><strong>Descripción:</strong> {{ $program->description ?: 'Sin descripción' }}</div>
             <div><strong>Precio base por defecto:</strong>
                 @if($program->base_price_eur)

@@ -15,6 +15,13 @@
             @endforeach
         </select>
     </div>
+    <div>
+        <label class="checkbox-inline">
+            <input type="checkbox" name="is_extracurricular" value="1" @checked(old('is_extracurricular', $program->is_extracurricular ?? false))>
+            Extracurricular
+        </label>
+        <p class="entity-sub">Actividades en colegios (inglés, robótica, danza, fútbol…) con cursos de todo el año escolar.</p>
+    </div>
     <div style="grid-column:1/-1;">
         <label>Descripción</label>
         <textarea name="description">{{ old('description', $program->description ?? '') }}</textarea>

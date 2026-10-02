@@ -14,6 +14,7 @@ class ProgramController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         $status = (string) $request->query('status', '');
+        $type = (string) $request->query('type', '');
 
         $query = Program::query()->withCount(['levels', 'courses'])->orderBy('name');
 
@@ -28,9 +29,13 @@ class ProgramController extends Controller
             $query->where('status', $status);
         }
 
+        if ($type !== '') {
+            $query->where('is_extracurricular', $type === 'extracurricular');
+        }
+
         return view('programs.index', [
             'programs' => $query->paginate(20)->withQueryString(),
-            'filters' => compact('q', 'status'),
+            'filters' => compact('q', 'status', 'type'),
         ]);
     }
 
@@ -80,12 +85,15 @@ class ProgramController extends Controller
 
     private function validatedData(Request $request, ?Program $program = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'code' => ['required', 'string', 'max:40', Rule::unique('programs', 'code')->ignore($program?->id)],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'description' => ['nullable', 'string'],
             'base_price_eur' => ['nullable', 'numeric', 'min:0'],
         ]);
+        $data['is_extracurricular'] = $request->boolean('is_extracurricular');
+
+        return $data;
     }
 }
