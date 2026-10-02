@@ -414,6 +414,7 @@
                         <th>Monto</th>
                         <th>Método</th>
                         <th>Recibo</th>
+                        <th></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -429,6 +430,7 @@
                                     Sin recibo
                                 @endif
                             </td>
+                            <td>@include('partials.finance.void-payment', ['payment' => $payment])</td>
                         </tr>
                     @endforeach
                     </tbody>

@@ -3,7 +3,7 @@
 @section('content')
 @php
     $chargesTotal = $charges->sum('amount');
-    $paymentsTotal = $payments->sum('amount');
+    $paymentsTotal = $payments->whereNull('voided_at')->sum('amount');
     $overdueCount = $charges->where('status', 'overdue')->count();
 @endphp
 <div class="module-head">
@@ -220,7 +220,7 @@
     <h3 class="section-title section-title-sm">Pagos recientes / Recibos</h3>
     <table>
         <thead>
-        <tr><th>Alumno</th><th>Moneda</th><th>Monto original</th><th>Monto aplicado</th><th>Tasa</th><th>Fecha</th><th>Recibo</th></tr>
+        <tr><th>Alumno</th><th>Moneda</th><th>Monto original</th><th>Monto aplicado</th><th>Tasa</th><th>Fecha</th><th>Recibo</th><th></th></tr>
         </thead>
         <tbody>
         @forelse($payments as $payment)
@@ -249,10 +249,11 @@
                         <div class="table-sub">1 cargo</div>
                     @endif
                 </td>
+                <td>@include('partials.finance.void-payment', ['payment' => $payment])</td>
             </tr>
         @empty
             <tr>
-                <td colspan="7">
+                <td colspan="8">
                     <div class="empty-state-inline">Aún no hay pagos registrados.</div>
                 </td>
             </tr>

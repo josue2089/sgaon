@@ -67,6 +67,7 @@
                     <div class="table-sub">{{ optional($item['date'])->format('d/m/Y H:i') ?: 'N/D' }}</div>
                     <div class="timeline-meta">
                         @foreach($item['meta'] as $label => $value)
+                            @continue($value === null)
                             <div><strong>{{ ucfirst($label) }}:</strong> {{ $value }}</div>
                         @endforeach
                     </div>

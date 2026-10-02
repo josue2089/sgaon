@@ -104,7 +104,10 @@
                 </td>
             </tr>
         </table>
-        <h1 class="title">Recibo {{ $receipt->receipt_number }}</h1>
+        <h1 class="title">Recibo {{ $receipt->receipt_number }}{{ $receipt->payment?->voided_at ? ' — ANULADO' : '' }}</h1>
+        @if($receipt->payment?->voided_at)
+            <p class="subtitle" style="color: #be123c; font-weight: 700;">Pago anulado el {{ $receipt->payment->voided_at->format('d/m/Y') }}. Motivo: {{ $receipt->payment->void_reason ?: 'Sin motivo' }}</p>
+        @endif
         <p class="subtitle">Detalle exacto de cargos aplicados por este pago</p>
     </div>
 

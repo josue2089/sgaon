@@ -24,6 +24,10 @@ class FinanceReconcile
 
     public static function outstandingForCharge(Charge $charge): float
     {
+        if ($charge->voided_at) {
+            return 0.0;
+        }
+
         return max(0, (float) $charge->amount - self::paidTotalForCharge($charge));
     }
 
