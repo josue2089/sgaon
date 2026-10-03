@@ -98,6 +98,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/operations/wizard/group', [OperationWizardController::class, 'storeGroup'])->name('operations.wizard.group');
         Route::post('/operations/wizard/session', [OperationWizardController::class, 'storeSession'])->name('operations.wizard.session');
         Route::post('/operations/wizard/enrollment', [OperationWizardController::class, 'storeEnrollment'])->name('operations.wizard.enrollment');
+        // Feriados: el master gestiona todo; el admin de sede, los días sin clase de su sede.
+        Route::resource('holidays', HolidayController::class)->except('show');
         Route::middleware('master.admin')->group(function () {
             Route::resource('admin-users', AdminUserController::class)
                 ->except(['show'])
@@ -109,7 +111,6 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::delete('campuses/{campus}/program-prices/{price}', [CampusProgramPriceController::class, 'destroy'])->name('campuses.program-prices.destroy');
             Route::resource('periods', PeriodController::class)->except('show');
             Route::resource('schedules', ScheduleTemplateController::class)->except('show');
-            Route::resource('holidays', HolidayController::class)->except('show');
             Route::resource('academic-levels', AcademicLevelController::class)->except('show');
             Route::resource('course-levels', CourseLevelController::class)->except('show');
             Route::resource('programs', ProgramController::class);

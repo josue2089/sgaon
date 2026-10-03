@@ -97,7 +97,7 @@ class HolidayCalendarSync
             $warnings[] = $course.': '.implode(', ', $dates);
         }
         if ($warnings !== []) {
-            $messages['warning'] = 'Estas sesiones tienen asistencia cargada en un feriado y no se movieron (revísalas desde la ficha del curso): '.implode(' · ', $warnings);
+            $messages['warning'] = 'Estas sesiones tienen asistencia cargada en un feriado o día sin clase y no se movieron (revísalas desde la ficha del curso): '.implode(' · ', $warnings);
         }
 
         if ($result['skipped'] !== []) {

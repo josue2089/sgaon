@@ -15,6 +15,8 @@ class Holiday extends Model
         'campus_id',
         'name',
         'holiday_date',
+        'end_date',
+        'kind',
         'month',
         'day',
         'is_recurring',
@@ -26,10 +28,20 @@ class Holiday extends Model
     {
         return [
             'holiday_date' => 'date',
+            'end_date' => 'date',
             'is_recurring' => 'boolean',
             'month' => 'integer',
             'day' => 'integer',
         ];
+    }
+
+    public const KIND_HOLIDAY = 'holiday';
+
+    public const KIND_SCHOOL_CLOSURE = 'school_closure';
+
+    public function getKindLabelAttribute(): string
+    {
+        return $this->kind === self::KIND_SCHOOL_CLOSURE ? 'Día sin clase del colegio' : 'Feriado';
     }
 
     public function campus()
@@ -63,13 +75,25 @@ class Holiday extends Model
                 && (int) $this->day === (int) $date->day;
         }
 
-        return $this->holiday_date?->isSameDay($date) ?? false;
+        if (! $this->holiday_date) {
+            return false;
+        }
+
+        if ($this->end_date) {
+            return $date->copy()->startOfDay()->betweenIncluded($this->holiday_date->copy()->startOfDay(), $this->end_date->copy()->startOfDay());
+        }
+
+        return $this->holiday_date->isSameDay($date);
     }
 
     public function getOccurrenceLabelAttribute(): string
     {
         if ($this->is_recurring) {
             return sprintf('Cada año · %02d/%02d', (int) $this->day, (int) $this->month);
+        }
+
+        if ($this->holiday_date && $this->end_date && ! $this->end_date->isSameDay($this->holiday_date)) {
+            return $this->holiday_date->format('d/m/Y').' al '.$this->end_date->format('d/m/Y');
         }
 
         return $this->holiday_date?->format('d/m/Y') ?? 'Sin fecha';
