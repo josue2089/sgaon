@@ -15,6 +15,7 @@ class Representative extends Model
         'first_name',
         'last_name',
         'document_id',
+        'nationality',
         'email',
         'phone',
         'address',

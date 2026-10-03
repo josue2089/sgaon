@@ -154,7 +154,8 @@
         @if($representative)
             <div class="detail-list detail-list-soft">
                 <div><strong>Nombre:</strong> {{ $representative->full_name }}</div>
-                <div><strong>Cédula:</strong> {{ $representative->document_id ?: 'N/D' }}</div>
+                <div><strong>Cédula:</strong> {{ $representative->nationality ? $representative->nationality.'-' : '' }}{{ $representative->document_id ?: 'N/D' }}</div>
+                <div><strong>Parentesco:</strong> {{ $representative->relation ?: 'N/D' }}</div>
                 <div><strong>Email:</strong> {{ $representative->email ?: 'N/D' }}</div>
                 <div><strong>Teléfono habitación:</strong> {{ $representative->home_phone ?: 'N/D' }}</div>
                 <div><strong>Celular:</strong> {{ $representative->mobile_phone ?: $representative->phone ?: 'N/D' }}</div>
@@ -313,6 +314,24 @@
         </div>
     </div>
 </div>
+
+@if($student->isExtracurricular() || $student->school_grade || $student->extracurricular_level || $student->teacher_observations)
+<div class="card" id="student-extracurricular">
+    <div class="section-head section-head-tight">
+        <h2 class="section-title section-title-md">Actividad extracurricular</h2>
+        <div class="entity-sub">Datos de la planilla de inscripción</div>
+    </div>
+    <div class="detail-list detail-list-soft">
+        <div><strong>Grado / Año:</strong> {{ $student->school_grade ?: 'N/D' }} · <strong>Sección:</strong> {{ $student->school_section ?: 'N/D' }}</div>
+        <div><strong>Edad:</strong> {{ $student->age ? $student->age.' años' : 'N/D' }}</div>
+        <div><strong>Teléfono de emergencia:</strong> {{ $student->emergency_phone ?: 'N/D' }}</div>
+        <div><strong>Nivel / Dominio actual:</strong> {{ $student->extracurricular_level ?: 'N/D' }}</div>
+        <div><strong>Objetivos / Competencias:</strong> {{ $student->extracurricular_objectives ?: 'N/D' }}</div>
+        <div><strong>Observaciones del docente:</strong> {{ $student->teacher_observations ?: 'Sin observaciones' }}</div>
+        <div><strong>Condición de pago / Matrícula:</strong> {{ $student->payment_condition ?: 'N/D' }}</div>
+    </div>
+</div>
+@endif
 
 <div class="card table-card" id="student-academic-history">
     <div class="section-head">
