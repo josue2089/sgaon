@@ -69,6 +69,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::delete('/students/{student}/attachments/{attachment}', [StudentController::class, 'destroyAttachment'])->name('students.attachments.destroy');
         Route::get('/students/{student}/enrollment-sheet', [StudentController::class, 'enrollmentSheet'])->name('students.enrollment-sheet');
         Route::get('/students/{student}/enrollment-sheet/pdf', [StudentController::class, 'enrollmentSheetPdf'])->name('students.enrollment-sheet.pdf');
+        Route::get('/students/{student}/extracurricular-sheet/pdf', [StudentController::class, 'extracurricularSheetPdf'])->name('students.extracurricular-sheet.pdf');
         Route::post('/students/{student}/payments', [StudentController::class, 'storePayment'])
             ->middleware('master.admin')
             ->name('students.payments.store');

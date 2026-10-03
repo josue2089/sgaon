@@ -20,6 +20,14 @@
         <input name="country" value="{{ old('country', $campus->country ?? '') }}">
     </div>
     <div>
+        <label>Logo de la sede (PNG o JPG)</label>
+        @if(!empty($campus->logo_path))
+            <img src="{{ \Illuminate\Support\Facades\Storage::url($campus->logo_path) }}" alt="Logo de {{ $campus->name }}" style="max-height:56px;display:block;margin-bottom:.5rem;">
+        @endif
+        <input type="file" name="logo" accept="image/png,image/jpeg">
+        <div class="form-hint">Se usa en la planilla de inscripción extracurricular. Ej. logo del colegio.</div>
+    </div>
+    <div>
         <label>Status</label>
         <select name="status" required>
             @foreach($statusOptions as $status)

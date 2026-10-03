@@ -10,7 +10,21 @@ class Campus extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'code', 'city', 'state', 'country', 'status'];
+    protected $fillable = ['name', 'code', 'city', 'state', 'country', 'logo_path', 'status'];
+
+    /**
+     * Logo de la sede como data URI para los PDF (DomPDF no lee URLs del disco público).
+     */
+    public function logoDataUri(): ?string
+    {
+        if (! $this->logo_path || ! \Illuminate\Support\Facades\Storage::disk('public')->exists($this->logo_path)) {
+            return null;
+        }
+
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+
+        return 'data:'.($disk->mimeType($this->logo_path) ?: 'image/png').';base64,'.base64_encode($disk->get($this->logo_path));
+    }
 
     public function students(): HasMany
     {

@@ -7,7 +7,7 @@
     </div>
 </div>
 <div class="card">
-    <form method="POST" action="{{ route('campuses.update', $campus) }}">
+    <form method="POST" action="{{ route('campuses.update', $campus) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         @include('campuses.form')

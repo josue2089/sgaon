@@ -101,6 +101,9 @@ class CampusController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatedData($request);
+        if ($request->hasFile('logo')) {
+            $data['logo_path'] = $request->file('logo')->store('campuses/logos', 'public');
+        }
         Campus::create($data);
 
         return redirect()->route('campuses.index')->with('success', 'Campus creado.');
@@ -117,6 +120,12 @@ class CampusController extends Controller
     public function update(Request $request, Campus $campus): RedirectResponse
     {
         $data = $this->validatedData($request, $campus);
+        if ($request->hasFile('logo')) {
+            if ($campus->logo_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($campus->logo_path);
+            }
+            $data['logo_path'] = $request->file('logo')->store('campuses/logos', 'public');
+        }
         $campus->update($data);
 
         return redirect()->route('campuses.index')->with('success', 'Campus actualizado.');
@@ -140,14 +149,18 @@ class CampusController extends Controller
 
     private function validatedData(Request $request, ?Campus $campus = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'code' => ['required', 'string', 'max:40', Rule::unique('campuses', 'code')->ignore($campus?->id)],
             'city' => ['nullable', 'string', 'max:120'],
             'state' => ['nullable', 'string', 'max:120'],
             'country' => ['nullable', 'string', 'max:120'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+            'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
         ]);
+        unset($data['logo']);
+
+        return $data;
     }
 
     private function campusDependencies(Campus $campus)

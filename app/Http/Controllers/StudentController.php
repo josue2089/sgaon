@@ -16,6 +16,7 @@ use App\Models\Representative;
 use App\Models\StudentAttachment;
 use App\Models\Student;
 use App\Support\AuditTrail;
+use App\Support\ExtracurricularSheet;
 use App\Support\CampusScope;
 use App\Support\FinanceReconcile;
 use App\Models\PaymentMethod;
@@ -444,6 +445,20 @@ class StudentController extends Controller
         ])->setPaper('a4');
 
         return $pdf->download('ficha-inscripcion-'.$student->id.'.pdf');
+    }
+
+    public function extracurricularSheetPdf(Student $student)
+    {
+        $this->authorizeStudent($student);
+
+        $enrollment = ExtracurricularSheet::enrollmentFor($student);
+        abort_unless($enrollment, 404, 'El alumno no tiene una inscripción extracurricular.');
+
+        $pdf = Pdf::loadView('students.extracurricular-sheet-pdf', ExtracurricularSheet::build($student, $enrollment) + [
+            'logoDataUri' => $this->buildLogoDataUri(),
+        ])->setPaper('a4');
+
+        return $pdf->download('planilla-extracurricular-'.$student->id.'.pdf');
     }
 
     private function detailData(Student $student): array
