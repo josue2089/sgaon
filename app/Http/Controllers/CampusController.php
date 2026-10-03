@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AcademicLevel;
 use App\Models\Alert;
 use App\Models\Campus;
+use App\Models\CampusProgramPrice;
 use App\Models\Charge;
 use App\Models\Course;
 use App\Models\Enrollment;
@@ -12,6 +13,7 @@ use App\Models\Group;
 use App\Models\Holiday;
 use App\Models\Payment;
 use App\Models\Period;
+use App\Models\Program;
 use App\Models\Receipt;
 use App\Models\ReportExport;
 use App\Models\Representative;
@@ -83,6 +85,8 @@ class CampusController extends Controller
             'campus' => $campus,
             'stats' => $stats,
             'usersByRole' => $usersByRole,
+            'programPrices' => CampusProgramPrice::query()->with('program')->where('campus_id', $campus->id)->get()->sortBy('program.name'),
+            'programs' => Program::query()->where('status', 'active')->orderBy('name')->get(),
         ]);
     }
 

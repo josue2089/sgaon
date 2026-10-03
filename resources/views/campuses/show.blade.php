@@ -61,6 +61,58 @@
 
 <div class="card" style="margin-top:1.25rem;">
     <div class="section-head">
+        <h2 class="section-title">Precios de mensualidad por programa</h2>
+    </div>
+    <p class="entity-sub">Al inscribir un alumno en esta sede, la mensualidad usa este precio. Si un programa no tiene precio aquí, se usa el precio del nivel o del programa (EUR).</p>
+    @if($programPrices->isNotEmpty())
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Programa</th><th>Precio mensual</th><th></th></tr></thead>
+                <tbody>
+                @foreach($programPrices as $price)
+                    <tr>
+                        <td>
+                            {{ $price->program?->name ?? 'Programa eliminado' }}
+                            @if($price->program?->is_extracurricular)
+                                <span class="status-pill info">Extracurricular</span>
+                            @endif
+                        </td>
+                        <td>{{ \App\Support\MoneyFormat::formatLedgerAmount($price->amount, $price->currency) }}</td>
+                        <td class="table-actions">
+                            <form method="POST" action="{{ route('campuses.program-prices.destroy', [$campus, $price]) }}" onsubmit="return confirm('¿Eliminar el precio de esta sede para {{ $price->program?->name }}?');">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn-link-danger" type="submit">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="empty-state-inline">Esta sede usa los precios generales de cada nivel o programa.</div>
+    @endif
+    <form method="POST" action="{{ route('campuses.program-prices.store', $campus) }}" class="fi-filter-bar" style="margin-top:1rem;">
+        @csrf
+        <select name="program_id" required>
+            <option value="">Programa…</option>
+            @foreach($programs as $program)
+                <option value="{{ $program->id }}" @selected((int) old('program_id') === $program->id)>{{ $program->name }}{{ $program->is_extracurricular ? ' (extracurricular)' : '' }}</option>
+            @endforeach
+        </select>
+        <input type="number" name="amount" min="0.01" step="0.01" value="{{ old('amount') }}" placeholder="Monto, ej. 35" required>
+        <select name="currency" required>
+            <option value="USD" @selected(old('currency', 'USD') === 'USD')>USD</option>
+            <option value="EUR" @selected(old('currency') === 'EUR')>EUR</option>
+        </select>
+        <button class="btn" type="submit">Guardar precio</button>
+    </form>
+    <p class="entity-sub">Si el programa ya tiene precio en esta sede, se reemplaza.</p>
+</div>
+
+<div class="card" style="margin-top:1.25rem;">
+    <div class="section-head">
         <h2 class="section-title">Accesos rápidos</h2>
     </div>
     <div class="form-actions">
