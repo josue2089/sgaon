@@ -18,7 +18,7 @@ class CoursePlanner
 
     public static function sync(Course $course, bool $regenerateSessions = true): Course
     {
-        if (! $course->schedule_template_id || ! $course->start_date || ! $course->academic_hours) {
+        if (! $course->hasCalendarSource()) {
             if ($regenerateSessions) {
                 return $course;
             }
@@ -50,15 +50,30 @@ class CoursePlanner
             ]);
         }
 
-        $requiredSessions = (int) ceil(($course->academic_hours * self::ACADEMIC_HOUR_MINUTES) / $slotMinutes);
-        if ($requiredSessions <= 0) {
-            throw ValidationException::withMessages([
-                'academic_hours' => 'La duración del curso debe ser mayor a cero.',
-            ]);
+        $isOpenEnded = $course->isExtracurricular();
+
+        if ($isOpenEnded) {
+            // Extracurricular: tantas clases como días de horario haya hasta la fecha de fin (sin tope).
+            $requiredSessions = self::scheduleDatesBetween($course->start_date, $course->end_date, $schedule, self::holidaysFor($course))->count();
+            if ($requiredSessions <= 0) {
+                throw ValidationException::withMessages([
+                    'end_date' => 'No hay días del horario entre la fecha de inicio y la fecha de fin.',
+                ]);
+            }
+        } else {
+            $requiredSessions = (int) ceil(($course->academic_hours * self::ACADEMIC_HOUR_MINUTES) / $slotMinutes);
+            if ($requiredSessions <= 0) {
+                throw ValidationException::withMessages([
+                    'academic_hours' => 'La duración del curso debe ser mayor a cero.',
+                ]);
+            }
         }
 
         $group = self::syncManagedGroup($course);
         $endDate = self::syncSessions($course, $group, $schedule, $requiredSessions);
+        if ($isOpenEnded) {
+            $endDate = $course->end_date->copy();
+        }
 
         $group->forceFill([
             'end_date' => $endDate?->toDateString(),
@@ -217,6 +232,7 @@ class CoursePlanner
     private static function sessionIsProtected(ClassSession $session): bool
     {
         return (bool) $session->date_locked
+            || (bool) $session->is_extra
             || ($session->attendance_records_count ?? 0) > 0
             || ($session->makeup_requests_count ?? 0) > 0;
     }
@@ -265,7 +281,8 @@ class CoursePlanner
     ): ?Carbon {
         $holidays = self::holidaysFor($course);
         $excludedDates = self::excludedDates($existingSessions);
-        $locked = $existingSessions->filter(fn (ClassSession $session) => (bool) $session->date_locked);
+        // Las clases extra se suman al calendario: no ocupan el lugar de ninguna clase del horario.
+        $locked = $existingSessions->filter(fn (ClassSession $session) => (bool) $session->date_locked && ! $session->is_extra);
 
         // Las clases movidas a mano fuera del horario ocupan el lugar de la clase original: el horario
         // genera solo las que faltan. Las que tienen asistencia en un feriado NO cuentan (se agrega la
@@ -293,7 +310,7 @@ class CoursePlanner
         $plan = [];
         foreach ($dates as $index => $date) {
             $candidate = ($availableByDate->get($date->toDateString()) ?? collect())
-                ->reject(fn (ClassSession $session) => in_array($session->id, $usedSessionIds, true))
+                ->reject(fn (ClassSession $session) => $session->is_extra || in_array($session->id, $usedSessionIds, true))
                 ->sortByDesc(fn (ClassSession $session) => self::sessionIsProtected($session) ? 1 : 0)
                 ->first();
             if ($candidate) {
@@ -471,6 +488,73 @@ class CoursePlanner
         }
 
         return $dates;
+    }
+
+    /**
+     * Días del horario entre dos fechas (inclusive) que no son feriado de la sede.
+     */
+    public static function scheduleDatesBetween(Carbon $startDate, Carbon $endDate, ScheduleTemplate $schedule, Collection $holidays): Collection
+    {
+        $isoWeekdays = collect($schedule->days ?? [])
+            ->map(fn (string $day) => ['mon' => 1, 'tue' => 2, 'wed' => 3, 'thu' => 4, 'fri' => 5, 'sat' => 6, 'sun' => 7][$day] ?? null)
+            ->filter()
+            ->values();
+
+        $dates = collect();
+        if ($isoWeekdays->isEmpty()) {
+            return $dates;
+        }
+
+        $cursor = $startDate->copy()->startOfDay();
+        $last = $endDate->copy()->startOfDay();
+        while ($cursor->lessThanOrEqualTo($last)) {
+            if ($isoWeekdays->contains($cursor->dayOfWeekIso) && ! self::isHoliday($cursor, $holidays)) {
+                $dates->push($cursor->copy());
+            }
+            $cursor->addDay();
+        }
+
+        return $dates;
+    }
+
+    /**
+     * Agrega una clase suelta (fuera del horario) al grupo del curso. No reemplaza ninguna clase del horario.
+     */
+    public static function addExtraSession(Course $course, Carbon $date, ?string $startsAt = null, ?string $endsAt = null): ClassSession
+    {
+        $schedule = $course->scheduleTemplate;
+        $group = $course->managedGroup;
+        if (! $schedule || ! $group) {
+            throw ValidationException::withMessages([
+                'session_date' => 'El curso no tiene horario ni grupo configurados.',
+            ]);
+        }
+
+        $startsAt = self::normalizeTime($startsAt ?: $schedule->starts_at);
+        $endsAt = self::normalizeTime($endsAt ?: $schedule->ends_at);
+
+        $exists = ClassSession::query()
+            ->where('group_id', $group->id)
+            ->whereDate('session_date', $date->toDateString())
+            ->where('starts_at', $startsAt)
+            ->exists();
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'session_date' => 'Ya hay una clase de este curso el '.$date->format('d/m/Y').' a esa hora.',
+            ]);
+        }
+
+        $attributes = self::sessionAttributes($course, $group, $schedule, $date, 0, collect(), includeTimestamps: false);
+        $session = ClassSession::create(array_merge($attributes, [
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'date_locked' => true,
+            'is_extra' => true,
+        ]));
+
+        self::resequence($course, $group, $group->sessions()->count());
+
+        return $session->fresh();
     }
 
     public static function normalizeTime(?string $time): string

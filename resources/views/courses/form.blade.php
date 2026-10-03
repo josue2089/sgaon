@@ -12,7 +12,7 @@
         <select name="program_id" data-program-select required>
             <option value="">Seleccione</option>
             @foreach($programs as $program)
-                <option value="{{ $program->id }}" @selected(old('program_id',$course->program_id ?? '') == $program->id)>{{ $program->name }}</option>
+                <option value="{{ $program->id }}" data-extracurricular="{{ $program->is_extracurricular ? 1 : 0 }}" @selected(old('program_id',$course->program_id ?? '') == $program->id)>{{ $program->name }}{{ $program->is_extracurricular ? ' (extracurricular)' : '' }}</option>
             @endforeach
         </select>
     </div>
@@ -73,11 +73,38 @@
         <label>Fecha de inicio</label>
         <input type="date" name="start_date" value="{{ old('start_date',isset($course->start_date) ? $course->start_date?->format('Y-m-d') : '') }}" required>
     </div>
-    <div>
+    @php($courseIsExtracurricular = (bool) optional($programs->firstWhere('id', (int) old('program_id', $course->program_id ?? 0)))->is_extracurricular)
+    <div data-course-hours-field @if($courseIsExtracurricular) hidden @endif>
         <label>Duración del curso</label>
-        <input type="number" name="academic_hours" data-academic-hours-input min="1" max="500" value="{{ old('academic_hours',$course->academic_hours ?? '') }}" placeholder="Ej. 40" required>
+        <input type="number" name="academic_hours" data-academic-hours-input min="1" max="500" value="{{ old('academic_hours',$course->academic_hours ?? '') }}" placeholder="Ej. 40" @disabled($courseIsExtracurricular) @required(! $courseIsExtracurricular)>
         <div class="form-hint">Se calcula con hora académica de 45 minutos.</div>
     </div>
+    <div data-course-end-date-field @if(! $courseIsExtracurricular) hidden @endif>
+        <label>Fecha de fin (fin del año escolar)</label>
+        <input type="date" name="end_date" value="{{ old('end_date', isset($course->end_date) && $courseIsExtracurricular ? $course->end_date?->format('Y-m-d') : '') }}" @disabled(! $courseIsExtracurricular) @required($courseIsExtracurricular)>
+        <div class="form-hint">Curso extracurricular: se generan todas las clases del horario hasta esta fecha, sin límite.</div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const programSelect = document.querySelector('select[name="program_id"][data-program-select]');
+            const hoursField = document.querySelector('[data-course-hours-field]');
+            const endDateField = document.querySelector('[data-course-end-date-field]');
+            if (!programSelect || !hoursField || !endDateField) {
+                return;
+            }
+            const toggle = function () {
+                const option = programSelect.selectedOptions[0];
+                const extracurricular = option && option.dataset.extracurricular === '1';
+                hoursField.hidden = extracurricular;
+                endDateField.hidden = !extracurricular;
+                hoursField.querySelector('input').disabled = extracurricular;
+                hoursField.querySelector('input').required = !extracurricular;
+                endDateField.querySelector('input').disabled = !extracurricular;
+                endDateField.querySelector('input').required = extracurricular;
+            };
+            programSelect.addEventListener('change', toggle);
+        });
+    </script>
     <div>
         <label>Status</label>
         <select name="status" required>

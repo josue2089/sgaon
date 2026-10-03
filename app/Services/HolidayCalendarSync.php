@@ -24,7 +24,7 @@ class HolidayCalendarSync
             ->where('status', 'active')
             ->whereNotNull('schedule_template_id')
             ->whereNotNull('start_date')
-            ->whereNotNull('academic_hours')
+            ->where(fn (Builder $q) => $q->whereNotNull('academic_hours')->orWhereNotNull('end_date'))
             ->when($campusId, fn (Builder $q) => $q->where('campus_id', $campusId))
             ->where(fn (Builder $q) => $q->whereNull('end_date')->orWhereDate('end_date', '>=', $fromDate->toDateString()))
             ->orderBy('id')
@@ -38,10 +38,10 @@ class HolidayCalendarSync
      */
     public function resyncCourse(Course $course): array
     {
-        if (! $course->schedule_template_id || ! $course->start_date || ! $course->academic_hours) {
+        if (! $course->hasCalendarSource()) {
             return [
                 'updated' => 0,
-                'skipped' => [$this->label($course) => 'El curso no tiene horario, fecha de inicio u horas académicas.'],
+                'skipped' => [$this->label($course) => 'El curso no tiene horario, fecha de inicio u horas académicas (o fecha de fin si es extracurricular).'],
                 'conflicts' => [],
             ];
         }
@@ -57,6 +57,10 @@ class HolidayCalendarSync
         $result = ['updated' => 0, 'skipped' => [], 'conflicts' => []];
 
         foreach ($courses as $course) {
+            if (! $course->hasCalendarSource()) {
+                continue;
+            }
+
             try {
                 $course = CoursePlanner::sync($course, true);
                 $result['updated']++;
