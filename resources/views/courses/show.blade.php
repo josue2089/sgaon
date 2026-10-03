@@ -249,7 +249,7 @@
                         <td>
                             {{ $session->session_date?->format('d/m/Y') ?? 'N/D' }}
                             @if(in_array($session->id, $holidaySessionIds ?? [], true))
-                                @include('partials.ui.status-badge', ['tone' => 'warn', 'text' => 'Feriado'])
+                                @include('partials.ui.status-badge', ['tone' => 'warn', 'text' => 'Feriado / sin clase'])
                             @endif
                             @if($session->is_extra)
                                 @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Clase extra'])

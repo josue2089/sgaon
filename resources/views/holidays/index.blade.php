@@ -2,10 +2,10 @@
 @section('content')
 <div class="module-head">
     <div>
-        <h1 class="page-title">Feriados</h1>
-        <p class="page-subtitle">Catálogo de días no laborables para evitar programar clases en esas fechas.</p>
+        <h1 class="page-title">Feriados y días sin clase</h1>
+        <p class="page-subtitle">Días no laborables y días sin clase de cada colegio. Las clases de los cursos de la sede se recalculan al guardar.</p>
     </div>
-    <a class="btn" href="{{ route('holidays.create') }}">Nuevo feriado</a>
+    <a class="btn" href="{{ route('holidays.create') }}">{{ auth()->user()->isMasterAdmin() ? 'Nuevo feriado' : 'Nuevo día sin clase' }}</a>
 </div>
 
 <form method="GET" action="{{ route('holidays.index') }}" class="card">
@@ -17,6 +17,7 @@
             <option value="">Todos los tipos</option>
             <option value="dated" @selected($filters['type'] === 'dated')>Fecha puntual</option>
             <option value="recurring" @selected($filters['type'] === 'recurring')>Recurrentes</option>
+            <option value="school_closure" @selected($filters['type'] === 'school_closure')>Días sin clase del colegio</option>
         </select>
         <select name="status" style="max-width:220px;">
             <option value="">Todos los estados</option>
@@ -47,17 +48,22 @@
                 @foreach($holidays as $holiday)
                     <tr>
                         <td class="table-title">{{ $holiday->name }}</td>
-                        <td>{{ $holiday->is_recurring ? 'Recurrente' : 'Fecha puntual' }}</td>
+                        <td>
+                            {{ $holiday->kind_label }}
+                            <div class="table-sub">{{ $holiday->is_recurring ? 'Recurrente' : ($holiday->end_date ? 'Rango de fechas' : 'Fecha puntual') }}</div>
+                        </td>
                         <td>{{ $holiday->occurrence_label }}</td>
                         <td>{{ $holiday->campus->name ?? 'Global' }}</td>
                         <td>@include('partials.ui.status-badge', ['tone' => $holiday->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($holiday->status)])</td>
                         <td class="table-actions">
+                            @if(auth()->user()->isMasterAdmin() || $holiday->campus_id)
                             <a href="{{ route('holidays.edit', $holiday) }}">Editar</a>
                             <form method="POST" action="{{ route('holidays.destroy', $holiday) }}" onsubmit="return confirm('¿Eliminar este feriado?');">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn-link-danger" type="submit">Eliminar</button>
                             </form>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

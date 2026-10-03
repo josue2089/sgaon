@@ -6,6 +6,7 @@ use App\Models\Campus;
 use App\Models\Holiday;
 use App\Services\HolidayCalendarSync;
 use App\Support\AuditTrail;
+use App\Support\CampusScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,6 +18,12 @@ class HolidayController extends Controller
     public function index(Request $request): View
     {
         $query = Holiday::query()->with('campus')->latest();
+
+        // Admin de sede: ve los feriados generales (solo lectura) y los de sus sedes.
+        $allowed = CampusScope::allowedCampusIds($request->user());
+        if (is_array($allowed)) {
+            $query->where(fn ($builder) => $builder->whereNull('campus_id')->orWhereIn('campus_id', $allowed ?: [0]));
+        }
 
         $q = trim((string) $request->query('q', ''));
         if ($q !== '') {
@@ -37,6 +44,8 @@ class HolidayController extends Controller
             $query->where('is_recurring', true);
         } elseif ($type === 'dated') {
             $query->where('is_recurring', false);
+        } elseif ($type === Holiday::KIND_SCHOOL_CLOSURE) {
+            $query->where('kind', Holiday::KIND_SCHOOL_CLOSURE);
         }
 
         return view('holidays.index', [
@@ -49,12 +58,15 @@ class HolidayController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        $isMaster = $request->user()->isMasterAdmin();
+
         return view('holidays.create', [
-            'holiday' => new Holiday(['status' => 'active']),
-            'campuses' => Campus::query()->orderBy('name')->get(),
+            'holiday' => new Holiday(['status' => 'active', 'kind' => $isMaster ? Holiday::KIND_HOLIDAY : Holiday::KIND_SCHOOL_CLOSURE]),
+            'campuses' => $this->manageableCampuses($request),
             'statusOptions' => ['active', 'inactive'],
+            'canManageGlobal' => $isMaster,
         ]);
     }
 
@@ -62,24 +74,32 @@ class HolidayController extends Controller
     {
         $data = $this->validatedData($request);
         $holiday = Holiday::create($data);
+        AuditTrail::log($request, 'holiday.create', $holiday, $data);
 
-        return $this->resyncAndRedirect($request, $holiday, [$holiday->campus_id], 'Feriado creado.');
+        return $this->resyncAndRedirect($request, $holiday, [$holiday->campus_id], $holiday->kind_label.' creado.');
     }
 
-    public function edit(Holiday $holiday): View
+    public function edit(Request $request, Holiday $holiday): View
     {
+        $this->authorizeHoliday($request, $holiday);
+
         return view('holidays.edit', [
             'holiday' => $holiday,
-            'campuses' => Campus::query()->orderBy('name')->get(),
+            'campuses' => $this->manageableCampuses($request),
             'statusOptions' => ['active', 'inactive'],
+            'canManageGlobal' => $request->user()->isMasterAdmin(),
         ]);
     }
 
     public function update(Request $request, Holiday $holiday): RedirectResponse
     {
+        $this->authorizeHoliday($request, $holiday);
+
         $previousCampusId = $holiday->campus_id;
         $previousFrom = $this->resyncFromDate($holiday);
-        $holiday->update($this->validatedData($request));
+        $data = $this->validatedData($request);
+        $holiday->update($data);
+        AuditTrail::log($request, 'holiday.update', $holiday, $data);
         $newFrom = $this->resyncFromDate($holiday);
 
         return $this->resyncAndRedirect(
@@ -93,6 +113,9 @@ class HolidayController extends Controller
 
     public function destroy(Request $request, Holiday $holiday): RedirectResponse
     {
+        $this->authorizeHoliday($request, $holiday);
+
+        AuditTrail::log($request, 'holiday.delete', $holiday, $holiday->toArray());
         $holiday->delete();
 
         return $this->resyncAndRedirect($request, $holiday, [$holiday->campus_id], 'Feriado eliminado.');
@@ -131,18 +154,54 @@ class HolidayController extends Controller
             ->with(HolidayCalendarSync::flashMessages($result, $prefix));
     }
 
+    /**
+     * Master: cualquier feriado. Admin de sede: solo los de sus sedes (nunca los generales).
+     */
+    private function authorizeHoliday(Request $request, Holiday $holiday): void
+    {
+        if ($request->user()->isMasterAdmin()) {
+            return;
+        }
+
+        if (! $holiday->campus_id || ! CampusScope::userCanAccessCampus($request->user(), (int) $holiday->campus_id)) {
+            abort(403);
+        }
+    }
+
+    private function manageableCampuses(Request $request)
+    {
+        $allowed = CampusScope::allowedCampusIds($request->user());
+
+        return Campus::query()
+            ->when(is_array($allowed), fn ($query) => $query->whereIn('id', $allowed ?: [0]))
+            ->orderBy('name')
+            ->get();
+    }
+
     private function validatedData(Request $request): array
     {
+        $isMaster = $request->user()->isMasterAdmin();
+
         $data = $request->validate([
-            'campus_id' => ['nullable', 'exists:campuses,id'],
+            'campus_id' => [$isMaster ? 'nullable' : 'required', 'exists:campuses,id'],
             'name' => ['required', 'string', 'max:160'],
+            'kind' => ['nullable', Rule::in([Holiday::KIND_HOLIDAY, Holiday::KIND_SCHOOL_CLOSURE])],
             'is_recurring' => ['nullable', 'boolean'],
             'holiday_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:holiday_date'],
             'month' => ['nullable', 'integer', 'between:1,12'],
             'day' => ['nullable', 'integer', 'between:1,31'],
             'description' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
+
+        if (! $isMaster) {
+            if (! CampusScope::userCanAccessCampus($request->user(), (int) $data['campus_id'])) {
+                abort(403);
+            }
+            $data['kind'] = Holiday::KIND_SCHOOL_CLOSURE;
+        }
+        $data['kind'] = $data['kind'] ?? Holiday::KIND_HOLIDAY;
 
         $data['is_recurring'] = (bool) ($data['is_recurring'] ?? false);
 
@@ -153,6 +212,7 @@ class HolidayController extends Controller
                 ]);
             }
             $data['holiday_date'] = null;
+            $data['end_date'] = null;
         } else {
             if (empty($data['holiday_date'])) {
                 throw ValidationException::withMessages([
