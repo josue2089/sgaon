@@ -9,6 +9,7 @@ use App\Http\Controllers\CampusProgramPriceController;
 use App\Http\Controllers\ClassSessionController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseGradeController;
+use App\Http\Controllers\CourseObservationController;
 use App\Http\Controllers\CourseLevelController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnrollmentController;
@@ -175,6 +176,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/grade-evaluation-sets/{gradeEvaluationSet}', [CourseGradeController::class, 'show'])->name('grade-evaluation-sets.show');
         Route::get('/grade-evaluation-sets/{gradeEvaluationSet}/edit', [CourseGradeController::class, 'edit'])->name('grade-evaluation-sets.edit');
         Route::put('/grade-evaluation-sets/{gradeEvaluationSet}', [CourseGradeController::class, 'update'])->name('grade-evaluation-sets.update');
+        Route::get('/courses/{course}/observations', [CourseObservationController::class, 'edit'])->name('courses.observations.edit');
+        Route::put('/courses/{course}/observations', [CourseObservationController::class, 'update'])->name('courses.observations.update');
     });
 
     Route::middleware(['role:student', 'permission:portal.student.view'])->group(function () {

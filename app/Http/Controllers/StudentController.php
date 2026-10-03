@@ -610,6 +610,15 @@ class StudentController extends Controller
             'payment_method' => ['nullable', 'string', 'max:120'],
             'installments' => ['nullable', 'integer', 'min:1', 'max:48'],
             'commercial_notes' => ['nullable', 'string'],
+            'school_grade' => ['nullable', 'string', 'max:40'],
+            'school_section' => ['nullable', 'string', 'max:40'],
+            'emergency_phone' => ['nullable', 'string', 'max:40'],
+            'extracurricular_level' => ['nullable', 'string', 'max:120'],
+            'extracurricular_objectives' => ['nullable', 'string'],
+            'teacher_observations' => ['nullable', 'string'],
+            'payment_condition' => ['nullable', 'string', 'max:255'],
+            'representative.nationality' => ['nullable', 'in:V,E'],
+            'representative.relation' => ['nullable', 'string', 'max:80'],
             'representative.first_name' => ['nullable', 'string', 'max:120'],
             'representative.last_name' => ['nullable', 'string', 'max:120'],
             'representative.document_id' => ['nullable', 'string', 'max:80'],
@@ -647,6 +656,7 @@ class StudentController extends Controller
             'first_name' => $data['first_name'] ?? '',
             'last_name' => $data['last_name'] ?? '',
             'document_id' => $data['document_id'] ?? null,
+            'nationality' => $data['nationality'] ?? null,
             'address' => $data['address'] ?? null,
             'phone' => ($data['phone'] ?? null) ?: ($data['mobile_phone'] ?? null),
             'home_phone' => $data['home_phone'] ?? null,
@@ -655,7 +665,7 @@ class StudentController extends Controller
             'work_address' => $data['work_address'] ?? null,
             'email' => $data['email'] ?? null,
             'office_phone' => $data['office_phone'] ?? null,
-            'relation' => 'Representante',
+            'relation' => filled($data['relation'] ?? null) ? $data['relation'] : 'Representante',
         ]);
         $representative->save();
         $student->representatives()->syncWithoutDetaching([$representative->id]);

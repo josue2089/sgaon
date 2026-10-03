@@ -40,7 +40,16 @@ class Student extends Model
         'payment_method',
         'installments',
         'commercial_notes',
+        'school_grade',
+        'school_section',
+        'emergency_phone',
+        'extracurricular_level',
+        'extracurricular_objectives',
+        'teacher_observations',
+        'payment_condition',
     ];
+
+    public const DEFAULT_EXTRACURRICULAR_OBJECTIVES = 'Fluidez conversacional y expresión oral / Comprensión auditiva (Listening) / Lectura y vocabulario (Reading & Vocabulary) / Escritura y gramática (Writing & Grammar)';
 
     protected function casts(): array
     {
@@ -57,6 +66,20 @@ class Student extends Model
     public function campus()
     {
         return $this->belongsTo(Campus::class);
+    }
+
+    /**
+     * Alumno de actividades extracurriculares: programa de registro o alguna inscripción en un programa extracurricular.
+     */
+    public function isExtracurricular(): bool
+    {
+        if ($this->registrationProgram?->is_extracurricular) {
+            return true;
+        }
+
+        return $this->enrollments()
+            ->whereHas('group.course.program', fn ($query) => $query->where('is_extracurricular', true))
+            ->exists();
     }
 
     public function registrationProgram()

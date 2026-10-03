@@ -11,6 +11,9 @@
         @else
             <a class="btn secondary" href="{{ route('dashboard') }}">Dashboard</a>
         @endif
+        @if($course->program?->is_extracurricular)
+            <a class="btn secondary" href="{{ route('courses.observations.edit', $course) }}">Observaciones del docente</a>
+        @endif
         <a class="btn" href="{{ route('courses.grades.create', $course) }}">Nueva evaluación</a>
     </div>
 </div>

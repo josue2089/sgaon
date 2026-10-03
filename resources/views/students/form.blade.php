@@ -52,7 +52,7 @@
             <select name="registration_program_id">
                 <option value="">Seleccione</option>
                 @foreach($programs as $program)
-                    <option value="{{ $program->id }}" @selected((string) old('registration_program_id', $student->registration_program_id ?? '') === (string) $program->id)>{{ $program->name }}</option>
+                    <option value="{{ $program->id }}" data-extracurricular="{{ $program->is_extracurricular ? 1 : 0 }}" @selected((string) old('registration_program_id', $student->registration_program_id ?? '') === (string) $program->id)>{{ $program->name }}{{ $program->is_extracurricular ? ' (extracurricular)' : '' }}</option>
                 @endforeach
             </select>
         </div>
@@ -85,6 +85,14 @@
         <div><label>Nombres</label><input name="representative[first_name]" value="{{ $representative['first_name'] ?? '' }}"></div>
         <div><label>Apellidos</label><input name="representative[last_name]" value="{{ $representative['last_name'] ?? '' }}"></div>
         <div><label>Cédula</label><input name="representative[document_id]" value="{{ $representative['document_id'] ?? '' }}"></div>
+        <div><label>Nacionalidad</label>
+            <select name="representative[nationality]">
+                <option value="">Seleccione</option>
+                <option value="V" @selected(($representative['nationality'] ?? '') === 'V')>V (venezolano)</option>
+                <option value="E" @selected(($representative['nationality'] ?? '') === 'E')>E (extranjero)</option>
+            </select>
+        </div>
+        <div><label>Parentesco con el alumno</label><input name="representative[relation]" value="{{ $representative['relation'] ?? '' }}" placeholder="Madre, padre, abuelo…"></div>
         <div><label>Email</label><input type="email" name="representative[email]" value="{{ $representative['email'] ?? '' }}"></div>
         <div><label>Teléfono habitación</label><input name="representative[home_phone]" value="{{ $representative['home_phone'] ?? '' }}"></div>
         <div><label>Celular</label><input name="representative[mobile_phone]" value="{{ $representative['mobile_phone'] ?? ($representative['phone'] ?? '') }}"></div>
@@ -115,6 +123,29 @@
         </div>
     </div>
 @endfor
+
+@php
+    $showExtracurricular = old('registration_program_id')
+        ? (bool) optional($programs->firstWhere('id', (int) old('registration_program_id')))->is_extracurricular
+        : (isset($student->id) && $student->isExtracurricular()) || (bool) optional($student->registrationProgram ?? null)->is_extracurricular;
+@endphp
+<div class="card mt-2" id="extracurricular-section"{{ $showExtracurricular ? '' : ' hidden' }}>
+    <div class="section-head section-head-tight">
+        <h2 class="section-title section-title-md">Actividad extracurricular</h2>
+        <div class="entity-sub">Planilla de inscripción de actividades extracurriculares en colegios</div>
+    </div>
+    <fieldset id="extracurricular-fields" style="border:0;padding:0;margin:0;min-width:0;" @disabled(! $showExtracurricular)>
+    <div class="grid-2">
+        <div><label>Grado / Año</label><input name="school_grade" value="{{ old('school_grade', $student->school_grade ?? '') }}" placeholder="Ej. 4to grado"></div>
+        <div><label>Sección</label><input name="school_section" value="{{ old('school_section', $student->school_section ?? '') }}" placeholder="Ej. U"></div>
+        <div><label>Teléfono de emergencia</label><input name="emergency_phone" value="{{ old('emergency_phone', $student->emergency_phone ?? '') }}"></div>
+        <div><label>Nivel / Dominio actual</label><input name="extracurricular_level" value="{{ old('extracurricular_level', $student->extracurricular_level ?? '') }}"></div>
+        <div style="grid-column:1/-1;"><label>Objetivos / Competencias a desarrollar</label><textarea name="extracurricular_objectives">{{ old('extracurricular_objectives', $student->extracurricular_objectives ?? \App\Models\Student::DEFAULT_EXTRACURRICULAR_OBJECTIVES) }}</textarea></div>
+        <div style="grid-column:1/-1;"><label>Observaciones / Recomendaciones del docente</label><textarea name="teacher_observations">{{ old('teacher_observations', $student->teacher_observations ?? '') }}</textarea></div>
+        <div style="grid-column:1/-1;"><label>Condición de pago / Matrícula</label><input name="payment_condition" value="{{ old('payment_condition', $student->payment_condition ?? '') }}" placeholder="Ej. 10 cuotas de 35 USD (octubre a julio)"></div>
+    </div>
+    </fieldset>
+</div>
 
 <div class="card mt-2">
     <div class="section-head section-head-tight">
@@ -171,6 +202,18 @@
                     labelIdle: 'Arrastra tu imagen o <span class="filepond--label-action">buscar</span>',
                 });
             });
+
+            const programSelect = document.querySelector('select[name="registration_program_id"]');
+            const extracurricularSection = document.getElementById('extracurricular-section');
+            if (programSelect && extracurricularSection) {
+                programSelect.addEventListener('change', function () {
+                    const option = programSelect.selectedOptions[0];
+                    if (option && option.dataset.extracurricular === '1') {
+                        extracurricularSection.hidden = false;
+                        document.getElementById('extracurricular-fields').disabled = false;
+                    }
+                });
+            }
         });
     </script>
 @endonce
