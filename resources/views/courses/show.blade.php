@@ -210,8 +210,23 @@
 <div class="card table-card">
     <div class="section-head">
         <h2 class="section-title">Sesiones y programa</h2>
-        <div class="entity-sub">Cada fila permite ir rápido a asistencia.</div>
+        <div class="entity-sub">
+            Cada fila permite ir rápido a asistencia.
+            @if($course->isExtracurricular())
+                Curso extracurricular: {{ $sessions->count() }} clase(s) hasta el {{ $course->end_date?->format('d/m/Y') ?? 'N/D' }}.
+            @endif
+        </div>
     </div>
+    @if($course->isExtracurricular() && $course->managedGroup)
+        <form method="POST" action="{{ route('courses.extra-sessions.store', $course) }}" class="fi-filter-bar">
+            @csrf
+            <label for="extra-session-date">Agregar clase extra</label>
+            <input id="extra-session-date" type="date" name="session_date" value="{{ old('session_date') }}" required>
+            <input type="time" name="starts_at" value="{{ old('starts_at') }}" title="Hora de inicio (opcional, por defecto la del horario)">
+            <input type="time" name="ends_at" value="{{ old('ends_at') }}" title="Hora de fin (opcional, por defecto la del horario)">
+            <button class="btn secondary" type="submit">Agregar clase</button>
+        </form>
+    @endif
     @if($sessions->count() > 0)
         <div class="table-wrap">
             <table class="data-table">
@@ -235,6 +250,9 @@
                             {{ $session->session_date?->format('d/m/Y') ?? 'N/D' }}
                             @if(in_array($session->id, $holidaySessionIds ?? [], true))
                                 @include('partials.ui.status-badge', ['tone' => 'warn', 'text' => 'Feriado'])
+                            @endif
+                            @if($session->is_extra)
+                                @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Clase extra'])
                             @endif
                             @if($session->date_locked && $session->rescheduled_from)
                                 @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Movida · antes '.$session->rescheduled_from->format('d/m')])

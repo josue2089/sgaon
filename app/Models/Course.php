@@ -67,6 +67,28 @@ class Course extends Model
         return $this->belongsTo(AcademicLevel::class, 'academic_level_id');
     }
 
+    /**
+     * Curso de un programa extracurricular: dura hasta su fecha de fin en lugar de un número de horas.
+     */
+    public function isExtracurricular(): bool
+    {
+        $program = $this->program ?? $this->programLevel?->program;
+
+        return (bool) $program?->is_extracurricular;
+    }
+
+    /**
+     * Tiene lo necesario para generar su calendario de sesiones.
+     */
+    public function hasCalendarSource(): bool
+    {
+        if (! $this->schedule_template_id || ! $this->start_date) {
+            return false;
+        }
+
+        return $this->isExtracurricular() ? (bool) $this->end_date : (bool) $this->academic_hours;
+    }
+
     public function program()
     {
         return $this->belongsTo(Program::class);

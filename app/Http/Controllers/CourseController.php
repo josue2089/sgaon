@@ -221,6 +221,27 @@ class CourseController extends Controller
         ]);
     }
 
+    public function storeExtraSession(Request $request, Course $course): RedirectResponse
+    {
+        $this->authorizeCourse($course);
+
+        $data = $request->validate([
+            'session_date' => ['required', 'date'],
+            'starts_at' => ['nullable', 'date_format:H:i'],
+            'ends_at' => ['nullable', 'date_format:H:i', 'after:starts_at'],
+        ]);
+
+        $session = CoursePlanner::addExtraSession(
+            $course->loadMissing(['scheduleTemplate', 'managedGroup']),
+            \Illuminate\Support\Carbon::parse($data['session_date']),
+            $data['starts_at'] ?? null,
+            $data['ends_at'] ?? null,
+        );
+        AuditTrail::log($request, 'course.session.extra', $course, $session->toArray());
+
+        return redirect()->route('courses.show', $course)->with('success', 'Clase extra agregada el '.$session->session_date->format('d/m/Y').'.');
+    }
+
     public function recalculateCalendar(Request $request, Course $course): RedirectResponse
     {
         $this->authorizeCourse($course);
@@ -396,7 +417,8 @@ class CourseController extends Controller
             'code' => ['nullable', 'string', 'max:60'],
             'description' => ['nullable', 'string'],
             'start_date' => ['required', 'date'],
-            'academic_hours' => ['required', 'integer', 'min:1', 'max:500'],
+            'academic_hours' => ['nullable', 'integer', 'min:1', 'max:500'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
 
@@ -408,6 +430,24 @@ class CourseController extends Controller
         }
 
         $program = Program::query()->find($data['program_id']);
+
+        // Extracurricular: el curso dura hasta su fecha de fin; los regulares, según sus horas académicas.
+        if ($program?->is_extracurricular) {
+            if (empty($data['end_date'])) {
+                throw ValidationException::withMessages([
+                    'end_date' => 'Indica la fecha de fin del curso extracurricular (fin del año escolar).',
+                ]);
+            }
+            $data['academic_hours'] = null;
+        } else {
+            if (empty($data['academic_hours'])) {
+                throw ValidationException::withMessages([
+                    'academic_hours' => 'Indica la duración del curso en horas académicas.',
+                ]);
+            }
+            unset($data['end_date']);
+        }
+
         $data['academic_level_id'] = $this->resolveAcademicLevelIdFromProgram($program, (int) $data['campus_id']);
         $data['course_level_id'] = null;
 
@@ -516,6 +556,7 @@ class CourseController extends Controller
             'start_date' => $course->start_date?->toDateString(),
             'schedule_template_id' => (int) $course->schedule_template_id,
             'academic_hours' => (int) $course->academic_hours,
+            'end_date' => $course->end_date?->toDateString(),
             'period_id' => (int) $course->period_id,
             'schedule_starts_at' => CoursePlanner::normalizeTime($course->scheduleTemplate?->starts_at),
             'schedule_ends_at' => CoursePlanner::normalizeTime($course->scheduleTemplate?->ends_at),
@@ -530,6 +571,7 @@ class CourseController extends Controller
         return $before['start_date'] !== $course->start_date?->toDateString()
             || $before['schedule_template_id'] !== (int) $course->schedule_template_id
             || $before['academic_hours'] !== (int) $course->academic_hours
+            || ($course->isExtracurricular() && $before['end_date'] !== $course->end_date?->toDateString())
             || $before['period_id'] !== (int) $course->period_id
             || $before['schedule_starts_at'] !== CoursePlanner::normalizeTime($course->scheduleTemplate?->starts_at)
             || $before['schedule_ends_at'] !== CoursePlanner::normalizeTime($course->scheduleTemplate?->ends_at)
