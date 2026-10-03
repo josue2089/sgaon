@@ -7,7 +7,7 @@ use App\Models\Charge;
 use App\Models\Enrollment;
 use App\Support\AlertEngine;
 use App\Support\AuditTrail;
-use App\Support\PaymentCurrencyConverter;
+use App\Support\TuitionPriceResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -25,8 +25,8 @@ class EnrollmentBillingService
         }
 
         $programLevel = $course->programLevel;
-        $basePriceEur = (float) ($programLevel?->resolvedBasePriceEur() ?? 0);
-        if ($basePriceEur <= 0) {
+        $price = TuitionPriceResolver::forCourse($course, (int) $enrollment->campus_id);
+        if (! $price) {
             return null;
         }
 
@@ -56,8 +56,8 @@ class EnrollmentBillingService
             'charge_type' => 'tuition',
             'billing_period_label' => $course->period?->code,
             'origin' => 'enrollment_auto',
-            'amount' => $basePriceEur,
-            'currency' => PaymentCurrencyConverter::CURRENCY_EUR,
+            'amount' => $price['amount'],
+            'currency' => $price['currency'],
             'due_date' => $dueDate,
             'status' => 'pending',
         ]);

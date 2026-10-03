@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AcademicLevelController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampusController;
+use App\Http\Controllers\CampusProgramPriceController;
 use App\Http\Controllers\ClassSessionController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseGradeController;
@@ -102,6 +103,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::post('admin-users/{user}/resend-credentials', [AdminUserController::class, 'resendCredentials'])
                 ->name('admin-users.resend-credentials');
             Route::resource('campuses', CampusController::class);
+            Route::post('campuses/{campus}/program-prices', [CampusProgramPriceController::class, 'store'])->name('campuses.program-prices.store');
+            Route::delete('campuses/{campus}/program-prices/{price}', [CampusProgramPriceController::class, 'destroy'])->name('campuses.program-prices.destroy');
             Route::resource('periods', PeriodController::class)->except('show');
             Route::resource('schedules', ScheduleTemplateController::class)->except('show');
             Route::resource('holidays', HolidayController::class)->except('show');
