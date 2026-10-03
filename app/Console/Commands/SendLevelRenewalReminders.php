@@ -42,6 +42,11 @@ class SendLevelRenewalReminders extends Command
                     return;
                 }
 
+                // Extracurriculares: duran el año escolar y no tienen renovación de nivel.
+                if ($course->isExtracurricular()) {
+                    return;
+                }
+
                 $reminderDate = $course->end_date->copy()->subDays((int) ($courseLevel->reminder_days_before ?? 5));
                 $remainingSessions = $this->remainingSessions($course, $today);
                 $isDueBySessions = $remainingSessions >= 1 && $remainingSessions <= self::TEST_REMAINING_SESSIONS_TRIGGER_MAX;
