@@ -9,6 +9,9 @@
     <div class="form-actions">
         <a class="btn secondary" href="{{ route('students.enrollment-sheet', $student) }}">Ficha imprimible</a>
         <a class="btn secondary" href="{{ route('students.enrollment-sheet.pdf', $student) }}">Ficha PDF</a>
+        @if($student->isExtracurricular())
+            <a class="btn secondary" href="{{ route('students.extracurricular-sheet.pdf', $student) }}">Planilla extracurricular (PDF)</a>
+        @endif
         <a class="btn secondary" href="{{ route('finance.students.history', $student) }}">Historial financiero</a>
         <a class="btn secondary" href="{{ route('students.edit', $student) }}">Editar datos</a>
         <a class="btn secondary" href="{{ route('students.index') }}">Volver</a>
