@@ -18,6 +18,7 @@ Proyecto: SGAON (Laravel + Blade + MySQL)
   - `generate:alerts` diario 06:00
   - `finance:reconcile-charges` diario 05:50
   - `finance:generate-recurring-charges` mensual día 1 06:10
+  - _Nota 2026-10: este comando se retiró (generaba cargos de 75$ que no correspondían, DevTeam #142). El cobro mensual actual es `finance:generate-extracurricular-charges`, diario 06:05, solo para cursos extracurriculares (DevTeam #95)._
 
 3. Migraciones
 - `php artisan migrate:status` mostró 3 pendientes nuevas.

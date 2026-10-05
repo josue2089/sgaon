@@ -345,6 +345,7 @@ Objetivo: reducir trabajo manual en cobranza y mejorar control.
 - `Responsable`: Codex
 - `Fecha objetivo`: 2026-02-25
 - `Notas`: Comando `finance:generate-recurring-charges` implementado con anti-duplicado por alumno/mes/grupo y calendarizado mensual (día 1, 06:10) en `routes/console.php`.
+- `Actualización 2026-10`: **Retirado.** El comando creaba un cargo fijo de 75$ (`finance.default_monthly_charge_amount`) por cada inscripción activa, sin importar el programa, y duplicaba la mensualidad real. Se eliminaron el comando, su schedule y la config (DevTeam #142). Los cargos generados se anularon con `finance:void-legacy-recurring-charges` (`--dry-run`, `--fake-payments`). El cobro mensual vigente es solo para cursos extracurriculares: `finance:generate-extracurricular-charges` (diario 06:05, precio por sede y programa; DevTeam #95). Los cursos regulares siguen con el cargo único al inscribir (`EnrollmentBillingService`).
 
 ### S4-02 Control de mora mejorado
 - Alcance: días de atraso, semáforo y priorización.
