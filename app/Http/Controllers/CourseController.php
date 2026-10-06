@@ -221,6 +221,32 @@ class CourseController extends Controller
         ]);
     }
 
+    public function generateExtracurricularCharges(Request $request, Course $course): RedirectResponse
+    {
+        $this->authorizeCourse($course);
+        abort_unless($course->isExtracurricular(), 404);
+
+        $billing = app(EnrollmentBillingService::class);
+        $created = 0;
+        $students = 0;
+        $course->loadMissing('managedGroup');
+        Enrollment::query()
+            ->where('status', 'active')
+            ->whereHas('group', fn ($query) => $query->where('course_id', $course->id))
+            ->get()
+            ->each(function (Enrollment $enrollment) use ($billing, $request, &$created, &$students): void {
+                $count = $billing->createAllMonthlyCharges($enrollment, $request)->count();
+                $created += $count;
+                $students += $count > 0 ? 1 : 0;
+            });
+
+        AuditTrail::log($request, 'course.extracurricular_charges.generate', $course, ['created' => $created, 'students' => $students]);
+
+        return redirect()->route('courses.show', $course)->with('success', $created > 0
+            ? "Se generaron {$created} cuota(s) faltante(s) para {$students} alumno(s)."
+            : 'Todas las inscripciones activas ya tienen sus cuotas generadas.');
+    }
+
     public function storeExtraSession(Request $request, Course $course): RedirectResponse
     {
         $this->authorizeCourse($course);

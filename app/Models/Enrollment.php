@@ -9,6 +9,20 @@ class Enrollment extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        // Retirar o eliminar una inscripción anula sus cuotas extracurriculares futuras sin pagos.
+        static::updated(function (Enrollment $enrollment): void {
+            if ($enrollment->wasChanged('status') && $enrollment->getOriginal('status') === 'active' && $enrollment->status !== 'active') {
+                app(\App\Services\EnrollmentBillingService::class)->voidFutureMonthlyCharges($enrollment, 'Inscripción retirada');
+            }
+        });
+
+        static::deleting(function (Enrollment $enrollment): void {
+            app(\App\Services\EnrollmentBillingService::class)->voidFutureMonthlyCharges($enrollment, 'Inscripción eliminada');
+        });
+    }
+
     protected $fillable = [
         'campus_id',
         'student_id',

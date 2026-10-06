@@ -15,6 +15,13 @@
             @csrf
             <button class="btn secondary" type="submit" data-submit-busy-label="Recalculando…">Recalcular calendario</button>
         </form>
+        @if($course->isExtracurricular())
+            <form method="POST" action="{{ route('courses.extracurricular-charges.generate', $course) }}" data-guard-submit
+                  onsubmit="return confirm('Se crearán las cuotas que falten hasta el fin del curso para todos los alumnos activos. Las que ya existen no se duplican. ¿Continuar?');">
+                @csrf
+                <button class="btn secondary" type="submit" data-submit-busy-label="Generando…">Generar cuotas faltantes</button>
+            </form>
+        @endif
         <a class="btn secondary" href="{{ route('courses.edit', $course) }}">Editar curso</a>
         <a class="btn secondary" href="{{ route('courses.index') }}">Volver</a>
     </div>

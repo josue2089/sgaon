@@ -24,13 +24,9 @@ class EnrollmentBillingService
             return null;
         }
 
-        // Extracurricular: una cuota por mes; al inscribir se crea la del mes en curso.
+        // Extracurricular: al inscribir se crean de una vez todas las cuotas hasta el fin del curso.
         if ($course->isExtracurricular()) {
-            $month = $this->firstBillableMonth($enrollment, $course);
-
-            return $month && $month->lte(now()->startOfMonth())
-                ? $this->createMonthlyCharge($enrollment, now()->startOfMonth(), $request)
-                : null;
+            return $this->createAllMonthlyCharges($enrollment, $request)->first();
         }
 
         $programLevel = $course->programLevel;
@@ -85,7 +81,70 @@ class EnrollmentBillingService
      * Cuota mensual de un curso extracurricular para el mes indicado. Idempotente por inscripción y mes:
      * devuelve null si ya existe (no anulada) o si el mes cae fuera del curso.
      */
-    public function createMonthlyCharge(Enrollment $enrollment, Carbon $month, ?Request $request = null): ?Charge
+    /**
+     * Crea las cuotas faltantes de una inscripción extracurricular, desde su primer mes hasta el mes de fin
+     * del curso, y envía un solo correo con el calendario. Idempotente.
+     *
+     * @return \Illuminate\Support\Collection<int, Charge>
+     */
+    public function createAllMonthlyCharges(Enrollment $enrollment, ?Request $request = null): \Illuminate\Support\Collection
+    {
+        $enrollment->loadMissing(['group.course.programLevel.program', 'group.course.program', 'student.representatives']);
+        $course = $enrollment->group?->course;
+        $created = collect();
+        if (! $course || ! $course->isExtracurricular() || ! $course->end_date) {
+            return $created;
+        }
+
+        $month = $this->firstBillableMonth($enrollment, $course);
+        $last = $course->end_date->copy()->startOfMonth();
+        while ($month && $month->lte($last)) {
+            $charge = $this->createMonthlyCharge($enrollment, $month, $request, notify: false);
+            if ($charge) {
+                $created->push($charge);
+            }
+            $month = $month->copy()->addMonth();
+        }
+
+        if ($created->isNotEmpty()) {
+            $this->emailChargeScheduleIfPossible($enrollment, $created);
+        }
+
+        return $created;
+    }
+
+    /**
+     * Anula las cuotas extracurriculares futuras sin pagos de una inscripción (p. ej. al retirarla).
+     */
+    public function voidFutureMonthlyCharges(Enrollment $enrollment, string $reason): int
+    {
+        $voided = 0;
+        Charge::query()
+            ->where('enrollment_id', $enrollment->id)
+            ->where('origin', 'monthly_auto')
+            ->whereNull('voided_at')
+            ->whereDate('due_date', '>', now()->toDateString())
+            ->get()
+            ->each(function (Charge $charge) use ($reason, &$voided): void {
+                if (\App\Support\FinanceReconcile::paidTotalForCharge($charge) > 0) {
+                    return;
+                }
+                $charge->update([
+                    'voided_at' => now(),
+                    'void_reason' => $reason,
+                    'status' => 'void',
+                ]);
+                $voided++;
+            });
+
+        if ($voided > 0) {
+            AlertEngine::evaluateFinanceForStudent((int) $enrollment->student_id);
+        }
+
+        return $voided;
+    }
+
+    public function createMonthlyCharge(Enrollment $enrollment, Carbon $month, ?Request $request = null, bool $notify = true): ?Charge
     {
         $enrollment->loadMissing(['group.course.programLevel.program', 'group.course.program', 'student.representatives']);
         $course = $enrollment->group?->course;
@@ -148,7 +207,9 @@ class EnrollmentBillingService
         }
 
         AlertEngine::evaluateFinanceForStudent((int) $enrollment->student_id);
-        $this->emailChargePendingIfPossible($charge->fresh('student.representatives'));
+        if ($notify) {
+            $this->emailChargePendingIfPossible($charge->fresh('student.representatives'));
+        }
 
         return $charge;
     }
@@ -177,6 +238,29 @@ class EnrollmentBillingService
             : now();
 
         return $enrolledAt->copy()->addDays((int) config('finance.enrollment_due_days', 30));
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, Charge>  $charges
+     */
+    private function emailChargeScheduleIfPossible(Enrollment $enrollment, \Illuminate\Support\Collection $charges): void
+    {
+        $student = $enrollment->student;
+        $recipients = collect([
+            $student?->email,
+            ...($student?->representatives?->pluck('email')->all() ?? []),
+        ])->filter(fn ($email) => filled($email))
+            ->map(fn ($email) => mb_strtolower(trim((string) $email)))
+            ->unique()
+            ->values();
+
+        if ($recipients->isEmpty()) {
+            Log::info('Extracurricular charge schedule created without email recipients', ['enrollment_id' => $enrollment->id]);
+
+            return;
+        }
+
+        Mail::to($recipients->all())->send(new \App\Mail\ChargeScheduleMail($enrollment, $charges->sortBy('due_date')->values()));
     }
 
     private function emailChargePendingIfPossible(Charge $charge): void
