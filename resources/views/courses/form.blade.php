@@ -32,6 +32,9 @@
             @endforeach
         </select>
         <div class="form-hint">Primero selecciona el programa. Solo verás los niveles que pertenecen a ese programa.</div>
+        @if(! empty($course->id) && $course->managedGroup?->enrollments?->isNotEmpty())
+            <div class="form-hint" style="color:#a16207;">Este curso ya tiene alumnos. Para pasarlos al siguiente nivel, crea un curso nuevo en lugar de cambiar el nivel aquí: así las mensualidades de cada nivel quedan separadas.</div>
+        @endif
     </div>
     <div>
         <label>Nombre estructurado</label>
@@ -125,5 +128,6 @@
             @endforeach
         </select>
         <div class="form-hint">Al guardar, el sistema generará el calendario y agregará estos estudiantes al curso.</div>
+        @include('partials.finance.skip-tuition')
     </div>
 </div>

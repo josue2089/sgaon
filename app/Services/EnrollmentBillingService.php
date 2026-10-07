@@ -24,6 +24,13 @@ class EnrollmentBillingService
             return null;
         }
 
+        // "No generar mensualidad (ya pagada fuera del sistema)".
+        if ($request?->boolean('skip_tuition')) {
+            AuditTrail::log($request, 'enrollment.tuition_skipped', $enrollment, ['course_id' => $course->id]);
+
+            return null;
+        }
+
         // Extracurricular: al inscribir se crean de una vez todas las cuotas hasta el fin del curso.
         if ($course->isExtracurricular()) {
             return $this->createAllMonthlyCharges($enrollment, $request)->first();
@@ -229,8 +236,9 @@ class EnrollmentBillingService
 
     private function resolveDueDate(Enrollment $enrollment, $course): Carbon
     {
+        // Curso ya iniciado: la mensualidad vence el día en que se inscribe, no en una fecha pasada.
         if ($course->start_date) {
-            return $course->start_date->copy();
+            return $course->start_date->copy()->max(now()->startOfDay());
         }
 
         $enrolledAt = $enrollment->enrolled_at

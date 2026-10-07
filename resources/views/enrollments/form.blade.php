@@ -5,4 +5,5 @@
 <div><label>Status</label><select name="status">@foreach(['active','inactive','completed','withdrawn'] as $status)<option value="{{ $status }}" @selected(old('status',$enrollment->status ?? 'active')==$status)>{{ $status }}</option>@endforeach</select></div>
 <div><label>Progreso (%)</label><input type="number" min="0" max="100" name="progress" value="{{ old('progress',$enrollment->progress ?? 0) }}"></div>
 <div><label>Notas</label><textarea name="notes">{{ old('notes',$enrollment->notes ?? '') }}</textarea></div>
+@if(empty($enrollment->id))<div>@include('partials.finance.skip-tuition')</div>@endif
 </div>
