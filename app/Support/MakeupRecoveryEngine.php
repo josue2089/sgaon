@@ -9,13 +9,17 @@ use App\Mail\MakeupRecoveryRejectedMail;
 use App\Models\Alert;
 use App\Models\AttendanceRecord;
 use App\Models\Charge;
+use App\Models\Enrollment;
 use App\Models\MakeupBooking;
 use App\Models\MakeupRequest;
 use App\Models\MakeupSession;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
 use App\Models\Receipt;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class MakeupRecoveryEngine
 {
@@ -154,6 +158,99 @@ class MakeupRecoveryEngine
 
         self::syncAlertStatus($request->student_id);
         self::emailApprovedIfNeeded($request->fresh(['student', 'missedSession.group.course', 'enrollment.group.course.programLevel']));
+    }
+
+    public const REQUEST_TYPE_MANUAL = 'manual';
+
+    /**
+     * Registra una recuperativa a mano desde la ficha del alumno: solicitud (nueva o la de la inasistencia),
+     * cargo con el precio indicado, bloque de recuperación con el profesor/fecha/horario y la reserva del alumno.
+     *
+     * @param  array{teacher_id: int, session_date: string, starts_at: string, ends_at: string, price: float, medical_support_required: bool, notes?: ?string}  $data
+     */
+    public static function registerManual(Enrollment $enrollment, ?AttendanceRecord $absence, array $data): MakeupRequest
+    {
+        $enrollment->loadMissing(['student', 'group.course.period']);
+        $course = $enrollment->group?->course;
+        if (! $course || ! $course->program_id || ! $course->program_level_id) {
+            throw ValidationException::withMessages(['enrollment_id' => 'El curso del alumno no tiene programa y nivel configurados.']);
+        }
+
+        return DB::transaction(function () use ($enrollment, $absence, $data, $course): MakeupRequest {
+            if ($absence) {
+                $request = self::syncForAttendanceRecord($absence->fresh(['enrollment.student', 'enrollment.group.course', 'classSession']));
+                if (! $request) {
+                    throw ValidationException::withMessages(['attendance_record_id' => 'La clase elegida no está marcada como inasistencia.']);
+                }
+                if (in_array($request->status, [MakeupRequest::STATUS_BOOKED, MakeupRequest::STATUS_COMPLETED], true)) {
+                    throw ValidationException::withMessages(['attendance_record_id' => 'Esa inasistencia ya tiene una recuperativa reservada o completada.']);
+                }
+            } else {
+                $request = MakeupRequest::create([
+                    'campus_id' => $enrollment->campus_id,
+                    'student_id' => $enrollment->student_id,
+                    'enrollment_id' => $enrollment->id,
+                    'request_type' => self::REQUEST_TYPE_MANUAL,
+                    'price' => $data['price'],
+                    'medical_support_required' => $data['medical_support_required'],
+                    'status' => MakeupRequest::STATUS_PENDING_PAYMENT,
+                ]);
+            }
+
+            $request->forceFill([
+                'price' => $data['price'],
+                'medical_support_required' => $data['medical_support_required'],
+            ])->save();
+
+            $charge = $request->charge;
+            if ($charge && FinanceReconcile::paidTotalForCharge($charge) <= 0) {
+                $charge->update(['amount' => $data['price']]);
+            } elseif (! $charge) {
+                $charge = Charge::create([
+                    'campus_id' => $request->campus_id,
+                    'student_id' => $request->student_id,
+                    'enrollment_id' => $enrollment->id,
+                    'makeup_request_id' => $request->id,
+                    'course_id' => $course->id,
+                    'group_id' => $enrollment->group_id,
+                    'period_id' => $course->period_id,
+                    'concept' => 'Clase recuperativa · '.$course->name.' · '.Carbon::parse($data['session_date'])->format('d/m/Y'),
+                    'charge_type' => 'makeup',
+                    'billing_period_label' => $course->period?->code,
+                    'origin' => 'makeup_manual',
+                    'amount' => $data['price'],
+                    'due_date' => Carbon::parse($data['session_date'])->toDateString(),
+                    'status' => 'pending',
+                    'notes' => 'Recuperativa registrada desde la ficha del alumno.',
+                ]);
+                $request->forceFill(['charge_id' => $charge->id])->save();
+            }
+
+            $session = MakeupSession::create([
+                'campus_id' => $request->campus_id,
+                'teacher_id' => $data['teacher_id'],
+                'program_id' => $course->program_id,
+                'program_level_id' => $course->program_level_id,
+                'session_date' => $data['session_date'],
+                'starts_at' => $data['starts_at'],
+                'ends_at' => $data['ends_at'],
+                'capacity' => 1,
+                'status' => 'open',
+                'notes' => $data['notes'] ?? 'Registrada desde la ficha del alumno.',
+            ]);
+
+            MakeupBooking::updateOrCreate(
+                ['makeup_request_id' => $request->id],
+                ['makeup_session_id' => $session->id, 'booked_at' => now(), 'status' => 'reserved'],
+            );
+            $request->forceFill(['status' => MakeupRequest::STATUS_BOOKED])->save();
+
+            self::syncSessionStatus($session->fresh()->loadCount('activeBookings'));
+            self::syncAlertStatus($request->student_id);
+            FinanceReconcile::syncCharge($charge->fresh());
+
+            return $request->fresh(['charge', 'booking.makeupSession.teacher']);
+        });
     }
 
     /**

@@ -531,6 +531,11 @@ class StudentController extends Controller
             'courseHistory' => $student->enrollments,
             'gradeEvaluationHistory' => $gradeEvaluationHistory,
             'paymentHistory' => $student->payments->take(15),
+            'makeupHistory' => $student->makeupRequests()
+                ->with(['missedSession', 'charge', 'booking.makeupSession.teacher', 'enrollment.group.course'])
+                ->latest()
+                ->limit(15)
+                ->get(),
             'chargeHistory' => $student->charges->take(15),
             'auditLogs' => AuditLog::query()
                 ->with('user')

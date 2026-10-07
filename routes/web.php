@@ -28,6 +28,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleTemplateController;
 use App\Http\Controllers\HistoricalStudentController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentMakeupController;
 use App\Http\Controllers\StudentImportController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\TeacherController;
@@ -73,6 +74,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/students/{student}/payments', [StudentController::class, 'storePayment'])
             ->middleware('master.admin')
             ->name('students.payments.store');
+        Route::get('/students/{student}/makeups/create', [StudentMakeupController::class, 'create'])->name('students.makeups.create');
+        Route::post('/students/{student}/makeups', [StudentMakeupController::class, 'store'])->name('students.makeups.store');
         Route::post('/students/{student}/charges', [StudentController::class, 'storeCharge'])
             ->middleware('master.admin')
             ->name('students.charges.store');
