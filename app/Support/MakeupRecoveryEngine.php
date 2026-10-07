@@ -156,6 +156,72 @@ class MakeupRecoveryEngine
         self::emailApprovedIfNeeded($request->fresh(['student', 'missedSession.group.course', 'enrollment.group.course.programLevel']));
     }
 
+    /**
+     * Alinea la solicitud de recuperativa con el estado de su cargo, venga el pago de donde venga
+     * (Finanzas, ficha del alumno, portal). Devuelve el estado nuevo, o null si no hubo cambio.
+     */
+    public static function syncWithCharge(Charge $charge, bool $notify = true): ?string
+    {
+        $request = MakeupRequest::query()
+            ->where('charge_id', $charge->id)
+            ->when($charge->makeup_request_id, fn ($query) => $query->orWhere('id', $charge->makeup_request_id))
+            ->first();
+        if (! $request) {
+            return null;
+        }
+
+        $awaitingPayment = [MakeupRequest::STATUS_PENDING_PAYMENT, MakeupRequest::STATUS_PENDING_VALIDATION];
+
+        if ($charge->voided_at) {
+            if (! in_array($request->status, [...$awaitingPayment, MakeupRequest::STATUS_APPROVED_FOR_BOOKING], true)) {
+                return null;
+            }
+            $request->forceFill(['status' => MakeupRequest::STATUS_CANCELLED])->save();
+            self::syncAlertStatus($request->student_id);
+
+            return MakeupRequest::STATUS_CANCELLED;
+        }
+
+        if ($charge->status === 'paid' && in_array($request->status, $awaitingPayment, true)) {
+            $payment = Payment::query()
+                ->whereNull('voided_at')
+                ->where(fn ($query) => $query
+                    ->where('charge_id', $charge->id)
+                    ->orWhereHas('allocations', fn ($allocations) => $allocations->where('charge_id', $charge->id)))
+                ->latest('id')
+                ->first();
+
+            $request->forceFill([
+                'payment_id' => $payment?->id,
+                'status' => MakeupRequest::STATUS_APPROVED_FOR_BOOKING,
+                'validated_at' => now(),
+                'rejection_reason' => null,
+            ])->save();
+            self::syncAlertStatus($request->student_id);
+            if ($notify) {
+                self::emailApprovedIfNeeded($request->fresh(['student', 'missedSession.group.course', 'enrollment.group.course.programLevel']));
+            }
+
+            return MakeupRequest::STATUS_APPROVED_FOR_BOOKING;
+        }
+
+        // Pago anulado: si todavía no reservó, vuelve a esperar el pago.
+        if ($charge->status !== 'paid'
+            && $request->status === MakeupRequest::STATUS_APPROVED_FOR_BOOKING
+            && ! $request->booking()->exists()) {
+            $request->forceFill([
+                'payment_id' => null,
+                'status' => MakeupRequest::STATUS_PENDING_PAYMENT,
+                'validated_at' => null,
+            ])->save();
+            self::syncAlertStatus($request->student_id);
+
+            return MakeupRequest::STATUS_PENDING_PAYMENT;
+        }
+
+        return null;
+    }
+
     public static function reject(MakeupRequest $request, ?string $reason = null): void
     {
         $request->forceFill([

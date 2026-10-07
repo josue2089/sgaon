@@ -22,6 +22,17 @@ class FinanceReconcile
         return $directPaid + $allocatedPaid;
     }
 
+    /**
+     * Solo notifica por correo si el cargo cambió de estado en esta llamada: la conciliación diaria
+     * corrige solicitudes atrasadas sin reenviar correos.
+     */
+    private static function syncMakeupRequest(Charge $charge, bool $statusChanged = false): void
+    {
+        if ($charge->charge_type === 'makeup' || $charge->makeup_request_id) {
+            MakeupRecoveryEngine::syncWithCharge($charge, notify: $statusChanged);
+        }
+    }
+
     public static function outstandingForCharge(Charge $charge): float
     {
         if ($charge->voided_at) {
@@ -34,6 +45,8 @@ class FinanceReconcile
     public static function syncCharge(Charge $charge): Charge
     {
         if ($charge->voided_at) {
+            self::syncMakeupRequest($charge);
+
             return $charge;
         }
 
@@ -50,10 +63,13 @@ class FinanceReconcile
             $nextStatus = 'pending';
         }
 
-        if ($charge->status !== $nextStatus) {
+        $statusChanged = $charge->status !== $nextStatus;
+        if ($statusChanged) {
             $charge->status = $nextStatus;
             $charge->save();
         }
+
+        self::syncMakeupRequest($charge, $statusChanged);
 
         return $charge->refresh();
     }

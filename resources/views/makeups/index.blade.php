@@ -19,7 +19,7 @@
     <div class="fi-filter-bar">
         <select name="status">
             <option value="">Todos los estados</option>
-            @foreach(['pending_payment' => 'Pendiente pago','pending_validation' => 'Pendiente validación','approved_for_booking' => 'Aprobada para reservar','booked' => 'Reservada','completed' => 'Completada','missed' => 'No atendida','rejected' => 'Rechazada'] as $value => $label)
+            @foreach(\App\Models\MakeupRequest::STATUS_LABELS as $value => $label)
                 <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>
             @endforeach
         </select>
@@ -143,13 +143,20 @@
                         <div class="table-title">{{ $makeupRequest->student?->full_name ?? 'N/D' }}</div>
                         <div class="table-sub">{{ $makeupRequest->student?->email ?? 'Sin email' }}</div>
                     </div>
-                    <div>@include('partials.ui.status-badge', ['tone' => in_array($makeupRequest->status, ['completed','approved_for_booking'], true) ? 'ok' : ($makeupRequest->status === 'rejected' ? 'danger' : 'warn'), 'text' => ucfirst(str_replace('_', ' ', $makeupRequest->status))])</div>
+                    <div>@include('partials.ui.status-badge', ['tone' => in_array($makeupRequest->status, ['completed','approved_for_booking'], true) ? 'ok' : ($makeupRequest->status === 'rejected' ? 'danger' : 'warn'), 'text' => \App\Models\MakeupRequest::STATUS_LABELS[$makeupRequest->status] ?? ucfirst(str_replace('_', ' ', $makeupRequest->status))])</div>
                 </div>
 
                 <div class="makeup-admin-meta">
                     <div><strong>Clase perdida:</strong> {{ $course?->name ?? 'N/D' }} · {{ $makeupRequest->missedSession?->session_date?->format('d/m/Y') ?? 'N/D' }}</div>
                     <div><strong>Programa:</strong> {{ $course?->program?->name ?? 'N/D' }} · {{ $course?->programLevel?->name ?? 'N/D' }}</div>
                     <div><strong>Costo:</strong> {{ \App\Support\MoneyFormat::usd($makeupRequest->price) }}</div>
+                    <div><strong>Cargo:</strong>
+                        @if($makeupRequest->charge)
+                            {{ $makeupRequest->charge->voided_at ? 'Anulado' : ['paid' => 'Pagado', 'partial' => 'Abonado', 'overdue' => 'Vencido', 'pending' => 'Pendiente'][$makeupRequest->charge->status] ?? $makeupRequest->charge->status }}
+                        @else
+                            Sin cargo
+                        @endif
+                    </div>
                 </div>
 
                 <div class="grid-3">
