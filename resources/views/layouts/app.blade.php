@@ -124,7 +124,7 @@
                         </div>
                     </details>
                 @endif
-                @if($user?->isMasterAdmin())
+                @if(collect($configNav)->contains('enabled', true))
                     <details class="fi-menu fi-menu-inline">
                         <summary class="fi-nav-item {{ $configActive ? 'active' : '' }}">
                             <span class="fi-nav-icon" aria-hidden="true">
@@ -173,7 +173,7 @@
                                 }
                             @endphp
                             <a href="{{ $alertUrl }}" class="fi-menu-link">
-                                <strong>{{ ucfirst($alert->type) }}</strong>
+                                <strong>{{ $alert->typeLabel() }}</strong>
                                 <small>{{ \Illuminate\Support\Str::limit($alert->message, 52) }}</small>
                             </a>
                         @empty
@@ -231,7 +231,12 @@
     <main class="fi-main">
         <div class="fi-container">
             @if(session('success'))
-                <div class="flash ok">{{ session('success') }}</div>
+                <div class="flash ok">
+                    {{ session('success') }}
+                    @if(is_array(session('success_link')))
+                        <a href="{{ session('success_link')['url'] }}" style="margin-left:.5rem;font-weight:700;">{{ session('success_link')['label'] }}</a>
+                    @endif
+                </div>
             @endif
             @if(session('warning'))
                 <div class="flash warn">{{ session('warning') }}</div>

@@ -52,7 +52,7 @@
             'formId' => 'finance-payment-form',
             'prefix' => 'finance-payment',
             'students' => $students,
-            'charges' => $charges,
+            'charges' => $payableCharges,
             'paymentMethods' => $paymentMethods,
             'bcvRate' => $bcvRate,
             'bcvEurRate' => $bcvEurRate,

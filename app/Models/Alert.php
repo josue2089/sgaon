@@ -9,6 +9,16 @@ class Alert extends Model
 {
     use HasFactory;
 
+    public const TYPE_LABELS = [
+        'finance' => 'Pagos pendientes',
+        'attendance' => 'Inasistencias',
+        'level_renewal' => 'Renovación de nivel',
+        'makeup_recovery' => 'Clase recuperativa',
+        'payment' => 'Pago',
+        'charge' => 'Cargo',
+        'overdue' => 'Pago vencido',
+    ];
+
     protected $fillable = [
         'campus_id',
         'student_id',
@@ -25,6 +35,11 @@ class Alert extends Model
             'resolved_at' => 'datetime',
             'emailed_at' => 'datetime',
         ];
+    }
+
+    public function typeLabel(): string
+    {
+        return self::TYPE_LABELS[$this->type] ?? ucfirst(str_replace('_', ' ', (string) $this->type));
     }
 
     public function student()

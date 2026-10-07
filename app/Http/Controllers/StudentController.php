@@ -197,7 +197,7 @@ class StudentController extends Controller
         $this->authorizeCampus($student->campus_id);
 
         $data = $this->detailData($student);
-        if ($request->user()?->isMasterAdmin()) {
+        if ($request->user()?->hasPermission('finance.manage')) {
             $data = array_merge($data, $this->paymentFormData($student));
         }
 
@@ -206,7 +206,7 @@ class StudentController extends Controller
 
     public function storePayment(Request $request, Student $student): RedirectResponse
     {
-        if (! $request->user()?->isMasterAdmin()) {
+        if (! $request->user()?->hasPermission('finance.manage')) {
             abort(403);
         }
 
@@ -228,19 +228,20 @@ class StudentController extends Controller
         $data['student_id'] = $student->id;
 
         try {
-            app(PaymentRegistrationService::class)->register($data, $request);
+            $payment = app(PaymentRegistrationService::class)->register($data, $request);
         } catch (ValidationException $exception) {
             return back()->withErrors($exception->errors())->withInput();
         }
 
         return redirect()
             ->route('students.show', $student)
-            ->with('success', 'Pago registrado y recibo generado. Se envió el comprobante por email.');
+            ->with('success', 'Pago registrado y recibo generado. Se envió el comprobante por email.')
+            ->with('success_link', $payment->receipt ? ['url' => route('finance.receipts.show', $payment->receipt), 'label' => 'Ver recibo '.$payment->receipt->receipt_number] : null);
     }
 
     public function storeCharge(Request $request, Student $student): RedirectResponse
     {
-        if (! $request->user()?->isMasterAdmin()) {
+        if (! $request->user()?->hasPermission('finance.manage')) {
             abort(403);
         }
 

@@ -120,8 +120,21 @@ class FinanceController extends Controller
             ->orderBy('label')
             ->get();
 
+        // Para "Registrar pago": todos los cargos con saldo (no solo la página visible de la tabla).
+        $payableCharges = CampusScope::apply(
+            Charge::query()
+                ->with(['student', 'course', 'group', 'period'])
+                ->whereNull('voided_at')
+                ->whereIn('status', ['pending', 'partial', 'overdue'])
+                ->when($focusStudentId, fn ($query) => $query->where('student_id', $focusStudentId))
+                ->orderBy('due_date')
+                ->orderBy('id'),
+            $user
+        )->get();
+
         return view('finance.index', [
             'charges' => $chargesQuery->paginate(20)->withQueryString(),
+            'payableCharges' => $payableCharges,
             'payments' => $paymentsQuery->take(20)->get(),
             'students' => $studentsQuery->get(),
             'enrollments' => $enrollmentsQuery
@@ -335,12 +348,14 @@ class FinanceController extends Controller
         }
 
         try {
-            app(PaymentRegistrationService::class)->register($data, $request);
+            $payment = app(PaymentRegistrationService::class)->register($data, $request);
         } catch (ValidationException $exception) {
             return back()->withErrors($exception->errors())->withInput();
         }
 
-        return back()->with('success', 'Pago registrado y recibo generado. Se envió el comprobante por email.');
+        return back()
+            ->with('success', 'Pago registrado y recibo generado. Se envió el comprobante por email.')
+            ->with('success_link', $payment->receipt ? ['url' => route('finance.receipts.show', $payment->receipt), 'label' => 'Ver recibo '.$payment->receipt->receipt_number] : null);
     }
 
     public function voidCharge(Request $request, Charge $charge, ChargeVoidService $voidService): RedirectResponse

@@ -106,9 +106,7 @@
                     <div class="session-main">
                         <div class="session-title">{{ $session->group->name ?? 'Grupo sin nombre' }} - {{ $session->group->course->name ?? 'Curso sin asignar' }}</div>
                         <div class="entity-sub">{{ $session->group->teacher->full_name ?? 'Profesor sin asignar' }}</div>
-                        @if($session->group?->course)
-                            <div class="entity-sub"><a href="{{ route('courses.show', $session->group->course) }}">Ver detalle del curso</a></div>
-                        @endif
+                        <div class="entity-sub"><a href="{{ route('attendance.index', ['class_session_id' => $session->id]) }}">Tomar asistencia</a></div>
                     </div>
                     <div class="session-meta">
                         <div class="session-time">{{ $session->starts_at ? \Illuminate\Support\Str::of($session->starts_at)->substr(0,5) : '--:--' }}</div>
@@ -130,7 +128,7 @@
             @forelse($openAlerts->take(5) as $alert)
                 <div class="activity-item">
                     <div>
-                        <div class="activity-title">{{ ucfirst($alert->type) }}</div>
+                        <div class="activity-title">{{ $alert->typeLabel() }}</div>
                         <div class="entity-sub">{{ $alert->message }}</div>
                     </div>
                     @include('partials.ui.status-badge', ['tone' => $alert->type === 'overdue' ? 'danger' : 'warn', 'text' => '!'])
