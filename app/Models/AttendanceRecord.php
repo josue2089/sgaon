@@ -21,6 +21,11 @@ class AttendanceRecord extends Model
         return $this->belongsTo(ClassSession::class);
     }
 
+    public function makeupRequest()
+    {
+        return $this->hasOne(MakeupRequest::class);
+    }
+
     public function enrollment()
     {
         return $this->belongsTo(Enrollment::class);
