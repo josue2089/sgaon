@@ -79,6 +79,7 @@
                     </div>
                     <div class="form-actions">
                         <button class="btn secondary" type="button" data-picker-open>Seleccionar estudiantes</button>
+                        @include('partials.finance.skip-tuition')
                         <button class="btn" type="submit">Agregar estudiantes</button>
                     </div>
                     <div class="student-picker-selection" data-picker-selection>Sin alumnos seleccionados.</div>

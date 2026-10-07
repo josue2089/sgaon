@@ -321,13 +321,20 @@ class CourseController extends Controller
         }
 
         $calendarSnapshot = $this->calendarSnapshot($course);
+        $previousLevelId = (int) $course->program_level_id;
 
         $course->update($data);
+        AuditTrail::log($request, 'course.update', $course, $course->getChanges());
         $course->load(['teacher', 'period', 'scheduleTemplate', 'managedGroup.sessions.attendanceRecords']);
         $course = CoursePlanner::sync($course, $this->calendarFieldsChanged($calendarSnapshot, $course));
         $this->addStudentsToCourse($course, $studentIds);
 
-        return redirect()->route('courses.show', $course)->with('success', 'Curso actualizado.');
+        $redirect = redirect()->route('courses.show', $course)->with('success', 'Curso actualizado.');
+        if ($previousLevelId && $previousLevelId !== (int) $course->program_level_id && $course->enrollments()->exists()) {
+            $redirect->with('warning', 'Cambiaste el nivel de un curso que ya tiene alumnos. Las mensualidades del nivel anterior siguen en sus fichas: revísalas o anúlalas si ya se pagaron. Para pasar a los alumnos al siguiente nivel conviene crear un curso nuevo.');
+        }
+
+        return $redirect;
     }
 
     public function syncStudents(Request $request, Course $course): RedirectResponse

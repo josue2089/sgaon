@@ -230,6 +230,7 @@
             </div>
         </div>
         <div class="form-actions">
+            @include('partials.finance.skip-tuition')
             <button class="btn" type="submit">Guardar inscripciones</button>
         </div>
     </form>
