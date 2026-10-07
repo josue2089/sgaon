@@ -18,6 +18,17 @@ class MakeupRequest extends Model
     public const STATUS_CANCELLED = 'cancelled';
     public const STATUS_REJECTED = 'rejected';
 
+    public const STATUS_LABELS = [
+        self::STATUS_PENDING_PAYMENT => 'Pendiente pago',
+        self::STATUS_PENDING_VALIDATION => 'Pendiente validación',
+        self::STATUS_APPROVED_FOR_BOOKING => 'Aprobada para reservar',
+        self::STATUS_BOOKED => 'Reservada',
+        self::STATUS_COMPLETED => 'Completada',
+        self::STATUS_MISSED => 'No atendida',
+        self::STATUS_CANCELLED => 'Cancelada',
+        self::STATUS_REJECTED => 'Rechazada',
+    ];
+
     protected $fillable = [
         'campus_id',
         'student_id',

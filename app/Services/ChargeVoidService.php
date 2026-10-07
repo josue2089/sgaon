@@ -49,6 +49,7 @@ class ChargeVoidService
         }
 
         AlertEngine::evaluateFinanceForStudent((int) $charge->student_id);
+        FinanceReconcile::syncCharge($charge->refresh());
 
         return $charge->refresh();
     }
