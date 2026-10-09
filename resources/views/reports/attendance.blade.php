@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('content')
-@include('partials.layout.reports-tabs')
 <div class="card">
     <div class="module-head">
         <div>
@@ -8,6 +7,7 @@
             <p class="page-subtitle">Consulta y exporta asistencia por fecha y grupo</p>
         </div>
     </div>
+@include('partials.layout.reports-tabs')
     <form method="GET" action="{{ route('reports.attendance') }}">
         <div class="grid-2">
             <div><label>Desde</label><input type="date" name="from" value="{{ request('from') }}"></div>

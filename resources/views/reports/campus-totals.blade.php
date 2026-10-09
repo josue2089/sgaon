@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('content')
-@include('partials.layout.reports-tabs')
 <div class="module-head">
     <div>
         <h1 class="page-title">Totales por sede 🏫</h1>
@@ -8,6 +7,7 @@
     </div>
     <a class="btn secondary" href="{{ route('reports.campus-totals', ['export' => 'csv']) }}">Exportar CSV</a>
 </div>
+@include('partials.layout.reports-tabs')
 
 <div class="card table-card">
     <div class="table-wrap">

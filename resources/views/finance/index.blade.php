@@ -61,7 +61,7 @@
     </div>
 </div>
 
-<div class="card finance-payment-requests-card">
+<div class="card finance-payment-requests-card" id="comprobantes">
     <div class="section-head section-head-tight">
         <h3 class="section-title section-title-sm">Solicitudes de pago por validar</h3>
         <div class="entity-sub">Revisa el comprobante en pantalla y define la acción sin tablas anchas</div>

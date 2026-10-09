@@ -731,6 +731,7 @@ class StudentController extends Controller
             'level' => (string) $request->query('level', ''),
             'status' => (string) $request->query('status', ''),
             'payment_status' => (string) $request->query('payment_status', ''),
+            'enrollment' => (string) $request->query('enrollment', ''),
             'campus_id' => (string) $request->query('campus_id', ''),
         ];
     }
@@ -758,6 +759,10 @@ class StudentController extends Controller
                     ->where('code', $levelFilter)
                     ->orWhere('name', $levelFilter);
             });
+        }
+
+        if ($filters['enrollment'] === 'none') {
+            $query->whereDoesntHave('enrollments', fn (Builder $builder) => $builder->where('status', 'active'));
         }
 
         if ($filters['payment_status'] === 'overdue') {

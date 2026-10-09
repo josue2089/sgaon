@@ -1,7 +1,6 @@
 @php use App\Support\MoneyFormat; @endphp
 @extends('layouts.app')
 @section('content')
-@include('partials.layout.reports-tabs')
 <div class="card">
     <div class="module-head">
         <div>
@@ -9,6 +8,7 @@
             <p class="page-subtitle">Resumen de cargos y monto efectivamente pagado</p>
         </div>
     </div>
+@include('partials.layout.reports-tabs')
     <form method="GET" action="{{ route('reports.payments') }}">
         <div class="grid-2">
             <div>
@@ -112,7 +112,7 @@
                 <td>{{ $charge->course->name ?? 'Sin curso' }}</td>
                 <td>{{ $charge->group->name ?? 'Sin grupo' }}</td>
                 <td>{{ $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período') }}</td>
-                <td>{{ $charge->charge_type ?: 'N/D' }}</td>
+                <td>{{ \App\Support\StatusLabel::chargeType($charge->charge_type) }}</td>
                 <td>{{ $charge->concept }}</td>
                 <td>{{ MoneyFormat::chargeAmount($charge) }}</td>
                 <td>@include('partials.ui.status', ['status' => $charge->status])</td>

@@ -1,12 +1,12 @@
 @extends('layouts.app')
 @section('content')
-@include('partials.layout.reports-tabs')
 <div class="module-head">
     <div>
         <h1 class="page-title">Renovación de niveles</h1>
         <p class="page-subtitle">Seguimiento de recordatorios enviados para reinscripción al siguiente nivel</p>
     </div>
 </div>
+@include('partials.layout.reports-tabs')
 
 <div class="soft-kpi-grid soft-kpi-grid-4">
     @include('partials.ui.soft-kpi', ['iconName' => 'mail', 'label' => 'Total recordatorios', 'value' => $summary['total']])
