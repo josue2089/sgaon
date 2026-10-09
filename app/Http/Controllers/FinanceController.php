@@ -154,8 +154,8 @@ class FinanceController extends Controller
     public function summary(Request $request): View|StreamedResponse|Response
     {
         $filterData = $request->validate([
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'start_date' => ['nullable', 'date', 'sane_date'],
+            'end_date' => ['nullable', 'date', 'sane_date', 'after_or_equal:start_date'],
             'currency' => ['nullable', 'in:'.PaymentCurrencyConverter::CURRENCY_EUR.','.PaymentCurrencyConverter::CURRENCY_USD],
             'campus_id' => ['nullable', 'integer', 'exists:campuses,id'],
         ]);
@@ -220,7 +220,7 @@ class FinanceController extends Controller
             'billing_period_label' => ['nullable', 'string', 'max:60'],
             'amount' => ['required', 'numeric', 'min:0'],
             'currency' => ['nullable', 'in:'.PaymentCurrencyConverter::CURRENCY_USD.','.PaymentCurrencyConverter::CURRENCY_EUR],
-            'due_date' => ['nullable', 'date'],
+            'due_date' => ['nullable', 'date', 'sane_date'],
             'status' => ['required', 'in:pending,partial,overdue'],
             'notes' => ['nullable', 'string'],
         ]);
@@ -264,8 +264,8 @@ class FinanceController extends Controller
         }
 
         $filterData = $request->validate([
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'start_date' => ['nullable', 'date', 'sane_date'],
+            'end_date' => ['nullable', 'date', 'sane_date', 'after_or_equal:start_date'],
         ]);
 
         $student->load([
@@ -325,8 +325,8 @@ class FinanceController extends Controller
             'currency' => ['required', 'in:'.PaymentCurrencyConverter::CURRENCY_USD.','.PaymentCurrencyConverter::CURRENCY_VES.','.PaymentCurrencyConverter::CURRENCY_EUR],
             'original_amount' => ['required', 'numeric', 'min:0.01'],
             'payment_method_id' => ['required', 'exists:payment_methods,id'],
-            'paid_at' => ['required', 'date'],
-            'balance_due_date' => ['nullable', 'date', 'after_or_equal:paid_at'],
+            'paid_at' => ['required', 'date', 'sane_date'],
+            'balance_due_date' => ['nullable', 'date', 'sane_date', 'after_or_equal:paid_at'],
             'reference' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string'],
         ]);

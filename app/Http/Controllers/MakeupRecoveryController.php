@@ -66,7 +66,7 @@ class MakeupRecoveryController extends Controller
             'student_id' => ['nullable', 'integer'],
             'program_id' => ['nullable', 'integer'],
             'program_level_id' => ['nullable', 'integer'],
-            'session_date' => ['nullable', 'date'],
+            'session_date' => ['nullable', 'date', 'sane_date'],
         ]);
 
         if (! empty($filters['status'])) {
@@ -118,7 +118,7 @@ class MakeupRecoveryController extends Controller
             'program_id' => ['required', 'exists:programs,id'],
             'program_level_id' => ['required', 'exists:program_levels,id'],
             'schedule_template_id' => ['nullable', 'exists:schedule_templates,id'],
-            'session_date' => ['required', 'date'],
+            'session_date' => ['required', 'date', 'sane_date'],
             'starts_at' => ['required'],
             'ends_at' => ['required'],
             'capacity' => ['required', 'integer', 'min:1', 'max:50'],
@@ -145,7 +145,7 @@ class MakeupRecoveryController extends Controller
         $data = $request->validate([
             'action' => ['required', 'in:approve,reject'],
             'rejection_reason' => ['nullable', 'string'],
-            'paid_at' => ['nullable', 'date'],
+            'paid_at' => ['nullable', 'date', 'sane_date'],
             'method' => ['nullable', 'string', 'max:60'],
             'reference' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string'],

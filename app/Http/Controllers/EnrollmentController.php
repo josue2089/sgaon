@@ -87,7 +87,7 @@ class EnrollmentController extends Controller
         $data = $request->validate([
             'student_id' => ['required', 'exists:students,id'],
             'group_id' => ['required', 'exists:groups,id'],
-            'enrolled_at' => ['nullable', 'date'],
+            'enrolled_at' => ['nullable', 'date', 'sane_date'],
             'status' => ['required', 'string'],
             'progress' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
@@ -152,7 +152,7 @@ class EnrollmentController extends Controller
         $data = $request->validate([
             'student_id' => ['required', 'exists:students,id'],
             'group_id' => ['required', 'exists:groups,id'],
-            'enrolled_at' => ['nullable', 'date'],
+            'enrolled_at' => ['nullable', 'date', 'sane_date'],
             'status' => ['required', 'string'],
             'progress' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],

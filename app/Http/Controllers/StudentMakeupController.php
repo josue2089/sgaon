@@ -47,7 +47,7 @@ class StudentMakeupController extends Controller
             'enrollment_id' => ['required', Rule::exists('enrollments', 'id')->where('student_id', $student->id)],
             'attendance_record_id' => ['nullable', 'exists:attendance_records,id'],
             'teacher_id' => ['required', Rule::exists('teachers', 'id')->where('campus_id', $student->campus_id)],
-            'session_date' => ['required', 'date'],
+            'session_date' => ['required', 'date', 'sane_date'],
             'starts_at' => ['required', 'date_format:H:i'],
             'ends_at' => ['required', 'date_format:H:i', 'after:starts_at'],
             'medical_support_required' => ['nullable', 'boolean'],
@@ -56,7 +56,7 @@ class StudentMakeupController extends Controller
             'payment_method_id' => ['required_if:paid,1', 'nullable', 'exists:payment_methods,id'],
             'currency' => ['required_if:paid,1', 'nullable', Rule::in([PaymentCurrencyConverter::CURRENCY_USD, PaymentCurrencyConverter::CURRENCY_VES, PaymentCurrencyConverter::CURRENCY_EUR])],
             'original_amount' => ['required_if:paid,1', 'nullable', 'numeric', 'min:0.01'],
-            'paid_at' => ['required_if:paid,1', 'nullable', 'date'],
+            'paid_at' => ['required_if:paid,1', 'nullable', 'date', 'sane_date'],
             'reference' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
