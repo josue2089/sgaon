@@ -268,3 +268,60 @@ document.querySelectorAll('[data-student-search]').forEach((box) => {
         }
     });
 });
+
+// --- Pestañas genéricas: [data-tabs] con botones [data-tab-target] y paneles [data-tab-panel] -----
+// Admite enlace directo: #finanzas abre esa pestaña; #student-finance abre la pestaña que contiene ese elemento.
+document.querySelectorAll('[data-tabs]').forEach((tabList) => {
+    const tabs = Array.from(tabList.querySelectorAll('[data-tab-target]'));
+    const panels = tabs
+        .map((tab) => document.querySelector(`[data-tab-panel="${tab.dataset.tabTarget}"]`))
+        .filter(Boolean);
+
+    const activate = (key, updateHash = true) => {
+        tabs.forEach((tab) => {
+            const active = tab.dataset.tabTarget === key;
+            tab.classList.toggle('is-active', active);
+            tab.setAttribute('aria-selected', active ? 'true' : 'false');
+            tab.tabIndex = active ? 0 : -1;
+        });
+        panels.forEach((panel) => panel.classList.toggle('is-active', panel.dataset.tabPanel === key));
+        if (updateHash) {
+            history.replaceState(null, '', `#${key}`);
+        }
+    };
+
+    tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => activate(tab.dataset.tabTarget));
+        tab.addEventListener('keydown', (event) => {
+            if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') {
+                return;
+            }
+            const next = tabs[(index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+            next.focus();
+            activate(next.dataset.tabTarget);
+        });
+    });
+
+    const openFromHash = () => {
+        const hash = decodeURIComponent(window.location.hash.slice(1));
+        if (!hash) {
+            return;
+        }
+        if (tabs.some((tab) => tab.dataset.tabTarget === hash)) {
+            activate(hash, false);
+            return;
+        }
+        const target = document.getElementById(hash);
+        const panel = target?.closest('[data-tab-panel]');
+        if (panel && panels.includes(panel)) {
+            activate(panel.dataset.tabPanel, false);
+            target.scrollIntoView({ block: 'start' });
+        }
+    };
+
+    openFromHash();
+    window.addEventListener('hashchange', openFromHash);
+});
+
+// Modales que deben abrirse al cargar (p. ej. el formulario que volvió con errores).
+document.querySelectorAll('dialog[data-open-on-load]').forEach((dialog) => dialog.showModal());
