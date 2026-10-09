@@ -183,6 +183,12 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Credenciales inválidas.'])->onlyInput('email');
         }
 
+        if (Auth::user()?->status === 'inactive') {
+            Auth::logout();
+
+            return back()->withErrors(['email' => 'Este usuario está desactivado. Consulta con la administración.'])->onlyInput('email');
+        }
+
         $request->session()->regenerate();
         AuditTrail::log($request, 'auth.login');
 

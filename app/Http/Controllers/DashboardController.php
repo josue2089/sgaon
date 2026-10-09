@@ -32,10 +32,7 @@ class DashboardController extends Controller
 
         $teacher = null;
         if ($user?->role === 'teacher') {
-            $teacher = CampusScope::apply(
-                Teacher::query()->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('email', $user->email)),
-                $user
-            )->first();
+            $teacher = Teacher::forUser($user);
         }
 
         $studentsQuery = CampusScope::apply(Student::query(), $user);
