@@ -86,7 +86,7 @@ class ClassSessionController extends Controller
     {
         $data = $request->validate([
             'group_id' => ['required', 'exists:groups,id'],
-            'session_date' => ['required', 'date'],
+            'session_date' => ['required', 'date', 'sane_date'],
             'starts_at' => ['nullable', self::TIME_RULE],
             'ends_at' => ['nullable', self::TIME_RULE],
             'topic' => ['nullable', 'string'],
@@ -148,7 +148,7 @@ class ClassSessionController extends Controller
     {
         $data = $request->validate([
             'group_id' => ['required', 'exists:groups,id'],
-            'session_date' => ['required', 'date'],
+            'session_date' => ['required', 'date', 'sane_date'],
             'starts_at' => ['nullable', self::TIME_RULE],
             'ends_at' => ['nullable', self::TIME_RULE],
             'topic' => ['nullable', 'string'],

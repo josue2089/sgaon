@@ -252,7 +252,7 @@ class CourseController extends Controller
         $this->authorizeCourse($course);
 
         $data = $request->validate([
-            'session_date' => ['required', 'date'],
+            'session_date' => ['required', 'date', 'sane_date'],
             'starts_at' => ['nullable', 'date_format:H:i'],
             'ends_at' => ['nullable', 'date_format:H:i', 'after:starts_at'],
         ]);
@@ -449,9 +449,9 @@ class CourseController extends Controller
             'name' => ['nullable', 'string', 'max:150'],
             'code' => ['nullable', 'string', 'max:60'],
             'description' => ['nullable', 'string'],
-            'start_date' => ['required', 'date'],
+            'start_date' => ['required', 'date', 'sane_date'],
             'academic_hours' => ['nullable', 'integer', 'min:1', 'max:500'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'end_date' => ['nullable', 'date', 'sane_date', 'after_or_equal:start_date'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
 

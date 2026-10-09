@@ -164,8 +164,8 @@ class OperationWizardController extends Controller
             'name' => ['required', 'string', 'max:150'],
             'period' => ['nullable', Rule::in($this->groupPeriods())],
             'schedule' => ['nullable', Rule::in($this->groupSchedules())],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
+            'start_date' => ['nullable', 'date', 'sane_date'],
+            'end_date' => ['nullable', 'date', 'sane_date'],
             'status' => ['required', Rule::in($this->groupStatuses())],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
@@ -186,7 +186,7 @@ class OperationWizardController extends Controller
     {
         $data = $request->validate([
             'group_id' => ['required', 'exists:groups,id'],
-            'session_date' => ['required', 'date'],
+            'session_date' => ['required', 'date', 'sane_date'],
             'starts_at' => ['nullable', 'date_format:H:i'],
             'ends_at' => ['nullable', 'date_format:H:i'],
             'topic' => ['nullable', 'string'],
@@ -231,7 +231,7 @@ class OperationWizardController extends Controller
             'group_id' => ['required', 'exists:groups,id'],
             'student_ids' => ['required', 'array', 'min:1'],
             'student_ids.*' => ['required', 'exists:students,id'],
-            'enrolled_at' => ['nullable', 'date'],
+            'enrolled_at' => ['nullable', 'date', 'sane_date'],
             'status' => ['required', 'in:active,inactive,completed,withdrawn'],
             'progress' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],

@@ -87,7 +87,7 @@ class CourseGradeController extends Controller
         }
 
         $rules = [
-            'evaluated_on' => ['required', 'date'],
+            'evaluated_on' => ['required', 'date', 'sane_date'],
             'title' => ['nullable', 'string', 'max:120'],
         ];
 
@@ -195,7 +195,7 @@ class CourseGradeController extends Controller
         $enrollmentIds = $gradeEvaluationSet->entries->pluck('enrollment_id')->all();
 
         $rules = [
-            'evaluated_on' => ['required', 'date'],
+            'evaluated_on' => ['required', 'date', 'sane_date'],
             'title' => ['nullable', 'string', 'max:120'],
         ];
 

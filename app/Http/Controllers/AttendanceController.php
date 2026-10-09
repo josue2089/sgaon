@@ -79,7 +79,7 @@ class AttendanceController extends Controller
             : null;
 
         // Selector: por defecto clases de hoy, próximos 7 días y últimos 30 días; con fecha, solo ese día.
-        $request->validate(['date' => ['nullable', 'date']]);
+        $request->validate(['date' => ['nullable', 'date', 'sane_date']]);
         $filterDate = $request->filled('date') ? Carbon::parse($request->input('date'))->startOfDay() : null;
         $today = now()->startOfDay();
         $listQuery = (clone $sessionsQuery)->orderBy('starts_at')->orderBy('id');
@@ -124,7 +124,7 @@ class AttendanceController extends Controller
     {
         $data = $request->validate([
             'class_session_id' => ['required', 'exists:class_sessions,id'],
-            'session_date' => ['required', 'date'],
+            'session_date' => ['required', 'date', 'sane_date'],
             'cascade' => ['nullable', 'boolean'],
         ]);
 

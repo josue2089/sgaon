@@ -175,8 +175,8 @@ class GroupController extends Controller
             'name' => ['required', 'string', 'max:150'],
             'period' => ['nullable', Rule::in($this->groupPeriods())],
             'schedule' => ['nullable', Rule::in($this->groupSchedules())],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
+            'start_date' => ['nullable', 'date', 'sane_date'],
+            'end_date' => ['nullable', 'date', 'sane_date'],
             'status' => ['required', Rule::in($this->groupStatuses())],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
@@ -229,8 +229,8 @@ class GroupController extends Controller
             'name' => ['required', 'string', 'max:150'],
             'period' => ['nullable', Rule::in(array_values(array_unique(array_merge($this->groupPeriods(), array_filter([$group->period])))))],
             'schedule' => ['nullable', Rule::in(array_values(array_unique(array_merge($this->groupSchedules(), array_filter([$group->schedule])))))],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
+            'start_date' => ['nullable', 'date', 'sane_date'],
+            'end_date' => ['nullable', 'date', 'sane_date'],
             'status' => ['required', Rule::in(array_values(array_unique(array_merge($this->groupStatuses(), array_filter([$group->status])))))],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
