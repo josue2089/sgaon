@@ -72,7 +72,7 @@
             <input type="number" name="price" min="0" step="0.01" value="{{ old('price', 10) }}" data-makeup-price required>
             <div class="form-hint">$10 por defecto, $5 con reposo. Se puede modificar.</div>
         </div>
-        <div style="grid-column:1/-1;">
+        <div class="col-span-full">
             <label>¿Pagó?</label>
             <select name="paid" data-makeup-paid required>
                 <option value="0" @selected(old('paid', '0') === '0')>No, el cargo queda pendiente</option>
@@ -109,19 +109,19 @@
                 <label>Fecha de pago</label>
                 <input type="date" name="paid_at" value="{{ old('paid_at', now()->toDateString()) }}">
             </div>
-            <div style="grid-column:1/-1;">
+            <div class="col-span-full">
                 <label>Referencia</label>
                 <input name="reference" value="{{ old('reference') }}" placeholder="Número de referencia o comprobante">
             </div>
         </div>
     </fieldset>
 
-    <div style="margin-top:1rem;">
+    <div class="mt-4">
         <label>Observaciones</label>
         <textarea name="notes" placeholder="Opcional">{{ old('notes') }}</textarea>
     </div>
 
-    <div class="form-actions" style="margin-top:1rem;">
+    <div class="form-actions mt-4">
         <button class="btn" type="submit" data-submit-busy-label="Registrando…">Registrar recuperativa</button>
         <a class="btn secondary" href="{{ route('students.show', $student) }}">Cancelar</a>
     </div>

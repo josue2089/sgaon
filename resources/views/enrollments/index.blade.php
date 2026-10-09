@@ -26,7 +26,7 @@
         <div class="search">
             <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar alumno (nombre, cédula, representante), grupo o curso...">
         </div>
-        <select name="group_id" style="max-width:260px;">
+        <select class="max-w-[260px]" name="group_id">
             <option value="">Todos los grupos</option>
             @foreach($groups as $group)
                 <option value="{{ $group->id }}" @selected((string) $filters['group_id'] === (string) $group->id)>{{ $group->name }}{{ $group->course ? ' · '.$group->course->name : '' }}</option>
@@ -49,7 +49,7 @@
     <div class="entity-grid">
         @foreach($enrollments as $enrollment)
             <div class="entity-card">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div class="flex justify-between items-start">
                     <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.9rem;">📘</div>
                     @include('partials.ui.status', ['status' => $enrollment->status, 'domain' => 'enrollment'])
                 </div>

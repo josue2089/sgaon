@@ -94,14 +94,14 @@
                         <td>@include('partials.ui.status-badge', ['tone' => 'warn', 'text' => $statusLabel])</td>
                         <td class="table-actions">
                             <a href="{{ route('students.show', $student) }}">Detalle</a>
-                            <form method="POST" action="{{ route('students.historical.activate', $student) }}" style="display:inline;">
+                            <form class="inline" method="POST" action="{{ route('students.historical.activate', $student) }}" data-confirm="¿Activar este alumno? Aparecerá en el listado de alumnos activos.">
                                 @csrf
                                 <input type="hidden" name="year" value="{{ $filters['year'] }}">
                                 <input type="hidden" name="campus_id" value="{{ $filters['campus_id'] }}">
                                 <input type="hidden" name="status" value="{{ $filters['status'] }}">
                                 <input type="hidden" name="q" value="{{ $filters['q'] }}">
                                 <input type="hidden" name="registration_program_id" value="{{ $filters['registration_program_id'] }}">
-                                <button type="submit" class="btn-link" onclick="return confirm('¿Activar este alumno? Aparecerá en el listado de alumnos activos.')">Activar</button>
+                                <button type="submit" class="btn-link">Activar</button>
                             </form>
                         </td>
                     </tr>

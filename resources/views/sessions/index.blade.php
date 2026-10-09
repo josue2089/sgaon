@@ -24,13 +24,13 @@
         <div class="search">
             <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar por grupo, curso o tema...">
         </div>
-        <select name="group_id" style="max-width:260px;">
+        <select class="max-w-[260px]" name="group_id">
             <option value="">Todos los grupos</option>
             @foreach($groups as $group)
                 <option value="{{ $group->id }}" @selected((string) $filters['group_id'] === (string) $group->id)>{{ $group->name }}{{ $group->course ? ' · '.$group->course->name : '' }}</option>
             @endforeach
         </select>
-        <input type="date" name="date" value="{{ $filters['date'] }}" style="max-width:220px;">
+        <input class="max-w-[220px]" type="date" name="date" value="{{ $filters['date'] }}">
         <button class="btn secondary" type="submit">Filtros</button>
     </div>
 </form>
@@ -41,7 +41,7 @@
     <div class="entity-grid">
         @foreach($sessions as $session)
             <div class="entity-card">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div class="flex justify-between items-start">
                     <div style="width:58px;height:58px;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.8rem;">🕒</div>
                     <span class="badge-pill badge-info">{{ $session->session_date?->format('d M') }}</span>
                 </div>

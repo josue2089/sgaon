@@ -42,12 +42,12 @@
                         <td>@include('partials.ui.status', ['status' => $user->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('admin-users.edit', $user) }}">Editar</a>
-                            <form method="POST" action="{{ route('admin-users.resend-credentials', $user) }}" style="display:inline;">
+                            <form class="inline" method="POST" action="{{ route('admin-users.resend-credentials', $user) }}">
                                 @csrf
                                 <button type="submit" class="btn-link">Reenviar credenciales</button>
                             </form>
                             @if((int) auth()->id() !== (int) $user->id)
-                                <form method="POST" action="{{ route('admin-users.destroy', $user) }}" style="display:inline;" onsubmit="return confirm('¿Eliminar este usuario administrativo?');">
+                                <form class="inline" method="POST" action="{{ route('admin-users.destroy', $user) }}" data-confirm="¿Eliminar este usuario administrativo?" data-confirm-danger>
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn-link-danger">Eliminar</button>

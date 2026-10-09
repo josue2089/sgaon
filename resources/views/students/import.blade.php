@@ -9,7 +9,7 @@
 </div>
 
 @if(session('error'))
-    <div class="card" style="margin-bottom:1rem;color:#b91c1c;">{{ session('error') }}</div>
+    <div class="card mb-4 text-[#b91c1c]">{{ session('error') }}</div>
 @endif
 
 @if(!$preview)
@@ -35,19 +35,19 @@
                     <input type="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
                 </label>
             </div>
-            <p class="page-subtitle" style="margin-top:1rem;">
+            <p class="page-subtitle mt-4">
                 Formato esperado: columnas Nombre, 2do Nombre, Apellido, Edad, Nivel y Status (encabezado en fila 4). La columna ID del Excel es solo un contador y se ignora.
                 No se asignan cursos ni horarios en esta etapa.
             </p>
-            @error('file')<p style="color:#b91c1c;">{{ $message }}</p>@enderror
-            @error('campus_id')<p style="color:#b91c1c;">{{ $message }}</p>@enderror
-            <div style="margin-top:1.25rem;">
+            @error('file')<p class="text-[#b91c1c]">{{ $message }}</p>@enderror
+            @error('campus_id')<p class="text-[#b91c1c]">{{ $message }}</p>@enderror
+            <div class="mt-5">
                 <button class="btn" type="submit">Vista previa</button>
             </div>
         </form>
     </div>
 @else
-    <div class="soft-kpi-grid soft-kpi-grid-4" style="margin-bottom:1rem;">
+    <div class="soft-kpi-grid soft-kpi-grid-4 mb-4">
         @include('partials.ui.soft-kpi', ['iconName' => 'users', 'label' => 'Filas', 'value' => count($preview->rows)])
         @include('partials.ui.soft-kpi', ['iconName' => 'check', 'label' => 'Listas para importar', 'value' => $preview->validCount(), 'valueClass' => 'value-ok'])
         @include('partials.ui.soft-kpi', ['iconName' => 'warning', 'label' => 'Con error', 'value' => $preview->errorCount(), 'valueClass' => 'value-danger'])

@@ -185,7 +185,7 @@
     </div>
 </div>
 
-<div class="card" style="margin-top:1rem;">
+<div class="card mt-4">
     <h3>Paso 4 · Inscribir alumnos al grupo</h3>
     <form method="POST" action="{{ route('operations.wizard.enrollment') }}">
         @csrf
@@ -216,7 +216,7 @@
                 <label>Progreso (%)</label>
                 <input type="number" min="0" max="100" name="progress" value="0">
             </div>
-            <div style="grid-column:1/-1;">
+            <div class="col-span-full">
                 <label>Selecciona alumnos</label>
                 <select name="student_ids[]" multiple size="8" required>
                     @foreach($students as $student)
@@ -224,7 +224,7 @@
                     @endforeach
                 </select>
             </div>
-            <div style="grid-column:1/-1;">
+            <div class="col-span-full">
                 <label>Notas</label>
                 <textarea name="notes" placeholder="Notas opcionales para el lote"></textarea>
             </div>
@@ -236,7 +236,7 @@
     </form>
 </div>
 
-<div class="card" style="margin-top:1rem;">
+<div class="card mt-4">
     <h3>Contexto actual</h3>
     <div class="stack-sm">
         <div><strong>Curso:</strong> {{ $selectedCourse?->name ?? 'No seleccionado' }}</div>

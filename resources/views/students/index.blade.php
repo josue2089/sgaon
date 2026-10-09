@@ -173,7 +173,7 @@
                         </select>
                     </label>
                 </div>
-                <p style="margin-top:1rem;">Alumno: <strong data-move-historical-name>—</strong></p>
+                <p class="mt-4">Alumno: <strong data-move-historical-name>—</strong></p>
                 <div class="form-actions">
                     <button class="btn secondary" type="button" data-move-historical-close>Cancelar</button>
                     <button class="btn" type="submit">Confirmar</button>

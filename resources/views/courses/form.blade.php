@@ -116,11 +116,11 @@
             @endforeach
         </select>
     </div>
-    <div style="grid-column:1/-1;">
+    <div class="col-span-full">
         <label>Descripción</label>
         <textarea name="description" placeholder="Descripción breve del curso">{{ old('description',$course->description ?? '') }}</textarea>
     </div>
-    <div style="grid-column:1/-1;">
+    <div class="col-span-full">
         <label>Estudiantes iniciales</label>
         <select name="student_ids[]" multiple size="8">
             @foreach($students as $student)

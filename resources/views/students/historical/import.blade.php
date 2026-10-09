@@ -9,7 +9,7 @@
 </div>
 
 @if(session('error'))
-    <div class="card" style="margin-bottom:1rem;color:#b91c1c;">{{ session('error') }}</div>
+    <div class="card mb-4 text-[#b91c1c]">{{ session('error') }}</div>
 @endif
 
 @if(!$preview)
@@ -36,19 +36,19 @@
                     <input type="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
                 </label>
             </div>
-            <p class="page-subtitle" style="margin-top:1rem;">
+            <p class="page-subtitle mt-4">
                 Formatos soportados: consulta histórica ancha (encabezado fila 6) y ledger 13-16 Picacho (encabezado fila 5).
                 Se importan ficha, fecha de inscripción, programa y representante cuando aplique.
             </p>
-            @error('file')<p style="color:#b91c1c;">{{ $message }}</p>@enderror
-            @error('campus_id')<p style="color:#b91c1c;">{{ $message }}</p>@enderror
-            <div style="margin-top:1.25rem;">
+            @error('file')<p class="text-[#b91c1c]">{{ $message }}</p>@enderror
+            @error('campus_id')<p class="text-[#b91c1c]">{{ $message }}</p>@enderror
+            <div class="mt-5">
                 <button class="btn" type="submit">Vista previa</button>
             </div>
         </form>
     </div>
 @else
-    <div class="soft-kpi-grid soft-kpi-grid-4" style="margin-bottom:1rem;">
+    <div class="soft-kpi-grid soft-kpi-grid-4 mb-4">
         @include('partials.ui.soft-kpi', ['iconName' => 'users', 'label' => 'Filas', 'value' => count($preview->rows)])
         @include('partials.ui.soft-kpi', ['iconName' => 'check', 'label' => 'Listas para importar', 'value' => $preview->validCount(), 'valueClass' => 'value-ok'])
         @include('partials.ui.soft-kpi', ['iconName' => 'warning', 'label' => 'Con error', 'value' => $preview->errorCount(), 'valueClass' => 'value-danger'])
@@ -82,7 +82,7 @@
                         <td>{{ $row->action === 'update' ? 'Actualizar' : 'Crear' }}</td>
                         <td>
                             @if(!$row->isValid)
-                                <span style="color:#b91c1c;">{{ implode(' ', $row->errors) }}</span>
+                                <span class="text-[#b91c1c]">{{ implode(' ', $row->errors) }}</span>
                             @elseif($row->warnings !== [])
                                 <span style="color:#b45309;">{{ implode(' ', $row->warnings) }}</span>
                             @else
@@ -96,7 +96,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('students.historical.import.store') }}" style="margin-top:1rem;">
+    <form class="mt-4" method="POST" action="{{ route('students.historical.import.store') }}">
         @csrf
         <button class="btn" type="submit" @disabled($preview->validCount() === 0)>Confirmar importación ({{ $preview->validCount() }} filas)</button>
         <a class="btn secondary" href="{{ route('students.historical.import') }}">Cancelar</a>

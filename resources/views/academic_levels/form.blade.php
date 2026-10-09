@@ -19,7 +19,7 @@
         <label>Orden</label>
         <input type="number" min="0" max="999" name="sort_order" value="{{ old('sort_order', $level->sort_order ?? 0) }}">
     </div>
-    <div style="grid-column:1/-1;">
+    <div class="col-span-full">
         <label>Descripción</label>
         <textarea name="description">{{ old('description', $level->description ?? '') }}</textarea>
     </div>

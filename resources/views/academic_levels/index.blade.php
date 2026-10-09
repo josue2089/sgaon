@@ -43,7 +43,7 @@
                         <td>{{ $level->description ?: 'Sin descripción' }}</td>
                         <td class="table-actions">
                             <a href="{{ route('academic-levels.edit', $level) }}">Editar</a>
-                            <form method="POST" action="{{ route('academic-levels.destroy', $level) }}" onsubmit="return confirm('¿Eliminar este nivel?');">
+                            <form method="POST" action="{{ route('academic-levels.destroy', $level) }}" data-confirm="¿Eliminar este nivel?" data-confirm-danger>
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn-link-danger" type="submit">Eliminar</button>

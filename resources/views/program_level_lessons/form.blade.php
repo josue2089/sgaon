@@ -11,11 +11,11 @@
         <label>Unidad / módulo</label>
         <input name="unit" value="{{ old('unit', $lesson->unit ?? '') }}">
     </div>
-    <div style="grid-column:1/-1;">
+    <div class="col-span-full">
         <label>Contenido</label>
         <textarea name="content" required>{{ old('content', $lesson->content ?? '') }}</textarea>
     </div>
-    <div style="grid-column:1/-1;">
+    <div class="col-span-full">
         <label>Nota</label>
         <textarea name="notes">{{ old('notes', $lesson->notes ?? '') }}</textarea>
     </div>
