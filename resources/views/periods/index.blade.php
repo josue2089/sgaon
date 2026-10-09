@@ -13,7 +13,7 @@
         <div class="search">
             <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar por código o descripción">
         </div>
-        <select name="status" style="max-width:220px;">
+        <select class="max-w-[220px]" name="status">
             <option value="">Todos los estados</option>
             <option value="active" @selected($filters['status'] === 'active')>Activos</option>
             <option value="inactive" @selected($filters['status'] === 'inactive')>Inactivos</option>
@@ -46,7 +46,7 @@
                         <td>@include('partials.ui.status', ['status' => $period->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('periods.edit', $period) }}">Editar</a>
-                            <form method="POST" action="{{ route('periods.destroy', $period) }}" onsubmit="return confirm('¿Eliminar este período?');">
+                            <form method="POST" action="{{ route('periods.destroy', $period) }}" data-confirm="¿Eliminar este período?" data-confirm-danger>
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn-link-danger" type="submit">Eliminar</button>

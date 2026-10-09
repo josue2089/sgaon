@@ -25,13 +25,13 @@
         <div class="search">
             <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar grupo, periodo, horario...">
         </div>
-        <select name="course_id" style="max-width:220px;">
+        <select class="max-w-[220px]" name="course_id">
             <option value="">Todos los cursos</option>
             @foreach($courses as $course)
                 <option value="{{ $course->id }}" @selected((string) $filters['course_id'] === (string) $course->id)>{{ $course->name }}</option>
             @endforeach
         </select>
-        <select name="teacher_id" style="max-width:220px;">
+        <select class="max-w-[220px]" name="teacher_id">
             <option value="">Todos los docentes</option>
             <option value="unassigned" @selected($filters['teacher_id'] === 'unassigned')>Sin asignar</option>
             @foreach($teachers as $teacher)
@@ -45,7 +45,7 @@
             <option value="completed" @selected($filters['status'] === 'completed')>Completados</option>
         </select>
         @if(($canFilterByCampus ?? false) && ($campuses ?? collect())->count() > 1)
-            <select name="campus_id" style="max-width:220px;">
+            <select class="max-w-[220px]" name="campus_id">
                 <option value="">Todas las sedes</option>
                 @foreach($campuses as $campus)
                     <option value="{{ $campus->id }}" @selected((string) $filters['campus_id'] === (string) $campus->id)>{{ $campus->name }}</option>
@@ -63,7 +63,7 @@
     <div class="entity-grid">
         @foreach($groups as $group)
             <div class="entity-card">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div class="flex justify-between items-start">
                     <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.9rem;">👥</div>
                     @include('partials.ui.status', ['status' => $group->status])
                 </div>

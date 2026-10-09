@@ -76,7 +76,7 @@
                         <td>{{ $lesson->sort_order }}</td>
                         <td class="table-actions">
                             <a href="{{ route('program-level-lessons.edit', $lesson) }}">Editar</a>
-                            <form method="POST" action="{{ route('program-level-lessons.destroy', $lesson) }}" onsubmit="return confirm('¿Eliminar esta clase base?');">
+                            <form method="POST" action="{{ route('program-level-lessons.destroy', $lesson) }}" data-confirm="¿Eliminar esta clase base?" data-confirm-danger>
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn-link-danger" type="submit">Eliminar</button>

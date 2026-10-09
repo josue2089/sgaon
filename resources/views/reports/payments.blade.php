@@ -64,14 +64,14 @@
         <form method="POST" action="{{ route('reports.presets.store', request()->query()) }}">
             @csrf
             <input type="hidden" name="route_name" value="reports.payments">
-            <input type="text" name="name" placeholder="Nombre del preset" style="max-width:220px;">
+            <input class="max-w-[220px]" type="text" name="name" placeholder="Nombre del preset">
             <button class="btn secondary" type="submit">Guardar preset</button>
         </form>
     </div>
     @if(($presets ?? collect())->count() > 0)
         <div class="stack-sm">
             @foreach($presets as $preset)
-                <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+                <div class="flex gap-[.6rem] items-center flex-wrap">
                     <a class="btn secondary" href="{{ route('reports.payments', $preset->filters ?? []) }}">{{ $preset->name }}</a>
                     <form method="POST" action="{{ route('reports.presets.destroy', $preset) }}">
                         @csrf
@@ -83,9 +83,9 @@
         </div>
     @endif
     @if(($exports ?? collect())->count() > 0)
-        <div class="stack-sm" style="margin-top:.8rem;">
+        <div class="stack-sm mt-[.8rem]">
             @foreach($exports as $export)
-                <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+                <div class="flex gap-[.6rem] items-center flex-wrap">
                     @include('partials.ui.status', ['status' => $export->status])
                     <span class="entity-sub">{{ $export->created_at?->format('Y-m-d H:i') }}</span>
                     @if($export->status === 'done')

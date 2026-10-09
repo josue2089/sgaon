@@ -1,71 +1,3 @@
-.portal-tabs {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin: 14px 0 16px;
-}
-
-.portal-tab {
-    border: 1px solid #d8e1f0;
-    background: #fff;
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #1f3563;
-    cursor: pointer;
-}
-
-.portal-tab-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 6px;
-    margin-left: 6px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 800;
-    background: #eef3ff;
-    color: #1b3f9d;
-}
-
-.portal-tab.is-active {
-    background: #1b3f9d;
-    border-color: #1b3f9d;
-    color: #fff;
-}
-
-.portal-tab.is-active .portal-tab-badge {
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-}
-
-.portal-tab-panel {
-    display: none;
-}
-
-.portal-tab-panel.is-active {
-    display: block;
-}
-
-@media (max-width: 768px) {
-    .portal-tabs {
-        position: sticky;
-        top: 56px;
-        z-index: 12;
-        background: #f8fafb;
-        padding: 8px 0;
-        overflow-x: auto;
-        flex-wrap: nowrap;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .portal-tabs .portal-tab {
-        white-space: nowrap;
-    }
-}
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -74,32 +6,41 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap');
 
 :root {
     --bg: #f8fafb;
     --surface: #ffffff;
-    --line: #cfd9e8;
-    --text: #11296e;
-    --muted: #61749a;
+    --line: #d8e1ef;
+    --text: #0a1e5e;
+    --muted: #64748b;
     --brand: #0a1e5e;
     --brand-soft: #1d337f;
     --ok: #16a34a;
     --warn: #d97706;
     --danger: #dc2626;
+    --focus: #2563eb;
+    --icon-xs: 0.78rem;
+    --icon-sm: 0.9rem;
+    --icon-md: 1rem;
+    --icon-lg: 1.08rem;
+    --icon-xl: 1.2rem;
 }
 
 * {
     box-sizing: border-box;
 }
 
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
 body {
     margin: 0;
-    font-family: 'Nunito Sans', sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     background: var(--bg);
     color: var(--text);
 }
@@ -1742,26 +1683,6 @@ a {
 }
 
 /* Figma/Node parity overrides */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
-
-:root {
-    --bg: #f8fafb;
-    --surface: #ffffff;
-    --line: #d8e1ef;
-    --text: #0a1e5e;
-    --muted: #64748b;
-    --brand: #0a1e5e;
-    --icon-xs: 0.78rem;
-    --icon-sm: 0.9rem;
-    --icon-md: 1rem;
-    --icon-lg: 1.08rem;
-    --icon-xl: 1.2rem;
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-}
-
 .fi-header {
     padding: 0.95rem 1.5rem;
 }
@@ -3678,4 +3599,162 @@ dialog.finance-proof-dialog[open] {
     opacity: 0.7;
     cursor: progress;
     pointer-events: none;
+}
+
+.portal-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 14px 0 16px;
+}
+
+.portal-tab {
+    border: 1px solid #d8e1f0;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f3563;
+    cursor: pointer;
+}
+
+.portal-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    margin-left: 6px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    background: #eef3ff;
+    color: #1b3f9d;
+}
+
+.portal-tab.is-active {
+    background: #1b3f9d;
+    border-color: #1b3f9d;
+    color: #fff;
+}
+
+.portal-tab.is-active .portal-tab-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.portal-tab-panel {
+    display: none;
+}
+
+.portal-tab-panel.is-active {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .portal-tabs {
+        position: sticky;
+        top: 56px;
+        z-index: 12;
+        background: #f8fafb;
+        padding: 8px 0;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .portal-tabs .portal-tab {
+        white-space: nowrap;
+    }
+}
+
+/* Componentes compartidos (#240): modal, campo de formulario y errores junto al campo */
+.ui-modal {
+    margin: auto;
+    width: min(560px, calc(100vw - 2rem));
+    max-height: calc(100vh - 3rem);
+    padding: 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 24px 60px rgba(7, 18, 53, 0.25);
+}
+
+.ui-modal--md {
+    width: min(760px, calc(100vw - 2rem));
+}
+
+.ui-modal--lg {
+    width: min(980px, calc(100vw - 2rem));
+}
+
+.ui-modal::backdrop {
+    background: rgba(7, 18, 53, 0.52);
+    backdrop-filter: blur(3px);
+}
+
+.ui-modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+}
+
+.ui-modal-x {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.ui-modal-body {
+    display: grid;
+    gap: 0.75rem;
+    line-height: 1.5;
+}
+
+.ui-modal-body p {
+    margin: 0;
+}
+
+.ui-modal-foot {
+    margin-top: 1.1rem;
+    justify-content: flex-end;
+}
+
+.form-field {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.field-required,
+label:has(+ :is(input, select, textarea)[required])::after {
+    color: var(--danger);
+}
+
+label:has(+ :is(input, select, textarea)[required])::after {
+    content: ' *';
+}
+
+.field-error {
+    margin-top: 0.3rem;
+    color: var(--danger);
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.ui-modal .btn.btn-danger {
+    background: linear-gradient(90deg, #dc2626, #b91c1c);
+    color: #fff;
+}
+
+[aria-invalid='true'],
+.form-field--invalid :is(input, select, textarea) {
+    border-color: var(--danger) !important;
 }

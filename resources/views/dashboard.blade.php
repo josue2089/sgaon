@@ -140,7 +140,7 @@
     </div>
 </div>
 
-<div class="card" style="margin-top:1rem;">
+<div class="card mt-4">
     <div class="module-head">
         <div>
             <h2 class="section-title">KPIs Académicos</h2>

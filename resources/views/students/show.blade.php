@@ -204,7 +204,7 @@
     <form method="POST" action="{{ route('students.attachments.store', $student) }}" enctype="multipart/form-data" class="fi-filter-bar">
         @csrf
         <input type="text" name="title" placeholder="Título del documento" required>
-        <select name="category" style="max-width:220px;">
+        <select class="max-w-[220px]" name="category">
             <option value="general">General</option>
             <option value="identity">Cédula</option>
             <option value="medical">Médico</option>
@@ -237,7 +237,7 @@
                         <td>{{ $attachment->created_at?->format('d/m/Y') ?? 'N/D' }}</td>
                         <td class="table-actions">
                             <a href="{{ route('students.attachments.download', [$student, $attachment]) }}">Descargar</a>
-                            <form method="POST" action="{{ route('students.attachments.destroy', [$student, $attachment]) }}" onsubmit="return confirm('¿Eliminar este adjunto?');">
+                            <form method="POST" action="{{ route('students.attachments.destroy', [$student, $attachment]) }}" data-confirm="¿Eliminar este adjunto?" data-confirm-danger>
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn-link-danger" type="submit">Eliminar</button>
@@ -430,7 +430,7 @@
         <div class="card student-finance-form-card">
             <div class="section-head">
                 <h2 class="section-title section-title-md">Nuevo cargo</h2>
-                <div class="entity-sub">Solo disponible para administrador master</div>
+                <div class="entity-sub">Se registra a nombre de este alumno</div>
             </div>
             @include('partials.finance.register-charge-form', [
                 'formAction' => route('students.charges.store', $student),
@@ -443,7 +443,7 @@
         <div class="card student-finance-form-card">
             <div class="section-head">
                 <h2 class="section-title section-title-md">Registrar pago</h2>
-                <div class="entity-sub">Solo disponible para administrador master</div>
+                <div class="entity-sub">Se registra a nombre de este alumno</div>
             </div>
             @include('partials.finance.register-payment-form', [
                 'formAction' => route('students.payments.store', $student),

@@ -11,13 +11,13 @@
         @endif
         <a class="btn" href="{{ route('courses.grades.index', $course) }}">Evaluaciones / Notas</a>
         <form method="POST" action="{{ route('courses.recalculate-calendar', $course) }}" data-guard-submit
-              onsubmit="return confirm('Se recalculará el calendario con los feriados vigentes. Las clases sin asistencia que caigan en feriado se moverán y la fecha de fin puede cambiar. ¿Continuar?');">
+              data-confirm="Se recalculará el calendario con los feriados vigentes. Las clases sin asistencia que caigan en feriado se moverán y la fecha de fin puede cambiar. ¿Continuar?">
             @csrf
             <button class="btn secondary" type="submit" data-submit-busy-label="Recalculando…">Recalcular calendario</button>
         </form>
         @if($course->isExtracurricular())
             <form method="POST" action="{{ route('courses.extracurricular-charges.generate', $course) }}" data-guard-submit
-                  onsubmit="return confirm('Se crearán las cuotas que falten hasta el fin del curso para todos los alumnos activos. Las que ya existen no se duplican. ¿Continuar?');">
+                  data-confirm="Se crearán las cuotas que falten hasta el fin del curso para todos los alumnos activos. Las que ya existen no se duplican. ¿Continuar?">
                 @csrf
                 <button class="btn secondary" type="submit" data-submit-busy-label="Generando…">Generar cuotas faltantes</button>
             </form>
@@ -199,7 +199,7 @@
                         <td>@include('partials.ui.status', ['status' => $enrollment->status, 'domain' => 'enrollment'])</td>
                         <td>{{ (int) $enrollment->progress }}%</td>
                         <td class="table-actions">
-                            <form method="POST" action="{{ route('courses.students.remove', [$course, $enrollment]) }}" onsubmit="return confirm('¿Quitar este alumno del curso?');">
+                            <form method="POST" action="{{ route('courses.students.remove', [$course, $enrollment]) }}" data-confirm="¿Quitar este alumno del curso?" data-confirm-danger>
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn-link-danger" type="submit">Quitar</button>

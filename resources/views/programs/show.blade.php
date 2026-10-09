@@ -77,7 +77,7 @@
                         <td class="table-actions">
                             <a href="{{ route('program-levels.show', $level) }}">Ver clases</a>
                             <a href="{{ route('program-levels.edit', $level) }}">Editar</a>
-                            <form method="POST" action="{{ route('program-levels.destroy', $level) }}" onsubmit="return confirm('¿Eliminar este nivel?');">
+                            <form method="POST" action="{{ route('program-levels.destroy', $level) }}" data-confirm="¿Eliminar este nivel?" data-confirm-danger>
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn-link-danger" type="submit">Eliminar</button>

@@ -13,13 +13,13 @@
         <div class="search">
             <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar por nombre o descripción">
         </div>
-        <select name="type" style="max-width:220px;">
+        <select class="max-w-[220px]" name="type">
             <option value="">Todos los tipos</option>
             <option value="dated" @selected($filters['type'] === 'dated')>Fecha puntual</option>
             <option value="recurring" @selected($filters['type'] === 'recurring')>Recurrentes</option>
             <option value="school_closure" @selected($filters['type'] === 'school_closure')>Días sin clase del colegio</option>
         </select>
-        <select name="status" style="max-width:220px;">
+        <select class="max-w-[220px]" name="status">
             <option value="">Todos los estados</option>
             <option value="active" @selected($filters['status'] === 'active')>Activos</option>
             <option value="inactive" @selected($filters['status'] === 'inactive')>Inactivos</option>
@@ -58,7 +58,7 @@
                         <td class="table-actions">
                             @if(auth()->user()->isMasterAdmin() || $holiday->campus_id)
                             <a href="{{ route('holidays.edit', $holiday) }}">Editar</a>
-                            <form method="POST" action="{{ route('holidays.destroy', $holiday) }}" onsubmit="return confirm('¿Eliminar este feriado?');">
+                            <form method="POST" action="{{ route('holidays.destroy', $holiday) }}" data-confirm="¿Eliminar este feriado?" data-confirm-danger>
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn-link-danger" type="submit">Eliminar</button>

@@ -22,7 +22,7 @@
         </label>
         <p class="entity-sub">Actividades en colegios (inglés, robótica, danza, fútbol…) con cursos de todo el año escolar.</p>
     </div>
-    <div style="grid-column:1/-1;">
+    <div class="col-span-full">
         <label>Descripción</label>
         <textarea name="description">{{ old('description', $program->description ?? '') }}</textarea>
     </div>

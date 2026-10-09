@@ -59,7 +59,7 @@
     </div>
 </div>
 
-<div class="card" style="margin-top:1.25rem;">
+<div class="card mt-5">
     <div class="section-head">
         <h2 class="section-title">Precios de mensualidad por programa</h2>
     </div>
@@ -79,7 +79,7 @@
                         </td>
                         <td>{{ \App\Support\MoneyFormat::formatLedgerAmount($price->amount, $price->currency) }}</td>
                         <td class="table-actions">
-                            <form method="POST" action="{{ route('campuses.program-prices.destroy', [$campus, $price]) }}" onsubmit="return confirm('¿Eliminar el precio de esta sede para {{ $price->program?->name }}?');">
+                            <form method="POST" action="{{ route('campuses.program-prices.destroy', [$campus, $price]) }}" data-confirm="¿Eliminar el precio de esta sede para {{ $price->program?->name }}?" data-confirm-danger>
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn-link-danger" type="submit">Eliminar</button>
@@ -93,7 +93,7 @@
     @else
         <div class="empty-state-inline">Esta sede usa los precios generales de cada nivel o programa.</div>
     @endif
-    <form method="POST" action="{{ route('campuses.program-prices.store', $campus) }}" class="fi-filter-bar" style="margin-top:1rem;">
+    <form method="POST" action="{{ route('campuses.program-prices.store', $campus) }}" class="fi-filter-bar mt-4">
         @csrf
         <select name="program_id" required>
             <option value="">Programa…</option>
@@ -111,7 +111,7 @@
     <p class="entity-sub">Si el programa ya tiene precio en esta sede, se reemplaza.</p>
 </div>
 
-<div class="card" style="margin-top:1.25rem;">
+<div class="card mt-5">
     <div class="section-head">
         <h2 class="section-title">Accesos rápidos</h2>
     </div>

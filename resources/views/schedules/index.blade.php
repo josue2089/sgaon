@@ -10,13 +10,13 @@
 
 <form method="GET" action="{{ route('schedules.index') }}" class="card">
     <div class="fi-filter-bar">
-        <select name="day" style="max-width:220px;">
+        <select class="max-w-[220px]" name="day">
             <option value="">Todos los días</option>
             @foreach($dayOptions as $dayCode => $dayLabel)
                 <option value="{{ $dayCode }}" @selected($filters['day'] === $dayCode)>{{ $dayLabel }}</option>
             @endforeach
         </select>
-        <select name="status" style="max-width:220px;">
+        <select class="max-w-[220px]" name="status">
             <option value="">Todos los estados</option>
             <option value="active" @selected($filters['status'] === 'active')>Activos</option>
             <option value="inactive" @selected($filters['status'] === 'inactive')>Inactivos</option>
@@ -49,7 +49,7 @@
                         <td>@include('partials.ui.status', ['status' => $schedule->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('schedules.edit', $schedule) }}">Editar</a>
-                            <form method="POST" action="{{ route('schedules.destroy', $schedule) }}" onsubmit="return confirm('¿Eliminar este horario?');">
+                            <form method="POST" action="{{ route('schedules.destroy', $schedule) }}" data-confirm="¿Eliminar este horario?" data-confirm-danger>
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn-link-danger" type="submit">Eliminar</button>

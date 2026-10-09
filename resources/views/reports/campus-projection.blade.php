@@ -81,7 +81,7 @@
     </div>
 </div>
 
-<p class="page-subtitle" style="margin-top:1rem;">
+<p class="page-subtitle mt-4">
     <strong>Notas:</strong> la proyección anual asume 10 meses académicos.
     Cambia la tarifa desde <a href="{{ route('settings.billing.edit') }}">Ajustes → Tarifa mensual</a>.
     Un alumno con varias inscripciones activas (por ejemplo Inglés + Robótica) suma una mensualidad por cada inscripción.

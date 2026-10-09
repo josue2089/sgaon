@@ -56,7 +56,7 @@
                 @endforeach
             </select>
         </div>
-        <div style="grid-column:1/-1;"><label>Dirección</label><textarea name="address">{{ old('address',$student->address ?? '') }}</textarea></div>
+        <div class="col-span-full"><label>Dirección</label><textarea name="address">{{ old('address',$student->address ?? '') }}</textarea></div>
         <div>
             <label>¿Tiene familiar en la institución?</label>
             <select name="family_in_institution">
@@ -100,7 +100,7 @@
         <div><label>Teléfono oficina</label><input name="representative[office_phone]" value="{{ $representative['office_phone'] ?? '' }}"></div>
         <div><label>Lugar de trabajo</label><input name="representative[work_place]" value="{{ $representative['work_place'] ?? '' }}"></div>
         <div><label>Dirección oficina</label><input name="representative[work_address]" value="{{ $representative['work_address'] ?? '' }}"></div>
-        <div style="grid-column:1/-1;"><label>Dirección de habitación</label><textarea name="representative[address]">{{ $representative['address'] ?? '' }}</textarea></div>
+        <div class="col-span-full"><label>Dirección de habitación</label><textarea name="representative[address]">{{ $representative['address'] ?? '' }}</textarea></div>
     </div>
 </div>
 
@@ -119,7 +119,7 @@
             <div><label>Celular</label><input name="authorized_contacts[{{ $i }}][mobile_phone]" value="{{ $authorizedContacts[$i]['mobile_phone'] ?? '' }}"></div>
             <div><label>Lugar de trabajo</label><input name="authorized_contacts[{{ $i }}][work_place]" value="{{ $authorizedContacts[$i]['work_place'] ?? '' }}"></div>
             <div><label>Dirección trabajo</label><input name="authorized_contacts[{{ $i }}][work_address]" value="{{ $authorizedContacts[$i]['work_address'] ?? '' }}"></div>
-            <div style="grid-column:1/-1;"><label>Dirección de habitación</label><textarea name="authorized_contacts[{{ $i }}][address]">{{ $authorizedContacts[$i]['address'] ?? '' }}</textarea></div>
+            <div class="col-span-full"><label>Dirección de habitación</label><textarea name="authorized_contacts[{{ $i }}][address]">{{ $authorizedContacts[$i]['address'] ?? '' }}</textarea></div>
         </div>
     </div>
 @endfor
@@ -140,9 +140,9 @@
         <div><label>Sección</label><input name="school_section" value="{{ old('school_section', $student->school_section ?? '') }}" placeholder="Ej. U"></div>
         <div><label>Teléfono de emergencia</label><input name="emergency_phone" value="{{ old('emergency_phone', $student->emergency_phone ?? '') }}"></div>
         <div><label>Nivel / Dominio actual</label><input name="extracurricular_level" value="{{ old('extracurricular_level', $student->extracurricular_level ?? '') }}"></div>
-        <div style="grid-column:1/-1;"><label>Objetivos / Competencias a desarrollar</label><textarea name="extracurricular_objectives">{{ old('extracurricular_objectives', $student->extracurricular_objectives ?? \App\Models\Student::DEFAULT_EXTRACURRICULAR_OBJECTIVES) }}</textarea></div>
-        <div style="grid-column:1/-1;"><label>Observaciones / Recomendaciones del docente</label><textarea name="teacher_observations">{{ old('teacher_observations', $student->teacher_observations ?? '') }}</textarea></div>
-        <div style="grid-column:1/-1;"><label>Condición de pago / Matrícula</label><input name="payment_condition" value="{{ old('payment_condition', $student->payment_condition ?? '') }}" placeholder="Ej. 10 cuotas de 35 USD (octubre a julio)"></div>
+        <div class="col-span-full"><label>Objetivos / Competencias a desarrollar</label><textarea name="extracurricular_objectives">{{ old('extracurricular_objectives', $student->extracurricular_objectives ?? \App\Models\Student::DEFAULT_EXTRACURRICULAR_OBJECTIVES) }}</textarea></div>
+        <div class="col-span-full"><label>Observaciones / Recomendaciones del docente</label><textarea name="teacher_observations">{{ old('teacher_observations', $student->teacher_observations ?? '') }}</textarea></div>
+        <div class="col-span-full"><label>Condición de pago / Matrícula</label><input name="payment_condition" value="{{ old('payment_condition', $student->payment_condition ?? '') }}" placeholder="Ej. 10 cuotas de 35 USD (octubre a julio)"></div>
     </div>
     </fieldset>
 </div>
@@ -171,7 +171,7 @@
         <div><label>Explique tratamiento</label><input name="medical_treatment_details" value="{{ old('medical_treatment_details',$student->medical_treatment_details ?? '') }}"></div>
         <div><label>Medicamento autorizado en caso de fiebre</label><input name="medical_fever_medication" value="{{ old('medical_fever_medication',$student->medical_fever_medication ?? '') }}"></div>
         <div><label>Medicamento autorizado en caso de cefalea</label><input name="medical_headache_medication" value="{{ old('medical_headache_medication',$student->medical_headache_medication ?? '') }}"></div>
-        <div style="grid-column:1/-1;"><label>Observaciones médicas</label><textarea name="medical_notes">{{ old('medical_notes',$student->medical_notes ?? '') }}</textarea></div>
+        <div class="col-span-full"><label>Observaciones médicas</label><textarea name="medical_notes">{{ old('medical_notes',$student->medical_notes ?? '') }}</textarea></div>
     </div>
 </div>
 
@@ -185,7 +185,7 @@
         <div><label>Promoción</label><input name="promotion" value="{{ old('promotion',$student->promotion ?? '') }}"></div>
         <div><label>Método de pago</label><input name="payment_method" value="{{ old('payment_method',$student->payment_method ?? '') }}"></div>
         <div><label>Cuotas</label><input type="number" min="1" max="48" name="installments" value="{{ old('installments',$student->installments ?? '') }}"></div>
-        <div style="grid-column:1/-1;"><label>Observaciones comerciales</label><textarea name="commercial_notes">{{ old('commercial_notes',$student->commercial_notes ?? '') }}</textarea></div>
+        <div class="col-span-full"><label>Observaciones comerciales</label><textarea name="commercial_notes">{{ old('commercial_notes',$student->commercial_notes ?? '') }}</textarea></div>
     </div>
 </div>
 

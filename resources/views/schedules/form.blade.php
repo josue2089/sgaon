@@ -15,7 +15,7 @@
             @endforeach
         </select>
     </div>
-    <div style="grid-column:1/-1;">
+    <div class="col-span-full">
         <label>Días de la semana</label>
         <div class="day-grid">
             @foreach($dayOptions as $dayCode => $dayLabel)

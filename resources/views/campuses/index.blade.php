@@ -13,7 +13,7 @@
         <div class="search">
             <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar por nombre, código o ubicación">
         </div>
-        <select name="status" style="max-width:220px;">
+        <select class="max-w-[220px]" name="status">
             <option value="">Todos los estados</option>
             <option value="active" @selected($filters['status'] === 'active')>Activos</option>
             <option value="inactive" @selected($filters['status'] === 'inactive')>Inactivos</option>
@@ -47,7 +47,7 @@
                         <td class="table-actions">
                             <a href="{{ route('campuses.show', $campus) }}">Ver</a>
                             <a href="{{ route('campuses.edit', $campus) }}">Editar</a>
-                            <form method="POST" action="{{ route('campuses.destroy', $campus) }}" onsubmit="return confirm('¿Eliminar este campus?');">
+                            <form method="POST" action="{{ route('campuses.destroy', $campus) }}" data-confirm="¿Eliminar este campus?" data-confirm-danger>
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn-link-danger" type="submit">Eliminar</button>

@@ -39,7 +39,7 @@
             @endforeach
         </select>
     </div>
-    <div style="grid-column:1/-1;">
+    <div class="col-span-full">
         <label>Descripción</label>
         <textarea name="description">{{ old('description', $level->description ?? '') }}</textarea>
     </div>

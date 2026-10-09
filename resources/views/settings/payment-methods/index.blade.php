@@ -34,7 +34,7 @@
                         <td>@include('partials.ui.status-badge', ['tone' => $method->is_active ? 'ok' : 'warn', 'text' => $method->is_active ? 'Activo' : 'Inactivo'])</td>
                         <td class="table-actions">
                             <a href="{{ route('settings.payment-methods.edit', $method) }}">Editar</a>
-                            <form method="POST" action="{{ route('settings.payment-methods.destroy', $method) }}" style="display:inline;" onsubmit="return confirm('¿Eliminar este método de pago?');">
+                            <form class="inline" method="POST" action="{{ route('settings.payment-methods.destroy', $method) }}" data-confirm="¿Eliminar este método de pago?" data-confirm-danger>
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn-link-danger">Eliminar</button>

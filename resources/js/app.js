@@ -3,6 +3,7 @@ import './payment-currency';
 import './searchable-select';
 import './finance-payment-form';
 import './finance-charge-form';
+import './ui';
 
 // Bloquea el botón submit y muestra spinner mientras el form se envía.
 // Evita duplicados por doble click / doble submit.

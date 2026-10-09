@@ -47,7 +47,7 @@
         <label>Día</label>
         <input type="number" name="day" min="1" max="31" value="{{ old('day', $holiday->day ?? '') }}" placeholder="Ej. 24">
     </div>
-    <div style="grid-column:1/-1;">
+    <div class="col-span-full">
         <label>Descripción</label>
         <textarea name="description" placeholder="Observación opcional">{{ old('description', $holiday->description ?? '') }}</textarea>
     </div>

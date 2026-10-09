@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ON English | Plataforma Académica</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+    @include('partials.ui.fonts')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
@@ -251,6 +252,27 @@
         </div>
     </main>
 </div>
+<dialog class="ui-modal ui-modal--sm" data-confirm-dialog aria-labelledby="confirm-dialog-title">
+    <div class="ui-modal-head">
+        <h3 class="section-title" id="confirm-dialog-title" data-confirm-title>Confirmar</h3>
+        <button class="ui-modal-x" type="button" data-modal-close aria-label="Cerrar">&times;</button>
+    </div>
+    <div class="ui-modal-body">
+        <p data-confirm-message></p>
+        <div data-confirm-reason-wrap hidden>
+            <label for="confirm-dialog-reason" data-confirm-reason-label>Motivo</label>
+            <textarea id="confirm-dialog-reason" rows="3" data-confirm-reason></textarea>
+            <div class="field-error" data-confirm-reason-error hidden>Escribe el motivo para continuar.</div>
+        </div>
+    </div>
+    <div class="form-actions ui-modal-foot">
+        <button class="btn secondary" type="button" data-modal-close>Cancelar</button>
+        <button class="btn" type="button" data-confirm-ok>Confirmar</button>
+    </div>
+</dialog>
+@if($errors->any())
+    <script type="application/json" id="form-errors">@json($errors->getMessages())</script>
+@endif
 @stack('scripts')
 </body>
 </html>

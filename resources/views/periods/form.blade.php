@@ -11,7 +11,7 @@
         <label>Código</label>
         <input name="code" value="{{ old('code', $period->code ?? '') }}" placeholder="Ej. 2026-Q1" required>
     </div>
-    <div style="grid-column:1/-1;">
+    <div class="col-span-full">
         <label>Descripción</label>
         <input name="description" value="{{ old('description', $period->description ?? '') }}" placeholder="Ej. Primer trimestre académico 2026">
     </div>
