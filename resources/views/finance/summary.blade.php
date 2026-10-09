@@ -116,7 +116,7 @@
     <h3 class="section-title section-title-sm">Proyección de cobros por fecha de vencimiento</h3>
     <table>
         <thead>
-        <tr><th>Periodo</th><th>Saldo pendiente</th><th>Equivalente Bs</th></tr>
+        <tr><th>Período</th><th>Saldo pendiente</th><th>Equivalente Bs</th></tr>
         </thead>
         <tbody>
         @forelse($summary['projection'] as $row)

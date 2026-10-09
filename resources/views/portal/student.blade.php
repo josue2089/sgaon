@@ -138,7 +138,7 @@
             <h3 class="section-title section-title-sm">Inscripciones</h3>
             <div class="table-wrap"><table class="data-table"><thead><tr><th>Curso</th><th>Grupo</th><th>Estado</th><th>Progreso</th></tr></thead><tbody>
             @foreach($enrollments as $enrollment)
-                <tr><td>{{ $enrollment->group->course->name ?? '' }}</td><td>{{ $enrollment->group->name ?? '' }}</td><td><span class="status-pill {{ $enrollment->status === 'active' ? 'success' : ($enrollment->status === 'completed' ? 'info' : 'warn') }}">{{ $enrollment->status }}</span></td><td>{{ $enrollment->progress }}%</td></tr>
+                <tr><td>{{ $enrollment->group->course->name ?? '' }}</td><td>{{ $enrollment->group->name ?? '' }}</td><td>@include('partials.ui.status', ['status' => $enrollment->status, 'domain' => 'enrollment'])</td><td>{{ $enrollment->progress }}%</td></tr>
             @endforeach
             </tbody></table></div>
         </div>
@@ -160,7 +160,7 @@
         @forelse($makeupRequests as $makeupRequest)
             @php($course = $makeupRequest->enrollment?->group?->course)
             <article class="makeup-student-card">
-                <div class="makeup-student-head"><div><div class="table-title">{{ $course?->name ?? 'N/D' }}</div><div class="table-sub">{{ $makeupRequest->missedSession?->session_date?->format('d/m/Y') ?? 'N/D' }} · {{ ucfirst($makeupRequest->request_type) }}</div></div><div>@include('partials.ui.status-badge', ['tone' => in_array($makeupRequest->status, ['approved_for_booking','completed'], true) ? 'ok' : ($makeupRequest->status === 'rejected' ? 'danger' : 'warn'), 'text' => ucfirst(str_replace('_', ' ', $makeupRequest->status))])</div></div>
+                <div class="makeup-student-head"><div><div class="table-title">{{ $course?->name ?? 'N/D' }}</div><div class="table-sub">{{ $makeupRequest->missedSession?->session_date?->format('d/m/Y') ?? 'N/D' }} · {{ ucfirst($makeupRequest->request_type) }}</div></div><div>@include('partials.ui.status', ['status' => $makeupRequest->status, 'domain' => 'makeup'])</div></div>
                 <div class="makeup-student-meta"><div><strong>Programa:</strong> {{ $course?->program?->name ?? 'N/D' }}</div><div><strong>Nivel:</strong> {{ $course?->programLevel?->name ?? 'N/D' }}</div><div><strong>Monto:</strong> {{ MoneyFormat::usd($makeupRequest->price) }}</div></div>
                 <div class="grid-2">
                     <div class="makeup-student-pane">
@@ -222,10 +222,7 @@
                         <div class="table-sub">Vence: {{ $charge->due_date?->format('d/m/Y') ?? 'N/D' }}</div>
                     </div>
                     <div>
-                        @include('partials.ui.status-badge', [
-                            'tone' => $charge->status === 'overdue' ? 'danger' : 'warn',
-                            'text' => ucfirst($charge->status),
-                        ])
+                        @include('partials.ui.status', ['status' => $charge->status])
                     </div>
                 </div>
                 <div class="charge-pending-meta">
@@ -281,10 +278,7 @@
                 <article class="charge-request-card">
                     <div class="charge-request-line">
                         <span class="table-title">{{ $paymentRequest->charge?->concept ?? 'N/D' }}</span>
-                        <span>@include('partials.ui.status-badge', [
-                            'tone' => $paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_APPROVED ? 'ok' : ($paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_REJECTED ? 'danger' : 'warn'),
-                            'text' => ucfirst(str_replace('_', ' ', $paymentRequest->status)),
-                        ])</span>
+                        <span>@include('partials.ui.status', ['status' => $paymentRequest->status])</span>
                     </div>
                     <div class="charge-request-meta">
                         <span>{{ $paymentRequest->submitted_at?->format('d/m/Y H:i') ?? 'N/D' }}</span>
@@ -306,7 +300,7 @@
     @endif
     </div>
     <div class="grid-2">
-    <div class="card table-card"><h3 class="section-title section-title-sm">Cargos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Concepto</th><th>Monto</th><th>Estado</th></tr></thead><tbody>@forelse($charges as $charge)<tr><td>{{ $charge->concept }}</td><td>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</td><td>{{ $charge->status }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin cargos</div></td></tr>@endforelse</tbody></table></div></div>
+    <div class="card table-card"><h3 class="section-title section-title-sm">Cargos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Concepto</th><th>Monto</th><th>Estado</th></tr></thead><tbody>@forelse($charges as $charge)<tr><td>{{ $charge->concept }}</td><td>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</td><td>@include('partials.ui.status', ['status' => $charge->status])</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin cargos</div></td></tr>@endforelse</tbody></table></div></div>
     <div class="card table-card"><h3 class="section-title section-title-sm">Pagos</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Monto</th><th>Método</th></tr></thead><tbody>@forelse($payments as $payment)<tr><td>{{ $payment->paid_at?->format('Y-m-d') }}</td><td>{{ \App\Support\MoneyFormat::dualLine($payment) }}</td><td>{{ $payment->method }}</td></tr>@empty<tr><td colspan="3"><div class="empty-state-inline">Sin pagos</div></td></tr>@endforelse</tbody></table></div></div>
     </div>
 @endif

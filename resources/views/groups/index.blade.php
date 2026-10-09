@@ -65,7 +65,7 @@
             <div class="entity-card">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.9rem;">👥</div>
-                    <span class="badge-pill {{ $group->status === 'active' ? 'badge-ok' : 'badge-warn' }}">{{ $group->status }}</span>
+                    @include('partials.ui.status', ['status' => $group->status])
                 </div>
                 <div class="entity-title">{{ $group->name }}</div>
                 @if($canFilterByCampus ?? false)

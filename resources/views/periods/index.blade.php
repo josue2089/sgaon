@@ -43,7 +43,7 @@
                         <td class="table-title">{{ $period->code }}</td>
                         <td>{{ $period->description ?: 'Sin descripción' }}</td>
                         <td>{{ $period->campus->name ?? 'Sin sede' }}</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $period->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($period->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $period->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('periods.edit', $period) }}">Editar</a>
                             <form method="POST" action="{{ route('periods.destroy', $period) }}" onsubmit="return confirm('¿Eliminar este período?');">

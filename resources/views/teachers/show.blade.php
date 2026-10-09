@@ -14,7 +14,7 @@
             <h1 class="page-title">Prof. {{ $teacher->full_name }}</h1>
             <p class="page-subtitle">Detalle operativo del profesor, sus cursos asignados y progreso académico.</p>
             <div class="detail-hero-meta">
-                @include('partials.ui.status-badge', ['tone' => $teacher->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($teacher->status)])
+                @include('partials.ui.status', ['status' => $teacher->status])
                 <span>{{ $teacher->campus?->name ?? 'Sin campus' }}</span>
                 <span>{{ $teacher->email ?: 'Sin email' }}</span>
                 <span>{{ $teacher->phone ?: 'Sin teléfono' }}</span>
@@ -205,7 +205,7 @@
                 <tr>
                     <th>Curso</th>
                     <th>Nivel</th>
-                    <th>Periodo</th>
+                    <th>Período</th>
                     <th>Horario</th>
                     <th>Estudiantes</th>
                     <th>Progreso</th>
@@ -272,7 +272,7 @@
                         <td>{{ $row['student']->full_name }}</td>
                         <td>{{ $row['course']->name }}</td>
                         <td>{{ $row['student']->email ?: 'Sin email' }}</td>
-                        <td>{{ ucfirst($row['enrollment']->status) }}</td>
+                        <td>{{ \App\Support\StatusLabel::label($row['enrollment']->status, 'enrollment') }}</td>
                         <td>{{ (int) $row['enrollment']->progress }}%</td>
                         <td class="table-actions">
                             <a href="{{ route('students.show', $row['student']) }}">Ver alumno</a>

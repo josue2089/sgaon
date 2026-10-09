@@ -59,7 +59,7 @@
         <div class="stack-sm" style="margin-top:.8rem;">
             @foreach($exports as $export)
                 <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
-                    @include('partials.ui.status-badge', ['tone' => $export->status === 'done' ? 'ok' : ($export->status === 'failed' ? 'danger' : 'warn'), 'text' => strtoupper($export->status)])
+                    @include('partials.ui.status', ['status' => $export->status])
                     <span class="entity-sub">{{ $export->created_at?->format('Y-m-d H:i') }}</span>
                     @if($export->status === 'done')
                         <a class="btn secondary" href="{{ route('reports.exports.download', $export) }}">Descargar</a>
@@ -71,14 +71,14 @@
 </div>
 <div class="card">
     <table>
-        <thead><tr><th>Fecha</th><th>Grupo</th><th>Alumno</th><th>Status</th><th>Comentario</th></tr></thead>
+        <thead><tr><th>Fecha</th><th>Grupo</th><th>Alumno</th><th>Estado</th><th>Comentario</th></tr></thead>
         <tbody>
         @forelse($records as $record)
             <tr>
                 <td>{{ $record->classSession->session_date?->format('Y-m-d') }}</td>
                 <td>{{ $record->classSession->group->name ?? '' }}</td>
                 <td>{{ $record->enrollment->student->full_name ?? '' }}</td>
-                <td><span class="status-pill {{ $record->status === 'present' ? 'success' : ($record->status === 'absent' ? 'danger' : 'warn') }}">{{ $record->status }}</span></td>
+                <td>@include('partials.ui.status', ['status' => $record->status, 'domain' => 'attendance'])</td>
                 <td>{{ $record->notes ?: '—' }}</td>
             </tr>
         @empty

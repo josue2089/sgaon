@@ -76,12 +76,7 @@
                 <tbody>
                 @foreach($students as $student)
                     @php
-                        $statusLabel = match($student->status) {
-                            'inactive' => 'Inactivo',
-                            'graduated' => 'Graduado',
-                            'withdrawn' => 'Retirado',
-                            default => ucfirst($student->status),
-                        };
+                        $statusLabel = \App\Support\StatusLabel::label($student->status);
                     @endphp
                     <tr>
                         <td>

@@ -68,7 +68,7 @@
                     <div class="timeline-meta">
                         @foreach($item['meta'] as $label => $value)
                             @continue($value === null)
-                            <div><strong>{{ ucfirst($label) }}:</strong> {{ $value }}</div>
+                            <div><strong>{{ \Illuminate\Support\Str::ucfirst($label) }}:</strong> {{ $value }}</div>
                         @endforeach
                     </div>
                     @if(!empty($item['receipt_id']))

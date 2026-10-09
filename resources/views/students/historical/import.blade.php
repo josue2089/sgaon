@@ -78,7 +78,7 @@
                         <td>{{ $row->firstName }} {{ $row->lastName }}</td>
                         <td>{{ $row->enrollmentDate ? \Carbon\Carbon::parse($row->enrollmentDate)->format('d/m/Y') : '—' }}</td>
                         <td>{{ $row->programName ?? ($row->levelCode ?: '—') }}</td>
-                        <td>{{ ucfirst($row->status) }}</td>
+                        <td>{{ \App\Support\StatusLabel::label($row->status) }}</td>
                         <td>{{ $row->action === 'update' ? 'Actualizar' : 'Crear' }}</td>
                         <td>
                             @if(!$row->isValid)

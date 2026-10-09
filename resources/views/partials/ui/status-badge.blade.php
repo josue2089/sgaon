@@ -7,4 +7,4 @@
         default => 'badge-info',
     };
 @endphp
-<span class="badge-pill {{ $toneClass }}">{{ $text }}</span>
+<span class="badge-pill {{ $toneClass }}"@if(!empty($title)) title="{{ $title }}"@endif>{{ $text }}</span>

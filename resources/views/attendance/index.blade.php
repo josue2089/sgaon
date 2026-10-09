@@ -194,7 +194,7 @@
                             </td>
                             <td>
                                 @if($previousStatus)
-                                    <span class="status-pill attendance-pill attendance-pill--{{ $previousStatus }}">{{ ucfirst($previousStatus) }}</span>
+                                    <span class="badge-pill attendance-pill attendance-pill--{{ $previousStatus }}">{{ \App\Support\StatusLabel::label($previousStatus, 'attendance') }}</span>
                                 @else
                                     <span class="entity-sub">N/D</span>
                                 @endif
@@ -210,7 +210,7 @@
                             <td>
                                 <select name="records[{{ $i }}][status]" class="attendance-status" data-enrollment-id="{{ $enrollment->id }}">
                                     @foreach($statuses as $status)
-                                        <option value="{{ $status }}" @selected($currentStatus == $status)>{{ ucfirst($status) }}</option>
+                                        <option value="{{ $status }}" @selected($currentStatus == $status)>{{ \App\Support\StatusLabel::label($status, 'attendance') }}</option>
                                     @endforeach
                                 </select>
                             </td>

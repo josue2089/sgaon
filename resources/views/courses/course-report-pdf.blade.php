@@ -105,7 +105,7 @@
                 <tr>
                     <td>{{ $enrollment->student?->full_name ?? 'N/D' }}</td>
                     <td>{{ $enrollment->student?->email ?: 'Sin email' }}</td>
-                    <td>{{ ucfirst($enrollment->status) }}</td>
+                    <td>{{ \App\Support\StatusLabel::label($enrollment->status, 'enrollment') }}</td>
                     <td>{{ (int) $enrollment->progress }}%</td>
                 </tr>
             @endforeach

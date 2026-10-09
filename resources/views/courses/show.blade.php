@@ -151,7 +151,7 @@
                                             </td>
                                             <td>{{ $student->email ?: 'Sin email' }}</td>
                                             <td>{{ $currentLevel ? (($currentLevel->sort_order ?? $currentLevel->scale_position).'/'.($currentLevel->program_total ?? $currentLevel->scale_total).' · '.$currentLevel->name) : 'N/D' }}</td>
-                                            <td>@include('partials.ui.status-badge', ['tone' => $student->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($student->status)])</td>
+                                            <td>@include('partials.ui.status', ['status' => $student->status])</td>
                                         </tr>
                                     @endforeach
                                     </tbody>
@@ -196,7 +196,7 @@
                     <tr>
                         <td>{{ $enrollment->student?->full_name ?? 'N/D' }}</td>
                         <td>{{ $enrollment->student?->email ?: 'Sin email' }}</td>
-                        <td>{{ ucfirst($enrollment->status) }}</td>
+                        <td>@include('partials.ui.status', ['status' => $enrollment->status, 'domain' => 'enrollment'])</td>
                         <td>{{ (int) $enrollment->progress }}%</td>
                         <td class="table-actions">
                             <form method="POST" action="{{ route('courses.students.remove', [$course, $enrollment]) }}" onsubmit="return confirm('¿Quitar este alumno del curso?');">

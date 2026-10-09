@@ -55,7 +55,7 @@
     </div>
     <div class="metric-card">
         <div class="metric-label">Estado</div>
-        <div class="metric-value">@include('partials.ui.status-badge', ['tone' => $campus->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($campus->status)])</div>
+        <div class="metric-value">@include('partials.ui.status', ['status' => $campus->status, 'domain' => 'campus'])</div>
     </div>
 </div>
 
@@ -74,7 +74,7 @@
                         <td>
                             {{ $price->program?->name ?? 'Programa eliminado' }}
                             @if($price->program?->is_extracurricular)
-                                <span class="status-pill info">Extracurricular</span>
+                                @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Extracurricular'])
                             @endif
                         </td>
                         <td>{{ \App\Support\MoneyFormat::formatLedgerAmount($price->amount, $price->currency) }}</td>

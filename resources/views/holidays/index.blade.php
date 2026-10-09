@@ -54,7 +54,7 @@
                         </td>
                         <td>{{ $holiday->occurrence_label }}</td>
                         <td>{{ $holiday->campus->name ?? 'Global' }}</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $holiday->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($holiday->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $holiday->status])</td>
                         <td class="table-actions">
                             @if(auth()->user()->isMasterAdmin() || $holiday->campus_id)
                             <a href="{{ route('holidays.edit', $holiday) }}">Editar</a>

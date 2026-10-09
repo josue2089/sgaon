@@ -1,5 +1,5 @@
 @if($charge->voided_at)
-    <span class="status-pill danger" title="{{ $charge->void_reason }}">Anulado</span>
+    @include('partials.ui.status-badge', ['tone' => 'danger', 'text' => 'Anulado', 'title' => $charge->void_reason])
 @elseif(auth()->user()?->hasPermission('finance.manage') && \App\Support\FinanceReconcile::paidTotalForCharge($charge) <= 0)
     <form method="POST" action="{{ route('finance.charges.void', $charge) }}"
           onsubmit="const reason = prompt('Motivo de la anulación del cargo:'); if (!reason || !reason.trim()) { return false; } this.reason.value = reason.trim(); return true;">

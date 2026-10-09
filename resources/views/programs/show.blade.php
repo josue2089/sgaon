@@ -18,7 +18,7 @@
         <div class="detail-list">
             <div><strong>Nombre:</strong> {{ $program->name }}</div>
             <div><strong>Código:</strong> {{ $program->code }}</div>
-            <div><strong>Estatus:</strong> {{ ucfirst($program->status) }}</div>
+            <div><strong>Estado:</strong> {{ \App\Support\StatusLabel::label($program->status) }}</div>
             <div><strong>Tipo:</strong> {{ $program->is_extracurricular ? 'Extracurricular' : 'Regular' }}</div>
             <div><strong>Descripción:</strong> {{ $program->description ?: 'Sin descripción' }}</div>
             <div><strong>Precio base por defecto:</strong>
@@ -73,7 +73,7 @@
                         <td>{{ $level->academic_hours }}</td>
                         <td>{{ $level->lessons_count }}</td>
                         <td>{{ $level->courses_count }}</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $level->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($level->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $level->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('program-levels.show', $level) }}">Ver clases</a>
                             <a href="{{ route('program-levels.edit', $level) }}">Editar</a>

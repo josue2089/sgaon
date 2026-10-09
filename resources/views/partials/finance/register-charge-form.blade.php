@@ -80,10 +80,10 @@
         <input type="date" name="due_date" value="{{ old('due_date') }}">
     </div>
     <div>
-        <label>Status</label>
+        <label>Estado</label>
         <select name="status">
             @foreach(['pending','partial','overdue'] as $status)
-                <option value="{{ $status }}" @selected(old('status', 'pending') === $status)>{{ $status }}</option>
+                <option value="{{ $status }}" @selected(old('status', 'pending') === $status)>{{ \App\Support\StatusLabel::label($status) }}</option>
             @endforeach
         </select>
     </div>

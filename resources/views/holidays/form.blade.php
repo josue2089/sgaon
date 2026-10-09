@@ -52,10 +52,10 @@
         <textarea name="description" placeholder="Observación opcional">{{ old('description', $holiday->description ?? '') }}</textarea>
     </div>
     <div>
-        <label>Status</label>
+        <label>Estado</label>
         <select name="status" required>
             @foreach($statusOptions as $status)
-                <option value="{{ $status }}" @selected(old('status', $holiday->status ?? 'active') === $status)>{{ $status }}</option>
+                <option value="{{ $status }}" @selected(old('status', $holiday->status ?? 'active') === $status)>{{ \App\Support\StatusLabel::label($status) }}</option>
             @endforeach
         </select>
     </div>

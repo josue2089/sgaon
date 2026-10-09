@@ -1396,20 +1396,6 @@ textarea {
 .badge-danger { background: #ffe4e6; color: #be123c; }
 .badge-info { background: #e0ecff; color: #1d4ed8; }
 
-.status-pill {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 0.27rem 0.72rem;
-    font-size: 0.88rem;
-    font-weight: 900;
-}
-
-.status-pill.success { background: #dcfce7; color: #15803d; }
-.status-pill.warn { background: #fff7d6; color: #a16207; }
-.status-pill.danger { background: #ffe4e6; color: #be123c; }
-.status-pill.info { background: #e0ecff; color: #1d4ed8; }
-
 .muted {
     color: var(--muted);
 }
@@ -2297,10 +2283,6 @@ textarea {
 }
 
 .attendance-shortcuts .badge-pill,
-.attendance-shortcuts .status-pill {
-    min-height: 2.35rem;
-}
-
 .attendance-sheet select,
 .attendance-sheet input {
     min-height: 3rem;

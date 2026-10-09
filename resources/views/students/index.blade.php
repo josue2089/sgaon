@@ -112,7 +112,7 @@
                         <td>{{ $levelCode }}</td>
                         <td>{{ isset($attendanceByStudent[$student->id]) ? ((int) $attendanceByStudent[$student->id]).'%' : 'N/D' }}</td>
                         <td>@include('partials.ui.status-badge', ['tone' => $paymentBadge[0], 'text' => $paymentBadge[1]])</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $student->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($student->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $student->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('students.show', $student) }}">Detalle</a>
                             @if(\Illuminate\Support\Facades\Route::has('students.move-to-historical'))

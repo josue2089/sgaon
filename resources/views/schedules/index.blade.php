@@ -46,7 +46,7 @@
                         <td class="table-title">{{ $schedule->days_label }}</td>
                         <td>{{ $schedule->time_range_label }}</td>
                         <td>{{ $schedule->campus->name ?? 'Sin sede' }}</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $schedule->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($schedule->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $schedule->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('schedules.edit', $schedule) }}">Editar</a>
                             <form method="POST" action="{{ route('schedules.destroy', $schedule) }}" onsubmit="return confirm('¿Eliminar este horario?');">

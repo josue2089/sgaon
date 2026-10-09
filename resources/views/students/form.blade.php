@@ -66,10 +66,10 @@
         </div>
         <div><label>Detalle familiar</label><input name="family_in_institution_details" value="{{ old('family_in_institution_details',$student->family_in_institution_details ?? '') }}" placeholder="Nombre o referencia"></div>
         <div>
-            <label>Status</label>
+            <label>Estado</label>
             <select name="status">
                 @foreach(['active','inactive','withdrawn','graduated'] as $status)
-                    <option value="{{ $status }}" @selected(old('status',$student->status ?? 'active')==$status)>{{ $status }}</option>
+                    <option value="{{ $status }}" @selected(old('status',$student->status ?? 'active')==$status)>{{ \App\Support\StatusLabel::label($status) }}</option>
                 @endforeach
             </select>
         </div>

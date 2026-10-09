@@ -210,7 +210,7 @@
                     </summary>
                     <div class="fi-menu-panel fi-menu-panel-profile">
                         <div class="fi-menu-title">{{ $user?->name ?? 'Usuario' }}</div>
-                        <div class="fi-menu-empty">Rol: {{ strtoupper((string) $user?->role) }}{{ $user?->isMasterAdmin() ? ' · MASTER' : '' }}</div>
+                        <div class="fi-menu-empty">Rol: {{ \App\Support\StatusLabel::role($user?->role) }}{{ $user?->isMasterAdmin() ? ' · MASTER' : '' }}</div>
                         <a href="{{ route('dashboard') }}" class="fi-menu-link">Ir al dashboard</a>
                         @if($user?->role === 'student')
                             <a href="{{ route('portal.student') }}" class="fi-menu-link">Mi portal</a>
