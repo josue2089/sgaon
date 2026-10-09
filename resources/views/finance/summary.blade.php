@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('content')
+@include('partials.layout.reports-tabs')
 @php
     use App\Support\MoneyFormat;
     use App\Support\PaymentCurrencyConverter;

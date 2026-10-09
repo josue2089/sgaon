@@ -1,6 +1,7 @@
 @php use App\Support\MoneyFormat; @endphp
 @extends('layouts.app')
 @section('content')
+@include('partials.layout.reports-tabs')
 <div class="card">
     <div class="module-head">
         <div>

@@ -1,6 +1,7 @@
 @php use App\Support\MoneyFormat; @endphp
 @extends('layouts.app')
 @section('content')
+@include('partials.layout.reports-tabs')
 <div class="module-head">
     <div>
         <h1 class="page-title">💰 Proyección de mensualidades por sede</h1>

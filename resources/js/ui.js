@@ -12,7 +12,7 @@ document.addEventListener('click', (event) => {
         return;
     }
     // Clic en el fondo (fuera del contenido) cierra el modal.
-    if (event.target instanceof HTMLDialogElement && event.target.classList.contains('ui-modal')) {
+    if (event.target instanceof HTMLDialogElement && (event.target.classList.contains('ui-modal') || event.target.classList.contains('fi-drawer'))) {
         const rect = event.target.getBoundingClientRect();
         const outside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
         if (outside) {
@@ -123,3 +123,148 @@ if (errorsNode) {
         anchor.insertAdjacentElement('afterend', note);
     });
 }
+
+// --- Menús del header (<details class="fi-menu">): uno abierto a la vez; se cierran con clic fuera o Esc --
+const headerMenus = () => Array.from(document.querySelectorAll('details.fi-menu'));
+
+document.addEventListener('toggle', (event) => {
+    const menu = event.target;
+    if (!(menu instanceof HTMLDetailsElement) || !menu.classList.contains('fi-menu') || !menu.open) {
+        return;
+    }
+    headerMenus().forEach((other) => {
+        if (other !== menu) {
+            other.open = false;
+        }
+    });
+}, true);
+
+document.addEventListener('click', (event) => {
+    headerMenus().forEach((menu) => {
+        if (menu.open && !menu.contains(event.target)) {
+            menu.open = false;
+        }
+    });
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') {
+        return;
+    }
+    headerMenus().forEach((menu) => {
+        if (menu.open) {
+            menu.open = false;
+            menu.querySelector('summary')?.focus();
+        }
+    });
+});
+
+// --- Búsqueda global de alumnos -------------------------------------------------
+document.querySelectorAll('[data-student-search]').forEach((box) => {
+    const input = box.querySelector('[data-student-search-input]');
+    const list = box.querySelector('[data-student-search-results]');
+    let timer = null;
+    let controller = null;
+    let activeIndex = -1;
+
+    const options = () => Array.from(list.querySelectorAll('[role="option"]'));
+
+    const close = () => {
+        list.hidden = true;
+        input.setAttribute('aria-expanded', 'false');
+        activeIndex = -1;
+    };
+
+    const highlight = (index) => {
+        const items = options();
+        if (items.length === 0) {
+            return;
+        }
+        activeIndex = (index + items.length) % items.length;
+        items.forEach((item, position) => item.setAttribute('aria-selected', position === activeIndex ? 'true' : 'false'));
+        input.setAttribute('aria-activedescendant', items[activeIndex].id);
+    };
+
+    const render = (results, term) => {
+        list.innerHTML = '';
+        if (results.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'fi-search-empty';
+            empty.textContent = `Sin alumnos para “${term}”`;
+            list.appendChild(empty);
+        }
+        results.forEach((result, index) => {
+            const link = document.createElement('a');
+            link.href = result.url;
+            link.id = `${list.id}-${index}`;
+            link.className = 'fi-search-result';
+            link.setAttribute('role', 'option');
+            const name = document.createElement('strong');
+            name.textContent = result.name;
+            link.appendChild(name);
+            if (result.detail) {
+                const detail = document.createElement('small');
+                detail.textContent = result.detail;
+                link.appendChild(detail);
+            }
+            list.appendChild(link);
+        });
+        list.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+        activeIndex = -1;
+    };
+
+    const search = async () => {
+        const term = input.value.trim();
+        if (term.length < 2) {
+            close();
+            return;
+        }
+        controller?.abort();
+        controller = new AbortController();
+        try {
+            const url = new URL(box.dataset.url, window.location.origin);
+            url.searchParams.set('q', term);
+            const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: controller.signal });
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            render(data.results || [], term);
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                close();
+            }
+        }
+    };
+
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(search, 220);
+    });
+
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            highlight(activeIndex + 1);
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            highlight(activeIndex - 1);
+        } else if (event.key === 'Enter') {
+            const items = options();
+            const target = items[activeIndex] || (items.length === 1 ? items[0] : null);
+            if (target) {
+                event.preventDefault();
+                window.location.href = target.href;
+            }
+        } else if (event.key === 'Escape') {
+            close();
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!box.contains(event.target)) {
+            close();
+        }
+    });
+});

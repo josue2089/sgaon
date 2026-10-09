@@ -17,7 +17,6 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\MakeupRecoveryController;
-use App\Http\Controllers\OperationWizardController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PeriodController;
@@ -28,6 +27,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleTemplateController;
 use App\Http\Controllers\HistoricalStudentController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentSearchController;
 use App\Http\Controllers\StudentMakeupController;
 use App\Http\Controllers\StudentImportController;
 use App\Http\Controllers\SystemSettingController;
@@ -54,6 +54,9 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/students/import', [StudentImportController::class, 'create'])->name('students.import');
         Route::post('/students/import/preview', [StudentImportController::class, 'preview'])->name('students.import.preview');
         Route::post('/students/import', [StudentImportController::class, 'store'])->name('students.import.store');
+        Route::get('/students/search', StudentSearchController::class)->name('students.search');
+        // El asistente de operaciones se retiró (#241): la creación de cursos e inscripciones tiene sus pantallas.
+        Route::redirect('/operations/wizard', '/courses');
         Route::get('/students/historical', [HistoricalStudentController::class, 'index'])->name('students.historical.index');
         Route::get('/students/historical/import', [HistoricalStudentController::class, 'importForm'])->name('students.historical.import');
         Route::post('/students/historical/import/preview', [HistoricalStudentController::class, 'importPreview'])->name('students.historical.import.preview');
@@ -98,11 +101,6 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/makeups/sessions', [MakeupRecoveryController::class, 'storeSession'])->name('makeups.sessions.store');
         Route::patch('/makeups/requests/{makeupRequest}', [MakeupRecoveryController::class, 'reviewRequest'])->name('makeups.requests.review');
         Route::patch('/makeups/bookings/{booking}', [MakeupRecoveryController::class, 'updateBooking'])->name('makeups.bookings.update');
-        Route::get('/operations/wizard', [OperationWizardController::class, 'index'])->name('operations.wizard');
-        Route::post('/operations/wizard/course', [OperationWizardController::class, 'storeCourse'])->name('operations.wizard.course');
-        Route::post('/operations/wizard/group', [OperationWizardController::class, 'storeGroup'])->name('operations.wizard.group');
-        Route::post('/operations/wizard/session', [OperationWizardController::class, 'storeSession'])->name('operations.wizard.session');
-        Route::post('/operations/wizard/enrollment', [OperationWizardController::class, 'storeEnrollment'])->name('operations.wizard.enrollment');
         // Feriados: el master gestiona todo; el admin de sede, los días sin clase de su sede.
         Route::resource('holidays', HolidayController::class)->except('show');
         Route::middleware('master.admin')->group(function () {

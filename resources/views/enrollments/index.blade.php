@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('content')
+@include('partials.layout.students-tabs')
 @php
     $total = $enrollments->total();
     $active = $enrollments->getCollection()->where('status', 'active')->count();
