@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('content')
+@include('partials.layout.students-tabs')
 <div class="module-head">
     <div>
         <h1 class="page-title">Alumnos</h1>

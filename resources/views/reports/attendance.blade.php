@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('content')
+@include('partials.layout.reports-tabs')
 <div class="card">
     <div class="module-head">
         <div>
