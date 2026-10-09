@@ -9,9 +9,31 @@
     <div class="soft-kpi-grid dashboard-achievements">
         @include('partials.ui.soft-kpi', ['label' => 'Mejor Asistencia', 'value' => is_null($bestGroupRate) ? 'N/D' : $bestGroupRate.'%', 'subtitle' => $bestGroup?->name ? 'Grupo '.$bestGroup->name : 'Sin data'])
         @include('partials.ui.soft-kpi', ['label' => 'Pagos del Mes', 'value' => is_null($paymentsRate) ? 'N/D' : $paymentsRate.'%', 'subtitle' => MoneyFormat::usd($paymentsMonthAmount).' recaudado'])
-        @include('partials.ui.soft-kpi', ['label' => 'Satisfacción', 'value' => 'N/D', 'subtitle' => 'Sin módulo de encuestas'])
+        @include('partials.ui.soft-kpi', ['label' => 'Asistencia del Mes', 'value' => is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%', 'subtitle' => 'Presentes sobre registros'])
     </div>
 </div>
+
+<section class="card today-inbox" aria-labelledby="today-inbox-title">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title" id="today-inbox-title">Pendientes de hoy</h2>
+            @php($pendingTotal = collect($inbox)->sum('count'))
+            <p class="page-subtitle section-subtitle">{{ $pendingTotal > 0 ? 'Lo que necesita atención ahora, con acceso directo.' : 'Todo al día. No hay pendientes.' }}</p>
+        </div>
+    </div>
+    <div class="today-inbox-grid">
+        @foreach($inbox as $item)
+            <a class="today-item today-item--{{ $item['tone'] }}" href="{{ $item['url'] }}" data-inbox="{{ $item['key'] }}">
+                <span class="today-item-count">{{ $item['count'] }}</span>
+                <span class="today-item-body">
+                    <span class="today-item-label">{{ $item['label'] }}</span>
+                    <span class="today-item-hint">{{ $item['hint'] }}</span>
+                </span>
+                <span class="today-item-action">{{ $item['count'] > 0 ? $item['action'] : 'Ver' }} →</span>
+            </a>
+        @endforeach
+    </div>
+</section>
 
 <div class="soft-kpi-grid dashboard-quick-grid">
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'users', 'label' => 'Alumnos', 'value' => $studentsCount, 'subtitle' => auth()->user()?->role === 'teacher' ? 'En tus cursos' : (auth()->user()?->isMasterAdmin() ? 'Todas las sedes' : null)])

@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('content')
-@include('partials.layout.students-tabs')
 @php
     $total = $enrollments->total();
     $active = $enrollments->getCollection()->where('status', 'active')->count();
@@ -14,6 +13,7 @@
     </div>
     <a class="btn" href="{{ route('enrollments.create') }}">Nueva inscripción</a>
 </div>
+@include('partials.layout.students-tabs')
 
 <div class="metric-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">
     <div class="metric-card metric-blue"><div class="metric-label">Total</div><div class="metric-value">{{ $total }}</div></div>

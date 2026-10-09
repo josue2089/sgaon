@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('content')
-@include('partials.layout.students-tabs')
 <div class="module-head">
     <div>
         <h1 class="page-title">Alumnos</h1>
@@ -16,6 +15,7 @@
         <a class="btn" href="{{ route('students.create') }}">Nuevo Alumno</a>
     </div>
 </div>
+@include('partials.layout.students-tabs')
 
 <div class="soft-kpi-grid soft-kpi-grid-4">
     @include('partials.ui.soft-kpi', ['iconName' => 'users', 'label' => 'Total Alumnos', 'value' => $summary['total']])
@@ -24,7 +24,14 @@
     @include('partials.ui.soft-kpi', ['iconName' => 'trend', 'label' => 'Asist. Promedio', 'value' => is_null($summary['attendance_rate']) ? 'N/D' : $summary['attendance_rate'].'%', 'valueClass' => 'value-purple'])
 </div>
 
+@if(($filters['enrollment'] ?? '') === 'none')
+    <div class="flash info">
+        Mostrando alumnos activos sin inscripción en ningún curso. Inscríbelos o pásalos a histórico.
+        <a href="{{ route('students.index') }}" class="ml-2 font-bold">Quitar filtro</a>
+    </div>
+@endif
 <form method="GET" action="{{ route('students.index') }}" class="card">
+    @if(($filters['enrollment'] ?? '') !== '')<input type="hidden" name="enrollment" value="{{ $filters['enrollment'] }}">@endif
     <div class="fi-filter-bar">
         <div class="search">
             <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Buscar por nombre, email, cédula o representante...">

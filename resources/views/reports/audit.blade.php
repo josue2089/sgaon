@@ -1,12 +1,12 @@
 @extends('layouts.app')
 @section('content')
-@include('partials.layout.reports-tabs')
 <div class="module-head">
     <div>
         <h1 class="page-title">Reporte de auditoría 🛡️</h1>
         <p class="page-subtitle">Trazabilidad de acciones críticas del sistema</p>
     </div>
 </div>
+@include('partials.layout.reports-tabs')
 <div class="card">
     <table>
         <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Payload</th></tr></thead>

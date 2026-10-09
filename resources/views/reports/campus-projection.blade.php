@@ -1,7 +1,6 @@
 @php use App\Support\MoneyFormat; @endphp
 @extends('layouts.app')
 @section('content')
-@include('partials.layout.reports-tabs')
 <div class="module-head">
     <div>
         <h1 class="page-title">💰 Proyección de mensualidades por sede</h1>
@@ -15,6 +14,7 @@
         <a class="btn secondary" href="{{ route('reports.campus-projection', ['export' => 'csv']) }}">Exportar CSV</a>
     </div>
 </div>
+@include('partials.layout.reports-tabs')
 
 <div class="metric-grid" style="grid-template-columns:repeat(4,minmax(0,1fr)); margin-bottom:1rem;">
     <div class="metric-card metric-blue">

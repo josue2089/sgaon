@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('content')
-@include('partials.layout.students-tabs')
 <div class="module-head">
     <div>
         <h1 class="page-title">Alumnos Históricos</h1>
@@ -11,6 +10,7 @@
         <a class="btn" href="{{ route('students.historical.import') }}">Importar histórico</a>
     </div>
 </div>
+@include('partials.layout.students-tabs')
 
 @if(session('success'))
     <div class="card" style="margin-bottom:1rem;color:#166534;">{{ session('success') }}</div>

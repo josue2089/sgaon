@@ -109,6 +109,17 @@ class StatusLabel
         ][(string) ($category ?: 'general')] ?? ucfirst(str_replace('_', ' ', (string) $category));
     }
 
+    public static function chargeType(?string $type): string
+    {
+        return [
+            'tuition' => 'Mensualidad',
+            'materials' => 'Materiales',
+            'registration' => 'Inscripción',
+            'makeup' => 'Recuperativa',
+            'other' => 'Otro',
+        ][(string) $type] ?? ($type ? ucfirst(str_replace('_', ' ', $type)) : 'N/D');
+    }
+
     /** Opciones para un <select>: valor => etiqueta. */
     public static function options(array $statuses, ?string $domain = null): array
     {

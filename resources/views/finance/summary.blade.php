@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('content')
-@include('partials.layout.reports-tabs')
 @php
     use App\Support\MoneyFormat;
     use App\Support\PaymentCurrencyConverter;
@@ -31,6 +30,7 @@
         <a class="btn secondary" href="{{ route('finance.index') }}">Volver a financiero</a>
     </div>
 </div>
+@include('partials.layout.reports-tabs')
 
 <form class="fi-filter-bar card" method="GET" action="{{ route('finance.summary') }}">
     <div>

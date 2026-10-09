@@ -211,6 +211,7 @@ class DashboardController extends Controller
         }
 
         return view('dashboard', [
+            'inbox' => \App\Support\TodayInbox::for($user, $teacher),
             'campusBreakdown' => $campusBreakdown,
             'studentsCount' => $studentsQuery->count(),
             'teachersCount' => $teachersQuery->count(),
