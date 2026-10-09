@@ -22,9 +22,7 @@ final class GradeAuthorization
             throw new AuthorizationException('No tienes permiso para gestionar evaluaciones.');
         }
 
-        $teacher = Teacher::query()
-            ->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('email', $user->email))
-            ->first();
+        $teacher = Teacher::forUser($user);
 
         if (! $teacher || (int) $course->teacher_id !== (int) $teacher->id) {
             throw new AuthorizationException('Solo el profesor titular puede cargar evaluaciones en este curso.');
@@ -43,9 +41,7 @@ final class GradeAuthorization
             return true;
         }
 
-        $teacher = Teacher::query()
-            ->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('email', $user->email))
-            ->first();
+        $teacher = Teacher::forUser($user);
 
         return $teacher && (int) $course->teacher_id === (int) $teacher->id;
     }

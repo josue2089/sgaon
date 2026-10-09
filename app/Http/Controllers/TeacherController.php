@@ -10,6 +10,7 @@ use App\Models\AuditLog;
 use App\Models\ScheduleTemplate;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Models\User;
 use App\Support\AuditTrail;
 use App\Support\CampusScope;
 use Carbon\Carbon;
@@ -491,10 +492,26 @@ class TeacherController extends Controller
             $data['profile_photo_path'] = $request->file('profile_photo')->store('profiles/teachers', 'public');
         }
 
+        $previousEmail = $teacher->email;
         $teacher->update($data);
         AuditTrail::log($request, 'teacher.update', $teacher, $data);
 
-        return redirect()->route('teachers.index')->with('success', 'Profesor actualizado.');
+        // Si cambia el email del profesor, su usuario de acceso cambia con él y conserva sus cursos.
+        $message = 'Profesor actualizado.';
+        $newEmail = trim((string) ($data['email'] ?? ''));
+        $accessUser = $teacher->user;
+        if ($accessUser && $accessUser->role === User::ROLE_TEACHER && $newEmail !== '' && strcasecmp($newEmail, (string) $previousEmail) !== 0) {
+            $taken = User::query()->whereRaw('LOWER(email) = ?', [strtolower($newEmail)])->whereKeyNot($accessUser->id)->exists();
+            if ($taken) {
+                $message .= ' Ojo: el email '.$newEmail.' ya pertenece a otro usuario, así que el acceso del profesor sigue con '.$accessUser->email.'.';
+            } else {
+                $accessUser->update(['email' => $newEmail]);
+                AuditTrail::log($request, 'teacher.user_email_synced', $teacher, ['user_id' => $accessUser->id, 'email' => $newEmail]);
+                $message .= ' Ahora ingresa con '.$newEmail.'.';
+            }
+        }
+
+        return redirect()->route('teachers.index')->with('success', $message);
     }
 
     public function destroy(Request $request, Teacher $teacher): RedirectResponse

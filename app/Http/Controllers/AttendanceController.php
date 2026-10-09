@@ -34,7 +34,7 @@ class AttendanceController extends Controller
         }
 
         if ($user?->role === 'teacher') {
-            $teacher = Teacher::where('user_id', $user->id)->orWhere('email', $user->email)->first();
+            $teacher = Teacher::forUser($user);
             $teacherId = $teacher?->id ?? -1;
             $sessionsQuery->whereHas('group', fn ($q) => $q->where('teacher_id', $teacherId));
         }
@@ -167,7 +167,7 @@ class AttendanceController extends Controller
     private function authorizeSession(Request $request, int $sessionId): void
     {
         if ($request->user()?->role === 'teacher') {
-            $teacher = Teacher::where('user_id', $request->user()->id)->orWhere('email', $request->user()->email)->first();
+            $teacher = Teacher::forUser($request->user());
             $allowed = ClassSession::where('id', $sessionId)
                 ->whereHas('group', fn ($q) => $q->where('teacher_id', $teacher?->id ?? -1))
                 ->exists();
