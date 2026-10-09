@@ -4183,3 +4183,41 @@ label:has(+ :is(input, select, textarea)[required])::after {
         overflow-x: auto;
     }
 }
+
+/* Secciones plegables de formularios (#244) */
+[hidden] {
+    display: none !important;
+}
+
+.form-section > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    list-style: none;
+    cursor: pointer;
+}
+
+.form-section > summary::-webkit-details-marker {
+    display: none;
+}
+
+.form-section > summary::after {
+    content: '';
+    flex-shrink: 0;
+    width: 0.6rem;
+    height: 0.6rem;
+    margin-left: auto;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg);
+    transition: transform 0.15s ease;
+}
+
+.form-section[open] > summary::after {
+    transform: rotate(-135deg);
+}
+
+.form-section:not([open]) > summary {
+    margin-bottom: 0;
+}
