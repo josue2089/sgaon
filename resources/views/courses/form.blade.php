@@ -109,10 +109,10 @@
         });
     </script>
     <div>
-        <label>Status</label>
+        <label>Estado</label>
         <select name="status" required>
             @foreach(['active','inactive'] as $status)
-                <option value="{{ $status }}" @selected(old('status',$course->status ?? 'active') === $status)>{{ $status }}</option>
+                <option value="{{ $status }}" @selected(old('status',$course->status ?? 'active') === $status)>{{ \App\Support\StatusLabel::label($status) }}</option>
             @endforeach
         </select>
     </div>

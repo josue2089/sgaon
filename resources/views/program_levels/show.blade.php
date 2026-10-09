@@ -33,7 +33,7 @@
                 @endif
             </div>
             <div><strong>Recordatorio:</strong> {{ $level->reminder_days_before }} días</div>
-            <div><strong>Estatus:</strong> {{ ucfirst($level->status) }}</div>
+            <div><strong>Estado:</strong> {{ \App\Support\StatusLabel::label($level->status) }}</div>
         </div>
     </div>
     <div class="card">

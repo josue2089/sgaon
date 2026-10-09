@@ -75,7 +75,7 @@
                         <td>{{ $course->end_date?->format('d/m/Y') ?? 'N/D' }}</td>
                         <td>{{ $studentsCount }}</td>
                         <td>{{ $completedCount }}/{{ $plannedCount }}</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $course->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($course->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $course->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('courses.show', $course) }}">Detalle</a>
                             <a href="{{ route('courses.edit', $course) }}">Editar</a>

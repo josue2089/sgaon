@@ -50,7 +50,7 @@
                             <div class="table-title">
                                 {{ $program->name }}
                                 @if($program->is_extracurricular)
-                                    <span class="status-pill info">Extracurricular</span>
+                                    @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Extracurricular'])
                                 @endif
                             </div>
                             <div class="table-sub">{{ $program->description ?: 'Sin descripción' }}</div>
@@ -58,7 +58,7 @@
                         <td>{{ $program->code }}</td>
                         <td>{{ $program->levels_count }}</td>
                         <td>{{ $program->courses_count }}</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $program->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($program->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $program->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('programs.show', $program) }}">Ver detalle</a>
                             <a href="{{ route('programs.edit', $program) }}">Editar</a>

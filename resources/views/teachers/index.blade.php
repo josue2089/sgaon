@@ -80,7 +80,7 @@
                         <td>{{ $teacher->campus?->name ?? 'N/D' }}</td>
                         <td>{{ (int) ($coursesByTeacher[$teacher->id] ?? 0) }}</td>
                         <td>{{ (int) ($studentsByTeacher[$teacher->id] ?? 0) }}</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $teacher->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($teacher->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $teacher->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('teachers.show', $teacher) }}">Ver detalle</a>
                             <a href="{{ route('teachers.edit', $teacher) }}">Editar</a>

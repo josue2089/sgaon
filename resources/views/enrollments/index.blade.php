@@ -51,7 +51,7 @@
             <div class="entity-card">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.9rem;">📘</div>
-                    <span class="badge-pill {{ $enrollment->status === 'active' ? 'badge-ok' : ($enrollment->status === 'completed' ? 'badge-info' : 'badge-warn') }}">{{ $enrollment->status }}</span>
+                    @include('partials.ui.status', ['status' => $enrollment->status, 'domain' => 'enrollment'])
                 </div>
                 <div class="entity-title">{{ $enrollment->student->full_name ?? 'Sin alumno' }}</div>
                 <div class="entity-sub">{{ $enrollment->group->name ?? 'Sin grupo' }}</div>

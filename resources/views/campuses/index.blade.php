@@ -43,7 +43,7 @@
                         <td class="table-title">{{ $campus->name }}</td>
                         <td>{{ $campus->code }}</td>
                         <td>{{ collect([$campus->city, $campus->state, $campus->country])->filter()->implode(', ') ?: 'Sin ubicación' }}</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $campus->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($campus->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $campus->status, 'domain' => 'campus'])</td>
                         <td class="table-actions">
                             <a href="{{ route('campuses.show', $campus) }}">Ver</a>
                             <a href="{{ route('campuses.edit', $campus) }}">Editar</a>

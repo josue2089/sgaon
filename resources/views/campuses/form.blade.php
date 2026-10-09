@@ -28,10 +28,10 @@
         <div class="form-hint">Se usa en la planilla de inscripción extracurricular. Ej. logo del colegio.</div>
     </div>
     <div>
-        <label>Status</label>
+        <label>Estado</label>
         <select name="status" required>
             @foreach($statusOptions as $status)
-                <option value="{{ $status }}" @selected(old('status', $campus->status ?? 'active') === $status)>{{ ucfirst($status) }}</option>
+                <option value="{{ $status }}" @selected(old('status', $campus->status ?? 'active') === $status)>{{ \App\Support\StatusLabel::label($status, 'campus') }}</option>
             @endforeach
         </select>
     </div>

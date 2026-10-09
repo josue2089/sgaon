@@ -29,10 +29,10 @@
         <input type="number" name="reminder_days_before" min="0" max="90" value="{{ old('reminder_days_before', $level->reminder_days_before ?? 5) }}" required>
     </div>
     <div>
-        <label>Status</label>
+        <label>Estado</label>
         <select name="status" required>
             @foreach(['active','inactive'] as $status)
-                <option value="{{ $status }}" @selected(old('status', $level->status ?? 'active') === $status)>{{ ucfirst($status) }}</option>
+                <option value="{{ $status }}" @selected(old('status', $level->status ?? 'active') === $status)>{{ \App\Support\StatusLabel::label($status) }}</option>
             @endforeach
         </select>
     </div>

@@ -61,7 +61,7 @@ class ProgramExtracurricularTest extends TestCase
         $this->actingAs($master)->get(route('programs.index'))
             ->assertOk()
             ->assertSee('Fútbol')
-            ->assertSee('<span class="status-pill info">Extracurricular</span>', false);
+            ->assertSee('<span class="badge-pill badge-info">Extracurricular</span>', false);
 
         $this->actingAs($master)->get(route('programs.index', ['type' => 'extracurricular']))
             ->assertOk()

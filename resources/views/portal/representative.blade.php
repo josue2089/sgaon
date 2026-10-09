@@ -23,7 +23,7 @@
         <div class="section-head section-head-tight">
             <div>
                 <h3 class="section-title section-title-md">{{ $student->full_name }}</h3>
-                <div class="entity-sub">Estado: @include('partials.ui.status-badge', ['tone' => $student->status === 'active' ? 'ok' : 'warn', 'text' => $student->status])</div>
+                <div class="entity-sub">Estado: @include('partials.ui.status', ['status' => $student->status])</div>
             </div>
         </div>
 
@@ -75,7 +75,7 @@
                     @if($student->chargePaymentRequests->isNotEmpty())
                         @php($latestRequest = $student->chargePaymentRequests->sortByDesc('submitted_at')->first())
                         <div class="table-sub">Último comprobante: {{ $latestRequest->submitted_at?->format('d/m/Y H:i') ?? 'N/D' }}</div>
-                        <div class="table-sub">Estado: {{ ucfirst(str_replace('_', ' ', $latestRequest->status)) }}</div>
+                        <div class="table-sub">Estado: {{ \App\Support\StatusLabel::label($latestRequest->status) }}</div>
                     @else
                         <div class="empty-state-inline">No hay actividad de pagos registrada.</div>
                     @endif
@@ -97,7 +97,7 @@
                                     <tr>
                                         <td>{{ $enrollment->group->course->name ?? '' }}</td>
                                         <td>{{ $enrollment->group->name ?? '' }}</td>
-                                        <td>{{ ucfirst($enrollment->status) }}</td>
+                                        <td>{{ \App\Support\StatusLabel::label($enrollment->status, 'enrollment') }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -136,7 +136,7 @@
                                     <tr>
                                         <td>{{ $charge->concept }}</td>
                                         <td>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</td>
-                                        <td>{{ ucfirst($charge->status) }}</td>
+                                        <td>@include('partials.ui.status', ['status' => $charge->status])</td>
                                         <td>
                                             <form method="POST" action="{{ route('portal.representative.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs">
                                                 @csrf
@@ -168,10 +168,7 @@
                                 <article class="charge-request-card">
                                     <div class="charge-request-line">
                                         <span class="table-title">{{ $paymentRequest->charge?->concept ?? 'N/D' }}</span>
-                                        <span>@include('partials.ui.status-badge', [
-                                            'tone' => $paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_APPROVED ? 'ok' : ($paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_REJECTED ? 'danger' : 'warn'),
-                                            'text' => ucfirst(str_replace('_', ' ', $paymentRequest->status)),
-                                        ])</span>
+                                        <span>@include('partials.ui.status', ['status' => $paymentRequest->status])</span>
                                     </div>
                                     <div class="charge-request-meta">
                                         <span>{{ $paymentRequest->submitted_at?->format('d/m/Y H:i') ?? 'N/D' }}</span>

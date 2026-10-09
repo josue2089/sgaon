@@ -39,7 +39,7 @@
                                 Sin sede
                             @endif
                         </td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $user->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($user->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $user->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('admin-users.edit', $user) }}">Editar</a>
                             <form method="POST" action="{{ route('admin-users.resend-credentials', $user) }}" style="display:inline;">

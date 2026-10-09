@@ -542,10 +542,10 @@ class FinanceController extends Controller
                 ),
                 'meta' => [
                     'concepto' => $charge->concept,
-                    'periodo' => $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período'),
-                    'estado' => $charge->status,
+                    'período' => $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período'),
+                    'estado' => \App\Support\StatusLabel::label($charge->voided_at ? 'voided' : $charge->status),
                     'saldo' => MoneyFormat::number(FinanceReconcile::outstandingForCharge($charge)),
-                    'anulacion' => $charge->voided_at
+                    'anulación' => $charge->voided_at
                         ? $charge->voided_at->format('d/m/Y').' · '.($charge->void_reason ?: 'Sin motivo')
                         : null,
                 ],
@@ -570,11 +570,11 @@ class FinanceController extends Controller
                 'subtitle' => $payment->receipt->receipt_number ?? 'Sin recibo',
                 'amount' => (float) $payment->amount,
                 'meta' => [
-                    'metodo' => $payment->method ?: 'Sin método',
+                    'método' => $payment->method ?: 'Sin método',
                     'moneda' => $payment->currency ?? PaymentCurrencyConverter::CURRENCY_USD,
                     'monto' => MoneyFormat::dualLine($payment),
                     'referencia' => $payment->reference ?: 'Sin referencia',
-                    'anulacion' => $payment->voided_at
+                    'anulación' => $payment->voided_at
                         ? $payment->voided_at->format('d/m/Y').' · '.($payment->void_reason ?: 'Sin motivo')
                         : null,
                     'cargos' => $allocations->map(function ($allocation) {

@@ -17,7 +17,7 @@
     @if(isset($teacher->id))
         <div class="form-hint">
             @if($teacher->user)
-                Acceso a la plataforma: {{ $teacher->user->email }}{{ $teacher->user->role !== 'teacher' ? ' (usuario con rol '.$teacher->user->role.')' : '' }}{{ $teacher->user->status === 'inactive' ? ' · inactivo' : '' }}. Si cambias el email, el acceso cambia con él.
+                Acceso a la plataforma: {{ $teacher->user->email }}{{ $teacher->user->role !== 'teacher' ? ' (usuario con rol '.\App\Support\StatusLabel::role($teacher->user->role).')' : '' }}{{ $teacher->user->status === 'inactive' ? ' · inactivo' : '' }}. Si cambias el email, el acceso cambia con él.
             @else
                 Sin usuario de acceso todavía: se crea la primera vez que el profesor entra con este email.
             @endif
@@ -25,7 +25,7 @@
     @endif
 </div>
 <div><label>Teléfono</label><input name="phone" value="{{ old('phone',$teacher->phone ?? '') }}"></div>
-<div><label>Status</label><select name="status">@foreach(['active','inactive'] as $status)<option value="{{ $status }}" @selected(old('status',$teacher->status ?? 'active')==$status)>{{ $status }}</option>@endforeach</select></div>
+<div><label>Estado</label><select name="status">@foreach(['active','inactive'] as $status)<option value="{{ $status }}" @selected(old('status',$teacher->status ?? 'active')==$status)>{{ \App\Support\StatusLabel::label($status) }}</option>@endforeach</select></div>
 </div>
 
 @once

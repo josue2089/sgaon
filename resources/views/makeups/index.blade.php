@@ -83,12 +83,12 @@
             <div class="grid-2">
                 <div><label>Cupo</label><input type="number" min="1" max="50" name="capacity" value="8" required></div>
                 <div>
-                    <label>Status</label>
+                    <label>Estado</label>
                     <select name="status">
-                        <option value="open">open</option>
-                        <option value="full">full</option>
-                        <option value="cancelled">cancelled</option>
-                        <option value="completed">completed</option>
+                        <option value="open">{{ \App\Support\StatusLabel::label('open') }}</option>
+                        <option value="full">{{ \App\Support\StatusLabel::label('full') }}</option>
+                        <option value="cancelled">{{ \App\Support\StatusLabel::label('cancelled') }}</option>
+                        <option value="completed">{{ \App\Support\StatusLabel::label('completed') }}</option>
                     </select>
                 </div>
             </div>
@@ -109,7 +109,7 @@
                     <th>Programa</th>
                     <th>Nivel</th>
                     <th>Cupos</th>
-                    <th>Status</th>
+                    <th>Estado</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -121,7 +121,7 @@
                         <td>{{ $session->program?->name ?? 'N/D' }}</td>
                         <td>{{ $session->programLevel?->name ?? 'N/D' }}</td>
                         <td>{{ $session->booked_count }}/{{ $session->capacity }}</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $session->status === 'open' ? 'ok' : ($session->status === 'full' ? 'warn' : 'info'), 'text' => ucfirst($session->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $session->status, 'domain' => 'booking'])</td>
                     </tr>
                 @empty
                     <tr><td colspan="7"><div class="empty-state-inline">No hay bloques recuperativos.</div></td></tr>
@@ -143,7 +143,7 @@
                         <div class="table-title">{{ $makeupRequest->student?->full_name ?? 'N/D' }}</div>
                         <div class="table-sub">{{ $makeupRequest->student?->email ?? 'Sin email' }}</div>
                     </div>
-                    <div>@include('partials.ui.status-badge', ['tone' => in_array($makeupRequest->status, ['completed','approved_for_booking'], true) ? 'ok' : ($makeupRequest->status === 'rejected' ? 'danger' : 'warn'), 'text' => \App\Models\MakeupRequest::STATUS_LABELS[$makeupRequest->status] ?? ucfirst(str_replace('_', ' ', $makeupRequest->status))])</div>
+                    <div>@include('partials.ui.status', ['status' => $makeupRequest->status, 'domain' => 'makeup'])</div>
                 </div>
 
                 <div class="makeup-admin-meta">
@@ -152,7 +152,7 @@
                     <div><strong>Costo:</strong> {{ \App\Support\MoneyFormat::usd($makeupRequest->price) }}</div>
                     <div><strong>Cargo:</strong>
                         @if($makeupRequest->charge)
-                            {{ $makeupRequest->charge->voided_at ? 'Anulado' : ['paid' => 'Pagado', 'partial' => 'Abonado', 'overdue' => 'Vencido', 'pending' => 'Pendiente'][$makeupRequest->charge->status] ?? $makeupRequest->charge->status }}
+                            {{ $makeupRequest->charge->voided_at ? 'Anulado' : \App\Support\StatusLabel::label($makeupRequest->charge->status) }}
                         @else
                             Sin cargo
                         @endif
@@ -190,7 +190,7 @@
                                 @method('PATCH')
                                 <select name="status">
                                     @foreach(['reserved','attended','missed','cancelled'] as $status)
-                                        <option value="{{ $status }}" @selected($makeupRequest->booking->status === $status)>{{ $status }}</option>
+                                        <option value="{{ $status }}" @selected($makeupRequest->booking->status === $status)>{{ \App\Support\StatusLabel::label($status) }}</option>
                                     @endforeach
                                 </select>
                                 <button class="btn secondary" type="submit">Actualizar reserva</button>

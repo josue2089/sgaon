@@ -36,7 +36,7 @@
             </div>
         </div>
         <div class="student-hero-tags">
-            @include('partials.ui.status-badge', ['tone' => $student->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($student->status)])
+            @include('partials.ui.status', ['status' => $student->status])
             @if($currentCourseLevel)
                 @include('partials.ui.status-badge', ['tone' => 'level', 'text' => (($currentCourseLevel->sort_order ?? $currentCourseLevel->scale_position).'/'.($currentCourseLevel->program_total ?? $currentCourseLevel->scale_total)).' · '.$currentCourseLevel->code])
             @endif
@@ -110,7 +110,7 @@
             <div><strong>Teléfono:</strong> {{ $student->landline_phone ?: 'Sin teléfono fijo' }}</div>
             <div><strong>Sede:</strong> {{ $student->campus?->name ?? 'Sin sede' }}</div>
             <div><strong>Programa inscripción:</strong> {{ $student->registrationProgram?->name ?? 'N/D' }}</div>
-            <div><strong>Estado:</strong> {{ ucfirst($student->status) }}</div>
+            <div><strong>Estado:</strong> {{ \App\Support\StatusLabel::label($student->status) }}</div>
             <div><strong>Edad:</strong> {{ $student->age ? $student->age.' años' : 'N/D' }}</div>
             <div><strong>Fecha inscripción:</strong> {{ $student->enrollment_date?->format('d/m/Y') ?? 'N/D' }}</div>
             <div><strong>Familiar en institución:</strong> {{ $student->family_in_institution ? 'Sí' : 'No' }}{{ $student->family_in_institution_details ? ' · '.$student->family_in_institution_details : '' }}</div>
@@ -231,7 +231,7 @@
                 @foreach($student->attachments as $attachment)
                     <tr>
                         <td class="table-title">{{ $attachment->title }}</td>
-                        <td>{{ ucfirst($attachment->category ?: 'general') }}</td>
+                        <td>{{ \App\Support\StatusLabel::category($attachment->category) }}</td>
                         <td>{{ $attachment->original_name }}</td>
                         <td>{{ $attachment->file_size_label }}</td>
                         <td>{{ $attachment->created_at?->format('d/m/Y') ?? 'N/D' }}</td>
@@ -353,11 +353,11 @@
                         <td>{{ $makeup->missedSession?->session_date?->format('d/m/Y') ?? 'Sin inasistencia (manual)' }}<div class="table-sub">{{ $makeup->enrollment?->group?->course?->name }}</div></td>
                         <td>{{ $makeupSession ? $makeupSession->session_date?->format('d/m/Y').' · '.substr((string) $makeupSession->starts_at, 0, 5).' - '.substr((string) $makeupSession->ends_at, 0, 5) : 'Sin reservar' }}</td>
                         <td>{{ $makeupSession?->teacher?->full_name ?? '—' }}</td>
-                        <td>{{ \App\Models\MakeupRequest::STATUS_LABELS[$makeup->status] ?? $makeup->status }}</td>
+                        <td>{{ \App\Support\StatusLabel::label($makeup->status, 'makeup') }}</td>
                         <td>
                             @if($makeup->charge)
                                 {{ MoneyFormat::formatLedgerAmount((float) $makeup->charge->amount, $makeup->charge->currency) }}
-                                <div class="table-sub">{{ $makeup->charge->voided_at ? 'Anulado' : (['paid' => 'Pagado', 'partial' => 'Abonado', 'overdue' => 'Vencido', 'pending' => 'Pendiente'][$makeup->charge->status] ?? $makeup->charge->status) }}</div>
+                                <div class="table-sub">{{ $makeup->charge->voided_at ? 'Anulado' : \App\Support\StatusLabel::label($makeup->charge->status) }}</div>
                             @else
                                 Sin cargo
                             @endif
@@ -411,7 +411,7 @@
                         <td>{{ $course?->period?->code ?? 'N/D' }}</td>
                         <td>{{ $course?->start_date?->format('d/m/Y') ?? 'N/D' }} - {{ $course?->end_date?->format('d/m/Y') ?? 'N/D' }}</td>
                         <td>{{ is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%' }}</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $enrollment->status === 'active' ? 'ok' : 'info', 'text' => ucfirst($enrollment->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $enrollment->status, 'domain' => 'enrollment'])</td>
                     </tr>
                 @empty
                     <tr><td colspan="7"><div class="empty-state-inline">No hay historico de cursos para este alumno.</div></td></tr>
@@ -528,7 +528,7 @@
                                 @if($charge->voided_at)
                                     <span class="table-sub">{{ $charge->void_reason ?: 'Anulado' }}</span>
                                 @else
-                                    @include('partials.ui.status-badge', ['tone' => $charge->status === 'paid' ? 'ok' : ($charge->status === 'overdue' ? 'danger' : 'warn'), 'text' => ucfirst($charge->status)])
+                                    @include('partials.ui.status', ['status' => $charge->status])
                                 @endif
                             </td>
                             <td>@include('partials.finance.void-charge', ['charge' => $charge])</td>

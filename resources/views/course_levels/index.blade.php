@@ -16,7 +16,7 @@
         <select name="status" style="max-width:220px;">
             <option value="">Todos los estados</option>
             @foreach($statusOptions as $status)
-                <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ ucfirst($status) }}</option>
+                <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ \App\Support\StatusLabel::label($status) }}</option>
             @endforeach
         </select>
         <button class="btn secondary" type="submit">Filtrar</button>
@@ -51,7 +51,7 @@
                         <td>{{ $level->stage }}</td>
                         <td>{{ $level->cefr_reference ?: 'N/D' }}</td>
                         <td>{{ $level->reminder_days_before }} día(s)</td>
-                        <td>@include('partials.ui.status-badge', ['tone' => $level->status === 'active' ? 'ok' : 'warn', 'text' => ucfirst($level->status)])</td>
+                        <td>@include('partials.ui.status', ['status' => $level->status])</td>
                         <td class="table-actions">
                             <a href="{{ route('course-levels.edit', $level) }}">Editar</a>
                             <form method="POST" action="{{ route('course-levels.destroy', $level) }}" onsubmit="return confirm('¿Eliminar esta escala?');">

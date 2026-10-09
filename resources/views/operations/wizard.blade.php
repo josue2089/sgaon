@@ -55,10 +55,10 @@
                     <input name="code" placeholder="Ej. B2-IA">
                 </div>
                 <div>
-                    <label>Status</label>
+                    <label>Estado</label>
                     <select name="status">
-                        <option value="active">active</option>
-                        <option value="inactive">inactive</option>
+                        <option value="active">{{ \App\Support\StatusLabel::label('active') }}</option>
+                        <option value="inactive">{{ \App\Support\StatusLabel::label('inactive') }}</option>
                     </select>
                 </div>
                 <div>
@@ -100,7 +100,7 @@
                     <input name="name" required placeholder="Ej. B2-M-003">
                 </div>
                 <div>
-                    <label>Periodo</label>
+                    <label>Período</label>
                     <select name="period">
                         <option value="">Seleccione</option>
                         @foreach($periodOptions as $period)
@@ -118,10 +118,10 @@
                     </select>
                 </div>
                 <div>
-                    <label>Status</label>
+                    <label>Estado</label>
                     <select name="status">
                         @foreach($statusOptions as $status)
-                            <option value="{{ $status }}">{{ $status }}</option>
+                            <option value="{{ $status }}">{{ \App\Support\StatusLabel::label($status) }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -202,10 +202,10 @@
             <div>
                 <label>Status inscripción</label>
                 <select name="status">
-                    <option value="active">active</option>
-                    <option value="inactive">inactive</option>
-                    <option value="completed">completed</option>
-                    <option value="withdrawn">withdrawn</option>
+                    <option value="active">{{ \App\Support\StatusLabel::label('active') }}</option>
+                    <option value="inactive">{{ \App\Support\StatusLabel::label('inactive') }}</option>
+                    <option value="completed">{{ \App\Support\StatusLabel::label('completed') }}</option>
+                    <option value="withdrawn">{{ \App\Support\StatusLabel::label('withdrawn') }}</option>
                 </select>
             </div>
             <div>

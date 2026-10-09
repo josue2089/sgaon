@@ -89,10 +89,7 @@
                         @endif
                     </div>
                     <div>
-                        @include('partials.ui.status-badge', [
-                            'tone' => $paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_APPROVED ? 'ok' : ($paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_REJECTED ? 'danger' : 'warn'),
-                            'text' => ucfirst(str_replace('_', ' ', $paymentRequest->status)),
-                        ])
+                        @include('partials.ui.status', ['status' => $paymentRequest->status])
                     </div>
                 </div>
                 <div class="finance-payment-request-meta">
@@ -184,7 +181,7 @@
     </div>
     <table>
         <thead>
-        <tr><th>Alumno</th><th>Curso</th><th>Grupo</th><th>Periodo</th><th>Concepto</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Mora</th><th>Status</th><th></th></tr>
+        <tr><th>Alumno</th><th>Curso</th><th>Grupo</th><th>Período</th><th>Concepto</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Mora</th><th>Estado</th><th></th></tr>
         </thead>
         <tbody>
         @forelse($charges as $charge)
@@ -209,7 +206,7 @@
                     @if($charge->voided_at)
                         <div class="table-sub">{{ $charge->voided_at->format('d/m/Y') }} · {{ $charge->void_reason ?: 'Sin motivo' }}</div>
                     @else
-                        <span class="status-pill {{ $charge->status === 'paid' ? 'success' : ($charge->status === 'overdue' ? 'danger' : 'warn') }}">{{ $charge->status }}</span>
+                        @include('partials.ui.status', ['status' => $charge->status])
                     @endif
                 </td>
                 <td>@include('partials.finance.void-charge', ['charge' => $charge])</td>

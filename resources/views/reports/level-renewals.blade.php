@@ -63,7 +63,7 @@
                         @endif
                     </td>
                     <td>{{ $alert->emailed_at?->format('d/m/Y H:i') ?? 'N/D' }}</td>
-                    <td>@include('partials.ui.status-badge', ['tone' => $alert->status === 'open' ? 'info' : 'ok', 'text' => ucfirst($alert->status)])</td>
+                    <td>@include('partials.ui.status', ['status' => $alert->status])</td>
                     <td class="table-actions">
                         @if($alert->student)
                             <a href="{{ route('students.show', $alert->student) }}">Ver alumno</a>

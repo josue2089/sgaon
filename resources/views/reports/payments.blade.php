@@ -11,13 +11,13 @@
     <form method="GET" action="{{ route('reports.payments') }}">
         <div class="grid-2">
             <div>
-                <label>Status</label>
+                <label>Estado</label>
                 <select name="status">
                     <option value="">Todos</option>
-                    <option value="pending" @selected(request('status') === 'pending')>pending</option>
-                    <option value="partial" @selected(request('status') === 'partial')>partial</option>
-                    <option value="paid" @selected(request('status') === 'paid')>paid</option>
-                    <option value="overdue" @selected(request('status') === 'overdue')>overdue</option>
+                    <option value="pending" @selected(request('status') === 'pending')>{{ \App\Support\StatusLabel::label('pending') }}</option>
+                    <option value="partial" @selected(request('status') === 'partial')>{{ \App\Support\StatusLabel::label('partial') }}</option>
+                    <option value="paid" @selected(request('status') === 'paid')>{{ \App\Support\StatusLabel::label('paid') }}</option>
+                    <option value="overdue" @selected(request('status') === 'overdue')>{{ \App\Support\StatusLabel::label('overdue') }}</option>
                 </select>
             </div>
             <div>
@@ -86,7 +86,7 @@
         <div class="stack-sm" style="margin-top:.8rem;">
             @foreach($exports as $export)
                 <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
-                    @include('partials.ui.status-badge', ['tone' => $export->status === 'done' ? 'ok' : ($export->status === 'failed' ? 'danger' : 'warn'), 'text' => strtoupper($export->status)])
+                    @include('partials.ui.status', ['status' => $export->status])
                     <span class="entity-sub">{{ $export->created_at?->format('Y-m-d H:i') }}</span>
                     @if($export->status === 'done')
                         <a class="btn secondary" href="{{ route('reports.exports.download', $export) }}">Descargar</a>
@@ -99,7 +99,7 @@
 
 <div class="card">
     <table>
-        <thead><tr><th>Alumno</th><th>Curso</th><th>Grupo</th><th>Período</th><th>Tipo</th><th>Concepto</th><th>Monto</th><th>Status</th><th>Pagado</th><th>Saldo</th></tr></thead>
+        <thead><tr><th>Alumno</th><th>Curso</th><th>Grupo</th><th>Período</th><th>Tipo</th><th>Concepto</th><th>Monto</th><th>Estado</th><th>Pagado</th><th>Saldo</th></tr></thead>
         <tbody>
         @forelse($charges as $charge)
             @php
@@ -114,7 +114,7 @@
                 <td>{{ $charge->charge_type ?: 'N/D' }}</td>
                 <td>{{ $charge->concept }}</td>
                 <td>{{ MoneyFormat::chargeAmount($charge) }}</td>
-                <td><span class="status-pill {{ $charge->status === 'paid' ? 'success' : ($charge->status === 'overdue' ? 'danger' : 'warn') }}">{{ $charge->status }}</span></td>
+                <td>@include('partials.ui.status', ['status' => $charge->status])</td>
                 <td>{{ MoneyFormat::formatLedgerAmount($paidTotal, $charge->currency) }}</td>
                 <td>{{ MoneyFormat::formatLedgerAmount($balance, $charge->currency) }}</td>
             </tr>
