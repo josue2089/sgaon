@@ -78,8 +78,32 @@ class AttendanceController extends Controller
                 ->first(fn (Holiday $holiday) => $holiday->occursOn($session->session_date))
             : null;
 
+        // Selector: por defecto clases de hoy, próximos 7 días y últimos 30 días; con fecha, solo ese día.
+        $request->validate(['date' => ['nullable', 'date']]);
+        $filterDate = $request->filled('date') ? Carbon::parse($request->input('date'))->startOfDay() : null;
+        $today = now()->startOfDay();
+        $listQuery = (clone $sessionsQuery)->orderBy('starts_at')->orderBy('id');
+        if ($filterDate) {
+            $listQuery->whereDate('session_date', $filterDate);
+        } else {
+            $listQuery->whereBetween('session_date', [$today->copy()->subDays(30)->toDateString(), $today->copy()->addDays(7)->toDateString()]);
+        }
+        $listed = $listQuery->get();
+        if ($session && ! $listed->contains('id', $session->id)) {
+            $listed->push($session->loadMissing('group'));
+        }
+        $sessionGroups = $filterDate
+            ? collect([$filterDate->format('d/m/Y') => $listed])
+            : collect([
+                'Hoy' => $listed->filter(fn ($item) => $item->session_date?->isSameDay($today)),
+                'Próximos 7 días' => $listed->filter(fn ($item) => $item->session_date?->gt($today))->sortBy(fn ($item) => $item->session_date->toDateString().$item->starts_at),
+                'Anteriores' => $listed->filter(fn ($item) => $item->session_date?->lt($today))->sortByDesc(fn ($item) => $item->session_date->toDateString().$item->starts_at),
+            ])->filter(fn ($items) => $items->isNotEmpty());
+
         return view('attendance.index', [
-            'sessions' => $sessionsQuery->latest('session_date')->take(100)->get(),
+            'sessionGroups' => $sessionGroups,
+            'filterDate' => $filterDate,
+            'todayCount' => $filterDate ? null : $listed->filter(fn ($item) => $item->session_date?->isSameDay($today))->count(),
             'selectedSession' => $session,
             'sessionHoliday' => $sessionHoliday,
             'canRecordAttendance' => $session?->canRecordAttendance() ?? false,

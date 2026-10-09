@@ -36,18 +36,31 @@
 <div class="card">
     <form method="GET" action="{{ route('attendance.index') }}">
         <div class="fi-filter-bar fi-filter-bar-attendance">
+            <div>
+                <input type="date" name="date" value="{{ $filterDate?->toDateString() }}" aria-label="Buscar clases de una fecha" onchange="this.form.class_session_id.value='';this.form.submit()">
+            </div>
             <div class="search">
                 <select name="class_session_id">
-                    <option value="">Seleccione sesión</option>
-                    @foreach($sessions as $session)
-                        <option value="{{ $session->id }}" @selected(request('class_session_id')==$session->id)>
-                            {{ $session->session_date?->format('Y-m-d') }} - {{ $session->group->name ?? '' }}{{ $session->canRecordAttendance() ? '' : ' (programada)' }}
-                        </option>
+                    <option value="">{{ $sessionGroups->isEmpty() ? ($filterDate ? 'No hay clases ese día' : 'No hay clases en estas fechas') : 'Seleccione sesión' }}</option>
+                    @foreach($sessionGroups as $label => $items)
+                        <optgroup label="{{ $label }}">
+                            @foreach($items as $session)
+                                <option value="{{ $session->id }}" @selected(request('class_session_id')==$session->id)>
+                                    {{ $session->session_date?->format('d/m/Y') }}{{ $session->starts_at ? ' '.substr($session->starts_at, 0, 5) : '' }} - {{ $session->group->name ?? '' }}{{ $session->canRecordAttendance() ? '' : ' (programada)' }}
+                                </option>
+                            @endforeach
+                        </optgroup>
                     @endforeach
                 </select>
             </div>
             <button class="btn" type="submit">Cargar sesión</button>
+            @if($filterDate)
+                <a class="btn secondary" href="{{ route('attendance.index') }}">Hoy</a>
+            @endif
         </div>
+        @if(! $filterDate && ! $selectedSession)
+            <div class="form-hint">{{ $todayCount ? 'Hoy hay '.$todayCount.' '.($todayCount === 1 ? 'clase' : 'clases').'.' : 'No hay clases hoy.' }} Para otra fecha, usa el calendario.</div>
+        @endif
     </form>
 </div>
 
