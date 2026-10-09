@@ -72,12 +72,12 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/students/{student}/enrollment-sheet/pdf', [StudentController::class, 'enrollmentSheetPdf'])->name('students.enrollment-sheet.pdf');
         Route::get('/students/{student}/extracurricular-sheet/pdf', [StudentController::class, 'extracurricularSheetPdf'])->name('students.extracurricular-sheet.pdf');
         Route::post('/students/{student}/payments', [StudentController::class, 'storePayment'])
-            ->middleware('master.admin')
+            ->middleware('permission:finance.manage')
             ->name('students.payments.store');
         Route::get('/students/{student}/makeups/create', [StudentMakeupController::class, 'create'])->name('students.makeups.create');
         Route::post('/students/{student}/makeups', [StudentMakeupController::class, 'store'])->name('students.makeups.store');
         Route::post('/students/{student}/charges', [StudentController::class, 'storeCharge'])
-            ->middleware('master.admin')
+            ->middleware('permission:finance.manage')
             ->name('students.charges.store');
         Route::resource('teachers', TeacherController::class)->except('show');
         Route::get('/teachers-calendar', [TeacherController::class, 'calendar'])->name('teachers.calendar');
