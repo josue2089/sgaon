@@ -22,6 +22,7 @@ use App\Models\User;
 use App\Support\MakeupRecoveryEngine;
 use App\Support\PaymentCurrencyConverter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -45,6 +46,8 @@ class MakeupManualRegistrationTest extends TestCase
     {
         parent::setUp();
         Mail::fake();
+        // Las fechas del caso (clase del 05/10, recuperativa el 10/10) se evalúan como si hoy fuera 07/10.
+        Carbon::setTestNow('2026-10-07 10:00:00');
 
         $this->campus = Campus::create(['name' => 'Picacho', 'code' => 'PIC', 'status' => 'active']);
         $this->admin = User::factory()->create(['role' => 'admin', 'campus_id' => $this->campus->id, 'is_master' => false]);
@@ -65,6 +68,12 @@ class MakeupManualRegistrationTest extends TestCase
         $this->student = Student::create(['campus_id' => $this->campus->id, 'first_name' => 'Sergio', 'last_name' => 'León', 'email' => 'sergio@student.test', 'status' => 'active']);
         $this->enrollment = Enrollment::create(['campus_id' => $this->campus->id, 'student_id' => $this->student->id, 'group_id' => $group->id, 'enrolled_at' => '2026-09-01', 'status' => 'active', 'progress' => 0]);
         $this->classSession = ClassSession::create(['campus_id' => $this->campus->id, 'group_id' => $group->id, 'sequence' => 1, 'session_date' => '2026-10-05', 'starts_at' => '16:00:00', 'ends_at' => '17:30:00']);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     private function payload(array $extra = []): array
