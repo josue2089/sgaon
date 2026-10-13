@@ -25,15 +25,40 @@
     @endif
 </div>
 
-<div class="metric-grid metric-grid-5">
+@if($selectedSession)
+<div class="metric-grid metric-grid-5 attendance-metrics">
     @include('partials.ui.metric-card', ['tone' => 'metric-blue', 'iconName' => 'users', 'label' => 'Total', 'value' => $total])
     @include('partials.ui.metric-card', ['tone' => 'metric-green', 'iconName' => 'check', 'label' => 'Presentes', 'value' => $present])
     @include('partials.ui.metric-card', ['tone' => 'metric-red', 'iconName' => 'warning', 'label' => 'Ausentes', 'value' => $absent])
     @include('partials.ui.metric-card', ['tone' => 'metric-orange', 'iconName' => 'trend', 'label' => 'Tarde', 'value' => $late])
     @include('partials.ui.metric-card', ['tone' => 'metric-purple', 'iconName' => 'calendar', 'label' => 'Justificadas', 'value' => $justified, 'subtitle' => $pending > 0 ? $pending.' pendientes' : 'Todos marcados'])
 </div>
+@endif
 
-<div class="card">
+@if(! $selectedSession && ! $filterDate && ($sessionGroups['Hoy'] ?? collect())->isNotEmpty())
+    <section class="card" aria-labelledby="today-classes-title">
+        <div class="attendance-today-head">
+            <h2 class="section-title" id="today-classes-title">{{ auth()->user()?->role === 'teacher' ? 'Mis clases de hoy' : 'Clases de hoy' }}</h2>
+            <p class="entity-sub">Toca una clase para tomar la asistencia.</p>
+        </div>
+        <div class="attendance-today-grid">
+            @foreach($sessionGroups['Hoy'] as $todaySession)
+                <?php $taken = (int) $todaySession->attendance_records_count > 0; ?>
+                <a class="attendance-today-card {{ $taken ? 'is-done' : '' }}" href="{{ route('attendance.index', ['class_session_id' => $todaySession->id]) }}">
+                    <span class="attendance-today-time">{{ $todaySession->starts_at ? substr($todaySession->starts_at, 0, 5) : '--:--' }}</span>
+                    <span class="attendance-today-body">
+                        <strong>{{ $todaySession->group?->course?->name ?? $todaySession->group?->name ?? 'Grupo' }}</strong>
+                        <small>{{ $todaySession->group?->teacher?->full_name ?? 'Profesor sin asignar' }} · {{ (int) ($todaySession->group?->active_enrollments_count ?? 0) }} alumnos</small>
+                    </span>
+                    @include('partials.ui.status-badge', ['tone' => $taken ? 'ok' : 'warn', 'text' => $taken ? 'Tomada' : 'Pendiente'])
+                </a>
+            @endforeach
+        </div>
+    </section>
+@endif
+
+<details class="card attendance-picker" @unless($selectedSession) open @endunless>
+    <summary><h2 class="section-title section-title-sm">{{ $selectedSession ? 'Cambiar de clase' : 'Otra fecha o clase' }}</h2></summary>
     <form method="GET" action="{{ route('attendance.index') }}">
         <div class="fi-filter-bar fi-filter-bar-attendance">
             <div>
@@ -62,23 +87,34 @@
             <div class="form-hint">{{ $todayCount ? 'Hoy hay '.$todayCount.' '.($todayCount === 1 ? 'clase' : 'clases').'.' : 'No hay clases hoy.' }} Para otra fecha, usa el calendario.</div>
         @endif
     </form>
-</div>
+</details>
+
+
 
 @if($selectedSession)
-    <div class="card">
-        <div class="section-head">
-            <h2 class="section-title">Fecha de la clase</h2>
+    <div class="card attendance-session-head">
+        <div>
+            <h2 class="section-title">{{ $selectedSession->group?->course?->name ?? $selectedSession->group?->name }}</h2>
             <div class="entity-sub">
-                Si la clase se dio (o se dará) otro día, cámbiala aquí. La asistencia se mueve con ella.
-                Si ese día el grupo ya tiene clase, marca "Correr también las clases siguientes": cada clase pasa al próximo día del horario con su asistencia.
+                {{ $selectedSession->session_date?->locale('es')->isoFormat('dddd D [de] MMMM') }}
+                @if($selectedSession->starts_at) · {{ substr($selectedSession->starts_at, 0, 5) }}{{ $selectedSession->ends_at ? ' - '.substr($selectedSession->ends_at, 0, 5) : '' }}@endif
             </div>
+            @if($selectedSession->date_locked && $selectedSession->rescheduled_from)
+                @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Movida desde el '.$selectedSession->rescheduled_from->format('d/m/Y')])
+            @endif
         </div>
-        @if($sessionHoliday)
-            <div class="flash warn">
-                Esta clase cae en feriado ({{ $sessionHoliday->name }}). Cámbiala al día en que realmente se dio.
-            </div>
-        @endif
-        <form method="POST" action="{{ route('attendance.reschedule') }}" data-guard-submit class="fi-filter-bar">
+        <button class="btn secondary" type="button" data-modal-open="reschedule-modal">Cambiar fecha de la clase</button>
+    </div>
+    @if($sessionHoliday)
+        <div class="flash warn">
+            Esta clase cae en feriado ({{ $sessionHoliday->name }}). Usa "Cambiar fecha de la clase" para moverla al día en que realmente se dio.
+        </div>
+    @endif
+    <x-ui.modal id="reschedule-modal" title="Cambiar fecha de la clase" size="md"
+        subtitle="Si la clase se dio (o se dará) otro día, cámbiala aquí. La asistencia se mueve con ella."
+        :data-open-on-load="$errors->has('session_date') ? '1' : null">
+        <p class="entity-sub">Si ese día el grupo ya tiene clase, marca "Correr también las clases siguientes": cada clase pasa al próximo día del horario con su asistencia.</p>
+        <form method="POST" action="{{ route('attendance.reschedule') }}" data-guard-submit class="form-grid">
             @csrf
             <input type="hidden" name="class_session_id" value="{{ $selectedSession->id }}">
             <div>
@@ -86,16 +122,16 @@
                 <input id="reschedule-date" type="date" name="session_date" required
                        value="{{ old('session_date', $selectedSession->session_date?->format('Y-m-d')) }}">
             </div>
-            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600;">
+            <label class="checkbox-inline">
                 <input type="checkbox" name="cascade" value="1" @checked(old('cascade'))>
                 Correr también las clases siguientes
             </label>
-            <button class="btn secondary" type="submit" data-submit-busy-label="Moviendo…">Cambiar fecha</button>
-            @if($selectedSession->date_locked && $selectedSession->rescheduled_from)
-                @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Movida desde el '.$selectedSession->rescheduled_from->format('d/m/Y')])
-            @endif
+            <div class="form-actions ui-modal-foot">
+                <button class="btn secondary" type="button" data-modal-close>Cancelar</button>
+                <button class="btn" type="submit" data-submit-busy-label="Moviendo…">Cambiar fecha</button>
+            </div>
         </form>
-    </div>
+    </x-ui.modal>
 
     <div class="card">
         @unless($canRecordAttendance)
@@ -152,10 +188,12 @@
                     </div>
                 </div>
                 <div class="attendance-toolbar-actions">
-                    <button class="btn secondary" type="button" data-bulk-status="present">Todos presentes</button>
-                    <button class="btn secondary" type="button" data-bulk-status="absent">Todos ausentes</button>
-                    <button class="btn secondary" type="button" data-bulk-status="late">Todos tarde</button>
-                    <button class="btn secondary" type="button" data-bulk-status="justified">Todos justificadas</button>
+                    <div class="attendance-bulk">
+                        <button class="btn secondary" type="button" data-bulk-status="present">Todos presentes</button>
+                        <button class="btn secondary" type="button" data-bulk-status="absent">Todos ausentes</button>
+                        <button class="btn secondary" type="button" data-bulk-status="late">Todos tarde</button>
+                        <button class="btn secondary" type="button" data-bulk-status="justified">Todos justificadas</button>
+                    </div>
                     <button class="btn secondary" type="button" id="btn-copy-last" @disabled(!$previousSession || ! $canRecordAttendance)>Copiar última asistencia</button>
                     @if($canRecordAttendance)
                         <button class="btn" type="submit">Guardar asistencia</button>
@@ -216,13 +254,16 @@
                             </td>
                             <td>
                                 <input name="records[{{ $i }}][notes]" class="attendance-notes" data-enrollment-id="{{ $enrollment->id }}" value="{{ $records[$enrollment->id]->notes ?? '' }}" placeholder="Observación opcional">
+                                @if(($records[$enrollment->id]->status ?? null) === 'absent' && auth()->user()?->role === 'admin' && \Illuminate\Support\Facades\Route::has('students.makeups.create'))
+                                    <a class="attendance-makeup-link" href="{{ route('students.makeups.create', $enrollment->student) }}">Registrar recuperativa</a>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
                     </tbody>
                 </table>
             </div>
-            <div class="attendance-footer">
+            <div class="attendance-footer attendance-savebar">
                 <div class="entity-sub">
                     @if($canRecordAttendance)
                         Consejo: usa `P`, `A`, `T`, `J` sobre la fila enfocada para registrar más rápido.
