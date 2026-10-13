@@ -4221,3 +4221,309 @@ label:has(+ :is(input, select, textarea)[required])::after {
 .form-section:not([open]) > summary {
     margin-bottom: 0;
 }
+
+/* Asistencia para profesores en el teléfono (#245) */
+.attendance-today-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.75rem;
+}
+
+.attendance-today-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--warn);
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.attendance-today-card.is-done {
+    border-left-color: var(--ok);
+}
+
+.attendance-today-card:hover {
+    box-shadow: 0 8px 20px rgba(10, 30, 94, 0.1);
+}
+
+.attendance-today-time {
+    font-size: 1.25rem;
+    font-weight: 900;
+}
+
+.attendance-today-body {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.attendance-today-body small {
+    color: var(--muted);
+}
+
+.attendance-session-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.attendance-bulk {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.attendance-makeup-link {
+    display: inline-block;
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.attendance-savebar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    padding: 0.75rem 0;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+}
+
+@media (max-width: 640px) {
+    .attendance-sheet-wrap {
+        overflow: visible;
+    }
+
+    .attendance-sheet {
+        min-width: 0 !important;
+    }
+
+    .attendance-sheet thead {
+        display: none;
+    }
+
+    .attendance-sheet,
+    .attendance-sheet tbody,
+    .attendance-sheet tr,
+    .attendance-sheet td {
+        display: block;
+        width: 100%;
+    }
+
+    .attendance-sheet tr.attendance-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        padding: 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+    }
+
+    .attendance-sheet tr.attendance-row.is-hidden {
+        display: none;
+    }
+
+    .attendance-sheet td {
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    /* Número de fila, sesión anterior y select de estado: los botones grandes los reemplazan. */
+    .attendance-sheet td:nth-child(1),
+    .attendance-sheet td:nth-child(3),
+    .attendance-sheet td:nth-child(5) {
+        display: none;
+    }
+
+    .attendance-toggle-group {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+    }
+
+    .attendance-toggle {
+        min-height: 3rem;
+        font-size: 1.05rem;
+    }
+
+    .attendance-shortcuts .badge-pill:first-child {
+        display: none;
+    }
+
+    .attendance-bulk {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .attendance-bulk .btn {
+        min-height: 2.6rem;
+        padding: 0.45rem 0.6rem;
+        font-size: 0.85rem;
+    }
+
+    .attendance-toolbar-actions > .btn[type='submit'] {
+        display: none;
+    }
+
+    .attendance-savebar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom));
+        box-shadow: 0 -8px 20px rgba(10, 30, 94, 0.12);
+    }
+
+    .attendance-savebar .entity-sub {
+        display: none;
+    }
+
+    .attendance-savebar .btn {
+        width: 100%;
+        min-height: 3.1rem;
+    }
+
+    .attendance-form--locked .attendance-savebar,
+    .attendance-sheet-wrap:last-child {
+        margin-bottom: 0;
+    }
+
+    form:has(.attendance-savebar) {
+        padding-bottom: 4.5rem;
+    }
+
+    .attendance-today-card {
+        grid-template-columns: auto 1fr;
+    }
+
+    .attendance-today-card .badge-pill {
+        grid-column: 2;
+        justify-self: start;
+    }
+}
+
+@media (max-width: 640px) {
+    .attendance-metrics {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        gap: 0.35rem;
+    }
+
+    .attendance-metrics > * {
+        padding: 0.5rem 0.35rem !important;
+        min-height: 0 !important;
+        border-radius: 12px !important;
+        text-align: center;
+    }
+
+    .attendance-metrics .metric-icon,
+    .attendance-metrics .metric-subtitle,
+    .attendance-metrics [class*='icon'] {
+        display: none !important;
+    }
+
+    .attendance-metrics .metric-label {
+        font-size: 0.68rem;
+    }
+
+    .attendance-metrics .metric-value {
+        font-size: 1.15rem;
+    }
+}
+
+.attendance-today-head {
+    margin-bottom: 0.85rem;
+}
+
+.attendance-today-head p {
+    margin: 0.25rem 0 0;
+}
+
+.attendance-picker .section-title-sm {
+    margin-bottom: 0.6rem;
+}
+
+.attendance-picker > h2.section-title-sm {
+    font-size: 1.05rem;
+    color: var(--muted);
+}
+
+@media (max-width: 640px) {
+    .attendance-today-head .section-title,
+    .attendance-session-head .section-title {
+        font-size: 1.35rem;
+    }
+}
+
+.attendance-picker > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.attendance-picker > summary::-webkit-details-marker {
+    display: none;
+}
+
+.attendance-picker:not([open]) > summary h2 {
+    margin-bottom: 0;
+}
+
+.attendance-picker:not([open]) > summary h2::after {
+    content: ' ▾';
+}
+
+@media (max-width: 640px) {
+    .attendance-metrics > * {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .attendance-metrics .metric-label {
+        font-size: 0.62rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .module-head .badge-pill {
+        white-space: nowrap;
+    }
+
+    .module-head {
+        flex-wrap: wrap;
+    }
+}
+
+/* Nada dentro del contenedor principal puede forzar un ancho mayor a la pantalla. */
+.fi-container > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.module-head {
+    flex-wrap: wrap;
+}
+
+fieldset {
+    min-width: 0;
+}
+
+@media (max-width: 640px) {
+    .attendance-sheet td,
+    .attendance-sheet td:nth-child(n) {
+        width: auto;
+        min-width: 0;
+    }
+
+    .attendance-toggle {
+        min-width: 0;
+        width: 100%;
+    }
+}

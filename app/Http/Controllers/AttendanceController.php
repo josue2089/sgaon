@@ -82,7 +82,13 @@ class AttendanceController extends Controller
         $request->validate(['date' => ['nullable', 'date', 'sane_date']]);
         $filterDate = $request->filled('date') ? Carbon::parse($request->input('date'))->startOfDay() : null;
         $today = now()->startOfDay();
-        $listQuery = (clone $sessionsQuery)->orderBy('starts_at')->orderBy('id');
+        $listQuery = (clone $sessionsQuery)
+            ->with(['group' => fn ($query) => $query
+                ->with(['course', 'teacher'])
+                ->withCount(['enrollments as active_enrollments_count' => fn ($enrollments) => $enrollments->where('status', 'active')])])
+            ->withCount('attendanceRecords')
+            ->orderBy('starts_at')
+            ->orderBy('id');
         if ($filterDate) {
             $listQuery->whereDate('session_date', $filterDate);
         } else {
