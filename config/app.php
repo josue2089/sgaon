@@ -78,7 +78,7 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => 'es', // La plataforma es solo en español; no depende de APP_LOCALE.
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 

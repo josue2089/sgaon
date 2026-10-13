@@ -1,70 +1,211 @@
 @php use App\Support\MoneyFormat; @endphp
 @extends('layouts.app')
 @section('content')
-@php
-    $chargesTotal = $charges->sum('amount');
-    $paymentsTotal = $payments->whereNull('voided_at')->sum('amount');
-    $overdueCount = $charges->where('status', 'overdue')->count();
-@endphp
+<?php
+    $baseQuery = array_filter(['student_id' => $focusStudentId, 'campus_id' => $filters['campus_id'] ?? null]);
+    $tabUrl = fn (string $key) => route('finance.index', $baseQuery + ['tab' => $key]);
+    $reopen = $focusStudent && $errors->any()
+        ? (old('concept') !== null ? 'finance-charge-modal' : (old('paid_at') !== null || old('charge_ids') !== null ? 'finance-payment-modal' : null))
+        : null;
+?>
 <div class="module-head">
     <div>
-        <h1 class="page-title">Financiero</h1>
+        <h1 class="page-title">Finanzas</h1>
         <p class="page-subtitle">
-            Control de cargos, pagos y cobranza
-            @if(($bcvRate['rate'] ?? 0) > 0)
-                · Tasa BCV USD: Bs {{ MoneyFormat::rate($bcvRate['rate']) }}
-            @endif
-            @if(($bcvEurRate['rate'] ?? 0) > 0)
-                · Tasa BCV EUR: Bs {{ MoneyFormat::rate($bcvEurRate['rate']) }}
-            @endif
+            Cobranza, pagos y comprobantes
+            @if(($bcvRate['rate'] ?? 0) > 0) · Tasa BCV USD: Bs {{ MoneyFormat::rate($bcvRate['rate']) }}@endif
+            @if(($bcvEurRate['rate'] ?? 0) > 0) · EUR: Bs {{ MoneyFormat::rate($bcvEurRate['rate']) }}@endif
         </p>
     </div>
-    <a class="btn secondary" href="{{ route('finance.index', array_merge(request()->query(), ['export' => 'mora_csv'])) }}">Exportar mora CSV</a>
-    <a class="btn secondary" href="{{ route('finance.summary') }}">Resumen financiero</a>
-    @if($focusStudentId)
-        @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Enfocado en alumno #'.$focusStudentId])
-    @endif
+    <div class="form-actions">
+        @if($focusStudent)
+            <button class="btn" type="button" data-modal-open="finance-payment-modal">Registrar pago</button>
+            <button class="btn secondary" type="button" data-modal-open="finance-charge-modal">Nuevo cargo</button>
+        @else
+            <button class="btn" type="button" data-modal-open="finance-pick-student" data-pick-intent="payment">Registrar pago</button>
+            <button class="btn secondary" type="button" data-modal-open="finance-pick-student" data-pick-intent="charge">Nuevo cargo</button>
+        @endif
+    </div>
 </div>
+
+@if($focusStudent)
+    <div class="flash info finance-focus">
+        Viendo solo a <strong>{{ $focusStudent->full_name }}</strong>{{ $focusStudent->document_id ? ' · '.$focusStudent->document_id : '' }}.
+        <a href="{{ route('students.show', $focusStudent) }}#finanzas">Ficha del alumno</a> ·
+        <a href="{{ route('finance.index', ['tab' => $tab]) }}">Ver todos</a>
+    </div>
+@endif
 
 <div class="soft-kpi-grid soft-kpi-grid-4">
-    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Cargos (página) USD', 'value' => MoneyFormat::usd($chargesTotal)])
-    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Pagos recientes USD', 'value' => MoneyFormat::usd($paymentsTotal)])
-    @include('partials.ui.soft-kpi', ['iconName' => 'warning', 'label' => 'Cuentas en mora', 'value' => $overdueCount, 'valueClass' => 'value-danger'])
-    @include('partials.ui.soft-kpi', ['iconName' => 'trend', 'label' => 'Mora crítica (30+ días)', 'value' => $criticalOverdueCount, 'valueClass' => 'value-danger'])
+    @include('partials.ui.soft-kpi', ['iconName' => 'warning', 'label' => 'Alumnos en mora', 'value' => $kpis['overdueStudents'], 'valueClass' => 'value-danger'])
+    @include('partials.ui.soft-kpi', ['iconName' => 'trend', 'label' => 'Mora crítica (30+ días)', 'value' => $kpis['criticalOverdue'], 'valueClass' => 'value-danger'])
+    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Comprobantes por validar', 'value' => $kpis['pendingProofs']])
+    @include('partials.ui.soft-kpi', ['iconName' => 'payment', 'label' => 'Cobrado este mes', 'value' => MoneyFormat::usd($kpis['monthPayments'])])
 </div>
 
-<div class="grid-2">
-    <div class="card">
-        <h3 class="section-title section-title-sm">Nuevo cargo</h3>
-        @include('partials.finance.register-charge-form', [
-            'formAction' => route('finance.charges.store'),
-            'formId' => 'finance-charge-form',
-            'students' => $students,
-            'enrollments' => $enrollments,
-            'focusStudentId' => $focusStudentId,
-        ])
-    </div>
+<nav class="section-tabs" aria-label="Secciones de finanzas">
+    @foreach(['cobrar' => 'Por cobrar', 'pagos' => 'Pagos', 'comprobantes' => 'Comprobantes por validar'] as $key => $label)
+        <a href="{{ $tabUrl($key) }}" @class(['section-tab', 'is-active' => $tab === $key]) aria-current="{{ $tab === $key ? 'page' : 'false' }}">
+            {{ $label }}@if($key === 'comprobantes' && $kpis['pendingProofs'] > 0)<span class="portal-tab-badge">{{ $kpis['pendingProofs'] }}</span>@endif
+        </a>
+    @endforeach
+    @if(\Illuminate\Support\Facades\Route::has('finance.summary'))
+        <a href="{{ route('finance.summary') }}" class="section-tab">Resumen</a>
+    @endif
+</nav>
 
-    <div class="card">
-        <h3 class="section-title section-title-sm">Registrar pago</h3>
-        @include('partials.finance.register-payment-form', [
-            'formAction' => route('finance.payments.store'),
-            'formId' => 'finance-payment-form',
-            'prefix' => 'finance-payment',
-            'students' => $students,
-            'charges' => $payableCharges,
-            'paymentMethods' => $paymentMethods,
-            'bcvRate' => $bcvRate,
-            'bcvEurRate' => $bcvEurRate,
-            'focusStudentId' => $focusStudentId,
-        ])
+<form method="GET" action="{{ route('finance.index') }}" class="card finance-filters">
+    <input type="hidden" name="tab" value="{{ $tab }}">
+    @if($focusStudentId)<input type="hidden" name="student_id" value="{{ $focusStudentId }}">@endif
+    <div class="fi-filter-bar">
+        @if($campuses->count() > 1)
+            <select name="campus_id" aria-label="Sede">
+                <option value="">Todas las sedes</option>
+                @foreach($campuses as $campus)
+                    <option value="{{ $campus->id }}" @selected((int) ($filters['campus_id'] ?? 0) === $campus->id)>{{ $campus->name }}</option>
+                @endforeach
+            </select>
+        @endif
+        @if($tab === 'comprobantes')
+            <select name="status" aria-label="Estado">
+                @foreach(['pending_validation', 'approved', 'rejected'] as $option)
+                    <option value="{{ $option }}" @selected(($filters['status'] ?? 'pending_validation') === $option)>{{ \App\Support\StatusLabel::label($option) }}</option>
+                @endforeach
+            </select>
+        @else
+            <select name="status" aria-label="Estado">
+                <option value="">{{ $tab === 'cobrar' ? 'Con saldo (pendiente, abonado, vencido)' : 'Todos los pagos' }}</option>
+                @foreach($tab === 'cobrar' ? ['pending', 'partial', 'overdue', 'paid', 'voided'] : ['voided'] as $option)
+                    <option value="{{ $option }}" @selected(($filters['status'] ?? '') === $option)>{{ $option === 'voided' ? 'Anulados' : \App\Support\StatusLabel::label($option) }}</option>
+                @endforeach
+            </select>
+            <input type="month" name="month" value="{{ $filters['month'] ?? '' }}" aria-label="Mes">
+            <select name="currency" aria-label="Moneda">
+                <option value="">Todas las monedas</option>
+                @foreach($tab === 'cobrar' ? ['USD', 'EUR'] : ['USD', 'EUR', 'VES'] as $currency)
+                    <option value="{{ $currency }}" @selected(($filters['currency'] ?? '') === $currency)>{{ $currency }}</option>
+                @endforeach
+            </select>
+        @endif
+        <button class="btn" type="submit">Filtrar</button>
+        @if($tab === 'cobrar')
+            <a class="btn secondary" href="{{ route('finance.index', array_merge(request()->query(), ['export' => 'mora_csv'])) }}">Exportar CSV</a>
+        @endif
     </div>
+</form>
+
+@if($tab === 'cobrar')
+<div class="card table-card">
+    <div class="section-head">
+        <h2 class="section-title section-title-sm">{{ $showVoided ? 'Cargos anulados' : 'Cuentas por cobrar' }}</h2>
+        <div class="entity-sub">{{ $charges->total() }} cargo(s)</div>
+    </div>
+    <div class="table-wrap">
+    <table>
+        <thead>
+        <tr><th>Alumno</th><th>Curso</th><th>Grupo</th><th>Período</th><th>Concepto</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Mora</th><th>Estado</th><th></th></tr>
+        </thead>
+        <tbody>
+        @forelse($charges as $charge)
+            @php
+                $daysOverdue = (int) ($charge->days_overdue ?? 0);
+                $moraTone = $daysOverdue >= 30 ? 'danger' : ($daysOverdue >= 10 ? 'warn' : ($daysOverdue > 0 ? 'info' : 'ok'));
+                $moraText = $daysOverdue > 0 ? $daysOverdue.' día(s)' : 'Al día';
+                $paidTotal = \App\Support\FinanceReconcile::paidTotalForCharge($charge);
+                $balance = \App\Support\FinanceReconcile::outstandingForCharge($charge);
+            @endphp
+            <tr>
+                <td><a href="{{ route('finance.students.history', $charge->student) }}">{{ $charge->student->full_name ?? '' }}</a></td>
+                <td>{{ $charge->course->name ?? 'Sin curso' }}</td>
+                <td>{{ $charge->group->name ?? 'Sin grupo' }}</td>
+                <td>{{ $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período') }}</td>
+                <td>{{ $charge->concept }}</td>
+                <td>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</td>
+                <td>{{ \App\Support\MoneyFormat::formatLedgerAmount($paidTotal, $charge->currencyCode()) }}</td>
+                <td>{{ \App\Support\MoneyFormat::formatLedgerAmount($balance, $charge->currencyCode()) }}</td>
+                <td>@include('partials.ui.status-badge', ['tone' => $moraTone, 'text' => $moraText])</td>
+                <td>
+                    @if($charge->voided_at)
+                        <div class="table-sub">{{ $charge->voided_at->format('d/m/Y') }} · {{ $charge->void_reason ?: 'Sin motivo' }}</div>
+                    @else
+                        @include('partials.ui.status', ['status' => $charge->status])
+                    @endif
+                </td>
+                <td>@include('partials.finance.void-charge', ['charge' => $charge])</td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="11">
+                    <div class="empty-state-inline">No hay cargos para el contexto seleccionado.</div>
+                </td>
+            </tr>
+        @endforelse
+        </tbody>
+    </table>
+    </div>
+    @if($charges->hasPages())
+        {{ $charges->links() }}
+    @endif
 </div>
-
+@elseif($tab === 'pagos')
+<div class="card table-card">
+    <div class="section-head">
+        <h2 class="section-title section-title-sm">Pagos y recibos</h2>
+        <div class="entity-sub">{{ $payments->total() }} pago(s)</div>
+    </div>
+    <div class="table-wrap">
+    <table>
+        <thead>
+        <tr><th>Alumno</th><th>Moneda</th><th>Monto original</th><th>Monto aplicado</th><th>Tasa</th><th>Fecha</th><th>Recibo</th><th></th></tr>
+        </thead>
+        <tbody>
+        @forelse($payments as $payment)
+            <tr>
+                <td><a href="{{ route('finance.students.history', $payment->student) }}">{{ $payment->student->full_name ?? '' }}</a></td>
+                <td>{{ $payment->currency ?? 'USD' }}</td>
+                <td>
+                    @if(($payment->currency ?? 'USD') === 'VES')
+                        {{ \App\Support\MoneyFormat::ves((float) ($payment->original_amount ?? $payment->amount)) }}
+                    @elseif(($payment->currency ?? 'USD') === 'EUR')
+                        {{ \App\Support\MoneyFormat::eur((float) ($payment->original_amount ?? $payment->amount)) }}
+                    @else
+                        {{ \App\Support\MoneyFormat::usd((float) ($payment->original_amount ?? $payment->amount)) }}
+                    @endif
+                </td>
+                <td>{{ \App\Support\MoneyFormat::formatLedgerAmount((float) $payment->amount, $payment->currency) }}</td>
+                <td>{{ $payment->exchange_rate ? MoneyFormat::rate((float) $payment->exchange_rate) : '—' }}</td>
+                <td>{{ $payment->paid_at?->format('Y-m-d') }}</td>
+                <td>
+                    @if($payment->receipt)
+                        <a href="{{ route('finance.receipts.show', $payment->receipt) }}">{{ $payment->receipt->receipt_number }}</a>
+                    @endif
+                    @if($payment->allocations->count() > 0)
+                        <div class="table-sub">{{ $payment->allocations->count() }} cargo(s)</div>
+                    @elseif($payment->charge_id)
+                        <div class="table-sub">1 cargo</div>
+                    @endif
+                </td>
+                <td>@include('partials.finance.void-payment', ['payment' => $payment])</td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="8">
+                    <div class="empty-state-inline">Aún no hay pagos registrados.</div>
+                </td>
+            </tr>
+        @endforelse
+        </tbody>
+    </table>
+    </div>
+    @if($payments->hasPages())
+        {{ $payments->links() }}
+    @endif
+</div>
+@else
 <div class="card finance-payment-requests-card" id="comprobantes">
     <div class="section-head section-head-tight">
-        <h3 class="section-title section-title-sm">Solicitudes de pago por validar</h3>
-        <div class="entity-sub">Revisa el comprobante en pantalla y define la acción sin tablas anchas</div>
+        <h2 class="section-title section-title-sm">Comprobantes enviados desde el portal</h2>
+        <div class="entity-sub">Revisa el comprobante en pantalla y aprueba o rechaza.</div>
     </div>
     <div class="finance-payment-request-list">
         @forelse($paymentRequests as $paymentRequest)
@@ -167,109 +308,50 @@
                 </div>
             </dialog>
         @empty
-            <div class="empty-state-inline">No hay solicitudes de pago pendientes.</div>
+            <div class="empty-state-inline">No hay comprobantes en este estado.</div>
         @endforelse
     </div>
-</div>
-
-<div class="card">
-    <div class="section-head">
-        <h3 class="section-title section-title-sm">{{ $showVoided ? 'Cargos anulados' : 'Cuentas por cobrar' }}</h3>
-        <a href="{{ route('finance.index', array_filter(['student_id' => $focusStudentId, 'anulados' => $showVoided ? null : 1])) }}">
-            {{ $showVoided ? 'Ver cuentas por cobrar' : 'Ver cargos anulados' }}
-        </a>
-    </div>
-    <table>
-        <thead>
-        <tr><th>Alumno</th><th>Curso</th><th>Grupo</th><th>Período</th><th>Concepto</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Mora</th><th>Estado</th><th></th></tr>
-        </thead>
-        <tbody>
-        @forelse($charges as $charge)
-            @php
-                $daysOverdue = (int) ($charge->days_overdue ?? 0);
-                $moraTone = $daysOverdue >= 30 ? 'danger' : ($daysOverdue >= 10 ? 'warn' : ($daysOverdue > 0 ? 'info' : 'ok'));
-                $moraText = $daysOverdue > 0 ? $daysOverdue.' día(s)' : 'Al día';
-                $paidTotal = \App\Support\FinanceReconcile::paidTotalForCharge($charge);
-                $balance = \App\Support\FinanceReconcile::outstandingForCharge($charge);
-            @endphp
-            <tr>
-                <td><a href="{{ route('finance.students.history', $charge->student) }}">{{ $charge->student->full_name ?? '' }}</a></td>
-                <td>{{ $charge->course->name ?? 'Sin curso' }}</td>
-                <td>{{ $charge->group->name ?? 'Sin grupo' }}</td>
-                <td>{{ $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período') }}</td>
-                <td>{{ $charge->concept }}</td>
-                <td>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</td>
-                <td>{{ \App\Support\MoneyFormat::formatLedgerAmount($paidTotal, $charge->currencyCode()) }}</td>
-                <td>{{ \App\Support\MoneyFormat::formatLedgerAmount($balance, $charge->currencyCode()) }}</td>
-                <td>@include('partials.ui.status-badge', ['tone' => $moraTone, 'text' => $moraText])</td>
-                <td>
-                    @if($charge->voided_at)
-                        <div class="table-sub">{{ $charge->voided_at->format('d/m/Y') }} · {{ $charge->void_reason ?: 'Sin motivo' }}</div>
-                    @else
-                        @include('partials.ui.status', ['status' => $charge->status])
-                    @endif
-                </td>
-                <td>@include('partials.finance.void-charge', ['charge' => $charge])</td>
-            </tr>
-        @empty
-            <tr>
-                <td colspan="11">
-                    <div class="empty-state-inline">No hay cargos para el contexto seleccionado.</div>
-                </td>
-            </tr>
-        @endforelse
-        </tbody>
-    </table>
-    @if($charges->hasPages())
-        {{ $charges->links() }}
+    @if($paymentRequests->hasPages())
+        {{ $paymentRequests->links() }}
     @endif
 </div>
+@endif
 
-<div class="card">
-    <h3 class="section-title section-title-sm">Pagos recientes / Recibos</h3>
-    <table>
-        <thead>
-        <tr><th>Alumno</th><th>Moneda</th><th>Monto original</th><th>Monto aplicado</th><th>Tasa</th><th>Fecha</th><th>Recibo</th><th></th></tr>
-        </thead>
-        <tbody>
-        @forelse($payments as $payment)
-            <tr>
-                <td><a href="{{ route('finance.students.history', $payment->student) }}">{{ $payment->student->full_name ?? '' }}</a></td>
-                <td>{{ $payment->currency ?? 'USD' }}</td>
-                <td>
-                    @if(($payment->currency ?? 'USD') === 'VES')
-                        {{ \App\Support\MoneyFormat::ves((float) ($payment->original_amount ?? $payment->amount)) }}
-                    @elseif(($payment->currency ?? 'USD') === 'EUR')
-                        {{ \App\Support\MoneyFormat::eur((float) ($payment->original_amount ?? $payment->amount)) }}
-                    @else
-                        {{ \App\Support\MoneyFormat::usd((float) ($payment->original_amount ?? $payment->amount)) }}
-                    @endif
-                </td>
-                <td>{{ \App\Support\MoneyFormat::formatLedgerAmount((float) $payment->amount, $payment->currency) }}</td>
-                <td>{{ $payment->exchange_rate ? MoneyFormat::rate((float) $payment->exchange_rate) : '—' }}</td>
-                <td>{{ $payment->paid_at?->format('Y-m-d') }}</td>
-                <td>
-                    @if($payment->receipt)
-                        <a href="{{ route('finance.receipts.show', $payment->receipt) }}">{{ $payment->receipt->receipt_number }}</a>
-                    @endif
-                    @if($payment->allocations->count() > 0)
-                        <div class="table-sub">{{ $payment->allocations->count() }} cargo(s)</div>
-                    @elseif($payment->charge_id)
-                        <div class="table-sub">1 cargo</div>
-                    @endif
-                </td>
-                <td>@include('partials.finance.void-payment', ['payment' => $payment])</td>
-            </tr>
-        @empty
-            <tr>
-                <td colspan="8">
-                    <div class="empty-state-inline">Aún no hay pagos registrados.</div>
-                </td>
-            </tr>
-        @endforelse
-        </tbody>
-    </table>
-</div>
+{{-- Registrar pago / Nuevo cargo: primero se elige el alumno; el formulario carga solo sus cargos. --}}
+@unless($focusStudent)
+    <x-ui.modal id="finance-pick-student" title="¿Para qué alumno?" subtitle="Busca por nombre, cédula o representante." size="md">
+        @include('partials.layout.student-search', ['searchId' => 'finance-pick', 'resultUrl' => route('finance.index', ['student_id' => '__ID__', 'open' => '__INTENT__', 'tab' => $tab])])
+    </x-ui.modal>
+@else
+    <x-ui.modal id="finance-charge-modal" title="Nuevo cargo" subtitle="A nombre de {{ $focusStudent->full_name }}" size="md"
+        :data-open-on-load="($reopen === 'finance-charge-modal' || ($openModal === 'charge' && ! session('success'))) ? '1' : null">
+        @include('partials.finance.register-charge-form', [
+            'formAction' => route('finance.charges.store'),
+            'formId' => 'finance-charge-form',
+            'lockStudent' => true,
+            'studentId' => $focusStudent->id,
+            'students' => $students,
+            'enrollments' => $enrollments,
+            'focusStudentId' => $focusStudentId,
+        ])
+    </x-ui.modal>
+    <x-ui.modal id="finance-payment-modal" title="Registrar pago" subtitle="A nombre de {{ $focusStudent->full_name }}" size="lg"
+        :data-open-on-load="($reopen === 'finance-payment-modal' || ($openModal === 'payment' && ! session('success'))) ? '1' : null">
+        @include('partials.finance.register-payment-form', [
+            'formAction' => route('finance.payments.store'),
+            'formId' => 'finance-payment-form',
+            'prefix' => 'finance-payment',
+            'lockStudent' => true,
+            'studentId' => $focusStudent->id,
+            'students' => $students,
+            'charges' => $payableCharges,
+            'paymentMethods' => $paymentMethods,
+            'bcvRate' => $bcvRate,
+            'bcvEurRate' => $bcvEurRate,
+            'focusStudentId' => $focusStudentId,
+        ])
+    </x-ui.modal>
+@endunless
 @endsection
 
 @push('scripts')

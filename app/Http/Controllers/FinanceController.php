@@ -48,35 +48,40 @@ class FinanceController extends Controller
     public function index(Request $request): View|StreamedResponse
     {
         $user = $request->user();
-        $chargesQuery = CampusScope::apply(Charge::with(['student', 'payments', 'course', 'group', 'period', 'enrollment.group.course'])->latest(), $user);
-        $paymentsQuery = CampusScope::apply(Payment::with(['student', 'receipt', 'allocations.charge', 'paymentMethod'])->latest(), $user);
-        $studentsQuery = CampusScope::apply(
-            Student::query()->with('representatives')->orderBy('first_name')->orderBy('last_name'),
-            $user
-        );
-        $enrollmentsQuery = CampusScope::apply(Enrollment::with(['student.representatives', 'group.course'])->latest(), $user);
-        $periodsQuery = CampusScope::apply(Period::orderBy('code'), $user);
-        $paymentRequestsQuery = CampusScope::apply(
-            ChargePaymentRequest::query()->with(['student', 'representative', 'charge.course', 'validator', 'paymentMethod'])->latest(),
-            $user
-        );
+        $filters = $request->validate([
+            'tab' => ['nullable', 'in:cobrar,pagos,comprobantes'],
+            'student_id' => ['nullable', 'integer'],
+            'campus_id' => ['nullable', 'integer'],
+            'status' => ['nullable', 'in:pending,partial,overdue,paid,voided,pending_validation,approved,rejected'],
+            'month' => ['nullable', 'date_format:Y-m'],
+            'currency' => ['nullable', 'in:USD,EUR,VES'],
+            'open' => ['nullable', 'in:payment,charge'],
+        ]);
+        $tab = $filters['tab'] ?? 'cobrar';
+        $campusId = ! empty($filters['campus_id']) && CampusScope::userCanAccessCampus($user, (int) $filters['campus_id']) ? (int) $filters['campus_id'] : null;
+        $month = ! empty($filters['month']) ? Carbon::createFromFormat('Y-m', $filters['month'])->startOfMonth() : null;
 
-        $showVoided = $request->boolean('anulados');
-        $showVoided ? $chargesQuery->whereNotNull('voided_at') : $chargesQuery->whereNull('voided_at');
-
-        $focusStudentId = $request->integer('student_id') ?: null;
-        if ($focusStudentId) {
-            $chargesQuery->where('student_id', $focusStudentId);
-            $paymentsQuery->where('student_id', $focusStudentId);
-            $paymentRequestsQuery->where('student_id', $focusStudentId);
-        }
+        // Modo enfocado: un alumno de la sede del usuario. Solo así se cargan los formularios de pago y cargo.
+        $focusStudent = ! empty($filters['student_id'])
+            ? CampusScope::apply(Student::query()->with('representatives'), $user)->find((int) $filters['student_id'])
+            : null;
+        $focusStudentId = $focusStudent?->id;
 
         $driver = DB::connection()->getDriverName();
         $daysOverdueExpression = $driver === 'sqlite'
             ? "CASE WHEN due_date IS NOT NULL AND due_date < DATE('now') AND status IN ('pending','partial','overdue') THEN CAST((julianday('now') - julianday(due_date)) AS INTEGER) ELSE 0 END"
             : "CASE WHEN due_date IS NOT NULL AND due_date < CURDATE() AND status IN ('pending','partial','overdue') THEN DATEDIFF(CURDATE(), due_date) ELSE 0 END";
 
-        $chargesQuery
+        $status = $filters['status'] ?? null;
+        $showVoided = $request->boolean('anulados') || $status === 'voided';
+        $chargesQuery = CampusScope::apply(Charge::with(['student', 'payments', 'course', 'group', 'period']), $user)
+            ->when($focusStudentId, fn ($query) => $query->where('student_id', $focusStudentId))
+            ->when($campusId, fn ($query) => $query->where('campus_id', $campusId))
+            ->when($showVoided, fn ($query) => $query->whereNotNull('voided_at'), fn ($query) => $query->whereNull('voided_at'))
+            ->when($status && $status !== 'voided' && in_array($status, ['pending', 'partial', 'overdue', 'paid'], true), fn ($query) => $query->where('status', $status))
+            ->when(! $status && ! $showVoided, fn ($query) => $query->whereIn('status', ['pending', 'partial', 'overdue']))
+            ->when($month, fn ($query) => $query->whereBetween('due_date', [$month->toDateString(), $month->copy()->endOfMonth()->toDateString()]))
+            ->when(in_array($filters['currency'] ?? null, ['USD', 'EUR'], true), fn ($query) => $query->where('currency', $filters['currency']))
             ->select('charges.*')
             ->selectRaw($daysOverdueExpression.' as days_overdue')
             ->orderByDesc('days_overdue')
@@ -100,54 +105,90 @@ class FinanceController extends Controller
             }, 'mora_report.csv', ['Content-Type' => 'text/csv']);
         }
 
-        $criticalOverdueQuery = CampusScope::apply(Charge::query(), $user);
-        if ($focusStudentId) {
-            $criticalOverdueQuery->where('student_id', $focusStudentId);
-        }
+        $openCharges = CampusScope::apply(Charge::query()->whereNull('voided_at')->whereIn('status', ['pending', 'partial', 'overdue']), $user)
+            ->when($focusStudentId, fn ($query) => $query->where('student_id', $focusStudentId))
+            ->when($campusId, fn ($query) => $query->where('campus_id', $campusId));
         $criticalOverdueCondition = $driver === 'sqlite'
-            ? "due_date IS NOT NULL AND due_date < DATE('now') AND status IN ('pending','partial','overdue') AND CAST((julianday('now') - julianday(due_date)) AS INTEGER) >= 30"
-            : "due_date IS NOT NULL AND due_date < CURDATE() AND status IN ('pending','partial','overdue') AND DATEDIFF(CURDATE(), due_date) >= 30";
+            ? "due_date IS NOT NULL AND due_date < DATE('now') AND CAST((julianday('now') - julianday(due_date)) AS INTEGER) >= 30"
+            : "due_date IS NOT NULL AND due_date < CURDATE() AND DATEDIFF(CURDATE(), due_date) >= 30";
+        $pendingProofsQuery = CampusScope::apply(ChargePaymentRequest::query()->where('status', ChargePaymentRequest::STATUS_PENDING_VALIDATION), $user)
+            ->when($focusStudentId, fn ($query) => $query->where('student_id', $focusStudentId))
+            ->when($campusId, fn ($query) => $query->where('campus_id', $campusId));
+        $monthPaymentsQuery = CampusScope::apply(Payment::query()->whereNull('voided_at'), $user)
+            ->when($focusStudentId, fn ($query) => $query->where('student_id', $focusStudentId))
+            ->when($campusId, fn ($query) => $query->where('campus_id', $campusId))
+            ->whereBetween('paid_at', [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()]);
 
-        $criticalOverdueCount = $criticalOverdueQuery
-            ->whereRaw($criticalOverdueCondition)
-            ->count();
+        $kpis = [
+            'overdueStudents' => (clone $openCharges)->where('status', 'overdue')->distinct('student_id')->count('student_id'),
+            'criticalOverdue' => (clone $openCharges)->whereRaw($criticalOverdueCondition)->count(),
+            'pendingProofs' => (clone $pendingProofsQuery)->count(),
+            'monthPayments' => (float) (clone $monthPaymentsQuery)->sum('amount'),
+        ];
+
+        $charges = $payments = $paymentRequests = null;
+        if ($tab === 'cobrar') {
+            $charges = $chargesQuery->paginate(25)->withQueryString();
+        } elseif ($tab === 'pagos') {
+            $payments = CampusScope::apply(Payment::with(['student', 'receipt', 'allocations.charge', 'paymentMethod'])->latest('paid_at')->latest('id'), $user)
+                ->when($focusStudentId, fn ($query) => $query->where('student_id', $focusStudentId))
+                ->when($campusId, fn ($query) => $query->where('campus_id', $campusId))
+                ->when($month, fn ($query) => $query->whereBetween('paid_at', [$month->toDateString(), $month->copy()->endOfMonth()->toDateString()]))
+                ->when(! empty($filters['currency']), fn ($query) => $query->where('currency', $filters['currency']))
+                ->when($status === 'voided', fn ($query) => $query->whereNotNull('voided_at'))
+                ->paginate(25)
+                ->withQueryString();
+        } else {
+            $requestStatus = in_array($status, ['pending_validation', 'approved', 'rejected'], true) ? $status : ChargePaymentRequest::STATUS_PENDING_VALIDATION;
+            $paymentRequests = CampusScope::apply(
+                ChargePaymentRequest::query()->with(['student', 'representative', 'charge.course', 'validator', 'paymentMethod'])->latest(),
+                $user
+            )
+                ->where('status', $requestStatus)
+                ->when($focusStudentId, fn ($query) => $query->where('student_id', $focusStudentId))
+                ->when($campusId, fn ($query) => $query->where('campus_id', $campusId))
+                ->paginate(20)
+                ->withQueryString();
+        }
 
         $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
         $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
-        $paymentMethods = PaymentMethod::query()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('label')
-            ->get();
 
-        // Para "Registrar pago": todos los cargos con saldo (no solo la página visible de la tabla).
-        $payableCharges = CampusScope::apply(
-            Charge::query()
-                ->with(['student', 'course', 'group', 'period'])
-                ->whereNull('voided_at')
-                ->whereIn('status', ['pending', 'partial', 'overdue'])
-                ->when($focusStudentId, fn ($query) => $query->where('student_id', $focusStudentId))
-                ->orderBy('due_date')
-                ->orderBy('id'),
-            $user
-        )->get();
+        $formData = [];
+        if ($focusStudent) {
+            $formData = [
+                'payableCharges' => Charge::query()
+                    ->with(['student', 'course', 'group', 'period'])
+                    ->where('student_id', $focusStudent->id)
+                    ->whereNull('voided_at')
+                    ->whereIn('status', ['pending', 'partial', 'overdue'])
+                    ->orderBy('due_date')
+                    ->orderBy('id')
+                    ->get(),
+                'enrollments' => Enrollment::with(['student.representatives', 'group.course'])
+                    ->where('student_id', $focusStudent->id)
+                    ->whereIn('status', ['active', 'inactive', 'completed', 'withdrawn'])
+                    ->latest()
+                    ->get(),
+                'students' => collect([$focusStudent]),
+                'paymentMethods' => PaymentMethod::query()->where('is_active', true)->orderBy('sort_order')->orderBy('label')->get(),
+            ];
+        }
 
-        return view('finance.index', [
-            'charges' => $chargesQuery->paginate(20)->withQueryString(),
-            'payableCharges' => $payableCharges,
-            'payments' => $paymentsQuery->take(20)->get(),
-            'students' => $studentsQuery->get(),
-            'enrollments' => $enrollmentsQuery
-                ->whereIn('status', ['active', 'inactive', 'completed', 'withdrawn'])
-                ->get(),
-            'periods' => $periodsQuery->get(),
-            'paymentRequests' => $paymentRequestsQuery->take(20)->get(),
+        return view('finance.index', $formData + [
+            'tab' => $tab,
+            'filters' => $filters + ['campus_id' => $campusId],
+            'charges' => $charges,
+            'payments' => $payments,
+            'paymentRequests' => $paymentRequests,
+            'kpis' => $kpis,
+            'campuses' => CampusScope::apply(\App\Models\Campus::query()->orderBy('name'), $user, 'id')->get(['id', 'name']),
+            'focusStudent' => $focusStudent,
             'focusStudentId' => $focusStudentId,
             'showVoided' => $showVoided,
-            'criticalOverdueCount' => (int) $criticalOverdueCount,
+            'openModal' => $focusStudent ? ($filters['open'] ?? null) : null,
             'bcvRate' => $bcvRate,
             'bcvEurRate' => $bcvEurRate,
-            'paymentMethods' => $paymentMethods,
         ]);
     }
 
