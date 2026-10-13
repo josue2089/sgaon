@@ -128,6 +128,12 @@ class EnrollmentController extends Controller
         AuditTrail::log($request, 'enrollment.upsert', $enrollment, $data);
         app(EnrollmentBillingService::class)->createTuitionCharge($enrollment, $request);
 
+        if ($request->input('return_to') === 'student') {
+            return redirect()
+                ->to(route('students.show', $student).'#academico')
+                ->with('success', 'Inscrito en '.($group->course?->name ?? $group->name).'.');
+        }
+
         return redirect()->route('enrollments.index')->with('success', 'Inscripción guardada.');
     }
 

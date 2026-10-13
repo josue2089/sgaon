@@ -38,7 +38,8 @@ class StudentShowTabsTest extends TestCase
 
         $response
             ->assertSee('class="portal-tab-panel student-panel is-active" id="panel-resumen"', false)
-            ->assertSee(route('enrollments.create', ['student_id' => $this->student->id]), false)
+            ->assertSee('data-modal-open="enroll-modal"', false)
+            ->assertSee('id="enroll-modal"', false)
             ->assertSee('data-modal-open="student-payment-modal"', false)
             ->assertSee('data-modal-open="student-charge-modal"', false)
             ->assertSee('id="student-finance"', false)
@@ -64,6 +65,6 @@ class StudentShowTabsTest extends TestCase
 
         $this->actingAs($admin)->get(route('enrollments.create', ['student_id' => $this->student->id]))
             ->assertOk()
-            ->assertSee('<option value="'.$this->student->id.'" selected', false);
+            ->assertSee('data-search="ana pérez" selected', false);
     }
 }

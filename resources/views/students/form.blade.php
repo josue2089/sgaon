@@ -76,11 +76,11 @@
     </div>
 </div>
 
-<div class="card mt-2">
-    <div class="section-head section-head-tight">
+<details class="card mt-2 form-section" open>
+    <summary class="section-head section-head-tight form-section-summary">
         <h2 class="section-title section-title-md">Datos del representante</h2>
         <div class="entity-sub">Representante principal asociado al alumno</div>
-    </div>
+    </summary>
     <div class="grid-2">
         <div><label>Nombres</label><input name="representative[first_name]" value="{{ $representative['first_name'] ?? '' }}"></div>
         <div><label>Apellidos</label><input name="representative[last_name]" value="{{ $representative['last_name'] ?? '' }}"></div>
@@ -102,14 +102,14 @@
         <div><label>Dirección oficina</label><input name="representative[work_address]" value="{{ $representative['work_address'] ?? '' }}"></div>
         <div class="col-span-full"><label>Dirección de habitación</label><textarea name="representative[address]">{{ $representative['address'] ?? '' }}</textarea></div>
     </div>
-</div>
+</details>
 
 @for($i = 0; $i < 2; $i++)
-    <div class="card mt-2">
-        <div class="section-head section-head-tight">
+    <details class="card mt-2 form-section" @if(filled($authorizedContacts[$i]['first_name'] ?? null) || filled($authorizedContacts[$i]['document_id'] ?? null) || ($i === 0 && empty($student->id))) open @endif>
+    <summary class="section-head section-head-tight form-section-summary">
             <h2 class="section-title section-title-md">Persona autorizada ({{ $i + 1 }})</h2>
             <div class="entity-sub">Contacto autorizado para retiro o atención del alumno</div>
-        </div>
+        </summary>
         <div class="grid-2">
             <div><label>Nombres</label><input name="authorized_contacts[{{ $i }}][first_name]" value="{{ $authorizedContacts[$i]['first_name'] ?? '' }}"></div>
             <div><label>Apellidos</label><input name="authorized_contacts[{{ $i }}][last_name]" value="{{ $authorizedContacts[$i]['last_name'] ?? '' }}"></div>
@@ -121,7 +121,7 @@
             <div><label>Dirección trabajo</label><input name="authorized_contacts[{{ $i }}][work_address]" value="{{ $authorizedContacts[$i]['work_address'] ?? '' }}"></div>
             <div class="col-span-full"><label>Dirección de habitación</label><textarea name="authorized_contacts[{{ $i }}][address]">{{ $authorizedContacts[$i]['address'] ?? '' }}</textarea></div>
         </div>
-    </div>
+    </details>
 @endfor
 
 @php
@@ -147,11 +147,11 @@
     </fieldset>
 </div>
 
-<div class="card mt-2">
-    <div class="section-head section-head-tight">
+<details class="card mt-2 form-section" @if((bool) old('medical_has_allergies', $student->medical_has_allergies ?? false) || (bool) old('medical_has_treatment', $student->medical_has_treatment ?? false) || filled(old('medical_notes', $student->medical_notes ?? null))) open @endif>
+    <summary class="section-head section-head-tight form-section-summary">
         <h2 class="section-title section-title-md">Ficha médica</h2>
         <div class="entity-sub">Información relevante de salud</div>
-    </div>
+    </summary>
     <div class="grid-2">
         <div>
             <label>¿Es alérgico?</label>
@@ -173,13 +173,13 @@
         <div><label>Medicamento autorizado en caso de cefalea</label><input name="medical_headache_medication" value="{{ old('medical_headache_medication',$student->medical_headache_medication ?? '') }}"></div>
         <div class="col-span-full"><label>Observaciones médicas</label><textarea name="medical_notes">{{ old('medical_notes',$student->medical_notes ?? '') }}</textarea></div>
     </div>
-</div>
+</details>
 
-<div class="card mt-2">
-    <div class="section-head section-head-tight">
+<details class="card mt-2 form-section" @if(filled(old('salesperson', $student->salesperson ?? null)) || filled(old('promotion', $student->promotion ?? null)) || filled(old('commercial_notes', $student->commercial_notes ?? null))) open @endif>
+    <summary class="section-head section-head-tight form-section-summary">
         <h2 class="section-title section-title-md">Datos comerciales</h2>
         <div class="entity-sub">Información de venta, promoción y pago</div>
-    </div>
+    </summary>
     <div class="grid-2">
         <div><label>Vendedor</label><input name="salesperson" value="{{ old('salesperson',$student->salesperson ?? '') }}"></div>
         <div><label>Promoción</label><input name="promotion" value="{{ old('promotion',$student->promotion ?? '') }}"></div>
@@ -187,9 +187,16 @@
         <div><label>Cuotas</label><input type="number" min="1" max="48" name="installments" value="{{ old('installments',$student->installments ?? '') }}"></div>
         <div class="col-span-full"><label>Observaciones comerciales</label><textarea name="commercial_notes">{{ old('commercial_notes',$student->commercial_notes ?? '') }}</textarea></div>
     </div>
-</div>
+</details>
 
 @once
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.getElementById('form-errors')) {
+                document.querySelectorAll('details.form-section').forEach(function (section) { section.open = true; });
+            }
+        });
+    </script>
     <link href="https://unpkg.com/filepond@^4/dist/filepond.min.css" rel="stylesheet">
     <script src="https://unpkg.com/filepond@^4/dist/filepond.min.js"></script>
     <script>
@@ -208,10 +215,9 @@
             if (programSelect && extracurricularSection) {
                 programSelect.addEventListener('change', function () {
                     const option = programSelect.selectedOptions[0];
-                    if (option && option.dataset.extracurricular === '1') {
-                        extracurricularSection.hidden = false;
-                        document.getElementById('extracurricular-fields').disabled = false;
-                    }
+                    const isExtracurricular = !!option && option.dataset.extracurricular === '1';
+                    extracurricularSection.hidden = !isExtracurricular;
+                    document.getElementById('extracurricular-fields').disabled = !isExtracurricular;
                 });
             }
         });

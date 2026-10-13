@@ -7,9 +7,7 @@
         <h1 class="page-title">Ficha del alumno</h1>
     </div>
     <div class="form-actions student-actions">
-        @if(\Illuminate\Support\Facades\Route::has('enrollments.create'))
-            <a class="btn" href="{{ route('enrollments.create', ['student_id' => $student->id]) }}">Inscribir en curso</a>
-        @endif
+        <button class="btn" type="button" data-modal-open="enroll-modal">Inscribir en curso</button>
         @if(!empty($canManageStudentFinance))
             <button class="btn" type="button" data-modal-open="student-payment-modal">Registrar pago</button>
             <button class="btn secondary" type="button" data-modal-open="student-charge-modal">Nuevo cargo</button>
@@ -579,5 +577,7 @@
             ])
     </x-ui.modal>
 @endif
+
+@include('partials.enrollments.enroll-modal', ['groups' => $enrollableGroups ?? collect()])
 
 @endsection

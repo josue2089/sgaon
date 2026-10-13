@@ -23,12 +23,7 @@
                 <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>
             @endforeach
         </select>
-        <select name="student_id">
-            <option value="">Todos los alumnos</option>
-            @foreach($students as $student)
-                <option value="{{ $student->id }}" @selected((int) ($filters['student_id'] ?? 0) === (int) $student->id)>{{ $student->full_name }}</option>
-            @endforeach
-        </select>
+        @include('partials.ui.student-select', ['students' => $students, 'name' => 'student_id', 'id' => 'makeup-student-filter', 'fieldLabel' => 'Alumno', 'placeholder' => 'Todos los alumnos', 'selected' => $filters['student_id'] ?? ''])
         <select name="program_id" id="makeup-program-filter">
             <option value="">Todos los programas</option>
             @foreach($programs as $program)

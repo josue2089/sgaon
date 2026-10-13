@@ -197,11 +197,26 @@ class StudentController extends Controller
         $this->authorizeCampus($student->campus_id);
 
         $data = $this->detailData($student);
+        $data['enrollableGroups'] = $this->enrollableGroups($student);
         if ($request->user()?->hasPermission('finance.manage')) {
             $data = array_merge($data, $this->paymentFormData($student));
         }
 
         return view('students.show', $data);
+    }
+
+    /** Grupos activos de la sede del alumno donde todavía no está inscrito (modal "Inscribir en curso"). */
+    private function enrollableGroups(Student $student): \Illuminate\Support\Collection
+    {
+        return \App\Models\Group::query()
+            ->with(['course.teacher', 'course.period'])
+            ->withCount(['enrollments as active_enrollments_count' => fn ($query) => $query->where('status', 'active')])
+            ->where('campus_id', $student->campus_id)
+            ->where('status', 'active')
+            ->whereDoesntHave('enrollments', fn ($query) => $query->where('student_id', $student->id)->where('status', 'active'))
+            ->get()
+            ->sortBy(fn ($group) => mb_strtolower($group->course?->name ?? $group->name))
+            ->values();
     }
 
     public function storePayment(Request $request, Student $student): RedirectResponse
@@ -303,7 +318,9 @@ class StudentController extends Controller
             optional($lock)->release();
         }
 
-        return redirect()->route('students.index')->with('success', 'Alumno creado.');
+        return redirect()
+            ->route('students.show', $student)
+            ->with('success', 'Alumno creado. Ahora inscríbelo en un curso con el botón "Inscribir en curso".');
     }
 
     public function edit(Student $student): View
@@ -348,7 +365,7 @@ class StudentController extends Controller
         $this->syncAuthorizedContacts($student, $request->input('authorized_contacts', []));
         AuditTrail::log($request, 'student.update', $student, $data);
 
-        return redirect()->route('students.index')->with('success', 'Alumno actualizado.');
+        return redirect()->route('students.show', $student)->with('success', 'Alumno actualizado.');
     }
 
     public function destroy(Request $request, Student $student): RedirectResponse
