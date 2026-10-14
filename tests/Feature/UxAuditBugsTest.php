@@ -100,7 +100,7 @@ class UxAuditBugsTest extends TestCase
         $last = $this->charge('Cargo tardío', '2026-12-20');
         $this->charge('Cargo pagado', '2026-12-21')->update(['status' => 'paid']);
 
-        $response = $this->actingAs($this->siteAdmin)->get(route('finance.index'))->assertOk();
+        $response = $this->actingAs($this->siteAdmin)->get(route('finance.index', ['student_id' => $this->student->id]))->assertOk();
         $response->assertSee('value="'.$last->id.'"', false);
         $response->assertDontSee('Cargo pagado — Saldo', false);
     }

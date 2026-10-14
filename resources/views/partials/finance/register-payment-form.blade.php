@@ -17,6 +17,9 @@
     @if($lockStudent && $studentId) data-student-id="{{ $studentId }}" @endif
 >
     @csrf
+    @if($lockStudent && $studentId)
+        <input type="hidden" name="student_id" value="{{ $studentId }}">
+    @endif
     @unless($lockStudent)
         <div class="searchable-select searchable-select--combo" data-searchable-select data-searchable-combo>
             <label>Alumno</label>
@@ -52,7 +55,7 @@
         </select>
         <div class="form-hint">Puedes seleccionar uno o varios cargos del mismo alumno.</div>
     </div>
-    <div data-payment-currency-root="{{ $prefix }}">
+    <div>
         @include('partials.payment-currency-fields', [
             'prefix' => $prefix,
             'chargeCurrency' => 'USD',

@@ -3823,7 +3823,7 @@ label:has(+ :is(input, select, textarea)[required])::after {
 .fi-search-icon {
     position: absolute;
     left: 0.8rem;
-    top: 50%;
+    top: 1.3rem;
     width: 1rem;
     height: 1rem;
     transform: translateY(-50%);
@@ -3858,7 +3858,7 @@ label:has(+ :is(input, select, textarea)[required])::after {
 
 .fi-search-results {
     position: absolute;
-    top: calc(100% + 0.4rem);
+    top: 3rem;
     right: 0;
     width: max(100%, 20rem);
     max-height: 22rem;
@@ -4525,5 +4525,54 @@ fieldset {
     .attendance-toggle {
         min-width: 0;
         width: 100%;
+    }
+}
+
+/* Finanzas (#246) */
+.finance-filters .fi-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.finance-filters .fi-filter-bar > select,
+.finance-filters .fi-filter-bar > input {
+    width: auto;
+    min-width: 11rem;
+    flex: 1 1 11rem;
+}
+
+#finance-pick-student .fi-search {
+    width: 100%;
+}
+
+#finance-pick-student .fi-search input[type='search'] {
+    background: #f1f5fb;
+    border-color: var(--line);
+    color: var(--text);
+}
+
+#finance-pick-student .fi-search input[type='search']::placeholder,
+#finance-pick-student .fi-search-icon {
+    color: var(--muted);
+}
+
+#finance-pick-student .fi-search-results {
+    position: static;
+    width: 100%;
+    margin-top: 0.5rem;
+    box-shadow: none;
+}
+
+@media (max-width: 640px) {
+    .soft-kpi-grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.6rem;
+    }
+
+    .soft-kpi-grid-4 > * {
+        min-width: 0;
+        padding: 0.75rem !important;
     }
 }

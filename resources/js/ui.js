@@ -4,7 +4,12 @@
 document.addEventListener('click', (event) => {
     const opener = event.target.closest('[data-modal-open]');
     if (opener) {
-        document.getElementById(opener.dataset.modalOpen)?.showModal();
+        const dialog = document.getElementById(opener.dataset.modalOpen);
+        if (dialog && opener.dataset.pickIntent) {
+            dialog.dataset.intent = opener.dataset.pickIntent;
+        }
+        dialog?.showModal();
+        dialog?.querySelector('[data-student-search-input]')?.focus();
         return;
     }
     if (event.target.closest('[data-modal-close]')) {
@@ -195,7 +200,11 @@ document.querySelectorAll('[data-student-search]').forEach((box) => {
         }
         results.forEach((result, index) => {
             const link = document.createElement('a');
-            link.href = result.url;
+            link.href = box.dataset.resultUrl
+                ? box.dataset.resultUrl
+                    .replace('__ID__', encodeURIComponent(result.id))
+                    .replace('__INTENT__', encodeURIComponent(box.closest('dialog')?.dataset.intent || ''))
+                : result.url;
             link.id = `${list.id}-${index}`;
             link.className = 'fi-search-result';
             link.setAttribute('role', 'option');
