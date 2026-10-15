@@ -21,15 +21,12 @@ class CampusScope
             ? $user->campuses->pluck('id')->map(fn ($id) => (int) $id)->all()
             : $user->campuses()->pluck('campuses.id')->map(fn ($id) => (int) $id)->all();
 
-        if ($pivotIds !== []) {
-            return array_values(array_unique($pivotIds));
-        }
+        $ids = $pivotIds !== [] ? $pivotIds : ($user->campus_id ? [(int) $user->campus_id] : []);
 
-        if ($user->campus_id) {
-            return [(int) $user->campus_id];
-        }
+        // El profesor también accede a las sedes donde dicta clases; sus consultas ya filtran por sus grupos.
+        $ids = array_merge($ids, $user->teachingCampusIds());
 
-        return [];
+        return array_values(array_unique($ids));
     }
 
     /**
