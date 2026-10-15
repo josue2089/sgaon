@@ -102,10 +102,13 @@
             @if($selectedSession->date_locked && $selectedSession->rescheduled_from)
                 @include('partials.ui.status-badge', ['tone' => 'info', 'text' => 'Movida desde el '.$selectedSession->rescheduled_from->format('d/m/Y')])
             @endif
+            @if($selectedSession->held_on_holiday)
+                @include('partials.ui.status-badge', ['tone' => 'warn', 'text' => 'Se dio en feriado'.($sessionHoliday ? ' ('.$sessionHoliday->name.')' : '')])
+            @endif
         </div>
         <button class="btn secondary" type="button" data-modal-open="reschedule-modal">Cambiar fecha de la clase</button>
     </div>
-    @if($sessionHoliday)
+    @if($sessionHoliday && ! $selectedSession->held_on_holiday)
         <div class="flash warn">
             Esta clase cae en feriado ({{ $sessionHoliday->name }}). Usa "Cambiar fecha de la clase" para moverla al día en que realmente se dio.
         </div>
@@ -125,6 +128,10 @@
             <label class="checkbox-inline">
                 <input type="checkbox" name="cascade" value="1" @checked(old('cascade'))>
                 Correr también las clases siguientes
+            </label>
+            <label class="checkbox-inline">
+                <input type="checkbox" name="held_on_holiday" value="1" @checked(old('held_on_holiday'))>
+                La clase se dio aunque era feriado
             </label>
             <div class="form-actions ui-modal-foot">
                 <button class="btn secondary" type="button" data-modal-close>Cancelar</button>

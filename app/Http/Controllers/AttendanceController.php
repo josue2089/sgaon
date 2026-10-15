@@ -132,6 +132,7 @@ class AttendanceController extends Controller
             'class_session_id' => ['required', 'exists:class_sessions,id'],
             'session_date' => ['required', 'date', 'sane_date'],
             'cascade' => ['nullable', 'boolean'],
+            'held_on_holiday' => ['nullable', 'boolean'],
         ]);
 
         $this->authorizeSession($request, (int) $data['class_session_id']);
@@ -140,11 +141,12 @@ class AttendanceController extends Controller
         $previousDate = $session->session_date?->format('d/m/Y');
         $newDate = Carbon::parse($data['session_date'])->startOfDay();
         $cascade = (bool) ($data['cascade'] ?? false);
+        $allowHoliday = (bool) ($data['held_on_holiday'] ?? false);
 
         try {
             $shifted = $cascade
-                ? $rescheduler->rescheduleWithCascade($session, $newDate)
-                : tap(0, fn () => $rescheduler->reschedule($session, $newDate));
+                ? $rescheduler->rescheduleWithCascade($session, $newDate, $allowHoliday)
+                : tap(0, fn () => $rescheduler->reschedule($session, $newDate, $allowHoliday));
         } catch (ValidationException $exception) {
             return redirect()
                 ->route('attendance.index', ['class_session_id' => $session->id])
@@ -156,6 +158,7 @@ class AttendanceController extends Controller
             'from' => $previousDate,
             'to' => $newDate->toDateString(),
             'shifted_following' => $shifted,
+            'held_on_holiday' => $session->fresh()->held_on_holiday ? $this->holidayNameOn($session, $newDate) : null,
         ]);
 
         $message = "Clase movida del {$previousDate} al {$newDate->format('d/m/Y')}.";
@@ -168,6 +171,12 @@ class AttendanceController extends Controller
         return redirect()
             ->route('attendance.index', ['class_session_id' => $session->id])
             ->with('success', $message);
+    }
+
+    private function holidayNameOn(ClassSession $session, Carbon $date): ?string
+    {
+        return Holiday::query()->active()->forCampus((int) $session->campus_id)->get()
+            ->first(fn (Holiday $holiday) => $holiday->occursOn($date))?->name;
     }
 
     private function authorizeSession(Request $request, int $sessionId): void

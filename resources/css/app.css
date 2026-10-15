@@ -4450,7 +4450,7 @@ label:has(+ :is(input, select, textarea)[required])::after {
     margin-bottom: 0.6rem;
 }
 
-.attendance-picker > h2.section-title-sm {
+.attendance-picker h2.section-title-sm {
     font-size: 1.05rem;
     color: var(--muted);
 }
