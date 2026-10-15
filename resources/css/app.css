@@ -4576,3 +4576,32 @@ fieldset {
         padding: 0.75rem !important;
     }
 }
+
+/* Configuración agrupada (#247) */
+.fi-menu-heading,
+.fi-drawer-subheading {
+    padding: 0.55rem 0.7rem 0.2rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.fi-menu-heading:not(:first-child) {
+    margin-top: 0.25rem;
+    border-top: 1px solid #e7edf7;
+}
+
+.fi-drawer-subheading {
+    padding-left: 2.4rem;
+}
+
+.fi-menu-panel-nav {
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+}
+
+.fi-nav .fi-menu-panel-nav {
+    width: 250px;
+}

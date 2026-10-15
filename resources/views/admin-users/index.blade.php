@@ -7,6 +7,7 @@
     </div>
     <a class="btn" href="{{ route('admin-users.create') }}">Nuevo usuario admin</a>
 </div>
+@include('partials.layout.config-tabs')
 
 @if($users->count() === 0)
     <div class="card empty-state">No hay usuarios administrativos de sede registrados.</div>

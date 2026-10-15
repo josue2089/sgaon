@@ -7,6 +7,7 @@
     </div>
     <a class="btn secondary" href="{{ route('reports.campus-projection') }}">Ver reporte</a>
 </div>
+@include('partials.layout.config-tabs')
 
 <div class="card">
     <form method="POST" action="{{ route('settings.billing.update') }}" class="stack-sm" data-guard-submit>

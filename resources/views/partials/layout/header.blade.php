@@ -30,7 +30,11 @@
                         </summary>
                         <div class="fi-menu-panel fi-menu-panel-nav">
                             @foreach($item['children'] as $child)
-                                <a href="{{ $child['url'] }}" class="fi-menu-link {{ $child['active'] ? 'is-active' : '' }}">{{ $child['label'] }}</a>
+                                @if(!empty($child['heading']))
+                                    <div class="fi-menu-heading">{{ $child['label'] }}</div>
+                                @else
+                                    <a href="{{ $child['url'] }}" class="fi-menu-link {{ $child['active'] ? 'is-active' : '' }}">{{ $child['label'] }}</a>
+                                @endif
                             @endforeach
                         </div>
                     </details>
@@ -126,7 +130,11 @@
                         {{ $item['label'] }}
                     </div>
                     @foreach($item['children'] as $child)
-                        <a class="fi-drawer-link fi-drawer-sublink {{ $child['active'] ? 'is-active' : '' }}" href="{{ $child['url'] }}">{{ $child['label'] }}</a>
+                        @if(!empty($child['heading']))
+                            <div class="fi-drawer-subheading">{{ $child['label'] }}</div>
+                        @else
+                            <a class="fi-drawer-link fi-drawer-sublink {{ $child['active'] ? 'is-active' : '' }}" href="{{ $child['url'] }}">{{ $child['label'] }}</a>
+                        @endif
                     @endforeach
                 </div>
             @endif

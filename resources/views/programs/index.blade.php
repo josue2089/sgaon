@@ -7,6 +7,7 @@
     </div>
     <a class="btn" href="{{ route('programs.create') }}">Nuevo programa</a>
 </div>
+@include('partials.layout.config-tabs')
 
 <form method="GET" action="{{ route('programs.index') }}" class="card">
     <div class="fi-filter-bar">

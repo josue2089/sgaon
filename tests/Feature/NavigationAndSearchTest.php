@@ -40,15 +40,20 @@ class NavigationAndSearchTest extends TestCase
         $reports = array_column($groups['Reportes']['children'], 'label');
         $this->assertContains('Resumen financiero', $reports);
         $this->assertNotContains('Proyección por sede', $reports, 'Solo master.');
-        $this->assertSame(['Profesores', 'Feriados y días sin clase'], array_column($groups['Configuración']['children'], 'label'));
+        $config = collect($groups['Configuración']['children']);
+        $this->assertSame(['Profesores', 'Feriados y días sin clase'], $config->whereNull('heading')->pluck('label')->values()->all());
+        $this->assertSame(['Personas', 'Calendario'], $config->where('heading', true)->pluck('label')->values()->all());
     }
 
     public function test_master_sees_full_configuration_and_teacher_sees_only_attendance(): void
     {
         $master = User::factory()->create(['role' => 'admin', 'campus_id' => $this->campus->id, 'is_master' => true]);
         $config = collect(Navigation::for($master, 'dashboard'))->firstWhere('label', 'Configuración');
-        $this->assertContains('Usuarios admin', array_column($config['children'], 'label'));
-        $this->assertContains('Tarifa mensual', array_column($config['children'], 'label'));
+        $configLabels = array_column($config['children'], 'label');
+        foreach (['Usuarios admin', 'Tarifa mensual', 'Niveles académicos', 'Escalas de curso', 'Métodos de pago', 'Períodos', 'Sedes'] as $label) {
+            $this->assertContains($label, $configLabels);
+        }
+        $this->assertSame(['Personas', 'Calendario', 'Programas', 'Pagos', 'Sedes'], collect($config['children'])->where('heading', true)->pluck('label')->values()->all());
 
         $teacher = User::factory()->create(['role' => 'teacher', 'campus_id' => $this->campus->id]);
         $this->assertSame(['Inicio', 'Asistencia'], $this->labels($teacher));
@@ -100,5 +105,32 @@ class NavigationAndSearchTest extends TestCase
 
         $admin = User::factory()->create(['role' => 'admin', 'campus_id' => $this->campus->id, 'is_master' => true]);
         $this->actingAs($admin)->get('/operations/wizard')->assertRedirect('/courses');
+    }
+
+    public function test_configuration_pages_show_their_group_tabs(): void
+    {
+        $master = User::factory()->create(['role' => 'admin', 'campus_id' => $this->campus->id, 'is_master' => true]);
+
+        $this->actingAs($master)->get(route('settings.billing.edit'))
+            ->assertOk()
+            ->assertSee('aria-label="Configuración: Pagos"', false)
+            ->assertSee('Métodos de pago')
+            ->assertSee('Pago de recuperativas')
+            ->assertSee('class="section-tab is-active" aria-current="page">Tarifa mensual</a>', false);
+
+        $this->actingAs($master)->get(route('academic-levels.index'))
+            ->assertOk()
+            ->assertSee('aria-label="Configuración: Programas"', false)
+            ->assertSee('Escalas de curso');
+
+        $this->actingAs($master)->get(route('dashboard'))
+            ->assertSee('<div class="fi-menu-heading">Pagos</div>', false);
+
+        // El admin de sede ve solo Feriados en Calendario: sin barra de pestañas de un solo elemento.
+        $admin = User::factory()->create(['role' => 'admin', 'campus_id' => $this->campus->id, 'is_master' => false]);
+        $this->actingAs($admin)->get(route('holidays.index'))
+            ->assertOk()
+            ->assertDontSee('aria-label="Configuración: Calendario"', false);
+        $this->actingAs($admin)->get(route('settings.billing.edit'))->assertForbidden();
     }
 }

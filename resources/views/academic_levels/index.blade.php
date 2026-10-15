@@ -7,6 +7,7 @@
     </div>
     <a class="btn" href="{{ route('academic-levels.create') }}">Nuevo nivel</a>
 </div>
+@include('partials.layout.config-tabs')
 
 <form method="GET" action="{{ route('academic-levels.index') }}" class="card">
     <div class="fi-filter-bar">

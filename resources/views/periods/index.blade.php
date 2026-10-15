@@ -7,6 +7,7 @@
     </div>
     <a class="btn" href="{{ route('periods.create') }}">Nuevo período</a>
 </div>
+@include('partials.layout.config-tabs')
 
 <form method="GET" action="{{ route('periods.index') }}" class="card">
     <div class="fi-filter-bar">

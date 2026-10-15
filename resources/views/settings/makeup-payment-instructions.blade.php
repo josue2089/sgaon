@@ -6,6 +6,7 @@
         <p class="page-subtitle">Mensaje global para recuperativas visible en el portal del alumno.</p>
     </div>
 </div>
+@include('partials.layout.config-tabs')
 
 <div class="card">
     <form method="POST" action="{{ route('settings.makeup-payment-instructions.update') }}" class="stack-sm">

@@ -7,6 +7,7 @@
     </div>
     <a class="btn" href="{{ route('holidays.create') }}">{{ auth()->user()->isMasterAdmin() ? 'Nuevo feriado' : 'Nuevo día sin clase' }}</a>
 </div>
+@include('partials.layout.config-tabs')
 
 <form method="GET" action="{{ route('holidays.index') }}" class="card">
     <div class="fi-filter-bar">
