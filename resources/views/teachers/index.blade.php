@@ -10,6 +10,7 @@
         <a class="btn" href="{{ route('teachers.create') }}">Nuevo Profesor</a>
     </div>
 </div>
+@include('partials.layout.config-tabs')
 
 <div class="metric-grid metric-grid-4">
     @include('partials.ui.metric-card', ['tone' => 'metric-purple', 'iconName' => 'users', 'label' => 'Total Profesores', 'value' => $summary['total']])

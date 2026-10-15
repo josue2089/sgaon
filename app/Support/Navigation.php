@@ -31,21 +31,76 @@ class Navigation
             self::link('Finanzas', 'finance', 'finance.index', ['finance.index', 'finance.students.', 'finance.receipts.'], $isAdmin && $user->hasPermission('finance.manage'), $current),
             self::link('Recuperativas', 'makeups', 'makeups.index', ['makeups.'], $isAdmin, $current),
             self::group('Reportes', 'reports', $current, self::reportLinks($user)),
-            self::group('Configuración', 'config', $current, array_filter([
-                self::child('Profesores', 'teachers.index', ['teachers.'], $isAdmin, $current),
-                self::child('Feriados y días sin clase', 'holidays.index', ['holidays.'], $isAdmin, $current),
-                self::child('Sedes', 'campuses.index', ['campuses.'], $isMaster, $current),
-                self::child('Programas y niveles', 'programs.index', ['programs.', 'program-level-lessons.', 'academic-levels.', 'course-levels.'], $isMaster, $current),
-                self::child('Períodos', 'periods.index', ['periods.'], $isMaster, $current),
-                self::child('Horarios', 'schedules.index', ['schedules.'], $isMaster, $current),
-                self::child('Métodos de pago', 'settings.payment-methods.index', ['settings.payment-methods.'], $isMaster, $current),
-                self::child('Pago de recuperativas', 'settings.makeup-payment-instructions.edit', ['settings.makeup-payment-instructions.'], $isMaster, $current),
-                self::child('Tarifa mensual', 'settings.billing.edit', ['settings.billing.'], $isMaster, $current),
-                self::child('Usuarios admin', 'admin-users.index', ['admin-users.'], $isMaster, $current),
-            ])),
+            self::group('Configuración', 'config', $current, self::configLinks($user, $current, withHeadings: true)),
         ];
 
         return array_values(array_filter($items, fn ($item) => $item !== null));
+    }
+
+    /**
+     * Configuración agrupada por tema (#247). Cada grupo alimenta su barra de pestañas.
+     *
+     * @return array<string, array<int, array{label: string, url: string, active: bool}>>
+     */
+    public static function configGroups(User $user, ?string $currentRoute = null): array
+    {
+        $current = (string) ($currentRoute ?? request()->route()?->getName());
+        $isAdmin = $user->role === User::ROLE_ADMIN;
+        $isMaster = $user->isMasterAdmin();
+
+        $groups = [
+            'Personas' => [
+                self::child('Profesores', 'teachers.index', ['teachers.'], $isAdmin, $current),
+                self::child('Usuarios admin', 'admin-users.index', ['admin-users.'], $isMaster, $current),
+            ],
+            'Calendario' => [
+                self::child('Feriados y días sin clase', 'holidays.index', ['holidays.'], $isAdmin, $current),
+                self::child('Períodos', 'periods.index', ['periods.'], $isMaster, $current),
+                self::child('Horarios', 'schedules.index', ['schedules.'], $isMaster, $current),
+            ],
+            'Programas' => [
+                self::child('Programas y niveles', 'programs.index', ['programs.', 'program-levels.', 'program-level-lessons.'], $isMaster, $current),
+                self::child('Niveles académicos', 'academic-levels.index', ['academic-levels.'], $isMaster, $current),
+                self::child('Escalas de curso', 'course-levels.index', ['course-levels.'], $isMaster, $current),
+            ],
+            'Pagos' => [
+                self::child('Métodos de pago', 'settings.payment-methods.index', ['settings.payment-methods.'], $isMaster, $current),
+                self::child('Pago de recuperativas', 'settings.makeup-payment-instructions.edit', ['settings.makeup-payment-instructions.'], $isMaster, $current),
+                self::child('Tarifa mensual', 'settings.billing.edit', ['settings.billing.'], $isMaster, $current),
+            ],
+            'Sedes' => [
+                self::child('Sedes', 'campuses.index', ['campuses.'], $isMaster, $current),
+            ],
+        ];
+
+        return array_filter(array_map(fn ($links) => array_values(array_filter($links)), $groups));
+    }
+
+    /** Enlaces de configuración planos; con encabezados de grupo para el menú desplegable. */
+    public static function configLinks(User $user, string $current, bool $withHeadings = false): array
+    {
+        $links = [];
+        $groups = self::configGroups($user, $current);
+        foreach ($groups as $heading => $children) {
+            if ($withHeadings && count($groups) > 1) {
+                $links[] = ['label' => $heading, 'url' => null, 'active' => false, 'heading' => true];
+            }
+            array_push($links, ...$children);
+        }
+
+        return $links;
+    }
+
+    /** Grupo de configuración al que pertenece la pantalla actual (para mostrar sus pestañas). */
+    public static function currentConfigGroup(User $user, ?string $currentRoute = null): ?array
+    {
+        foreach (self::configGroups($user, $currentRoute) as $heading => $children) {
+            if (collect($children)->contains('active', true)) {
+                return ['heading' => $heading, 'links' => $children];
+            }
+        }
+
+        return null;
     }
 
     /** Reportes disponibles para el usuario; también alimenta la barra de navegación entre reportes. */
@@ -78,6 +133,10 @@ class Navigation
     {
         $children = array_values($children);
         if ($children === []) {
+            return null;
+        }
+
+        if (collect($children)->whereNull('heading')->isEmpty()) {
             return null;
         }
 

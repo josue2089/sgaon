@@ -7,6 +7,7 @@
     </div>
     <a class="btn" href="{{ route('course-levels.create') }}">Nueva escala</a>
 </div>
+@include('partials.layout.config-tabs')
 
 <form method="GET" action="{{ route('course-levels.index') }}" class="card">
     <div class="fi-filter-bar">

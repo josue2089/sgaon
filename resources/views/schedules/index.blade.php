@@ -7,6 +7,7 @@
     </div>
     <a class="btn" href="{{ route('schedules.create') }}">Nuevo horario</a>
 </div>
+@include('partials.layout.config-tabs')
 
 <form method="GET" action="{{ route('schedules.index') }}" class="card">
     <div class="fi-filter-bar">

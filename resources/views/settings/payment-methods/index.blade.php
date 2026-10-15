@@ -7,6 +7,7 @@
     </div>
     <a class="btn" href="{{ route('settings.payment-methods.create') }}">Nuevo método</a>
 </div>
+@include('partials.layout.config-tabs')
 
 @if($methods->isEmpty())
     <div class="card empty-state">No hay métodos de pago configurados.</div>
