@@ -13,7 +13,12 @@ use Illuminate\Validation\ValidationException;
 
 class SessionRescheduler
 {
-    public function assertDateAllowed(Group $group, Carbon $date): void
+    /**
+     * Valida la fecha destino. Con $allowHoliday (la clase se dio aunque era feriado) el feriado no bloquea.
+     *
+     * @return Holiday|null El feriado de esa fecha, si lo hay.
+     */
+    public function assertDateAllowed(Group $group, Carbon $date, bool $allowHoliday = false): ?Holiday
     {
         if ($group->start_date && $date->lt($group->start_date->copy()->startOfDay())) {
             throw ValidationException::withMessages([
@@ -27,11 +32,13 @@ class SessionRescheduler
             ->get()
             ->first(fn (Holiday $holiday) => $holiday->occursOn($date));
 
-        if ($holiday) {
+        if ($holiday && ! $allowHoliday) {
             throw ValidationException::withMessages([
-                'session_date' => "Esa fecha es feriado ({$holiday->name}). Elige otra.",
+                'session_date' => "Esa fecha es feriado ({$holiday->name}). Si la clase se dio igual, marca \"La clase se dio aunque era feriado\".",
             ]);
         }
+
+        return $holiday;
     }
 
     /**
@@ -53,18 +60,21 @@ class SessionRescheduler
         }
     }
 
-    public function reschedule(ClassSession $session, Carbon $newDate): void
+    public function reschedule(ClassSession $session, Carbon $newDate, bool $allowHoliday = false): ?Holiday
     {
         $group = $session->group()->firstOrFail();
-        $this->assertDateAllowed($group, $newDate);
+        $holiday = $this->assertDateAllowed($group, $newDate, $allowHoliday);
 
-        DB::transaction(function () use ($session, $group, $newDate): void {
+        DB::transaction(function () use ($session, $group, $newDate, $holiday): void {
             $this->freeSlot($session, (int) $group->id, $newDate, $session->starts_at);
             $session->session_date = $newDate->toDateString();
+            $session->held_on_holiday = (bool) $holiday;
             $this->markMoved($session, $newDate);
             $session->save();
             $this->afterMove($group);
         });
+
+        return $holiday;
     }
 
     /**
@@ -74,10 +84,10 @@ class SessionRescheduler
      *
      * @return int Cantidad de clases siguientes que se corrieron.
      */
-    public function rescheduleWithCascade(ClassSession $session, Carbon $newDate): int
+    public function rescheduleWithCascade(ClassSession $session, Carbon $newDate, bool $allowHoliday = false): int
     {
         $group = $session->group()->firstOrFail();
-        $this->assertDateAllowed($group, $newDate);
+        $holiday = $this->assertDateAllowed($group, $newDate, $allowHoliday);
 
         $course = Course::query()->with('scheduleTemplate')->where('managed_group_id', $group->id)->first();
         if (! $course || ! $course->scheduleTemplate) {
@@ -123,7 +133,7 @@ class SessionRescheduler
             $previous = $next;
         }
 
-        DB::transaction(function () use ($session, $group, $newDate, $moves): void {
+        DB::transaction(function () use ($session, $group, $newDate, $moves, $holiday): void {
             // Fechas temporales únicas para no chocar con el índice (grupo, fecha, hora) mientras se reordena.
             // La clase que se mueve no lo necesita: su fecha original nunca es destino de otra.
             foreach (array_keys($moves) as $id) {
@@ -137,6 +147,7 @@ class SessionRescheduler
             }
 
             $session->session_date = $newDate->toDateString();
+            $session->held_on_holiday = (bool) $holiday;
             $this->markMoved($session, $newDate);
             $session->save();
             $this->afterMove($group);

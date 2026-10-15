@@ -22,6 +22,7 @@ class ClassSession extends Model
         'starts_at',
         'ends_at',
         'date_locked',
+        'held_on_holiday',
         'is_extra',
         'rescheduled_from',
         'topic',
@@ -34,6 +35,7 @@ class ClassSession extends Model
         return [
             'session_date' => 'date',
             'date_locked' => 'boolean',
+            'held_on_holiday' => 'boolean',
             'is_extra' => 'boolean',
             'rescheduled_from' => 'date',
         ];
