@@ -79,6 +79,34 @@ class User extends Authenticatable
         return false;
     }
 
+    /**
+     * Sedes donde el profesor dicta (por sus grupos y cursos). Un profesor puede dar clases en una sede
+     * distinta a la de su usuario y debe ver esas clases (#304). Memorizado por instancia.
+     *
+     * @return array<int>
+     */
+    public function teachingCampusIds(): array
+    {
+        if ($this->role !== self::ROLE_TEACHER) {
+            return [];
+        }
+
+        return once(function (): array {
+            $teacher = Teacher::forUser($this);
+            if (! $teacher) {
+                return [];
+            }
+
+            return Group::query()->where('teacher_id', $teacher->id)->pluck('campus_id')
+                ->merge(Course::query()->where('teacher_id', $teacher->id)->pluck('campus_id'))
+                ->filter()
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values()
+                ->all();
+        });
+    }
+
     public function hasPermission(string $permission): bool
     {
         if ($this->role === self::ROLE_ADMIN) {
