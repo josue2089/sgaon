@@ -1,5 +1,14 @@
 @import 'tailwindcss';
 
+/*
+ * Escala de tamaños de pantalla (#347). Usar solo estos cortes:
+ *   teléfono  max-width: 640px   (min-width: 641px para lo que empieza en tablet)
+ *   tablet    max-width: 980px   (min-width: 981px para escritorio)
+ *   portátil  max-width: 1199px  (por debajo de 1200 el menú pasa a ☰)
+ *   escritorio max-width: 1439px
+ */
+
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
@@ -1526,13 +1535,13 @@ a {
     color: #fff;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1439px) {
     .fi-header { padding: 0.65rem 0.85rem; }
     .fi-nav-item { font-size: 0.76rem; padding: 0.45rem 0.72rem; }
     .fi-user-pill { font-size: 0.75rem; }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 641px) {
     .fi-header {
         padding: 1rem 2rem;
     }
@@ -1561,7 +1570,7 @@ a {
     }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 981px) {
     .fi-main {
         padding: 2rem;
     }
@@ -2215,7 +2224,7 @@ textarea {
     line-height: 1.2;
 }
 
-@media (max-width: 1360px) {
+@media (max-width: 1439px) {
     .fi-filter-bar {
         grid-template-columns: 1fr 190px 180px auto;
     }
@@ -2225,7 +2234,7 @@ textarea {
     }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1199px) {
     :root {
         --icon-sm: 0.84rem;
         --icon-md: 0.92rem;
@@ -2490,7 +2499,7 @@ textarea {
     grid-template-columns: 180px 180px 180px 180px auto;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1199px) {
     .summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -2808,7 +2817,7 @@ textarea {
     background: linear-gradient(180deg, #fff3f3 0%, #ffdfe0 100%);
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1199px) {
     .teacher-calendar-day-strip {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -2818,7 +2827,7 @@ textarea {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
     .teacher-calendar-day-strip {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -3109,7 +3118,7 @@ dialog.finance-proof-dialog:not([open]) {
     color: var(--text);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
     .charge-pay-dialog-footer {
         flex-direction: column-reverse;
         align-items: stretch;
@@ -3311,7 +3320,7 @@ dialog.finance-proof-dialog[open] {
     flex-shrink: 0;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 980px) {
     .finance-payment-request-panes {
         grid-template-columns: 1fr;
     }
@@ -3653,7 +3662,7 @@ dialog.finance-proof-dialog[open] {
     display: block;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
     .portal-tabs {
         position: sticky;
         top: 56px;
