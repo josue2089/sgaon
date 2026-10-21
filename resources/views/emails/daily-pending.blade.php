@@ -1,6 +1,6 @@
 <div style="font-family:Arial,sans-serif;color:#17305c;line-height:1.5;max-width:560px;">
     <h2 style="margin:0 0 6px;">Pendientes de hoy</h2>
-    <p style="margin:0 0 16px;color:#64748b;">{{ now('America/Caracas')->locale('es')->isoFormat('dddd D [de] MMMM') }} · {{ $scopeLabel }}</p>
+    <p style="margin:0 0 16px;color:#64748b;">{{ now()->locale('es')->isoFormat('dddd D [de] MMMM') }} · {{ $scopeLabel }}</p>
     <p style="margin:0 0 12px;">Hola {{ $user->name }}, esto es lo que necesita atención hoy:</p>
     <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
         @foreach($items as $item)
