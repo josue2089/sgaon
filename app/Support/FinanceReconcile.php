@@ -57,7 +57,8 @@ class FinanceReconcile
             $nextStatus = 'paid';
         } elseif ($paidTotal > 0) {
             $nextStatus = 'partial';
-        } elseif ($charge->due_date && $charge->due_date->isPast()) {
+        } elseif ($charge->due_date && $charge->due_date->lt(today())) {
+            // Vence al terminar el día de vencimiento (hora de Caracas), no al empezar. #368
             $nextStatus = 'overdue';
         } else {
             $nextStatus = 'pending';

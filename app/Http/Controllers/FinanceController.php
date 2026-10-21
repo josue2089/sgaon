@@ -6,30 +6,30 @@ use App\Http\Controllers\Concerns\ScopesCampusAccess;
 use App\Mail\ChargePaymentApprovedMail;
 use App\Mail\ChargePaymentRejectedMail;
 use App\Mail\ChargePendingMail;
+use App\Models\Campus;
 use App\Models\Charge;
 use App\Models\ChargePaymentRequest;
 use App\Models\Enrollment;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
-use App\Models\Period;
+use App\Models\PaymentMethod;
 use App\Models\Receipt;
 use App\Models\Student;
-use App\Support\AlertEngine;
-use App\Support\AuditTrail;
-use App\Support\CampusScope;
-use App\Support\FinanceReconcile;
-use App\Support\FinanceSummary;
-use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
 use App\Services\ChargeRegistrationService;
 use App\Services\ChargeVoidService;
-use App\Services\PaymentRegistrationService;
-use App\Services\PaymentVoidService;
 use App\Services\FinanceSummaryExportService;
 use App\Services\PaymentReceiptNotifier;
+use App\Services\PaymentRegistrationService;
+use App\Services\PaymentVoidService;
 use App\Services\ReceiptPdfService;
+use App\Support\AlertEngine;
+use App\Support\CampusScope;
+use App\Support\FinanceReconcile;
+use App\Support\FinanceSummary;
 use App\Support\MoneyFormat;
 use App\Support\PaymentCurrencyConverter;
+use App\Support\StatusLabel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -110,7 +110,7 @@ class FinanceController extends Controller
             ->when($campusId, fn ($query) => $query->where('campus_id', $campusId));
         $criticalOverdueCondition = $driver === 'sqlite'
             ? "due_date IS NOT NULL AND due_date < DATE('now') AND CAST((julianday('now') - julianday(due_date)) AS INTEGER) >= 30"
-            : "due_date IS NOT NULL AND due_date < CURDATE() AND DATEDIFF(CURDATE(), due_date) >= 30";
+            : 'due_date IS NOT NULL AND due_date < CURDATE() AND DATEDIFF(CURDATE(), due_date) >= 30';
         $pendingProofsQuery = CampusScope::apply(ChargePaymentRequest::query()->where('status', ChargePaymentRequest::STATUS_PENDING_VALIDATION), $user)
             ->when($focusStudentId, fn ($query) => $query->where('student_id', $focusStudentId))
             ->when($campusId, fn ($query) => $query->where('campus_id', $campusId));
@@ -182,7 +182,7 @@ class FinanceController extends Controller
             'payments' => $payments,
             'paymentRequests' => $paymentRequests,
             'kpis' => $kpis,
-            'campuses' => CampusScope::apply(\App\Models\Campus::query()->orderBy('name'), $user, 'id')->get(['id', 'name']),
+            'campuses' => CampusScope::apply(Campus::query()->orderBy('name'), $user, 'id')->get(['id', 'name']),
             'focusStudent' => $focusStudent,
             'focusStudentId' => $focusStudentId,
             'showVoided' => $showVoided,
@@ -292,7 +292,7 @@ class FinanceController extends Controller
         $pdfService = app(ReceiptPdfService::class);
 
         return response()->streamDownload(
-            fn () => print($pdfService->renderBinary($receipt)),
+            fn () => print ($pdfService->renderBinary($receipt)),
             $pdfService->filename($receipt),
             ['Content-Type' => 'application/pdf'],
         );
@@ -584,7 +584,7 @@ class FinanceController extends Controller
                 'meta' => [
                     'concepto' => $charge->concept,
                     'período' => $charge->period->code ?? ($charge->billing_period_label ?: 'Sin período'),
-                    'estado' => \App\Support\StatusLabel::label($charge->voided_at ? 'voided' : $charge->status),
+                    'estado' => StatusLabel::label($charge->voided_at ? 'voided' : $charge->status),
                     'saldo' => MoneyFormat::number(FinanceReconcile::outstandingForCharge($charge)),
                     'anulación' => $charge->voided_at
                         ? $charge->voided_at->format('d/m/Y').' · '.($charge->void_reason ?: 'Sin motivo')
@@ -642,7 +642,7 @@ class FinanceController extends Controller
             fn (Charge $charge) => FinanceReconcile::outstandingForCharge($charge)
         );
         $overdueCount = (int) $student->charges
-            ->filter(fn (Charge $charge) => in_array($charge->status, ['overdue', 'partial', 'pending'], true) && $charge->due_date?->isPast())
+            ->filter(fn (Charge $charge) => in_array($charge->status, ['overdue', 'partial', 'pending'], true) && $charge->due_date?->lt(today()))
             ->count();
 
         return [
