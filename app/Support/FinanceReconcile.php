@@ -48,6 +48,26 @@ class FinanceReconcile
         return max(0, (self::cents($charge->amount) - self::cents(self::paidTotalForCharge($charge))) / 100);
     }
 
+    /**
+     * Saldo pendiente por moneda (USD, EUR) de cargos no anulados, sin mezclar monedas. #436
+     *
+     * @param  iterable<Charge>  $charges
+     * @return array<string, float>
+     */
+    public static function outstandingByCurrency(iterable $charges): array
+    {
+        $cents = [];
+        foreach ($charges as $charge) {
+            $outstanding = self::cents(self::outstandingForCharge($charge));
+            if ($outstanding > 0) {
+                $cents[$charge->currencyCode()] = ($cents[$charge->currencyCode()] ?? 0) + $outstanding;
+            }
+        }
+        ksort($cents);
+
+        return array_map(fn (int $value) => round($value / 100, 2), $cents);
+    }
+
     public static function syncCharge(Charge $charge): Charge
     {
         if ($charge->voided_at) {

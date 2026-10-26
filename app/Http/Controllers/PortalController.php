@@ -14,12 +14,14 @@ use App\Models\Student;
 use App\Models\SystemSetting;
 use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
+use App\Support\FinanceReconcile;
 use App\Support\PaymentSubmission;
 use App\Support\MakeupRecoveryEngine;
 use App\Support\RenewalEnrollmentEligibility;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class PortalController extends Controller
@@ -39,7 +41,8 @@ class PortalController extends Controller
                 'attendanceRecords as justified_count' => fn ($q) => $q->where('status', 'justified'),
             ])->get();
 
-        $charges = $student->charges()->latest('due_date')->get();
+        $charges = $student->charges()->with(['paymentRequests', 'makeupRequest'])->latest('due_date')->get();
+        $balance = FinanceReconcile::outstandingByCurrency($charges);
         $payments = $student->payments()->whereNull('voided_at')->latest('paid_at')->get();
         $makeupRequests = $student->makeupRequests()
             ->with([
@@ -151,7 +154,7 @@ class PortalController extends Controller
         $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
         $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
 
-        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions', 'pendingCharges', 'chargePaymentRequests', 'portalGradeEntries', 'renewalOffers', 'paymentMethods', 'bcvRate', 'bcvEurRate'));
+        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'balance', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions', 'pendingCharges', 'chargePaymentRequests', 'portalGradeEntries', 'renewalOffers', 'paymentMethods', 'bcvRate', 'bcvEurRate'));
     }
 
     public function enrollInRenewalCourse(Request $request, Course $course): RedirectResponse
@@ -220,6 +223,10 @@ class PortalController extends Controller
     {
         $student = $this->resolveStudent($request);
         abort_if(! $student || (int) $makeupRequest->student_id !== (int) $student->id, 403);
+
+        if ($makeupRequest->charge && $makeupRequest->charge->paymentRequests()->where('status', ChargePaymentRequest::STATUS_PENDING_VALIDATION)->exists()) {
+            return back()->withErrors(['payment_proof' => 'Ya hay un comprobante de esta recuperativa en validación.']);
+        }
 
         $data = $request->validate([
             'payment_notes' => ['nullable', 'string'],
@@ -298,8 +305,8 @@ class PortalController extends Controller
         $students = $representative->students()
             ->with([
                 'enrollments.group.course',
-                'charges',
-                'payments',
+                'charges.paymentRequests',
+                'charges.makeupRequest',
                 'chargePaymentRequests.charge',
             ])
             ->get();
@@ -373,6 +380,17 @@ class PortalController extends Controller
 
     private function storeChargePaymentRequest(Request $request, Charge $charge, Student $student, ?Representative $representative): void
     {
+        // #436: un solo comprobante en validación por cargo, y la recuperativa se paga desde su propia sección.
+        if ($charge->hasPaymentInValidation()) {
+            throw ValidationException::withMessages(['payment_proof' => 'Ya enviaste un comprobante para este cargo y está en validación.']);
+        }
+        if ($charge->voided_at || FinanceReconcile::outstandingForCharge($charge) <= 0) {
+            throw ValidationException::withMessages(['payment_proof' => 'Este cargo no tiene saldo pendiente.']);
+        }
+        if (! $representative && $charge->isMakeup()) {
+            throw ValidationException::withMessages(['payment_proof' => 'Esta recuperativa se paga desde la sección Recuperativas.']);
+        }
+
         $request->validate([
             'payment_proof' => ['required', 'file', 'max:10240'],
         ]);
