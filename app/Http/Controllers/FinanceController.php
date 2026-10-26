@@ -11,7 +11,6 @@ use App\Models\Charge;
 use App\Models\ChargePaymentRequest;
 use App\Models\Enrollment;
 use App\Models\Payment;
-use App\Models\PaymentAllocation;
 use App\Models\PaymentMethod;
 use App\Models\Receipt;
 use App\Models\Student;
@@ -19,11 +18,10 @@ use App\Services\Bcv\ExchangeRateService;
 use App\Services\ChargeRegistrationService;
 use App\Services\ChargeVoidService;
 use App\Services\FinanceSummaryExportService;
-use App\Services\PaymentReceiptNotifier;
 use App\Services\PaymentRegistrationService;
 use App\Services\PaymentVoidService;
 use App\Services\ReceiptPdfService;
-use App\Support\AlertEngine;
+use App\Support\AuditTrail;
 use App\Support\CampusScope;
 use App\Support\FinanceReconcile;
 use App\Support\FinanceSummary;
@@ -369,6 +367,7 @@ class FinanceController extends Controller
             'paid_at' => ['required', 'date', 'sane_date'],
             'balance_due_date' => ['nullable', 'date', 'sane_date', 'after_or_equal:paid_at'],
             'reference' => ['nullable', 'string', 'max:80'],
+            'allow_duplicate_reference' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string'],
         ]);
 
@@ -395,7 +394,7 @@ class FinanceController extends Controller
         }
 
         return back()
-            ->with('success', 'Pago registrado y recibo generado. Se envió el comprobante por email.')
+            ->with('success', 'Pago registrado y recibo generado.'.(app(PaymentRegistrationService::class)->receiptWillBeEmailed($payment) ? ' Se envió el comprobante por email.' : ''))
             ->with('success_link', $payment->receipt ? ['url' => route('finance.receipts.show', $payment->receipt), 'label' => 'Ver recibo '.$payment->receipt->receipt_number] : null);
     }
 
@@ -429,7 +428,7 @@ class FinanceController extends Controller
         return back()->with('success', 'Pago anulado. Los cargos asociados se recalcularon.');
     }
 
-    public function reviewPaymentRequest(Request $request, ChargePaymentRequest $paymentRequest): RedirectResponse
+    public function reviewPaymentRequest(Request $request, ChargePaymentRequest $paymentRequest, PaymentRegistrationService $payments): RedirectResponse
     {
         if (! CampusScope::userCanAccessCampus($request->user(), (int) $paymentRequest->campus_id)) {
             abort(403);
@@ -437,7 +436,11 @@ class FinanceController extends Controller
 
         $data = $request->validate([
             'action' => ['required', 'in:approve,reject'],
-            'rejection_reason' => ['nullable', 'string'],
+            'paid_at' => ['required_if:action,approve', 'nullable', 'date', 'sane_date', 'before_or_equal:today'],
+            'rejection_reason' => ['required_if:action,reject', 'nullable', 'string', 'max:500'],
+        ], [
+            'rejection_reason.required_if' => 'Indica el motivo del rechazo: se le envía a la familia.',
+            'paid_at.required_if' => 'Indica la fecha del pago.',
         ]);
 
         if ($paymentRequest->status !== ChargePaymentRequest::STATUS_PENDING_VALIDATION) {
@@ -445,75 +448,37 @@ class FinanceController extends Controller
         }
 
         if ($data['action'] === 'approve') {
-            $charge = Charge::query()
-                ->with(['paymentAllocations', 'payments'])
-                ->findOrFail($paymentRequest->charge_id);
-            $amountToApply = min((float) $paymentRequest->amount, FinanceReconcile::outstandingForCharge($charge));
-
-            if ($amountToApply <= 0) {
-                return back()->withErrors(['action' => 'El cargo seleccionado ya no tiene saldo pendiente.']);
+            try {
+                $result = $payments->approveRequest($paymentRequest, $data['paid_at'], $request);
+            } catch (ValidationException $exception) {
+                return back()->withErrors($exception->errors());
             }
 
-            $requestAmountUsd = (float) $paymentRequest->amount;
-            $ratio = $requestAmountUsd > 0 ? $amountToApply / $requestAmountUsd : 1;
-            $originalApplied = round((float) ($paymentRequest->original_amount ?? $paymentRequest->amount) * $ratio, 2);
+            $payment = $result['payment'];
+            $message = 'Solicitud aprobada y pago aplicado.';
+            if ($result['extra_charges']->isNotEmpty()) {
+                $message .= ' El excedente se aplicó a: '.$result['extra_charges']->pluck('concept')->join(', ').'.';
+            }
+            if ($result['unapplied'] > 0) {
+                $message .= ' Quedó '.MoneyFormat::usd($result['unapplied']).' sin aplicar a ningún cargo.';
+            }
+            $message .= $payments->receiptWillBeEmailed($payment) ? ' Se envió el recibo por email.' : ' El alumno no tiene email: entrega el recibo a mano.';
 
-            $payment = Payment::create([
-                'campus_id' => $paymentRequest->campus_id,
-                'student_id' => $paymentRequest->student_id,
-                'charge_id' => $charge->id,
-                'amount' => $amountToApply,
-                'currency' => $paymentRequest->currency,
-                'original_amount' => $originalApplied,
-                'exchange_rate' => $paymentRequest->exchange_rate,
-                'exchange_rate_effective_at' => $paymentRequest->exchange_rate_effective_at,
-                'payment_method_id' => $paymentRequest->payment_method_id,
-                'paid_at' => now()->toDateString(),
-                'paid_at_datetime' => now(),
-                'method' => $paymentRequest->payment_method ?: 'Comprobante portal',
-                'reference' => $paymentRequest->reference,
-                'status' => 'confirmed',
-                'received_by' => $request->user()?->id,
-                'notes' => $paymentRequest->notes,
-            ]);
-
-            PaymentAllocation::create([
-                'payment_id' => $payment->id,
-                'charge_id' => $charge->id,
-                'amount_applied' => $amountToApply,
-            ]);
-            FinanceReconcile::syncCharge($charge);
-
-            Receipt::create([
-                'campus_id' => $paymentRequest->campus_id,
-                'payment_id' => $payment->id,
-                'receipt_number' => 'R-'.str_pad((string) $payment->id, 8, '0', STR_PAD_LEFT),
-                'issued_at' => now()->toDateString(),
-            ]);
-
-            $paymentRequest->forceFill([
-                'status' => ChargePaymentRequest::STATUS_APPROVED,
-                'validated_by' => $request->user()?->id,
-                'validated_at' => now(),
-                'rejection_reason' => null,
-            ])->save();
-
-            AlertEngine::evaluateFinanceForStudent((int) $paymentRequest->student_id);
-            $payment->load(['receipt', 'student.representatives', 'allocations.charge', 'paymentMethod', 'charge']);
-            app(PaymentReceiptNotifier::class)->notify($payment);
-
-            return back()->with('success', 'Solicitud aprobada y pago aplicado. Se envió el recibo por email.');
+            return back()
+                ->with('success', $message)
+                ->with('success_link', $payment->receipt ? ['url' => route('finance.receipts.show', $payment->receipt), 'label' => 'Ver recibo '.$payment->receipt->receipt_number] : null);
         }
 
         $paymentRequest->forceFill([
             'status' => ChargePaymentRequest::STATUS_REJECTED,
             'validated_by' => $request->user()?->id,
             'validated_at' => now(),
-            'rejection_reason' => $data['rejection_reason'] ?? 'Comprobante inválido.',
+            'rejection_reason' => trim($data['rejection_reason']),
         ])->save();
+        AuditTrail::log($request, 'finance.payment_request.reject', $paymentRequest, ['reason' => $paymentRequest->rejection_reason]);
         $this->emailPaymentRequestRejected($paymentRequest->fresh(['student.representatives', 'charge']));
 
-        return back()->with('success', 'Solicitud rechazada.');
+        return back()->with('success', 'Solicitud rechazada. Se le avisó a la familia con el motivo.');
     }
 
     private function emailChargePendingIfPossible(Charge $charge): void

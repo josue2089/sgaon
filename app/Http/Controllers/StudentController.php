@@ -237,6 +237,7 @@ class StudentController extends Controller
             'paid_at' => ['required', 'date', 'sane_date'],
             'balance_due_date' => ['nullable', 'date', 'sane_date', 'after_or_equal:paid_at'],
             'reference' => ['nullable', 'string', 'max:80'],
+            'allow_duplicate_reference' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string'],
         ]);
 
@@ -250,7 +251,7 @@ class StudentController extends Controller
 
         return redirect()
             ->route('students.show', $student)
-            ->with('success', 'Pago registrado y recibo generado. Se envió el comprobante por email.')
+            ->with('success', 'Pago registrado y recibo generado.'.(app(PaymentRegistrationService::class)->receiptWillBeEmailed($payment) ? ' Se envió el comprobante por email.' : ''))
             ->with('success_link', $payment->receipt ? ['url' => route('finance.receipts.show', $payment->receipt), 'label' => 'Ver recibo '.$payment->receipt->receipt_number] : null);
     }
 

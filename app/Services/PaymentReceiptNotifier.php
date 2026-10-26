@@ -31,6 +31,11 @@ class PaymentReceiptNotifier
         Mail::to($recipients->all())->send(new PaymentReceiptMail($payment));
     }
 
+    public function hasRecipients(Payment $payment): bool
+    {
+        return $this->recipientsForStudent($payment->student)->isNotEmpty();
+    }
+
     private function recipientsForStudent(?Student $student): Collection
     {
         if (! $student) {

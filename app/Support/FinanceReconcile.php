@@ -7,6 +7,12 @@ use App\Models\Payment;
 
 class FinanceReconcile
 {
+    /** Montos en centavos para comparar sin errores de coma flotante (33.33+33.33+33.34 = 100). #435 */
+    public static function cents(float|int|string|null $amount): int
+    {
+        return (int) round(((float) $amount) * 100);
+    }
+
     public static function paidTotalForCharge(Charge $charge): float
     {
         $directPaid = (float) Payment::query()
@@ -39,7 +45,7 @@ class FinanceReconcile
             return 0.0;
         }
 
-        return max(0, (float) $charge->amount - self::paidTotalForCharge($charge));
+        return max(0, (self::cents($charge->amount) - self::cents(self::paidTotalForCharge($charge))) / 100);
     }
 
     public static function syncCharge(Charge $charge): Charge
@@ -53,9 +59,9 @@ class FinanceReconcile
         $paidTotal = self::paidTotalForCharge($charge);
         $amount = (float) $charge->amount;
 
-        if ($paidTotal >= $amount && $amount > 0) {
+        if (self::cents($paidTotal) >= self::cents($amount) && self::cents($amount) > 0) {
             $nextStatus = 'paid';
-        } elseif ($paidTotal > 0) {
+        } elseif (self::cents($paidTotal) > 0) {
             $nextStatus = 'partial';
         } elseif ($charge->due_date && $charge->due_date->lt(today())) {
             // Vence al terminar el día de vencimiento (hora de Caracas), no al empezar. #368
