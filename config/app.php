@@ -62,11 +62,15 @@ return [
     | Here you may specify the default timezone for your application, which
     | will be used by the PHP date and date-time functions. ON English opera
     | en Venezuela: "hoy", vencimientos y tareas programadas van en hora de
-    | Caracas (#368).
+    | Caracas (#368). Va fija, sin .env: la conexión MySQL usa -04:00 y una
+    | zona distinta guardaría horas corridas. Las tareas programadas (recordatorios,
+    | alertas, mensualidades) corren en esta misma hora (#410).
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'America/Caracas'),
+    'timezone' => 'America/Caracas',
+
+    'schedule_timezone' => 'America/Caracas',
 
     /*
     |--------------------------------------------------------------------------

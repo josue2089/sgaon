@@ -92,6 +92,26 @@ class CaracasTimezoneTest extends TestCase
         }
     }
 
+    public function test_timezone_does_not_depend_on_env(): void
+    {
+        $previous = getenv('APP_TIMEZONE');
+        putenv('APP_TIMEZONE=UTC');
+        $_ENV['APP_TIMEZONE'] = $_SERVER['APP_TIMEZONE'] = 'UTC';
+        try {
+            $config = require config_path('app.php');
+        } finally {
+            $previous === false ? putenv('APP_TIMEZONE') : putenv("APP_TIMEZONE={$previous}");
+            unset($_ENV['APP_TIMEZONE'], $_SERVER['APP_TIMEZONE']);
+        }
+
+        $this->assertSame('America/Caracas', $config['timezone']);
+        $this->assertSame('America/Caracas', $config['schedule_timezone']);
+
+        $reminder = collect(app(Schedule::class)->events())->first(fn ($event) => str_contains($event->command, 'finance:send-payment-reminders'));
+        $this->assertSame('0 7 * * *', $reminder->expression);
+        $this->assertSame('America/Caracas', (string) $reminder->timezone);
+    }
+
     public function test_shifts_old_utc_datetimes_once_and_keeps_local_ones(): void
     {
         $old = Payment::create(['campus_id' => $this->campus->id, 'student_id' => $this->student->id, 'amount' => 40, 'currency' => 'USD', 'paid_at' => '2026-10-10', 'status' => 'confirmed']);
