@@ -247,6 +247,10 @@
                         @endif
                     </div>
                     <div><strong>Referencia:</strong> {{ $paymentRequest->reference ?: 'Sin referencia' }}</div>
+                    @if($paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_PENDING_VALIDATION
+                        && ($duplicatePayment = \App\Services\PaymentRegistrationService::findDuplicateReference($paymentRequest->reference, $paymentRequest->payment_method_id)))
+                        <div class="field-error">Atención: esta referencia ya está en el pago {{ $duplicatePayment->receipt?->receipt_number ?? '#'.$duplicatePayment->id }} del {{ $duplicatePayment->paid_at?->format('d/m/Y') }}. Revisa que no sea el mismo comprobante.</div>
+                    @endif
                     @if($paymentRequest->payment_method)
                         <div><strong>Método declarado:</strong> {{ $paymentRequest->payment_method }}</div>
                     @endif
@@ -263,19 +267,21 @@
                         <h4>Decisión</h4>
                         @if($paymentRequest->status === \App\Models\ChargePaymentRequest::STATUS_PENDING_VALIDATION)
                             <div class="finance-payment-request-actions-row">
-                                <form method="POST" action="{{ route('finance.payment-requests.review', $paymentRequest) }}" class="finance-payment-action-form">
+                                <form method="POST" action="{{ route('finance.payment-requests.review', $paymentRequest) }}" class="finance-payment-action-form" data-guard-submit>
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="action" value="approve">
-                                    <button class="btn" type="submit">Aprobar</button>
+                                    <label class="finance-reject-label" for="approve-paid-at-{{ $paymentRequest->id }}">Fecha del pago</label>
+                                    <input type="date" id="approve-paid-at-{{ $paymentRequest->id }}" name="paid_at" required max="{{ now()->toDateString() }}" value="{{ ($paymentRequest->submitted_at ?? now())->toDateString() }}">
+                                    <button class="btn" type="submit" data-submit-busy-label="Aprobando…">Aprobar</button>
                                 </form>
-                                <form method="POST" action="{{ route('finance.payment-requests.review', $paymentRequest) }}" class="finance-payment-action-form finance-payment-reject-form">
+                                <form method="POST" action="{{ route('finance.payment-requests.review', $paymentRequest) }}" class="finance-payment-action-form finance-payment-reject-form" data-guard-submit>
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="action" value="reject">
                                     <label class="finance-reject-label" for="reject-reason-{{ $paymentRequest->id }}">Motivo de rechazo</label>
-                                    <textarea id="reject-reason-{{ $paymentRequest->id }}" name="rejection_reason" rows="2" placeholder="Solo si rechazas — describe el problema del comprobante"></textarea>
-                                    <button class="btn secondary" type="submit">Rechazar</button>
+                                    <input id="reject-reason-{{ $paymentRequest->id }}" name="rejection_reason" required maxlength="500" list="reject-reasons" placeholder="Elige o escribe el motivo (se le envía a la familia)">
+                                    <button class="btn secondary" type="submit" data-submit-busy-label="Rechazando…">Rechazar</button>
                                 </form>
                             </div>
                         @else
@@ -314,6 +320,13 @@
     @if($paymentRequests->hasPages())
         {{ $paymentRequests->links() }}
     @endif
+    <datalist id="reject-reasons">
+        <option value="El monto del comprobante no coincide con el cargo.">
+        <option value="No se encontró la transferencia en la cuenta.">
+        <option value="El comprobante no se lee bien. Envíalo de nuevo, por favor.">
+        <option value="La referencia ya fue usada en otro pago.">
+        <option value="El comprobante corresponde a otro alumno o a otro cargo.">
+    </datalist>
 </div>
 @endif
 

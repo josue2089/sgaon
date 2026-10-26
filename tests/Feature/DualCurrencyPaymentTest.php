@@ -160,6 +160,7 @@ class DualCurrencyPaymentTest extends TestCase
 
         $response = $this->actingAs($admin)->patch(route('finance.payment-requests.review', $paymentRequest), [
             'action' => 'approve',
+            'paid_at' => now()->toDateString(),
         ]);
 
         $response->assertRedirect();

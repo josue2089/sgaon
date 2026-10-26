@@ -13,6 +13,7 @@
     action="{{ $formAction }}"
     id="{{ $formId }}"
     data-finance-payment-form
+    data-guard-submit
     @if($lockStudent) data-student-locked="true" @endif
     @if($lockStudent && $studentId) data-student-id="{{ $studentId }}" @endif
 >
@@ -75,8 +76,12 @@
         <input type="date" name="paid_at" value="{{ old('paid_at', now()->toDateString()) }}">
     </div>
     <div>
-        <label>Referencia</label>
-        <input name="reference" value="{{ old('reference') }}">
+        <label for="{{ $formId }}-reference">Referencia</label>
+        <input id="{{ $formId }}-reference" name="reference" value="{{ old('reference') }}">
+        @error('reference')
+            <div class="field-error" role="alert">{{ $message }}</div>
+            <label class="checkbox-inline"><input type="checkbox" name="allow_duplicate_reference" value="1"> Registrar de todos modos</label>
+        @enderror
     </div>
-    <button class="btn" type="submit">Registrar pago</button>
+    <button class="btn" type="submit" data-submit-busy-label="Registrando pago…">Registrar pago</button>
 </form>
