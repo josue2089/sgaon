@@ -119,4 +119,13 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    | Las respuestas de los representantes van al correo de ON English, no a la cuenta que envía.
+    | El "from" se mantiene en la cuenta autenticada para no caer en spam (SPF/DMARC). #409
+    */
+    'reply_to' => [
+        'address' => env('MAIL_REPLY_TO_ADDRESS', 'onenglishweb@gmail.com'),
+        'name' => env('MAIL_REPLY_TO_NAME', 'ON English'),
+    ],
+
 ];
