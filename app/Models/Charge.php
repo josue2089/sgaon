@@ -52,6 +52,21 @@ class Charge extends Model
         return $this->currencyCode() === PaymentCurrencyConverter::CURRENCY_EUR;
     }
 
+    public function isMakeup(): bool
+    {
+        return $this->charge_type === 'makeup' || (bool) $this->makeup_request_id;
+    }
+
+    /** Ya hay un comprobante esperando validación, por el portal o por la recuperativa. #436 */
+    public function hasPaymentInValidation(): bool
+    {
+        if ($this->paymentRequests->contains('status', ChargePaymentRequest::STATUS_PENDING_VALIDATION)) {
+            return true;
+        }
+
+        return $this->makeup_request_id && $this->makeupRequest?->status === MakeupRequest::STATUS_PENDING_VALIDATION;
+    }
+
     public function voidedBy()
     {
         return $this->belongsTo(User::class, 'voided_by');

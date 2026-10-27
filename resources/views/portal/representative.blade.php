@@ -41,8 +41,8 @@
                 <div class="summary-value">{{ $tabCounts['pagos'] }}</div>
             </div>
             <div class="card summary-card">
-                <div class="summary-label">Saldo</div>
-                <div class="summary-value">{{ MoneyFormat::usd($student->charges->sum('amount') - $student->payments->sum('amount')) }}</div>
+                <div class="summary-label">Saldo pendiente</div>
+                @include('partials.portal.balance', ['balance' => \App\Support\FinanceReconcile::outstandingByCurrency($student->charges)])
             </div>
         </div>
 
@@ -59,13 +59,17 @@
                     <h4 class="section-title section-title-sm">Resumen financiero</h4>
                     <div class="table-wrap">
                         <table class="data-table">
-                            <thead><tr><th>Cargos</th><th>Pagos</th><th>Saldo</th></tr></thead>
+                            <thead><tr><th>Cargo</th><th>Vence</th><th>Pendiente</th></tr></thead>
                             <tbody>
-                                <tr>
-                                    <td>{{ MoneyFormat::usd($student->charges->sum('amount')) }}</td>
-                                    <td>{{ MoneyFormat::usd($student->payments->sum('amount')) }}</td>
-                                    <td>{{ MoneyFormat::usd($student->charges->sum('amount') - $student->payments->sum('amount')) }}</td>
-                                </tr>
+                                @forelse($pendingCharges as $charge)
+                                    <tr>
+                                        <td>{{ $charge->concept }}</td>
+                                        <td>{{ $charge->due_date?->format('d/m/Y') ?? 'N/D' }}</td>
+                                        <td>{{ MoneyFormat::formatLedgerAmount(\App\Support\FinanceReconcile::outstandingForCharge($charge), $charge->currencyCode()) }}</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="3"><div class="empty-state-inline">Sin saldo pendiente.</div></td></tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -129,16 +133,19 @@
                     @else
                         <div class="table-wrap">
                             <table class="data-table">
-                                <thead><tr><th>Cargo</th><th>Monto</th><th>Estado</th><th>Comprobante</th></tr></thead>
+                                <thead><tr><th>Cargo</th><th>Pendiente</th><th>Estado</th><th>Comprobante</th></tr></thead>
                                 <tbody>
                                 @foreach($pendingCharges as $charge)
                                     @php($chargeBalance = \App\Support\FinanceReconcile::outstandingForCharge($charge))
                                     <tr>
                                         <td>{{ $charge->concept }}</td>
-                                        <td>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</td>
+                                        <td>{{ MoneyFormat::formatLedgerAmount($chargeBalance, $charge->currencyCode()) }}</td>
                                         <td>@include('partials.ui.status', ['status' => $charge->status])</td>
                                         <td>
-                                            <form method="POST" action="{{ route('portal.representative.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs">
+                                            @if($charge->hasPaymentInValidation())
+                                                @include('partials.portal.charge-payment-state')
+                                            @else
+                                            <form method="POST" action="{{ route('portal.representative.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs" data-guard-submit>
                                                 @csrf
                                                 @include('partials.payment-currency-fields', [
                                                     'prefix' => 'rep-charge-'.$charge->id,
@@ -153,6 +160,7 @@
                                                 <input name="notes" placeholder="Observaciones">
                                                 <button class="btn secondary" type="submit">Enviar comprobante</button>
                                             </form>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

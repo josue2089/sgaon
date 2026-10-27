@@ -21,8 +21,8 @@
 <div class="summary-grid student-summary-grid">
     <div class="card summary-card"><div class="summary-label">Inscripciones</div><div class="summary-value">{{ $enrollments->count() }}</div></div>
     <div class="card summary-card"><div class="summary-label">Recuperativas abiertas</div><div class="summary-value">{{ $makeupRequests->whereIn('status', ['pending_payment','pending_validation','approved_for_booking','booked'])->count() }}</div></div>
-    <div class="card summary-card"><div class="summary-label">Cargos</div><div class="summary-value">{{ MoneyFormat::usd($charges->sum('amount')) }}</div></div>
-    <div class="card summary-card"><div class="summary-label">Pagos</div><div class="summary-value">{{ MoneyFormat::usd($payments->sum('amount')) }}</div></div>
+    <div class="card summary-card"><div class="summary-label">Cargos pendientes</div><div class="summary-value">{{ $pendingCharges->count() }}</div></div>
+    <div class="card summary-card"><div class="summary-label">Saldo pendiente</div>@include('partials.portal.balance')</div>
 </div>
 
 <div class="portal-tabs" role="tablist" aria-label="Secciones del portal del alumno">
@@ -166,7 +166,7 @@
                     <div class="makeup-student-pane">
                         <h4>Pago / Reposo</h4>
                         @if(in_array($makeupRequest->status, ['pending_payment','pending_validation','rejected'], true))
-                            <form method="POST" action="{{ route('portal.student.makeups.payment', $makeupRequest) }}" enctype="multipart/form-data" class="stack-xs">@csrf<div><label>Comprobante</label><input type="file" name="payment_proof" required></div><label class="checkbox-inline"><input type="checkbox" name="medical_support_required" value="1"> Con reposo ($5)</label><div><label>Reposo médico (opcional)</label><input type="file" name="medical_support"></div><input name="payment_notes" placeholder="Observación o referencia"><button class="btn secondary" type="submit">Enviar comprobante</button></form>
+                            <form method="POST" action="{{ route('portal.student.makeups.payment', $makeupRequest) }}" enctype="multipart/form-data" class="stack-xs" data-guard-submit>@csrf<div><label>Comprobante</label><input type="file" name="payment_proof" required></div><label class="checkbox-inline"><input type="checkbox" name="medical_support_required" value="1"> Con reposo ($5)</label><div><label>Reposo médico (opcional)</label><input type="file" name="medical_support"></div><input name="payment_notes" placeholder="Observación o referencia"><button class="btn secondary" type="submit">Enviar comprobante</button></form>
                         @else
                             <div class="table-sub">Pago enviado: {{ $makeupRequest->payment_proof ? 'Sí' : 'No' }}</div><div class="table-sub">Reposo: {{ $makeupRequest->medical_support_attachment ? 'Sí' : 'No' }}</div>
                         @endif
@@ -227,19 +227,25 @@
                 </div>
                 <div class="charge-pending-meta">
                     @php($chargeBalance = \App\Support\FinanceReconcile::outstandingForCharge($charge))
-                    <div><strong>Saldo pendiente:</strong> {{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</div>
+                    <div><strong>Saldo pendiente:</strong> {{ \App\Support\MoneyFormat::formatLedgerAmount($chargeBalance, $charge->currencyCode()) }}</div>
                 </div>
+                @php($canSubmitProof = ! $charge->hasPaymentInValidation() && ! $charge->isMakeup())
                 <div class="charge-pending-actions">
-                    <button type="button" class="btn secondary" onclick="document.getElementById('charge-pay-dialog-{{ $charge->id }}').showModal()">Enviar comprobante</button>
+                    @if($canSubmitProof)
+                        <button type="button" class="btn secondary" onclick="document.getElementById('charge-pay-dialog-{{ $charge->id }}').showModal()">Enviar comprobante</button>
+                    @else
+                        @include('partials.portal.charge-payment-state')
+                    @endif
                 </div>
             </article>
+            @if($canSubmitProof)
             <dialog id="charge-pay-dialog-{{ $charge->id }}" class="charge-pay-dialog">
                 <div class="charge-pay-dialog-head">
                     <h3 class="charge-pay-dialog-title">Enviar comprobante</h3>
                     <button type="button" class="charge-pay-dialog-close" onclick="document.getElementById('charge-pay-dialog-{{ $charge->id }}').close()" aria-label="Cerrar">&times;</button>
                 </div>
-                <p class="charge-pay-dialog-summary">{{ $charge->concept }} · <strong>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</strong> pendiente</p>
-                <form method="POST" action="{{ route('portal.student.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs charge-pay-form">
+                <p class="charge-pay-dialog-summary">{{ $charge->concept }} · <strong>{{ \App\Support\MoneyFormat::formatLedgerAmount($chargeBalance, $charge->currencyCode()) }}</strong> pendiente</p>
+                <form method="POST" action="{{ route('portal.student.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs charge-pay-form" data-guard-submit>
                     @csrf
                     @include('partials.payment-currency-fields', [
                         'prefix' => 'charge-'.$charge->id,
@@ -267,6 +273,7 @@
                     </div>
                 </form>
             </dialog>
+            @endif
         @empty
             <div class="empty-state-inline">No tienes cargos pendientes por pagar.</div>
         @endforelse
