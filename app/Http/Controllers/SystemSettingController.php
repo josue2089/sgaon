@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SystemSetting;
 use App\Support\AuditTrail;
+use App\Support\MakeupRecoveryEngine;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,6 +18,7 @@ class SystemSettingController extends Controller
     {
         return view('settings.makeup-payment-instructions', [
             'instructions' => SystemSetting::getValue('makeup_payment_instructions', ''),
+            'dueDays' => MakeupRecoveryEngine::chargeDueDays(),
         ]);
     }
 
@@ -24,9 +26,11 @@ class SystemSettingController extends Controller
     {
         $data = $request->validate([
             'instructions' => ['nullable', 'string', 'max:8000'],
+            'due_days' => ['required', 'integer', 'min:0', 'max:60'],
         ]);
 
         SystemSetting::putValue('makeup_payment_instructions', $data['instructions'] ?? null);
+        SystemSetting::putValue(MakeupRecoveryEngine::CHARGE_DUE_DAYS_KEY, (string) $data['due_days']);
 
         return back()->with('success', 'Instrucciones de pago actualizadas.');
     }

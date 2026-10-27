@@ -41,7 +41,15 @@ class AttendanceController extends Controller
 
         $sessionId = $request->integer('class_session_id');
         $session = $sessionId ? (clone $sessionsQuery)->where('id', $sessionId)->first() : null;
-        $enrollments = $session ? Enrollment::with(['student.representatives'])->where('group_id', $session->group_id)->get() : collect();
+        // Solo inscripciones activas, más las que ya tienen registro en esta clase (historial). #437
+        $enrollments = $session
+            ? Enrollment::with(['student.representatives'])
+                ->where('group_id', $session->group_id)
+                ->where(fn ($query) => $query
+                    ->where('status', 'active')
+                    ->orWhereHas('attendanceRecords', fn ($records) => $records->where('class_session_id', $session->id)))
+                ->get()
+            : collect();
 
         $records = $session
             ? AttendanceRecord::where('class_session_id', $session->id)->get()->keyBy('enrollment_id')
@@ -224,6 +232,20 @@ class AttendanceController extends Controller
                 ->withErrors(['class_session_id' => 'La asistencia solo puede registrarse el día de la sesión o después.']);
         }
 
+        $enrollmentIds = collect($data['records'])->pluck('enrollment_id')->map(fn ($id) => (int) $id)->unique();
+        $validIds = Enrollment::query()
+            ->where('group_id', $session->group_id)
+            ->whereIn('id', $enrollmentIds)
+            ->where(fn ($query) => $query
+                ->where('status', 'active')
+                ->orWhereHas('attendanceRecords', fn ($records) => $records->where('class_session_id', $session->id)))
+            ->pluck('id');
+        if ($enrollmentIds->diff($validIds)->isNotEmpty()) {
+            return redirect()
+                ->route('attendance.index', ['class_session_id' => $session->id])
+                ->withErrors(['records' => 'Hay alumnos que no pertenecen a esta clase o ya no están inscritos.']);
+        }
+
         ClassSession::where('id', $data['class_session_id'])->update([
             'topic' => $data['topic'] ?? null,
             'program_status' => $data['program_status'] ?? null,
@@ -242,7 +264,7 @@ class AttendanceController extends Controller
                     'notes' => $entry['notes'] ?? null,
                 ],
             );
-            MakeupRecoveryEngine::syncForAttendanceRecord($record);
+            MakeupRecoveryEngine::syncForAttendanceRecord($record, $request->user());
             $written++;
         }
 

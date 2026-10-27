@@ -16,9 +16,9 @@ class ChargeVoidService
 
     /**
      * Anula un cargo sin borrarlo: deja de sumar saldo, alertas y recordatorios.
-     * Solo se permite si no tiene pagos vigentes aplicados.
+     * Solo se permite si no tiene pagos vigentes aplicados. Sin usuario cuando lo anula el sistema (#437).
      */
-    public function void(Charge $charge, User $user, string $reason, ?Request $request = null): Charge
+    public function void(Charge $charge, ?User $user, string $reason, ?Request $request = null): Charge
     {
         if ($charge->voided_at) {
             throw ValidationException::withMessages([
@@ -34,7 +34,7 @@ class ChargeVoidService
 
         $charge->update([
             'voided_at' => now(),
-            'voided_by' => $user->id,
+            'voided_by' => $user?->id,
             'void_reason' => $reason,
             'status' => self::VOID_STATUS,
         ]);
