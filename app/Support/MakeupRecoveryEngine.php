@@ -9,6 +9,7 @@ use App\Mail\MakeupRecoveryRejectedMail;
 use App\Models\Alert;
 use App\Models\AttendanceRecord;
 use App\Models\Charge;
+use App\Models\ChargePaymentRequest;
 use App\Models\Enrollment;
 use App\Models\MakeupBooking;
 use App\Models\MakeupRequest;
@@ -16,6 +17,9 @@ use App\Models\MakeupSession;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
 use App\Models\Receipt;
+use App\Models\SystemSetting;
+use App\Models\User;
+use App\Services\ChargeVoidService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -23,7 +27,17 @@ use Illuminate\Validation\ValidationException;
 
 class MakeupRecoveryEngine
 {
-    public static function syncForAttendanceRecord(AttendanceRecord $record): ?MakeupRequest
+    public const CHARGE_DUE_DAYS_KEY = 'makeup.charge_due_days';
+
+    public const CHARGE_DUE_DAYS_DEFAULT = 7;
+
+    /** Días que tiene la familia para pagar la recuperativa, contados desde la inasistencia. #437 */
+    public static function chargeDueDays(): int
+    {
+        return max(0, (int) SystemSetting::getValue(self::CHARGE_DUE_DAYS_KEY, (string) self::CHARGE_DUE_DAYS_DEFAULT));
+    }
+
+    public static function syncForAttendanceRecord(AttendanceRecord $record, ?User $actor = null): ?MakeupRequest
     {
         $record->loadMissing([
             'enrollment.student',
@@ -33,6 +47,8 @@ class MakeupRecoveryEngine
         ]);
 
         if (! in_array($record->status, [AttendanceRecord::STATUS_ABSENT, AttendanceRecord::STATUS_JUSTIFIED], true)) {
+            self::cancelForCorrectedAttendance($record, $actor);
+
             return null;
         }
 
@@ -48,6 +64,11 @@ class MakeupRecoveryEngine
         $request = MakeupRequest::firstOrNew([
             'attendance_record_id' => $record->id,
         ]);
+
+        // Volvió a quedar ausente después de una corrección: la solicitud cancelada se reabre con un cargo nuevo.
+        if ($request->exists && $request->status === MakeupRequest::STATUS_CANCELLED && (! $request->charge || $request->charge->voided_at)) {
+            $request->forceFill(['status' => MakeupRequest::STATUS_PENDING_PAYMENT, 'charge_id' => null, 'payment_id' => null, 'validated_at' => null]);
+        }
 
         $request->fill([
             'campus_id' => $student->campus_id,
@@ -74,7 +95,7 @@ class MakeupRecoveryEngine
                 'billing_period_label' => $course->period?->code,
                 'origin' => 'makeup_recovery',
                 'amount' => $request->price,
-                'due_date' => now()->toDateString(),
+                'due_date' => ($session->session_date ?? today())->copy()->addDays(self::chargeDueDays())->toDateString(),
                 'status' => 'pending',
                 'notes' => 'Generado automáticamente por inasistencia.',
             ]);
@@ -263,7 +284,8 @@ class MakeupRecoveryEngine
             ->where('charge_id', $charge->id)
             ->when($charge->makeup_request_id, fn ($query) => $query->orWhere('id', $charge->makeup_request_id))
             ->first();
-        if (! $request) {
+        if (! $request || ($request->charge_id && (int) $request->charge_id !== (int) $charge->id)) {
+            // Cargo anterior de una solicitud que ya tiene otro (p. ej. reabierta tras corregir asistencia).
             return null;
         }
 
@@ -317,6 +339,36 @@ class MakeupRecoveryEngine
         }
 
         return null;
+    }
+
+    /**
+     * El profesor corrigió una inasistencia (A/J → P/T). Si la recuperativa aún espera pago, se anula el
+     * cargo y se cancela la solicitud. Si ya hay pago, reserva o clase dada, no se toca. #437
+     */
+    private static function cancelForCorrectedAttendance(AttendanceRecord $record, ?User $actor): void
+    {
+        $request = MakeupRequest::query()->with('charge')->where('attendance_record_id', $record->id)->first();
+        if (! $request || ! in_array($request->status, [MakeupRequest::STATUS_PENDING_PAYMENT, MakeupRequest::STATUS_PENDING_VALIDATION], true)) {
+            return;
+        }
+
+        $charge = $request->charge;
+        if ($charge && ! $charge->voided_at) {
+            if (FinanceReconcile::paidTotalForCharge($charge) > 0) {
+                return;
+            }
+            ChargePaymentRequest::query()
+                ->where('charge_id', $charge->id)
+                ->where('status', ChargePaymentRequest::STATUS_PENDING_VALIDATION)
+                ->update(['status' => ChargePaymentRequest::STATUS_REJECTED, 'rejection_reason' => 'Se corrigió la asistencia: no hubo inasistencia.', 'validated_at' => now(), 'validated_by' => $actor?->id]);
+            app(ChargeVoidService::class)->void($charge, $actor, 'Asistencia corregida: el alumno no faltó.');
+        }
+
+        // Sin cargo, o cargo anulado sin pasar por syncWithCharge.
+        if ($request->fresh()->status !== MakeupRequest::STATUS_CANCELLED) {
+            $request->forceFill(['status' => MakeupRequest::STATUS_CANCELLED])->save();
+            self::syncAlertStatus($request->student_id);
+        }
     }
 
     public static function reject(MakeupRequest $request, ?string $reason = null): void

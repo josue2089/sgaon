@@ -121,6 +121,9 @@ class PaymentRegistrationService
             }
 
             $charge = Charge::query()->lockForUpdate()->findOrFail($locked->charge_id);
+            if ($charge->voided_at) {
+                throw ValidationException::withMessages(['action' => 'El cargo de esta solicitud fue anulado. Recházala indicando el motivo.']);
+            }
             $otherCharges = Charge::query()
                 ->lockForUpdate()
                 ->where('student_id', $locked->student_id)
