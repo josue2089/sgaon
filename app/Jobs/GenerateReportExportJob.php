@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use App\Support\CampusScope;
 use App\Support\PrivateFiles;
 
 class GenerateReportExportJob implements ShouldQueue
@@ -37,9 +38,7 @@ class GenerateReportExportJob implements ShouldQueue
             if ($export->type === 'attendance') {
                 fputcsv($handle, ['date', 'group', 'student', 'status', 'notes']);
                 $query = AttendanceRecord::query()->with(['classSession.group', 'enrollment.student']);
-                if ($export->campus_id) {
-                    $query->whereHas('classSession', fn ($q) => $q->where('campus_id', $export->campus_id));
-                }
+                $query->whereHas('classSession', fn ($q) => $this->scopeCampus($q, $export));
                 if (! empty($filters['from'])) {
                     $query->whereHas('classSession', fn ($q) => $q->whereDate('session_date', '>=', $filters['from']));
                 }
@@ -62,9 +61,7 @@ class GenerateReportExportJob implements ShouldQueue
             } elseif ($export->type === 'payments') {
                 fputcsv($handle, ['student', 'concept', 'amount', 'status', 'paid', 'balance']);
                 $chargesQuery = Charge::query()->with(['student', 'payments']);
-                if ($export->campus_id) {
-                    $chargesQuery->where('campus_id', $export->campus_id);
-                }
+                $this->scopeCampus($chargesQuery, $export);
                 if (! empty($filters['status'])) {
                     $chargesQuery->where('status', $filters['status']);
                 }
@@ -87,9 +84,7 @@ class GenerateReportExportJob implements ShouldQueue
                 fputcsv($handle, []);
                 fputcsv($handle, ['student', 'paid_at', 'currency', 'original_amount', 'exchange_rate', 'amount_usd', 'method', 'reference']);
                 $paymentsQuery = \App\Models\Payment::query()->whereNull('voided_at')->with(['student'])->latest();
-                if ($export->campus_id) {
-                    $paymentsQuery->where('campus_id', $export->campus_id);
-                }
+                $this->scopeCampus($paymentsQuery, $export);
                 foreach ($paymentsQuery->cursor() as $payment) {
                     fputcsv($handle, [
                         $payment->student->full_name ?? '',
@@ -121,5 +116,15 @@ class GenerateReportExportJob implements ShouldQueue
                 'error_message' => $exception->getMessage(),
             ]);
         }
+    }
+
+    /** Sede elegida en la exportación y, siempre, solo las sedes del usuario que la pidió. #439 */
+    private function scopeCampus($query, ReportExport $export)
+    {
+        if ($export->campus_id) {
+            $query->where('campus_id', $export->campus_id);
+        }
+
+        return CampusScope::apply($query, $export->user);
     }
 }

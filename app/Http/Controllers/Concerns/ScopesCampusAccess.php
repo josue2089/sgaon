@@ -14,9 +14,39 @@ trait ScopesCampusAccess
         return request()->user();
     }
 
-    protected function campusId(): ?int
+    /** El usuario está limitado a ciertas sedes (no ve todas). */
+    protected function campusScoped(): bool
     {
-        return CampusScope::campusIdFor($this->campusUser());
+        return CampusScope::allowedCampusIds($this->campusUser()) !== null;
+    }
+
+    protected function canAccessCampus(?int $campusId): bool
+    {
+        return CampusScope::userCanAccessCampus($this->campusUser(), $campusId);
+    }
+
+    /**
+     * Sede para guardar un registro: con una sola sede se fuerza esa; con varias, la pedida debe estar
+     * entre las permitidas. Null = no cambiar (usuario sin límite que no envió sede). #439
+     */
+    protected function writableCampusId(int|string|null $requested, ?int $fallback = null): ?int
+    {
+        $requested = $requested !== null && $requested !== '' ? (int) $requested : null;
+        $allowed = CampusScope::allowedCampusIds($this->campusUser());
+
+        if ($allowed === null) {
+            return $requested ?? $fallback;
+        }
+        if (count($allowed) === 1) {
+            return $allowed[0];
+        }
+
+        $campusId = $requested ?? $fallback;
+        if ($campusId === null || ! in_array($campusId, $allowed, true)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['campus_id' => 'Selecciona una de tus sedes.']);
+        }
+
+        return $campusId;
     }
 
     protected function primaryCampusId(): ?int
@@ -29,7 +59,7 @@ trait ScopesCampusAccess
         return CampusScope::singleAllowedCampusId($this->campusUser());
     }
 
-    protected function applyCampusScope(Builder $query, string $column = 'campus_id'): Builder
+    protected function applyCampusScope(mixed $query, string $column = 'campus_id'): mixed
     {
         return CampusScope::apply($query, $this->campusUser(), $column);
     }

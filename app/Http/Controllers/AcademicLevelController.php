@@ -12,16 +12,13 @@ use Illuminate\View\View;
 
 class AcademicLevelController extends Controller
 {
-    private function campusId(): ?int
-    {
-        return \App\Support\CampusScope::campusIdFor(request()->user());
-    }
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
 
     public function index(Request $request): View
     {
         $query = AcademicLevel::query()
             ->with('campus')
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->orderBy('sort_order')
             ->orderBy('name');
 
@@ -46,7 +43,7 @@ class AcademicLevelController extends Controller
         return view('academic_levels.create', [
             'level' => new AcademicLevel(),
             'campuses' => Campus::query()
-                ->when($this->campusId(), fn (Builder $builder) => $builder->where('id', $this->campusId()))
+                ->tap(fn ($builder) => $this->applyCampusScope($builder, 'id'))
                 ->orderBy('name')
                 ->get(),
         ]);
@@ -55,8 +52,8 @@ class AcademicLevelController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatedData($request);
-        if ($this->campusId()) {
-            $data['campus_id'] = $this->campusId();
+        if (($writableCampusId = $this->writableCampusId($data['campus_id'] ?? null)) !== null) {
+            $data['campus_id'] = $writableCampusId;
         }
 
         AcademicLevel::create($data);
@@ -69,7 +66,7 @@ class AcademicLevelController extends Controller
         return view('academic_levels.edit', [
             'level' => $academicLevel,
             'campuses' => Campus::query()
-                ->when($this->campusId(), fn (Builder $builder) => $builder->where('id', $this->campusId()))
+                ->tap(fn ($builder) => $this->applyCampusScope($builder, 'id'))
                 ->orderBy('name')
                 ->get(),
         ]);
@@ -78,8 +75,8 @@ class AcademicLevelController extends Controller
     public function update(Request $request, AcademicLevel $academicLevel): RedirectResponse
     {
         $data = $this->validatedData($request, $academicLevel);
-        if ($this->campusId()) {
-            $data['campus_id'] = $this->campusId();
+        if (($writableCampusId = $this->writableCampusId($data['campus_id'] ?? null)) !== null) {
+            $data['campus_id'] = $writableCampusId;
         }
 
         $academicLevel->update($data);
@@ -96,7 +93,7 @@ class AcademicLevelController extends Controller
 
     private function validatedData(Request $request, ?AcademicLevel $level = null): array
     {
-        $campusId = $this->campusId() ?: $request->integer('campus_id');
+        $campusId = $this->singleAllowedCampusId() ?: $request->integer('campus_id');
 
         return $request->validate([
             'campus_id' => ['required', 'exists:campuses,id'],

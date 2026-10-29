@@ -13,27 +13,23 @@ use RuntimeException;
 
 class StudentImportController extends Controller
 {
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
+
     private const SESSION_KEY = 'student_import_preview';
 
     public function __construct(
         private readonly StudentBulkImportService $importService,
     ) {}
 
-    private function scopedCampusId(): ?int
-    {
-        return \App\Support\CampusScope::campusIdFor(request()->user());
-    }
 
     public function create(Request $request): View
     {
         $campuses = Campus::query()->where('status', 'active')->orderBy('name');
-        if ($this->scopedCampusId()) {
-            $campuses->where('id', $this->scopedCampusId());
-        }
+        $this->applyCampusScope($campuses, 'id');
 
         return view('students.import', [
             'campuses' => $campuses->get(),
-            'defaultCampusId' => $this->scopedCampusId() ?? $request->user()?->campus_id,
+            'defaultCampusId' => $this->singleAllowedCampusId() ?? $request->user()?->campus_id,
             'isMaster' => $request->user()?->isMasterAdmin() ?? false,
             'preview' => null,
         ]);
@@ -65,9 +61,7 @@ class StudentImportController extends Controller
         ]);
 
         $campuses = Campus::query()->where('status', 'active')->orderBy('name');
-        if ($this->scopedCampusId()) {
-            $campuses->where('id', $this->scopedCampusId());
-        }
+        $this->applyCampusScope($campuses, 'id');
 
         return view('students.import', [
             'campuses' => $campuses->get(),
@@ -119,8 +113,7 @@ class StudentImportController extends Controller
 
     private function authorizeCampus(int $campusId): void
     {
-        $scoped = $this->scopedCampusId();
-        if ($scoped !== null && $scoped !== $campusId) {
+        if (! $this->canAccessCampus($campusId)) {
             abort(403);
         }
     }

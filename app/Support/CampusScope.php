@@ -4,6 +4,8 @@ namespace App\Support;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 class CampusScope
 {
@@ -27,20 +29,6 @@ class CampusScope
         $ids = array_merge($ids, $user->teachingCampusIds());
 
         return array_values(array_unique($ids));
-    }
-
-    /**
-     * @deprecated Prefer allowedCampusIds() + apply(). Returns single campus id for legacy callers, or null when all/multiple.
-     */
-    public static function campusIdFor(?User $user): ?int
-    {
-        $allowed = self::allowedCampusIds($user);
-
-        if ($allowed === null || count($allowed) !== 1) {
-            return null;
-        }
-
-        return $allowed[0];
     }
 
     public static function userCanAccessCampus(?User $user, ?int $campusId): bool
@@ -80,7 +68,16 @@ class CampusScope
         return $allowed[0] ?? null;
     }
 
-    public static function apply(Builder $query, ?User $user, string $column = 'campus_id'): Builder
+    /**
+     * Filtra por las sedes del usuario. Con varias sedes usa whereIn; nunca deja la consulta sin filtro
+     * salvo para quien accede a todas. #439
+     *
+     * @template TQuery of Builder|Relation|QueryBuilder
+     *
+     * @param  TQuery  $query
+     * @return TQuery
+     */
+    public static function apply(Builder|Relation|QueryBuilder $query, ?User $user, string $column = 'campus_id'): Builder|Relation|QueryBuilder
     {
         $allowed = self::allowedCampusIds($user);
 

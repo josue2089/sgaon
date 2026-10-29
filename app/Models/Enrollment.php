@@ -70,4 +70,28 @@ class Enrollment extends Model
     {
         return $this->hasMany(GradeEntry::class);
     }
+
+    /**
+     * Borra la inscripción si no tiene historial. Con asistencia o cargos solo la marca como retirada,
+     * con una nota. Devuelve true si se borró. #439
+     */
+    public function deleteOrWithdraw(string $reason): bool
+    {
+        $this->loadCount(['attendanceRecords', 'charges']);
+
+        if ($this->attendance_records_count > 0 || $this->charges_count > 0) {
+            $notes = trim((string) $this->notes);
+            $auditNote = $reason.' el '.now()->format('d/m/Y H:i');
+            $this->update([
+                'status' => 'withdrawn',
+                'notes' => $notes === '' ? $auditNote : $notes."\n".$auditNote,
+            ]);
+
+            return false;
+        }
+
+        $this->delete();
+
+        return true;
+    }
 }

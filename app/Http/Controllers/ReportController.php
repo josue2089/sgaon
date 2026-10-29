@@ -19,16 +19,13 @@ use Illuminate\View\View;
 
 class ReportController extends Controller
 {
-    private function campusId(Request $request): ?int
-    {
-        return \App\Support\CampusScope::campusIdFor($request->user());
-    }
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
 
     public function attendance(Request $request): View|StreamedResponse
     {
         $query = AttendanceRecord::query()->with(['classSession.group', 'enrollment.student']);
-        if ($this->campusId($request)) {
-            $query->whereHas('classSession', fn ($q) => $q->where('campus_id', $this->campusId($request)));
+        if ($this->campusScoped()) {
+            $query->whereHas('classSession', fn ($q) => $this->applyCampusScope($q));
         }
 
         if ($request->filled('from')) {
@@ -51,7 +48,7 @@ class ReportController extends Controller
         return view('reports.attendance', [
             'records' => $query->latest()->paginate(40)->withQueryString(),
             'groups' => \App\Models\Group::query()
-                ->when($this->campusId($request), fn ($builder) => $builder->where('campus_id', $this->campusId($request)))
+                ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
                 ->orderBy('name')
                 ->get(['id', 'name']),
             'presets' => ReportPreset::query()
@@ -71,8 +68,8 @@ class ReportController extends Controller
     public function payments(Request $request): View|StreamedResponse
     {
         $query = Charge::with(['student', 'payments', 'course', 'group', 'period'])->latest();
-        if ($this->campusId($request)) {
-            $query->where('campus_id', $this->campusId($request));
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($query, 'campus_id');
         }
 
         if ($request->filled('status')) {
@@ -100,15 +97,15 @@ class ReportController extends Controller
         }
 
         $paymentsQuery = Payment::query()->whereNull('voided_at')->with(['student', 'paymentMethod'])->latest();
-        if ($this->campusId($request)) {
-            $paymentsQuery->where('campus_id', $this->campusId($request));
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($paymentsQuery, 'campus_id');
         }
 
         return view('reports.payments', [
             'charges' => $query->paginate(40)->withQueryString(),
             'recentPayments' => $paymentsQuery->take(50)->get(),
             'periods' => \App\Models\Period::query()
-                ->when($this->campusId($request), fn ($builder) => $builder->where('campus_id', $this->campusId($request)))
+                ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
                 ->orderBy('code')
                 ->get(['id', 'code']),
             'presets' => ReportPreset::query()
@@ -128,8 +125,8 @@ class ReportController extends Controller
     public function audit(): View
     {
         $query = AuditLog::with('user')->latest();
-        if ($this->campusId(request())) {
-            $query->whereHas('user', fn ($q) => $q->where('campus_id', $this->campusId(request())));
+        if ($this->campusScoped()) {
+            $query->whereHas('user', fn ($q) => $this->applyCampusScope($q));
         }
 
         return view('reports.audit', [
@@ -144,8 +141,8 @@ class ReportController extends Controller
             ->where('type', 'level_renewal')
             ->latest();
 
-        if ($this->campusId($request)) {
-            $query->where('campus_id', $this->campusId($request));
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($query, 'campus_id');
         }
 
         $status = (string) $request->query('status', '');
@@ -171,8 +168,8 @@ class ReportController extends Controller
         $alerts = $query->paginate(40)->withQueryString();
 
         $summaryQuery = Alert::query()->where('type', 'level_renewal');
-        if ($this->campusId($request)) {
-            $summaryQuery->where('campus_id', $this->campusId($request));
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($summaryQuery, 'campus_id');
         }
 
         return view('reports.level-renewals', [
@@ -385,7 +382,7 @@ class ReportController extends Controller
 
         $export = ReportExport::create([
             'user_id' => $request->user()->id,
-            'campus_id' => $this->campusId($request),
+            'campus_id' => $this->singleAllowedCampusId(),
             'type' => $data['type'],
             'filters' => $filters,
             'status' => 'pending',
@@ -429,8 +426,8 @@ class ReportController extends Controller
     private function paymentsDetailCsv(Request $request): StreamedResponse
     {
         $query = Payment::query()->whereNull('voided_at')->with(['student'])->latest();
-        if ($this->campusId($request)) {
-            $query->where('campus_id', $this->campusId($request));
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($query, 'campus_id');
         }
 
         return response()->streamDownload(function () use ($query): void {

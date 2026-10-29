@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Alert;
 use App\Models\AttendanceRecord;
 use App\Models\Charge;
 use App\Models\ClassSession;
@@ -40,7 +39,7 @@ class DashboardController extends Controller
         $coursesQuery = CampusScope::apply(Course::query(), $user);
         $groupsQuery = CampusScope::apply(Group::query(), $user);
         $chargesQuery = CampusScope::apply(Charge::where('status', '!=', 'paid'), $user);
-        $alertsQuery = CampusScope::apply(Alert::where('status', 'open'), $user);
+        $alertsQuery = \App\Support\AlertVisibility::openFor($user);
         $attendanceQuery = AttendanceRecord::query();
         $paymentsQuery = CampusScope::apply(Payment::query()->whereNull('voided_at'), $user);
         $monthChargesQuery = CampusScope::apply(
@@ -234,6 +233,19 @@ class DashboardController extends Controller
             'attendanceByTeacher' => $attendanceByTeacherQuery->take(5)->get(),
             'attendanceByGroup' => $attendanceByGroupQuery->take(5)->get(),
             'teacherGradeCourses' => $teacherGradeCourses,
+            'isTeacherView' => (bool) $teacher,
+            'weekSessionsTotal' => (int) $weekCounts->sum(),
+            'pendingAttendanceCount' => $teacher ? $this->pendingAttendanceCount($teacher) : 0,
         ]);
+    }
+
+    /** Clases del profesor de los últimos 14 días (hasta hoy) que aún no tienen asistencia. #439 */
+    private function pendingAttendanceCount(Teacher $teacher): int
+    {
+        return ClassSession::query()
+            ->whereHas('group', fn ($q) => $q->where('teacher_id', $teacher->id))
+            ->whereBetween('session_date', [today()->subDays(14)->toDateString(), today()->toDateString()])
+            ->whereDoesntHave('attendanceRecords')
+            ->count();
     }
 }

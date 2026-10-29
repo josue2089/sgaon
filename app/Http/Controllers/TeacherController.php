@@ -23,18 +23,15 @@ use Illuminate\View\View;
 
 class TeacherController extends Controller
 {
-    private function campusId(): ?int
-    {
-        return CampusScope::campusIdFor(request()->user());
-    }
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
 
     public function index(Request $request): View
     {
         $query = Teacher::query()->with('campus')->latest();
         $baseStatsQuery = Teacher::query();
-        if ($this->campusId()) {
-            $query->where('campus_id', $this->campusId());
-            $baseStatsQuery->where('campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($query, 'campus_id');
+            $this->applyCampusScope($baseStatsQuery, 'campus_id');
         }
 
         $q = trim((string) $request->query('q', ''));
@@ -81,7 +78,7 @@ class TeacherController extends Controller
 
         $specialties = DB::table('groups')
             ->join('courses', 'courses.id', '=', 'groups.course_id')
-            ->when($this->campusId(), fn ($builder) => $builder->where('groups.campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'groups.campus_id'))
             ->distinct()
             ->orderBy('courses.name')
             ->pluck('courses.name');
@@ -115,7 +112,7 @@ class TeacherController extends Controller
 
         $teachers = Teacher::query()
             ->with('campus')
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->where('status', 'active')
             ->orderBy('first_name')
             ->orderBy('last_name')
@@ -123,7 +120,7 @@ class TeacherController extends Controller
 
         $scheduleTemplates = ScheduleTemplate::query()
             ->where('status', 'active')
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->orderBy('starts_at')
             ->orderBy('ends_at')
             ->get();
@@ -133,8 +130,8 @@ class TeacherController extends Controller
             ->with(['group.course.programLevel', 'group.teacher'])
             ->whereHas('group', function (Builder $builder) use ($teacherIds): void {
                 $builder->whereIn('teacher_id', $teacherIds);
-                if ($this->campusId()) {
-                    $builder->where('campus_id', $this->campusId());
+                if ($this->campusScoped()) {
+                    $this->applyCampusScope($builder, 'campus_id');
                 }
             })
             ->whereBetween('session_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
@@ -253,7 +250,7 @@ class TeacherController extends Controller
                 'managedGroup.sessions' => fn ($query) => $query->withCount('attendanceRecords')->orderBy('sequence')->orderBy('session_date'),
             ])
             ->where('teacher_id', $teacher->id)
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->orderByDesc('start_date')
             ->orderByDesc('id')
             ->get();
@@ -289,7 +286,7 @@ class TeacherController extends Controller
             ->join('groups', 'groups.id', '=', 'class_sessions.group_id')
             ->join('attendance_records', 'attendance_records.class_session_id', '=', 'class_sessions.id')
             ->where('groups.teacher_id', $teacher->id)
-            ->when($this->campusId(), fn ($builder) => $builder->where('groups.campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'groups.campus_id'))
             ->selectRaw(
                 "ROUND((SUM(CASE WHEN attendance_records.status = 'present' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100) as attendance_rate"
             )
@@ -297,15 +294,15 @@ class TeacherController extends Controller
 
         $financeTotal = Charge::query()
             ->whereHas('course', fn (Builder $builder) => $builder->where('teacher_id', $teacher->id))
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->sum('amount');
 
         $upcomingSessions = ClassSession::query()
             ->with(['group.course.programLevel', 'group.course.courseLevel'])
             ->whereHas('group', function (Builder $builder) use ($teacher): void {
                 $builder->where('teacher_id', $teacher->id);
-                if ($this->campusId()) {
-                    $builder->where('campus_id', $this->campusId());
+                if ($this->campusScoped()) {
+                    $this->applyCampusScope($builder, 'campus_id');
                 }
             })
             ->whereDate('session_date', '>=', now()->toDateString())
@@ -325,8 +322,8 @@ class TeacherController extends Controller
             ->with(['group.course.programLevel'])
             ->whereHas('group', function (Builder $builder) use ($teacher): void {
                 $builder->where('teacher_id', $teacher->id);
-                if ($this->campusId()) {
-                    $builder->where('campus_id', $this->campusId());
+                if ($this->campusScoped()) {
+                    $this->applyCampusScope($builder, 'campus_id');
                 }
             })
             ->whereBetween('session_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
@@ -410,8 +407,8 @@ class TeacherController extends Controller
     public function create(): View
     {
         $campuses = Campus::orderBy('name');
-        if ($this->campusId()) {
-            $campuses->where('id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($campuses, 'id');
         }
 
         return view('teachers.create', ['campuses' => $campuses->get()]);
@@ -430,8 +427,8 @@ class TeacherController extends Controller
             'profile_photo' => ['nullable', 'image', 'max:5120'],
         ]);
 
-        if ($this->campusId()) {
-            $data['campus_id'] = $this->campusId();
+        if (($writableCampusId = $this->writableCampusId($data['campus_id'] ?? null)) !== null) {
+            $data['campus_id'] = $writableCampusId;
         }
 
         if ($request->hasFile('profile_photo')) {
@@ -449,8 +446,8 @@ class TeacherController extends Controller
         $this->authorizeTeacher($teacher);
 
         $campuses = Campus::orderBy('name');
-        if ($this->campusId()) {
-            $campuses->where('id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($campuses, 'id');
         }
 
         return view('teachers.edit', [
@@ -481,8 +478,8 @@ class TeacherController extends Controller
             'profile_photo' => ['nullable', 'image', 'max:5120'],
         ]);
 
-        if ($this->campusId()) {
-            $data['campus_id'] = $this->campusId();
+        if (($writableCampusId = $this->writableCampusId($data['campus_id'] ?? null)) !== null) {
+            $data['campus_id'] = $writableCampusId;
         }
 
         if ($request->hasFile('profile_photo')) {
@@ -533,7 +530,7 @@ class TeacherController extends Controller
 
     private function authorizeTeacher(Teacher $teacher): void
     {
-        if ($this->campusId() && (int) $teacher->campus_id !== (int) $this->campusId()) {
+        if (! $this->canAccessCampus((int) $teacher->campus_id)) {
             abort(403);
         }
     }
