@@ -24,6 +24,7 @@ use App\Services\Bcv\ExchangeRateService;
 use App\Services\ChargeRegistrationService;
 use App\Services\PaymentRegistrationService;
 use App\Support\PaymentCurrencyConverter;
+use App\Support\PrivateFiles;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Support\StudentSearch;
 use Illuminate\Database\Eloquent\Builder;
@@ -395,11 +396,11 @@ class StudentController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:160'],
             'category' => ['nullable', 'string', 'max:80'],
-            'file' => ['required', 'file', 'max:10240'],
+            'file' => ['required', 'file', 'max:10240', PrivateFiles::DOCUMENT_RULE],
         ]);
 
         $file = $request->file('file');
-        $path = $file->store('student-attachments/'.$student->id, 'public');
+        $path = PrivateFiles::store($file, 'student-attachments/'.$student->id);
 
         $attachment = $student->attachments()->create([
             'title' => $data['title'],
@@ -426,7 +427,7 @@ class StudentController extends Controller
             abort(404);
         }
 
-        return Storage::disk('public')->download($attachment->file_path, $attachment->original_name);
+        return PrivateFiles::download($attachment->file_path, $attachment->original_name);
     }
 
     public function destroyAttachment(Request $request, Student $student, StudentAttachment $attachment): RedirectResponse
@@ -436,7 +437,7 @@ class StudentController extends Controller
             abort(404);
         }
 
-        Storage::disk('public')->delete($attachment->file_path);
+        PrivateFiles::delete($attachment->file_path);
         AuditTrail::log($request, 'student.attachment.delete', $attachment, [
             'title' => $attachment->title,
             'original_name' => $attachment->original_name,

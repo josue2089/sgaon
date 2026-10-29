@@ -11,9 +11,9 @@ use App\Models\Payment;
 use App\Models\ReportExport;
 use App\Models\ReportPreset;
 use App\Support\FinanceReconcile;
+use App\Support\PrivateFiles;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\View\View;
 
@@ -401,11 +401,11 @@ class ReportController extends Controller
         if ((int) $export->user_id !== (int) $request->user()->id) {
             abort(403);
         }
-        if ($export->status !== 'done' || ! $export->file_path || ! Storage::disk('public')->exists($export->file_path)) {
+        if ($export->status !== 'done' || ! PrivateFiles::exists($export->file_path)) {
             return back()->withErrors(['export' => 'El archivo aún no está disponible.']);
         }
 
-        return Storage::disk('public')->download($export->file_path);
+        return PrivateFiles::download($export->file_path);
     }
 
     private function attendanceCsv($records): StreamedResponse

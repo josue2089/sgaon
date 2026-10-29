@@ -160,7 +160,7 @@
                         <div class="table-sub">
                             Pago:
                             @if($makeupRequest->payment_proof)
-                                <a href="{{ \Illuminate\Support\Facades\Storage::url($makeupRequest->payment_proof->file_path) }}" target="_blank">Ver archivo</a>
+                                <a href="{{ route('files.makeup-attachment', $makeupRequest->payment_proof) }}" target="_blank" rel="noopener">Ver archivo</a>
                             @else
                                 No
                             @endif
@@ -168,7 +168,7 @@
                         <div class="table-sub">
                             Reposo:
                             @if($makeupRequest->medical_support_attachment)
-                                <a href="{{ \Illuminate\Support\Facades\Storage::url($makeupRequest->medical_support_attachment->file_path) }}" target="_blank">Ver archivo</a>
+                                <a href="{{ route('files.makeup-attachment', $makeupRequest->medical_support_attachment) }}" target="_blank" rel="noopener">Ver archivo</a>
                             @else
                                 No
                             @endif

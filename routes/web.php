@@ -49,6 +49,9 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/api/finance/exchange-rate', [\App\Http\Controllers\ExchangeRateController::class, 'latest'])->name('finance.exchange-rate');
+    // Archivos privados: el controlador verifica sede, alumno o representante. #438
+    Route::get('/files/payment-proofs/{paymentRequest}', [\App\Http\Controllers\PrivateFileController::class, 'paymentProof'])->name('files.payment-proof');
+    Route::get('/files/makeup-attachments/{attachment}', [\App\Http\Controllers\PrivateFileController::class, 'makeupAttachment'])->name('files.makeup-attachment');
 
     Route::middleware('role:admin')->group(function () {
         Route::get('/students/import', [StudentImportController::class, 'create'])->name('students.import');

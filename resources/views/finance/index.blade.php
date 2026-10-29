@@ -210,7 +210,7 @@
     <div class="finance-payment-request-list">
         @forelse($paymentRequests as $paymentRequest)
             @php
-                $proofUrl = asset('storage/'.$paymentRequest->proof_path);
+                $proofUrl = route('files.payment-proof', $paymentRequest);
                 $proofMime = strtolower((string) ($paymentRequest->proof_mime_type ?? ''));
                 $proofExt = strtolower(pathinfo((string) $paymentRequest->proof_path, PATHINFO_EXTENSION));
                 $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'svg'];
