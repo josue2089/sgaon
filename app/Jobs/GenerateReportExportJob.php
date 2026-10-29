@@ -10,7 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
+use App\Support\PrivateFiles;
 
 class GenerateReportExportJob implements ShouldQueue
 {
@@ -107,7 +107,7 @@ class GenerateReportExportJob implements ShouldQueue
             }
 
             rewind($handle);
-            Storage::disk('public')->put($filename, stream_get_contents($handle));
+            PrivateFiles::put($filename, stream_get_contents($handle));
             fclose($handle);
 
             $export->update([

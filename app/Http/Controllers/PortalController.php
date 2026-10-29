@@ -16,11 +16,11 @@ use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
 use App\Support\FinanceReconcile;
 use App\Support\PaymentSubmission;
+use App\Support\PrivateFiles;
 use App\Support\MakeupRecoveryEngine;
 use App\Support\RenewalEnrollmentEligibility;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -231,12 +231,19 @@ class PortalController extends Controller
         $data = $request->validate([
             'payment_notes' => ['nullable', 'string'],
             'medical_support_required' => ['nullable', 'boolean'],
-            'payment_proof' => ['required', 'file', 'max:10240'],
-            'medical_support' => ['nullable', 'file', 'max:10240'],
+            'payment_proof' => ['required', 'file', 'max:10240', PrivateFiles::PROOF_RULE],
+            'medical_support' => ['nullable', 'file', 'max:10240', PrivateFiles::PROOF_RULE],
         ]);
 
+        $medicalSupportRequired = (bool) ($request->boolean('medical_support_required'));
+        if ($medicalSupportRequired && ! $request->hasFile('medical_support')) {
+            return back()->withErrors([
+                'medical_support' => 'Debes cargar el reposo para aplicar la tarifa reducida.',
+            ])->withInput();
+        }
+
         $paymentProof = $request->file('payment_proof');
-        $proofPath = $paymentProof->store('makeup-requests/'.$makeupRequest->id, 'public');
+        $proofPath = PrivateFiles::store($paymentProof, 'makeup-requests/'.$makeupRequest->id);
         $makeupRequest->attachments()->create([
             'category' => 'payment_proof',
             'title' => 'Comprobante de pago',
@@ -246,21 +253,15 @@ class PortalController extends Controller
             'file_size' => $paymentProof->getSize(),
         ]);
 
-        $medicalSupportRequired = (bool) ($request->boolean('medical_support_required'));
-        if ($medicalSupportRequired && ! $request->hasFile('medical_support')) {
-            return back()->withErrors([
-                'medical_support' => 'Debes cargar el reposo para aplicar la tarifa reducida.',
-            ])->withInput();
-        }
         $makeupRequest->medical_support_required = $medicalSupportRequired;
         $makeupRequest->payment_notes = $data['payment_notes'] ?? null;
 
         if ($medicalSupportRequired && $request->hasFile('medical_support')) {
             if ($makeupRequest->medical_support_path) {
-                Storage::disk('public')->delete($makeupRequest->medical_support_path);
+                PrivateFiles::delete($makeupRequest->medical_support_path);
             }
             $medicalSupport = $request->file('medical_support');
-            $medicalPath = $medicalSupport->store('makeup-requests/'.$makeupRequest->id, 'public');
+            $medicalPath = PrivateFiles::store($medicalSupport, 'makeup-requests/'.$makeupRequest->id);
             $makeupRequest->medical_support_path = $medicalPath;
             $makeupRequest->attachments()->create([
                 'category' => 'medical_support',
@@ -392,13 +393,13 @@ class PortalController extends Controller
         }
 
         $request->validate([
-            'payment_proof' => ['required', 'file', 'max:10240'],
+            'payment_proof' => ['required', 'file', 'max:10240', PrivateFiles::PROOF_RULE],
         ]);
 
         $payload = PaymentSubmission::validatedCurrencyPayload($request, $charge);
 
         $proof = $request->file('payment_proof');
-        $proofPath = $proof->store('charge-payment-requests/'.$charge->id, 'public');
+        $proofPath = PrivateFiles::store($proof, 'charge-payment-requests/'.$charge->id);
 
         ChargePaymentRequest::create([
             'campus_id' => $charge->campus_id,
