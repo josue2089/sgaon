@@ -42,6 +42,9 @@
             <div><strong>Etapa:</strong> {{ $course->level?->name ?? 'N/D' }}</div>
             <div><strong>Programa:</strong> {{ $course->program?->name ?? 'N/D' }}</div>
             <div><strong>Nivel real:</strong> {{ $course->programLevel ? $course->programLevel->sort_order.'/'.$course->programLevel->program_total.' · '.$course->programLevel->name : ($course->courseLevel?->name ?? 'N/D') }}</div>
+            @if($course->programLevel?->cefrSummary())
+                <div><strong>Equivalencia:</strong> {{ $course->programLevel->cefrSummary() }}@if($course->programLevel->book) · {{ $course->programLevel->book }}@endif</div>
+            @endif
             <div><strong>Precio base:</strong>
                 @php $resolvedPrice = $course->programLevel?->resolvedBasePriceEur(); @endphp
                 @if($resolvedPrice)

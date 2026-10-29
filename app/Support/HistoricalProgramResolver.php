@@ -19,6 +19,12 @@ class HistoricalProgramResolver
         $normalized = Str::upper(Str::ascii(trim($levelCode)));
         $normalized = preg_replace('/\s+/', ' ', $normalized) ?? $normalized;
 
+        // Basic User / Independent User / Prof User son del programa de adultos (#469). Si aún no existe,
+        // BU sigue cayendo en Primary como antes.
+        if ($this->matchesAdults($normalized) && ($adultsId = $this->programIdByCode(Program::ADULTS_CODE))) {
+            return $adultsId;
+        }
+
         if ($this->matchesPrePrimary($normalized)) {
             return $this->programId('Pre-Primary');
         }
@@ -57,6 +63,14 @@ class HistoricalProgramResolver
             || str_contains($code, 'BASIC USER');
     }
 
+    private function matchesAdults(string $code): bool
+    {
+        return (bool) preg_match('/^(BU|IU|PU)\s?\d/', $code)
+            || str_contains($code, 'BASIC USER')
+            || str_contains($code, 'INDEPENDENT USER')
+            || str_contains($code, 'PROF USER');
+    }
+
     private function matchesHighSchool(string $code): bool
     {
         return str_starts_with($code, 'HS')
@@ -67,6 +81,11 @@ class HistoricalProgramResolver
     private function matchesRobotics(string $code): bool
     {
         return str_contains($code, 'ROBOT');
+    }
+
+    private function programIdByCode(string $code): ?int
+    {
+        return Program::query()->where('code', $code)->value('id');
     }
 
     private function programId(string $name): ?int

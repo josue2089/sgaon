@@ -9,6 +9,9 @@ class Program extends Model
 {
     use HasFactory;
 
+    /** Programa de adultos "Basic User – Prof. Use" (#469). */
+    public const ADULTS_CODE = 'BUPU';
+
     protected $fillable = [
         'name',
         'code',
@@ -16,6 +19,10 @@ class Program extends Model
         'description',
         'base_price_eur',
         'is_extracurricular',
+        'audience',
+        'age_min',
+        'age_max',
+        'uses_cefr',
     ];
 
     protected function casts(): array
@@ -23,6 +30,9 @@ class Program extends Model
         return [
             'base_price_eur' => 'float',
             'is_extracurricular' => 'boolean',
+            'uses_cefr' => 'boolean',
+            'age_min' => 'integer',
+            'age_max' => 'integer',
         ];
     }
 

@@ -523,6 +523,7 @@ class StudentController extends Controller
                 ? (($currentCourseLevel->sort_order ?? $currentCourseLevel->scale_position).'/'.($currentCourseLevel->program_total ?? $currentCourseLevel->scale_total))
                 : 'N/D',
             'current_level_name' => $currentCourseLevel?->name ?? 'Sin nivel asignado',
+            'current_level_cefr' => $currentCourseLevel instanceof \App\Models\ProgramLevel ? $currentCourseLevel->cefrSummary() : null,
             'next_level_name' => $nextCourseLevel?->name ?? 'N/D',
             'completion_date' => $currentCourse?->end_date,
             'reminder_date' => ($currentCourse?->end_date && $currentCourseLevel)

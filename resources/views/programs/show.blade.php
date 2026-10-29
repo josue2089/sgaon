@@ -54,6 +54,7 @@
                     <th>Orden</th>
                     <th>Nivel</th>
                     <th>Código</th>
+                    <th>CEFR / GSE</th>
                     <th>Horas</th>
                     <th>Clases base</th>
                     <th>Cursos</th>
@@ -70,6 +71,11 @@
                             <div class="table-sub">{{ $level->description ?: 'Sin descripción' }}</div>
                         </td>
                         <td>{{ $level->code }}</td>
+                        <td>
+                            {{ $level->cefr_label ?: '—' }}
+                            @if($level->gse_min && $level->gse_max)<div class="table-sub">GSE {{ $level->gse_min }}–{{ $level->gse_max }}</div>@endif
+                            @if($level->book)<div class="table-sub">{{ $level->book }}</div>@endif
+                        </td>
                         <td>{{ $level->academic_hours }}</td>
                         <td>{{ $level->lessons_count }}</td>
                         <td>{{ $level->courses_count }}</td>
