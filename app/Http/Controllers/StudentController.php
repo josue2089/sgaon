@@ -293,9 +293,7 @@ class StudentController extends Controller
     {
         $data = $this->validatedData($request);
 
-        if ($this->singleAllowedCampusId()) {
-            $data['campus_id'] = $this->singleAllowedCampusId();
-        }
+        $data['campus_id'] = $this->writableCampusId($data['campus_id'] ?? null);
 
         $data['phone'] = ($data['phone'] ?? null) ?: ($data['mobile_phone'] ?? null);
 
@@ -349,9 +347,7 @@ class StudentController extends Controller
     {
         $data = $this->validatedData($request);
 
-        if ($this->singleAllowedCampusId()) {
-            $data['campus_id'] = $this->singleAllowedCampusId();
-        }
+        $data['campus_id'] = $this->writableCampusId($data['campus_id'] ?? null);
 
         $data['phone'] = ($data['phone'] ?? null) ?: ($data['mobile_phone'] ?? null);
 

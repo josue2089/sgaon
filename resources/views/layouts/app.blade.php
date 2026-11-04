@@ -12,10 +12,7 @@
 @php
     $currentRoute = request()->route()?->getName();
     $user = auth()->user();
-    $alertsQuery = \App\Support\CampusScope::apply(
-        \App\Models\Alert::query()->where('status', 'open'),
-        $user
-    );
+    $alertsQuery = \App\Support\AlertVisibility::openFor($user);
     $openAlertsCount = (clone $alertsQuery)->count();
     $openAlerts = (clone $alertsQuery)->latest()->take(5)->get();
     $hasRoute = static fn (string $name): bool => \Illuminate\Support\Facades\Route::has($name);

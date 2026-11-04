@@ -8,7 +8,11 @@
     </div>
     <div class="soft-kpi-grid dashboard-achievements">
         @include('partials.ui.soft-kpi', ['label' => 'Mejor Asistencia', 'value' => is_null($bestGroupRate) ? 'N/D' : $bestGroupRate.'%', 'subtitle' => $bestGroup?->name ? 'Grupo '.$bestGroup->name : 'Sin data'])
-        @include('partials.ui.soft-kpi', ['label' => 'Pagos del Mes', 'value' => is_null($paymentsRate) ? 'N/D' : $paymentsRate.'%', 'subtitle' => MoneyFormat::usd($paymentsMonthAmount).' recaudado'])
+        @if($isTeacherView)
+            @include('partials.ui.soft-kpi', ['label' => 'Clases esta semana', 'value' => $weekSessionsTotal, 'subtitle' => 'En tus grupos'])
+        @else
+            @include('partials.ui.soft-kpi', ['label' => 'Pagos del Mes', 'value' => is_null($paymentsRate) ? 'N/D' : $paymentsRate.'%', 'subtitle' => MoneyFormat::usd($paymentsMonthAmount).' recaudado'])
+        @endif
         @include('partials.ui.soft-kpi', ['label' => 'Asistencia del Mes', 'value' => is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%', 'subtitle' => 'Presentes sobre registros'])
     </div>
 </div>
@@ -40,7 +44,11 @@
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'teacher', 'label' => 'Profesores', 'value' => $teachersCount, 'subtitle' => auth()->user()?->isMasterAdmin() ? 'Todas las sedes' : null])
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'book', 'label' => 'Cursos', 'value' => $coursesCount])
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'check', 'label' => 'Asistencia', 'value' => is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%'])
-    @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'payment', 'label' => 'Pagos Mes', 'value' => MoneyFormat::usd($paymentsMonthAmount)])
+    @if($isTeacherView)
+        @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'check', 'label' => 'Asistencias pendientes', 'value' => $pendingAttendanceCount, 'subtitle' => 'Últimos 14 días'])
+    @else
+        @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'payment', 'label' => 'Pagos Mes', 'value' => MoneyFormat::usd($paymentsMonthAmount)])
+    @endif
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'iconName' => 'alert', 'label' => 'Alertas', 'value' => $openAlertsCount])
 </div>
 

@@ -17,6 +17,8 @@ use RuntimeException;
 
 class HistoricalStudentController extends Controller
 {
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
+
     private const SESSION_KEY = 'historical_student_import_preview';
 
     /** @var list<string> */
@@ -26,10 +28,6 @@ class HistoricalStudentController extends Controller
         private readonly HistoricalStudentImportService $importService,
     ) {}
 
-    private function scopedCampusId(): ?int
-    {
-        return \App\Support\CampusScope::campusIdFor(request()->user());
-    }
 
     public function index(Request $request): View
     {
@@ -38,18 +36,14 @@ class HistoricalStudentController extends Controller
             ->with(['campus', 'registrationProgram']);
 
         $baseStatsQuery = Student::query()->whereIn('status', self::HISTORICAL_STATUSES);
-        if ($this->scopedCampusId()) {
-            $baseStatsQuery->where('campus_id', $this->scopedCampusId());
-        }
+        $this->applyCampusScope($baseStatsQuery);
 
         $campuses = Campus::query()->where('status', 'active')->orderBy('name');
-        if ($this->scopedCampusId()) {
-            $campuses->where('id', $this->scopedCampusId());
-        }
+        $this->applyCampusScope($campuses, 'id');
 
         $years = Student::query()
             ->whereIn('status', self::HISTORICAL_STATUSES)
-            ->when($this->scopedCampusId(), fn (Builder $q) => $q->where('campus_id', $this->scopedCampusId()))
+            ->tap(fn ($q) => $this->applyCampusScope($q))
             ->whereNotNull('enrollment_date')
             ->pluck('enrollment_date')
             ->map(fn ($date) => (int) \Carbon\Carbon::parse($date)->format('Y'))
@@ -76,13 +70,11 @@ class HistoricalStudentController extends Controller
     public function importForm(Request $request): View
     {
         $campuses = Campus::query()->where('status', 'active')->orderBy('name');
-        if ($this->scopedCampusId()) {
-            $campuses->where('id', $this->scopedCampusId());
-        }
+        $this->applyCampusScope($campuses, 'id');
 
         return view('students.historical.import', [
             'campuses' => $campuses->get(),
-            'defaultCampusId' => $this->scopedCampusId() ?? $request->user()?->campus_id,
+            'defaultCampusId' => $this->singleAllowedCampusId() ?? $request->user()?->campus_id,
             'isMaster' => $request->user()?->isMasterAdmin() ?? false,
             'preview' => null,
         ]);
@@ -117,13 +109,11 @@ class HistoricalStudentController extends Controller
         ]);
 
         $campuses = Campus::query()->where('status', 'active')->orderBy('name');
-        if ($this->scopedCampusId()) {
-            $campuses->where('id', $this->scopedCampusId());
-        }
+        $this->applyCampusScope($campuses, 'id');
 
         return view('students.historical.import', [
             'campuses' => $campuses->get(),
-            'defaultCampusId' => $campusId ?? $this->scopedCampusId() ?? $request->user()?->campus_id,
+            'defaultCampusId' => $campusId ?? $this->singleAllowedCampusId() ?? $request->user()?->campus_id,
             'isMaster' => $request->user()?->isMasterAdmin() ?? false,
             'preview' => $preview,
         ]);
@@ -188,8 +178,7 @@ class HistoricalStudentController extends Controller
             abort(404);
         }
 
-        $scoped = $this->scopedCampusId();
-        if ($scoped !== null && $student->campus_id !== $scoped) {
+        if (! $this->canAccessCampus((int) $student->campus_id)) {
             abort(403);
         }
     }
@@ -216,10 +205,8 @@ class HistoricalStudentController extends Controller
             ->whereIn('status', self::HISTORICAL_STATUSES)
             ->latest('enrollment_date');
 
-        $scoped = $this->scopedCampusId();
-        if ($scoped) {
-            $query->where('campus_id', $scoped);
-        } elseif ($filters['campus_id'] !== '') {
+        $this->applyCampusScope($query);
+        if ($filters['campus_id'] !== '') {
             $query->where('campus_id', (int) $filters['campus_id']);
         }
 
@@ -248,8 +235,7 @@ class HistoricalStudentController extends Controller
 
     private function authorizeCampus(int $campusId): void
     {
-        $scoped = $this->scopedCampusId();
-        if ($scoped !== null && $scoped !== $campusId) {
+        if (! $this->canAccessCampus($campusId)) {
             abort(403);
         }
     }

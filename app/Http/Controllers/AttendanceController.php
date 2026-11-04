@@ -20,17 +20,14 @@ use Illuminate\View\View;
 
 class AttendanceController extends Controller
 {
-    private function campusId(Request $request): ?int
-    {
-        return \App\Support\CampusScope::campusIdFor($request->user());
-    }
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
 
     public function index(Request $request): View
     {
         $user = $request->user();
         $sessionsQuery = ClassSession::with('group');
-        if ($this->campusId($request)) {
-            $sessionsQuery->where('campus_id', $this->campusId($request));
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($sessionsQuery, 'campus_id');
         }
 
         if ($user?->role === 'teacher') {
@@ -200,9 +197,9 @@ class AttendanceController extends Controller
             }
         }
 
-        if ($this->campusId($request)) {
+        if ($this->campusScoped()) {
             $sessionCampusMatches = ClassSession::where('id', $sessionId)
-                ->where('campus_id', $this->campusId($request))
+                ->tap(fn ($builder) => $this->applyCampusScope($builder))
                 ->exists();
             if (! $sessionCampusMatches) {
                 abort(403);

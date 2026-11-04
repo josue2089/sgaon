@@ -16,16 +16,13 @@ use Illuminate\View\View;
 
 class ScheduleTemplateController extends Controller
 {
-    private function campusId(): ?int
-    {
-        return \App\Support\CampusScope::campusIdFor(request()->user());
-    }
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
 
     public function index(Request $request): View
     {
         $query = ScheduleTemplate::query()
             ->with('campus')
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->latest();
 
         $status = (string) $request->query('status', '');
@@ -53,7 +50,7 @@ class ScheduleTemplateController extends Controller
         return view('schedules.create', [
             'schedule' => new ScheduleTemplate(),
             'campuses' => Campus::query()
-                ->when($this->campusId(), fn (Builder $builder) => $builder->where('id', $this->campusId()))
+                ->tap(fn ($builder) => $this->applyCampusScope($builder, 'id'))
                 ->orderBy('name')
                 ->get(),
             'statusOptions' => ['active', 'inactive'],
@@ -75,7 +72,7 @@ class ScheduleTemplateController extends Controller
         return view('schedules.edit', [
             'schedule' => $schedule,
             'campuses' => Campus::query()
-                ->when($this->campusId(), fn (Builder $builder) => $builder->where('id', $this->campusId()))
+                ->tap(fn ($builder) => $this->applyCampusScope($builder, 'id'))
                 ->orderBy('name')
                 ->get(),
             'statusOptions' => ['active', 'inactive'],
@@ -144,8 +141,6 @@ class ScheduleTemplateController extends Controller
 
     private function validatedScheduleData(Request $request): array
     {
-        $campusId = $this->campusId();
-
         $request->merge([
             'starts_at' => $this->normalizeTimeInput($request->input('starts_at')),
             'ends_at' => $this->normalizeTimeInput($request->input('ends_at')),
@@ -160,9 +155,7 @@ class ScheduleTemplateController extends Controller
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
 
-        if ($campusId) {
-            $data['campus_id'] = $campusId;
-        }
+        $data['campus_id'] = $this->writableCampusId($data['campus_id']);
 
         $data['days'] = $this->normalizeDays($data['days']);
 

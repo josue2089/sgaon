@@ -63,8 +63,8 @@ class CourseController extends Controller
             ->with(['campus', 'level', 'program', 'programLevel', 'courseLevel', 'teacher', 'period', 'scheduleTemplate', 'managedGroup'])
             ->latest();
 
-        if ($this->campusId()) {
-            $query->where('campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($query, 'campus_id');
         }
 
         $q = trim((string) $request->query('q', ''));
@@ -118,11 +118,11 @@ class CourseController extends Controller
             : collect();
 
         $coursesCount = Course::query()
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->count();
         $totalStudents = (int) $studentsByGroup->sum();
         $plannedSessions = Course::query()
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->sum('academic_hours');
 
         $levelsQuery = AcademicLevel::query()
@@ -131,8 +131,8 @@ class CourseController extends Controller
             ->leftJoin('courses', 'courses.academic_level_id', '=', 'academic_levels.id')
             ->groupBy('academic_levels.id', 'academic_levels.name', 'academic_levels.code')
             ->orderBy('academic_levels.sort_order');
-        if ($this->campusId()) {
-            $levelsQuery->where('academic_levels.campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($levelsQuery, 'academic_levels.campus_id');
         }
 
         return view('courses.index', [
@@ -157,7 +157,7 @@ class CourseController extends Controller
                 'level' => $levelFilter,
             ],
             'levels' => AcademicLevel::query()
-                ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+                ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get(['code', 'name']),
@@ -178,8 +178,8 @@ class CourseController extends Controller
             ->unique()
             ->values();
 
-        if ($this->campusId()) {
-            $data['campus_id'] = $this->campusId();
+        if (($writableCampusId = $this->writableCampusId($data['campus_id'] ?? null)) !== null) {
+            $data['campus_id'] = $writableCampusId;
         }
 
         $course = Course::create($data);
@@ -199,7 +199,7 @@ class CourseController extends Controller
 
         $availableStudents = Student::query()
             ->when($course->campus_id, fn (Builder $builder) => $builder->where('campus_id', $course->campus_id))
-            ->when(! $course->campus_id && $this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->when(! $course->campus_id, fn (Builder $builder) => $this->applyCampusScope($builder))
             ->where('status', 'active')
             ->when(! empty($enrolledStudentIds), fn (Builder $builder) => $builder->whereNotIn('id', $enrolledStudentIds))
             ->with([
@@ -316,8 +316,8 @@ class CourseController extends Controller
             ->unique()
             ->values();
 
-        if ($this->campusId()) {
-            $data['campus_id'] = $this->campusId();
+        if (($writableCampusId = $this->writableCampusId($data['campus_id'] ?? null)) !== null) {
+            $data['campus_id'] = $writableCampusId;
         }
 
         $calendarSnapshot = $this->calendarSnapshot($course);
@@ -365,23 +365,11 @@ class CourseController extends Controller
             abort(404);
         }
 
-        $enrollment->loadCount(['attendanceRecords', 'charges']);
-
-        if ($enrollment->attendance_records_count > 0 || $enrollment->charges_count > 0) {
-            $notes = trim((string) $enrollment->notes);
-            $auditNote = 'Retirado desde detalle de curso el '.now()->format('d/m/Y H:i');
-
-            $enrollment->update([
-                'status' => 'withdrawn',
-                'notes' => $notes === '' ? $auditNote : $notes."\n".$auditNote,
-            ]);
-
+        if (! $enrollment->deleteOrWithdraw('Retirado desde detalle de curso')) {
             return redirect()
                 ->route('courses.show', $course)
                 ->with('success', 'El alumno fue marcado como retirado para preservar su historial.');
         }
-
-        $enrollment->delete();
 
         return redirect()
             ->route('courses.show', $course)
@@ -416,12 +404,12 @@ class CourseController extends Controller
         $programs = Program::query()->where('status', 'active')->orderBy('name');
         $programLevels = ProgramLevel::query()->where('status', 'active')->with('program')->orderBy('program_id')->orderBy('sort_order');
 
-        if ($this->campusId()) {
-            $campuses->where('id', $this->campusId());
-            $teachers->where('campus_id', $this->campusId());
-            $periods->where('campus_id', $this->campusId());
-            $schedules->where('campus_id', $this->campusId());
-            $students->where('campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($campuses, 'id');
+            $this->applyCampusScope($teachers, 'campus_id');
+            $this->applyCampusScope($periods, 'campus_id');
+            $this->applyCampusScope($schedules, 'campus_id');
+            $this->applyCampusScope($students, 'campus_id');
         }
 
         return [
@@ -506,7 +494,7 @@ class CourseController extends Controller
 
         foreach ($studentIds as $studentId) {
             $student = Student::query()
-                ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+                ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
                 ->findOrFail($studentId);
 
             $enrollment = Enrollment::updateOrCreate(

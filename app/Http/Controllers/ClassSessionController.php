@@ -18,18 +18,16 @@ use Illuminate\View\View;
 
 class ClassSessionController extends Controller
 {
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
+
     private const TIME_RULE = 'regex:/^\d{2}:\d{2}(:\d{2})?$/';
 
-    private function campusId(): ?int
-    {
-        return \App\Support\CampusScope::campusIdFor(request()->user());
-    }
 
     public function index(Request $request): View
     {
         $query = ClassSession::with('group.course')->latest('session_date');
-        if ($this->campusId()) {
-            $query->where('campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($query, 'campus_id');
         }
 
         $q = trim((string) $request->query('q', ''));
@@ -55,7 +53,7 @@ class ClassSessionController extends Controller
 
         $groups = Group::query()
             ->with('course')
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->orderBy('name')
             ->get(['id', 'name', 'course_id']);
 
@@ -73,8 +71,8 @@ class ClassSessionController extends Controller
     public function create(): View
     {
         $groups = Group::with('course')->orderBy('name');
-        if ($this->campusId()) {
-            $groups->where('campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($groups, 'campus_id');
         }
 
         return view('sessions.create', [
@@ -96,7 +94,7 @@ class ClassSessionController extends Controller
         $data = $this->normalizeTimes($data);
 
         $group = Group::findOrFail($data['group_id']);
-        if ($this->campusId() && (int) $group->campus_id !== (int) $this->campusId()) {
+        if (! $this->canAccessCampus((int) $group->campus_id)) {
             abort(403);
         }
         if ($group->status !== 'active') {
@@ -114,7 +112,7 @@ class ClassSessionController extends Controller
                 'session_date' => 'La sesión no puede ser después de la fecha de fin del grupo.',
             ]);
         }
-        $data['campus_id'] = $this->campusId() ?: $group->campus_id;
+        $data['campus_id'] = $this->singleAllowedCampusId() ?: $group->campus_id;
 
         if (! empty($data['starts_at']) && ClassSession::query()
             ->where('group_id', $group->id)
@@ -134,8 +132,8 @@ class ClassSessionController extends Controller
     public function edit(ClassSession $session): View
     {
         $groups = Group::with('course')->orderBy('name');
-        if ($this->campusId()) {
-            $groups->where('campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($groups, 'campus_id');
         }
 
         return view('sessions.edit', [
@@ -158,7 +156,7 @@ class ClassSessionController extends Controller
         $data = $this->normalizeTimes($data);
 
         $group = Group::findOrFail($data['group_id']);
-        if ($this->campusId() && (int) $group->campus_id !== (int) $this->campusId()) {
+        if (! $this->canAccessCampus((int) $group->campus_id)) {
             abort(403);
         }
         if ($group->status !== 'active') {
@@ -170,7 +168,7 @@ class ClassSessionController extends Controller
         $sessionDate = Carbon::parse($data['session_date'])->startOfDay();
         $rescheduler->assertDateAllowed($group, $sessionDate);
 
-        $data['campus_id'] = $this->campusId() ?: $group->campus_id;
+        $data['campus_id'] = $this->singleAllowedCampusId() ?: $group->campus_id;
 
         $previousGroupId = $session->group_id;
         DB::transaction(function () use ($session, $data, $group, $sessionDate, $rescheduler, $previousGroupId): void {

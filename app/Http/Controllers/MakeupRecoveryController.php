@@ -18,15 +18,10 @@ use Illuminate\View\View;
 
 class MakeupRecoveryController extends Controller
 {
-    private function campusId(Request $request): ?int
-    {
-        return \App\Support\CampusScope::campusIdFor($request->user());
-    }
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
 
     public function index(Request $request): View
     {
-        $campusId = $this->campusId($request);
-
         $requestsQuery = MakeupRequest::query()
             ->with([
                 'student',
@@ -53,12 +48,8 @@ class MakeupRecoveryController extends Controller
         $levelsQuery = ProgramLevel::query()->where('status', 'active')->orderBy('sort_order');
         $schedulesQuery = ScheduleTemplate::query()->where('status', 'active')->orderBy('starts_at');
 
-        if ($campusId) {
-            $requestsQuery->where('campus_id', $campusId);
-            $sessionsQuery->where('campus_id', $campusId);
-            $studentsQuery->where('campus_id', $campusId);
-            $teachersQuery->where('campus_id', $campusId);
-            $schedulesQuery->where('campus_id', $campusId);
+        foreach ([$requestsQuery, $sessionsQuery, $studentsQuery, $teachersQuery, $schedulesQuery] as $scopedQuery) {
+            $this->applyCampusScope($scopedQuery);
         }
 
         $filters = $request->validate([
@@ -87,10 +78,7 @@ class MakeupRecoveryController extends Controller
             $sessionsQuery->whereDate('session_date', $filters['session_date']);
         }
 
-        $summaryQuery = MakeupRequest::query();
-        if ($campusId) {
-            $summaryQuery->where('campus_id', $campusId);
-        }
+        $summaryQuery = $this->applyCampusScope(MakeupRequest::query());
 
         return view('makeups.index', [
             'requests' => $requestsQuery->paginate(20)->withQueryString(),
@@ -127,7 +115,7 @@ class MakeupRecoveryController extends Controller
         ]);
 
         $teacher = Teacher::findOrFail((int) $data['teacher_id']);
-        if ($this->campusId($request) && (int) $teacher->campus_id !== (int) $this->campusId($request)) {
+        if (! $this->canAccessCampus((int) $teacher->campus_id)) {
             abort(403);
         }
 
@@ -197,7 +185,7 @@ class MakeupRecoveryController extends Controller
 
     private function authorizeCampus(Request $request, ?int $campusId): void
     {
-        if ($this->campusId($request) && (int) $this->campusId($request) !== (int) $campusId) {
+        if (! $this->canAccessCampus($campusId)) {
             abort(403);
         }
     }

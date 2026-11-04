@@ -17,16 +17,13 @@ use Illuminate\View\View;
 
 class EnrollmentController extends Controller
 {
-    private function campusId(): ?int
-    {
-        return \App\Support\CampusScope::campusIdFor(request()->user());
-    }
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
 
     public function index(Request $request): View
     {
         $query = Enrollment::with(['student', 'group.course'])->latest();
-        if ($this->campusId()) {
-            $query->where('campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($query, 'campus_id');
         }
 
         $q = trim((string) $request->query('q', ''));
@@ -52,7 +49,7 @@ class EnrollmentController extends Controller
 
         $groups = Group::query()
             ->with('course')
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->orderBy('name')
             ->get(['id', 'name', 'course_id']);
 
@@ -71,9 +68,9 @@ class EnrollmentController extends Controller
     {
         $students = Student::orderBy('first_name');
         $groups = Group::with('course')->orderBy('name');
-        if ($this->campusId()) {
-            $students->where('campus_id', $this->campusId());
-            $groups->where('campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($students, 'campus_id');
+            $this->applyCampusScope($groups, 'campus_id');
         }
 
         return view('enrollments.create', [
@@ -95,10 +92,10 @@ class EnrollmentController extends Controller
 
         $student = Student::findOrFail($data['student_id']);
         $group = Group::findOrFail($data['group_id']);
-        if ($this->campusId() && (int) $student->campus_id !== (int) $this->campusId()) {
+        if (! $this->canAccessCampus((int) $student->campus_id)) {
             abort(403);
         }
-        if ($this->campusId() && (int) $group->campus_id !== (int) $this->campusId()) {
+        if (! $this->canAccessCampus((int) $group->campus_id)) {
             abort(403);
         }
         if ($group->status !== 'active') {
@@ -119,7 +116,7 @@ class EnrollmentController extends Controller
                 ]);
             }
         }
-        $data['campus_id'] = $this->campusId() ?: $student->campus_id;
+        $data['campus_id'] = $this->singleAllowedCampusId() ?: $student->campus_id;
 
         $enrollment = Enrollment::updateOrCreate(
             ['student_id' => $data['student_id'], 'group_id' => $data['group_id']],
@@ -141,9 +138,9 @@ class EnrollmentController extends Controller
     {
         $students = Student::orderBy('first_name');
         $groups = Group::with('course')->orderBy('name');
-        if ($this->campusId()) {
-            $students->where('campus_id', $this->campusId());
-            $groups->where('campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($students, 'campus_id');
+            $this->applyCampusScope($groups, 'campus_id');
         }
 
         return view('enrollments.edit', [
@@ -166,10 +163,10 @@ class EnrollmentController extends Controller
 
         $student = Student::findOrFail($data['student_id']);
         $group = Group::findOrFail($data['group_id']);
-        if ($this->campusId() && (int) $student->campus_id !== (int) $this->campusId()) {
+        if (! $this->canAccessCampus((int) $student->campus_id)) {
             abort(403);
         }
-        if ($this->campusId() && (int) $group->campus_id !== (int) $this->campusId()) {
+        if (! $this->canAccessCampus((int) $group->campus_id)) {
             abort(403);
         }
         if ($group->status !== 'active') {
@@ -200,7 +197,7 @@ class EnrollmentController extends Controller
                 ]);
             }
         }
-        $data['campus_id'] = $this->campusId() ?: $student->campus_id;
+        $data['campus_id'] = $this->singleAllowedCampusId() ?: $student->campus_id;
 
         $enrollment->update($data);
         AuditTrail::log($request, 'enrollment.update', $enrollment, $data);
@@ -210,8 +207,17 @@ class EnrollmentController extends Controller
 
     public function destroy(Enrollment $enrollment): RedirectResponse
     {
+        if (! $this->canAccessCampus((int) $enrollment->campus_id)) {
+            abort(403);
+        }
+
         $payload = ['student_id' => $enrollment->student_id, 'group_id' => $enrollment->group_id];
-        $enrollment->delete();
+        if (! $enrollment->deleteOrWithdraw('Retirado desde inscripciones')) {
+            AuditTrail::log(request(), 'enrollment.withdraw', $enrollment, $payload);
+
+            return redirect()->route('enrollments.index')
+                ->with('success', 'La inscripción tiene asistencia o cargos: se marcó como retirada para preservar su historial.');
+        }
         AuditTrail::log(request(), 'enrollment.delete', null, $payload);
 
         return redirect()->route('enrollments.index')->with('success', 'Inscripción eliminada.');

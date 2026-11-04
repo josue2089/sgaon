@@ -12,16 +12,13 @@ use Illuminate\View\View;
 
 class PeriodController extends Controller
 {
-    private function campusId(): ?int
-    {
-        return \App\Support\CampusScope::campusIdFor(request()->user());
-    }
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
 
     public function index(Request $request): View
     {
         $query = Period::query()
             ->with('campus')
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->latest();
 
         $q = trim((string) $request->query('q', ''));
@@ -52,7 +49,7 @@ class PeriodController extends Controller
         return view('periods.create', [
             'period' => new Period(),
             'campuses' => Campus::query()
-                ->when($this->campusId(), fn (Builder $builder) => $builder->where('id', $this->campusId()))
+                ->tap(fn ($builder) => $this->applyCampusScope($builder, 'id'))
                 ->orderBy('name')
                 ->get(),
             'statusOptions' => ['active', 'inactive'],
@@ -61,7 +58,8 @@ class PeriodController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $campusId = $this->campusId();
+        $campusId = $this->writableCampusId($request->input('campus_id'));
+        $request->merge(['campus_id' => $campusId]);
 
         $data = $request->validate([
             'campus_id' => ['required', 'exists:campuses,id'],
@@ -69,15 +67,12 @@ class PeriodController extends Controller
                 'required',
                 'string',
                 'max:40',
-                Rule::unique('periods', 'code')->where(fn ($query) => $query->where('campus_id', $campusId ?: $request->integer('campus_id'))),
+                Rule::unique('periods', 'code')->where(fn ($query) => $query->where('campus_id', $campusId)),
             ],
             'description' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
 
-        if ($campusId) {
-            $data['campus_id'] = $campusId;
-        }
 
         Period::create($data);
 
@@ -89,7 +84,7 @@ class PeriodController extends Controller
         return view('periods.edit', [
             'period' => $period,
             'campuses' => Campus::query()
-                ->when($this->campusId(), fn (Builder $builder) => $builder->where('id', $this->campusId()))
+                ->tap(fn ($builder) => $this->applyCampusScope($builder, 'id'))
                 ->orderBy('name')
                 ->get(),
             'statusOptions' => ['active', 'inactive'],
@@ -98,7 +93,8 @@ class PeriodController extends Controller
 
     public function update(Request $request, Period $period): RedirectResponse
     {
-        $campusId = $this->campusId();
+        $campusId = $this->writableCampusId($request->input('campus_id'));
+        $request->merge(['campus_id' => $campusId]);
 
         $data = $request->validate([
             'campus_id' => ['required', 'exists:campuses,id'],
@@ -108,15 +104,12 @@ class PeriodController extends Controller
                 'max:40',
                 Rule::unique('periods', 'code')
                     ->ignore($period->id)
-                    ->where(fn ($query) => $query->where('campus_id', $campusId ?: $request->integer('campus_id'))),
+                    ->where(fn ($query) => $query->where('campus_id', $campusId)),
             ],
             'description' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
 
-        if ($campusId) {
-            $data['campus_id'] = $campusId;
-        }
 
         $period->update($data);
 

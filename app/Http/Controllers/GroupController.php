@@ -19,10 +19,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GroupController extends Controller
 {
+    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
+
     private function groupPeriods(): array
     {
         return Period::query()
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->where('status', 'active')
             ->orderBy('code')
             ->pluck('code')
@@ -32,7 +34,7 @@ class GroupController extends Controller
     private function groupSchedules(): array
     {
         return ScheduleTemplate::query()
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->where('status', 'active')
             ->get()
             ->pluck('display_label')
@@ -44,10 +46,6 @@ class GroupController extends Controller
         return config('academic.group_statuses', ['active', 'inactive']);
     }
 
-    private function campusId(): ?int
-    {
-        return \App\Support\CampusScope::campusIdFor(request()->user());
-    }
 
     public function index(Request $request): View|StreamedResponse
     {
@@ -93,12 +91,12 @@ class GroupController extends Controller
         }
 
         $courses = Course::query()
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->orderBy('name')
             ->get(['id', 'name']);
 
         $teachers = Teacher::query()
-            ->when($this->campusId(), fn (Builder $builder) => $builder->where('campus_id', $this->campusId()))
+            ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->get(['id', 'first_name', 'last_name']);
@@ -150,10 +148,10 @@ class GroupController extends Controller
         $campuses = Campus::orderBy('name');
         $courses = Course::orderBy('name');
         $teachers = Teacher::orderBy('first_name');
-        if ($this->campusId()) {
-            $campuses->where('id', $this->campusId());
-            $courses->where('campus_id', $this->campusId());
-            $teachers->where('campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($campuses, 'id');
+            $this->applyCampusScope($courses, 'campus_id');
+            $this->applyCampusScope($teachers, 'campus_id');
         }
 
         return view('groups.create', [
@@ -181,8 +179,8 @@ class GroupController extends Controller
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
 
-        if ($this->campusId()) {
-            $data['campus_id'] = $this->campusId();
+        if (($writableCampusId = $this->writableCampusId($data['campus_id'] ?? null)) !== null) {
+            $data['campus_id'] = $writableCampusId;
         }
 
         $group = Group::create($data);
@@ -196,10 +194,10 @@ class GroupController extends Controller
         $campuses = Campus::orderBy('name');
         $courses = Course::orderBy('name');
         $teachers = Teacher::orderBy('first_name');
-        if ($this->campusId()) {
-            $campuses->where('id', $this->campusId());
-            $courses->where('campus_id', $this->campusId());
-            $teachers->where('campus_id', $this->campusId());
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($campuses, 'id');
+            $this->applyCampusScope($courses, 'campus_id');
+            $this->applyCampusScope($teachers, 'campus_id');
         }
 
         return view('groups.edit', [
@@ -235,8 +233,8 @@ class GroupController extends Controller
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
 
-        if ($this->campusId()) {
-            $data['campus_id'] = $this->campusId();
+        if (($writableCampusId = $this->writableCampusId($data['campus_id'] ?? null)) !== null) {
+            $data['campus_id'] = $writableCampusId;
         }
 
         $group->update($data);
