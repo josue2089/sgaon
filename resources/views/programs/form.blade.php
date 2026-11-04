@@ -22,6 +22,32 @@
         </label>
         <p class="entity-sub">Actividades en colegios (inglés, robótica, danza, fútbol…) con cursos de todo el año escolar.</p>
     </div>
+    <div>
+        <label for="audience">Público</label>
+        <select id="audience" name="audience">
+            <option value="">—</option>
+            @foreach(\App\Support\CefrScale::AUDIENCES as $value => $label)
+                <option value="{{ $value }}" @selected(old('audience', $program->audience ?? '') === $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="grid-2">
+        <div>
+            <label for="age_min">Edad desde</label>
+            <input id="age_min" type="number" name="age_min" min="1" max="99" value="{{ old('age_min', $program->age_min ?? '') }}">
+        </div>
+        <div>
+            <label for="age_max">Edad hasta</label>
+            <input id="age_max" type="number" name="age_max" min="1" max="99" value="{{ old('age_max', $program->age_max ?? '') }}" placeholder="Sin límite">
+        </div>
+    </div>
+    <div>
+        <label class="checkbox-inline">
+            <input type="checkbox" name="uses_cefr" value="1" @checked(old('uses_cefr', $program->uses_cefr ?? false))>
+            Usa equivalencias CEFR / GSE
+        </label>
+        <p class="entity-sub">Desmárcalo para programas que no son de inglés (robótica, deportes…).</p>
+    </div>
     <div class="col-span-full">
         <label>Descripción</label>
         <textarea name="description">{{ old('description', $program->description ?? '') }}</textarea>

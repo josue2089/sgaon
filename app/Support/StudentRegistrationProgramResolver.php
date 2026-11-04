@@ -23,6 +23,11 @@ class StudentRegistrationProgramResolver
             return 'ROB';
         }
 
+        // Adultos: Basic User, Independent User y Prof User (#469).
+        if (preg_match('/^(BU|IU|PU)\d/', $code) || str_starts_with($code, 'BASICUSER')) {
+            return Program::ADULTS_CODE;
+        }
+
         if (str_starts_with($code, 'CON') || str_starts_with($code, 'HS')) {
             return 'HS';
         }
@@ -61,6 +66,7 @@ class StudentRegistrationProgramResolver
                 'HS' => 'No se encontró el programa High School activo (código HS).',
                 'PRIMARY' => 'No se encontró el programa Primary activo (código PRIMARY).',
                 'PREP' => 'No se encontró el programa Pre-Primary activo (código PREP).',
+                Program::ADULTS_CODE => 'No se encontró el programa de adultos activo (código '.Program::ADULTS_CODE.').',
                 default => "No hay programa activo para el nivel «{$nivel}».",
             };
         }
@@ -76,6 +82,7 @@ class StudentRegistrationProgramResolver
             'HS' => ['HS', 'HIGHSCHOOL', 'HIGH_SCHOOL'],
             'PRIMARY' => ['PRIMARY'],
             'PREP' => ['PREP', 'PREPRIMARY', 'PRE_PRIMARY'],
+            Program::ADULTS_CODE => [Program::ADULTS_CODE],
             default => [],
         };
 

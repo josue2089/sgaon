@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Program;
+use App\Support\CefrScale;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -91,8 +92,12 @@ class ProgramController extends Controller
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'description' => ['nullable', 'string'],
             'base_price_eur' => ['nullable', 'numeric', 'min:0'],
+            'audience' => ['nullable', Rule::in(array_keys(CefrScale::AUDIENCES))],
+            'age_min' => ['nullable', 'integer', 'min:1', 'max:99'],
+            'age_max' => ['nullable', 'integer', 'min:1', 'max:99', 'gte:age_min'],
         ]);
         $data['is_extracurricular'] = $request->boolean('is_extracurricular');
+        $data['uses_cefr'] = $request->boolean('uses_cefr');
 
         return $data;
     }

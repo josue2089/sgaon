@@ -85,6 +85,9 @@
         <div class="summary-label">Nivel actual</div>
         <div class="summary-value">{{ $summary['current_level_label'] }}</div>
         <div class="table-sub">{{ $summary['current_level_name'] }}</div>
+        @if(! empty($summary['current_level_cefr']))
+            <div class="table-sub">{{ $summary['current_level_cefr'] }}</div>
+        @endif
     </div>
     <div class="card summary-card">
         <div class="summary-label">Siguiente nivel</div>
@@ -150,6 +153,9 @@
                 <div><strong>Período:</strong> {{ $currentCourse->period?->code ?? 'N/D' }}</div>
                 <div><strong>Horario:</strong> {{ $currentCourse->scheduleTemplate?->display_label ?? 'N/D' }}</div>
                 <div><strong>Nivel real:</strong> {{ $currentCourseLevel ? (($currentCourseLevel->sort_order ?? $currentCourseLevel->scale_position).'/'.($currentCourseLevel->program_total ?? $currentCourseLevel->scale_total).' · '.$currentCourseLevel->name) : 'Sin nivel asignado' }}</div>
+                @if(! empty($summary['current_level_cefr']))
+                    <div><strong>Equivalencia:</strong> {{ $summary['current_level_cefr'] }}</div>
+                @endif
                 <div><strong>Detalle del nivel:</strong> {{ $currentCourseLevel?->description ?? 'Sin descripción' }}</div>
                 <div><strong>Próximo nivel:</strong> {{ $nextCourseLevel?->name ?? 'No definido' }}</div>
                 <div><strong>Fecha finalización:</strong> {{ $currentCourse->end_date?->format('d/m/Y') ?? 'N/D' }}</div>

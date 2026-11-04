@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Program;
 use App\Models\ProgramLevel;
 use App\Models\ProgramLevelLesson;
+use App\Support\CefrScale;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,6 +18,7 @@ class ProgramLevelController extends Controller
         return view('program_levels.create', [
             'program' => $program,
             'level' => new ProgramLevel(['program_id' => $program->id, 'program_total' => $program->levels()->count() ?: 1, 'academic_hours' => 40, 'reminder_days_before' => 5]),
+            'nextLevelOptions' => $this->nextLevelOptions(),
         ]);
     }
 
@@ -44,6 +46,7 @@ class ProgramLevelController extends Controller
         return view('program_levels.edit', [
             'level' => $programLevel,
             'program' => $programLevel->program,
+            'nextLevelOptions' => $this->nextLevelOptions($programLevel),
         ]);
     }
 
@@ -86,9 +89,20 @@ class ProgramLevelController extends Controller
         return redirect()->route('program-levels.show', $copy)->with('success', 'Nivel duplicado.');
     }
 
+    /** Niveles de todos los programas para elegir el "siguiente nivel" entre programas. */
+    private function nextLevelOptions(?ProgramLevel $except = null)
+    {
+        return ProgramLevel::query()
+            ->with('program:id,name')
+            ->when($except, fn ($query) => $query->whereKeyNot($except->id))
+            ->orderBy('program_id')
+            ->orderBy('sort_order')
+            ->get(['id', 'program_id', 'name']);
+    }
+
     private function validatedData(Request $request, Program $program, ?ProgramLevel $level = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'code' => ['required', 'string', 'max:40', Rule::unique('program_levels', 'code')->ignore($level?->id)],
             'sort_order' => ['required', 'integer', 'min:1', 'max:99'],
@@ -98,6 +112,21 @@ class ProgramLevelController extends Controller
             'base_price_eur' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'description' => ['nullable', 'string'],
+            'level_number' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'part' => ['nullable', Rule::in(['A', 'B'])],
+            'cefr_label' => ['nullable', 'string', 'max:40'],
+            'gse_min' => ['nullable', 'integer', 'min:10', 'max:90'],
+            'gse_max' => ['nullable', 'integer', 'min:10', 'max:90', 'gte:gse_min'],
+            'book' => ['nullable', 'string', 'max:120'],
+            'next_program_level_id' => ['nullable', 'integer', Rule::exists('program_levels', 'id'), Rule::notIn(array_filter([$level?->id]))],
         ]) + ['program_id' => $program->id];
+
+        // Si se carga el CEFR sin GSE, se sugiere el rango oficial de Pearson. #469
+        if (! empty($data['cefr_label']) && empty($data['gse_min']) && empty($data['gse_max'])
+            && ($range = CefrScale::gseRange($data['cefr_label']))) {
+            [$data['gse_min'], $data['gse_max']] = $range;
+        }
+
+        return $data;
     }
 }
