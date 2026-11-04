@@ -71,11 +71,6 @@ class ApplyCefrStructure extends Command
         'BUPUCONV' => 'Conversación (adultos)',
     ];
 
-    /** nivel => siguiente nivel en otro programa */
-    private const NEXT_ACROSS_PROGRAMS = [
-        'PRIMARY6B' => 'HS1A',
-    ];
-
     private bool $overwrite = false;
 
     /** @var list<array{0: string, 1: string, 2: string}> */
@@ -99,7 +94,6 @@ class ApplyCefrStructure extends Command
             foreach (self::LEVELS as $programCode => $levels) {
                 $this->applyLevels($programCode, $levels);
             }
-            $this->applyNextLevels();
 
             $this->changes === []
                 ? $this->info('Sin cambios: la estructura ya está cargada.')
@@ -233,20 +227,8 @@ class ApplyCefrStructure extends Command
         }
     }
 
-    private function applyNextLevels(): void
-    {
-        foreach (self::NEXT_ACROSS_PROGRAMS as $fromCode => $toCode) {
-            $from = ProgramLevel::query()->where('code', $fromCode)->first();
-            $to = ProgramLevel::query()->where('code', $toCode)->first();
-            if ($from && $to) {
-                $this->fill($from, $fromCode, ['next_program_level_id' => $to->id], $toCode);
-                $from->save();
-            }
-        }
-    }
-
     /** @param  array<string, mixed>  $values */
-    private function fill(Program|ProgramLevel $model, string $label, array $values, ?string $display = null): void
+    private function fill(Program|ProgramLevel $model, string $label, array $values): void
     {
         foreach ($values as $field => $value) {
             if ($value === null || $model->{$field} == $value) {
@@ -256,7 +238,7 @@ class ApplyCefrStructure extends Command
                 continue;
             }
             $model->{$field} = $value;
-            $this->changes[] = [$label, $field, (string) ($display ?? $value)];
+            $this->changes[] = [$label, $field, (string) $value];
         }
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Mail\LevelRenewalReminderMail;
+use App\Models\AcademicLevel;
 use App\Models\Alert;
 use App\Models\Course;
 use App\Models\CourseLevel;
@@ -167,8 +168,8 @@ class SendLevelRenewalReminders extends Command
 
         $draft = new Course([
             'campus_id' => $course->campus_id,
-            'academic_level_id' => $course->academic_level_id,
-            'program_id' => $course->program_id,
+            'academic_level_id' => $this->academicLevelIdFor($course, $nextLevel),
+            'program_id' => $nextLevel instanceof ProgramLevel ? $nextLevel->program_id : $course->program_id,
             'program_level_id' => $nextLevel instanceof ProgramLevel ? $nextLevel->id : null,
             'course_level_id' => $nextLevel instanceof CourseLevel ? $nextLevel->id : null,
             'teacher_id' => null,
@@ -186,6 +187,19 @@ class SendLevelRenewalReminders extends Command
         $draft->load(['period', 'scheduleTemplate', 'managedGroup.sessions.attendanceRecords']);
         CoursePlanner::sync($draft);
         return $draft->fresh();
+    }
+
+    /** Si el siguiente nivel es de otro programa, el curso nuevo usa el nivel académico de ese programa. #469 */
+    private function academicLevelIdFor(Course $course, Model $nextLevel): ?int
+    {
+        if (! $nextLevel instanceof ProgramLevel || (int) $nextLevel->program_id === (int) $course->program_id) {
+            return $course->academic_level_id;
+        }
+
+        return AcademicLevel::firstOrCreate([
+            'campus_id' => $course->campus_id,
+            'name' => $nextLevel->program->name,
+        ])->id;
     }
 
     private function nextCourseName(Course $draft): string

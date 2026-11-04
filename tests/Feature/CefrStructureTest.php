@@ -2,15 +2,22 @@
 
 namespace Tests\Feature;
 
+use App\Models\AcademicLevel;
 use App\Models\AuditLog;
 use App\Models\Campus;
+use App\Models\Course;
+use App\Models\Enrollment;
+use App\Models\Group;
 use App\Models\Program;
 use App\Models\ProgramLevel;
+use App\Models\ScheduleTemplate;
+use App\Models\Student;
 use App\Models\User;
 use App\Support\CefrScale;
 use App\Support\HistoricalProgramResolver;
 use App\Support\StudentRegistrationProgramResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class CefrStructureTest extends TestCase
@@ -81,7 +88,10 @@ class CefrStructureTest extends TestCase
     {
         $this->artisan('programs:apply-cefr-structure')->assertSuccessful();
 
-        $this->assertSame('HS1A', $this->level('PRIMARY6B')->nextLevel()?->code);
+        // El salto de Primary a High School no lo fija el comando: se configura en el nivel al confirmarlo el cliente.
+        $this->assertNull($this->level('PRIMARY6B')->nextLevel());
+        $this->level('PRIMARY6B')->update(['next_program_level_id' => $this->level('HS3A')->id]);
+        $this->assertSame('HS3A', $this->level('PRIMARY6B')->nextLevel()?->code);
         $this->assertSame('PRIMARY2A', $this->level('PRIMARY1B')->nextLevel()?->code);
 
         $adults = Program::query()->where('code', Program::ADULTS_CODE)->firstOrFail();
@@ -131,5 +141,38 @@ class CefrStructureTest extends TestCase
         $registration = new StudentRegistrationProgramResolver;
         $this->assertSame($adultsId, $registration->resolve('IU 3B')?->id);
         $this->assertSame('PRIMARY', $registration->programCodeForNivel('Primary 2A'));
+    }
+
+    public function test_renewal_draft_uses_the_program_of_the_next_level(): void
+    {
+        Mail::fake();
+        $this->artisan('programs:apply-cefr-structure')->assertSuccessful();
+        $primary6b = $this->level('PRIMARY6B');
+        $hs3a = $this->level('HS3A');
+        $primary6b->update(['next_program_level_id' => $hs3a->id]);
+
+        $campus = Campus::create(['name' => 'Picacho', 'code' => 'PIC', 'status' => 'active']);
+        $schedule = ScheduleTemplate::create(['campus_id' => $campus->id, 'days' => ['mon'], 'starts_at' => '16:00:00', 'ends_at' => '17:00:00', 'status' => 'active']);
+        $course = Course::create([
+            'campus_id' => $campus->id,
+            'academic_level_id' => AcademicLevel::create(['campus_id' => $campus->id, 'name' => 'Primary'])->id,
+            'program_id' => $primary6b->program_id,
+            'program_level_id' => $primary6b->id,
+            'schedule_template_id' => $schedule->id,
+            'name' => 'Primary 6B Picacho',
+            'start_date' => now()->subDays(30)->toDateString(),
+            'end_date' => now()->addDays(5)->toDateString(),
+            'academic_hours' => 40,
+            'status' => 'active',
+        ]);
+        $group = Group::create(['campus_id' => $campus->id, 'course_id' => $course->id, 'name' => 'G6B', 'status' => 'active', 'capacity' => 20]);
+        $student = Student::create(['campus_id' => $campus->id, 'first_name' => 'Ana', 'last_name' => 'Gil', 'email' => 'ana@test.com', 'status' => 'active']);
+        Enrollment::create(['campus_id' => $campus->id, 'student_id' => $student->id, 'group_id' => $group->id, 'enrolled_at' => now()->subDays(30)->toDateString(), 'status' => 'active', 'progress' => 0]);
+
+        $this->artisan('levels:send-renewal-reminders')->assertSuccessful();
+
+        $draft = Course::query()->where('program_level_id', $hs3a->id)->sole();
+        $this->assertSame((int) $hs3a->program_id, (int) $draft->program_id);
+        $this->assertSame('HighSchool', $draft->level?->name);
     }
 }
