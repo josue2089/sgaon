@@ -105,7 +105,7 @@ class ExtracurricularMonthlyChargesTest extends TestCase
         $this->assertTrue($charges->every(fn (Charge $c) => $c->amount === 35.0 && $c->currency === 'USD' && $c->due_date->day === 5));
         $this->assertSame('Mensualidad Danza — Octubre 2026', $charges->first()->concept);
         $this->assertSame('monthly_auto', $charges->first()->origin);
-        Mail::assertSent(ChargePendingMail::class, 10);
+        Mail::assertQueued(ChargePendingMail::class, 10);
     }
 
     public function test_mid_year_enrollment_charges_from_enrollment_month(): void

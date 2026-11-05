@@ -4,17 +4,12 @@ namespace App\Mail;
 
 use App\Models\Payment;
 use App\Services\ReceiptPdfService;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class PaymentReceiptMail extends Mailable
+class PaymentReceiptMail extends QueuedMailable
 {
-    use Queueable, SerializesModels;
-
     public function __construct(public Payment $payment)
     {
     }

@@ -3,16 +3,11 @@
 namespace App\Mail;
 
 use App\Models\Charge;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class ChargePendingMail extends Mailable
+class ChargePendingMail extends QueuedMailable
 {
-    use Queueable, SerializesModels;
-
     public function __construct(public Charge $charge)
     {
     }

@@ -95,7 +95,7 @@ class PaymentReceiptMailTest extends TestCase
             'paid_at' => now()->toDateString(),
         ])->assertRedirect();
 
-        Mail::assertSent(PaymentReceiptMail::class, function (PaymentReceiptMail $mail) {
+        Mail::assertQueued(PaymentReceiptMail::class, function (PaymentReceiptMail $mail) {
             return count($mail->attachments()) === 1;
         });
     }
@@ -143,7 +143,7 @@ class PaymentReceiptMailTest extends TestCase
             ])
             ->assertRedirect(route('students.show', $student));
 
-        Mail::assertSent(PaymentReceiptMail::class);
+        Mail::assertQueued(PaymentReceiptMail::class);
         $this->assertDatabaseHas('payments', ['student_id' => $student->id, 'amount' => 75]);
     }
 

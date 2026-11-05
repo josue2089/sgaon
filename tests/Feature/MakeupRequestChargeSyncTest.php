@@ -95,7 +95,7 @@ class MakeupRequestChargeSyncTest extends TestCase
         $this->assertSame(MakeupRequest::STATUS_APPROVED_FOR_BOOKING, $request->status);
         $this->assertNotNull($request->payment_id);
         $this->assertNotNull($request->validated_at);
-        Mail::assertSent(MakeupRecoveryApprovedMail::class, 1);
+        Mail::assertQueued(MakeupRecoveryApprovedMail::class, 1);
 
         $this->actingAs($this->admin)->get(route('makeups.index'))
             ->assertOk()
@@ -147,7 +147,7 @@ class MakeupRequestChargeSyncTest extends TestCase
 
         $this->assertSame(MakeupRequest::STATUS_APPROVED_FOR_BOOKING, $paid->fresh()->status);
         $this->assertSame(MakeupRequest::STATUS_PENDING_PAYMENT, $unpaid->fresh()->status);
-        Mail::assertNotSent(MakeupRecoveryApprovedMail::class);
+        Mail::assertNotQueued(MakeupRecoveryApprovedMail::class);
     }
 
     public function test_daily_reconcile_fixes_stale_requests_silently(): void
@@ -165,6 +165,6 @@ class MakeupRequestChargeSyncTest extends TestCase
         $request->refresh();
         $this->assertSame(MakeupRequest::STATUS_APPROVED_FOR_BOOKING, $request->status);
         $this->assertSame($payment->id, $request->payment_id);
-        Mail::assertNotSent(MakeupRecoveryApprovedMail::class);
+        Mail::assertNotQueued(MakeupRecoveryApprovedMail::class);
     }
 }

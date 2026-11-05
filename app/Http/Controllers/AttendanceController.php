@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class AttendanceController extends Controller
@@ -243,33 +244,36 @@ class AttendanceController extends Controller
                 ->withErrors(['records' => 'Hay alumnos que no pertenecen a esta clase o ya no están inscritos.']);
         }
 
-        ClassSession::where('id', $data['class_session_id'])->update([
-            'topic' => $data['topic'] ?? null,
-            'program_status' => $data['program_status'] ?? null,
-            'program_notes' => $data['program_notes'] ?? null,
-        ]);
+        // Todo o nada; los correos de recuperativas salen por la cola al confirmar la transacción. #440
+        DB::transaction(function () use ($data, $request): void {
+            ClassSession::where('id', $data['class_session_id'])->update([
+                'topic' => $data['topic'] ?? null,
+                'program_status' => $data['program_status'] ?? null,
+                'program_notes' => $data['program_notes'] ?? null,
+            ]);
 
-        $written = 0;
-        foreach ($data['records'] as $entry) {
-            $record = AttendanceRecord::updateOrCreate(
-                [
-                    'class_session_id' => $data['class_session_id'],
-                    'enrollment_id' => $entry['enrollment_id'],
-                ],
-                [
-                    'status' => $entry['status'],
-                    'notes' => $entry['notes'] ?? null,
-                ],
-            );
-            MakeupRecoveryEngine::syncForAttendanceRecord($record, $request->user());
-            $written++;
-        }
+            $written = 0;
+            foreach ($data['records'] as $entry) {
+                $record = AttendanceRecord::updateOrCreate(
+                    [
+                        'class_session_id' => $data['class_session_id'],
+                        'enrollment_id' => $entry['enrollment_id'],
+                    ],
+                    [
+                        'status' => $entry['status'],
+                        'notes' => $entry['notes'] ?? null,
+                    ],
+                );
+                MakeupRecoveryEngine::syncForAttendanceRecord($record, $request->user());
+                $written++;
+            }
 
-        AuditTrail::log($request, 'attendance.upsert', null, [
-            'class_session_id' => $data['class_session_id'],
-            'records_written' => $written,
-        ]);
-        AlertEngine::evaluateAttendanceForSession((int) $data['class_session_id']);
+            AuditTrail::log($request, 'attendance.upsert', null, [
+                'class_session_id' => $data['class_session_id'],
+                'records_written' => $written,
+            ]);
+            AlertEngine::evaluateAttendanceForSession((int) $data['class_session_id']);
+        });
 
         return redirect()
             ->route('attendance.index', ['class_session_id' => $data['class_session_id']])

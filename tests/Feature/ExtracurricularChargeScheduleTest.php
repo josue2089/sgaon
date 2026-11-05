@@ -100,9 +100,9 @@ class ExtracurricularChargeScheduleTest extends TestCase
         $this->assertSame('2027-07-05', $charges->last()->due_date->toDateString());
         $this->assertTrue($charges->every(fn (Charge $c) => $c->amount === 35.0 && $c->due_date->day === 5));
 
-        Mail::assertSent(ChargeScheduleMail::class, 1);
-        Mail::assertSent(ChargeScheduleMail::class, fn (ChargeScheduleMail $mail) => $mail->charges->count() === 10);
-        Mail::assertNotSent(ChargePendingMail::class);
+        Mail::assertQueued(ChargeScheduleMail::class, 1);
+        Mail::assertQueued(ChargeScheduleMail::class, fn (ChargeScheduleMail $mail) => $mail->charges->count() === 10);
+        Mail::assertNotQueued(ChargePendingMail::class);
 
         $html = (new ChargeScheduleMail($enrollment->fresh(['student', 'group.course.program']), $charges))->render();
         $this->assertStringContainsString('Robótica', $html);

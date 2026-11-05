@@ -147,7 +147,7 @@ class ChargeVoidTest extends TestCase
         $this->actingAs($this->master())->post(route('finance.charges.void', $charge), ['reason' => 'No corresponde']);
         $this->artisan('finance:send-payment-reminders')->assertSuccessful();
 
-        Mail::assertSent(ChargeDueReminderMail::class, 1);
-        Mail::assertSent(ChargeDueReminderMail::class, fn (ChargeDueReminderMail $mail) => $mail->charge->is($valid));
+        Mail::assertQueued(ChargeDueReminderMail::class, 1);
+        Mail::assertQueued(ChargeDueReminderMail::class, fn (ChargeDueReminderMail $mail) => $mail->charge->is($valid));
     }
 }
