@@ -121,7 +121,7 @@ class PaymentSafetyTest extends TestCase
         $this->assertSame('2026-10-24', $payment->receipt->issued_at->toDateString());
         $this->assertSame('paid', $charge->fresh()->status);
         $this->assertTrue(AuditLog::query()->where('action', 'finance.payment_request.approve')->exists());
-        Mail::assertSent(PaymentReceiptMail::class, 1);
+        Mail::assertQueued(PaymentReceiptMail::class, 1);
     }
 
     public function test_excess_goes_to_other_open_charges_and_is_never_dropped(): void

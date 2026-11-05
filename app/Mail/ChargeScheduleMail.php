@@ -3,17 +3,12 @@
 namespace App\Mail;
 
 use App\Models\Enrollment;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 
-class ChargeScheduleMail extends Mailable
+class ChargeScheduleMail extends QueuedMailable
 {
-    use Queueable, SerializesModels;
-
     /**
      * @param  Collection<int, \App\Models\Charge>  $charges
      */

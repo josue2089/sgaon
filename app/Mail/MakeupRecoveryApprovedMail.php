@@ -3,16 +3,11 @@
 namespace App\Mail;
 
 use App\Models\MakeupRequest;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class MakeupRecoveryApprovedMail extends Mailable
+class MakeupRecoveryApprovedMail extends QueuedMailable
 {
-    use Queueable, SerializesModels;
-
     public function __construct(public MakeupRequest $makeupRequest)
     {
     }

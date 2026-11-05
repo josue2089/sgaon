@@ -3,17 +3,12 @@
 namespace App\Mail;
 
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
 /** Resumen diario de pendientes para un admin (mismo cálculo que el panel "Pendientes de hoy"). */
-class DailyPendingMail extends Mailable
+class DailyPendingMail extends QueuedMailable
 {
-    use Queueable, SerializesModels;
-
     /**
      * @param  array<int, array{key: string, label: string, hint: string, count: int, url: string, action: string, tone: string}>  $items
      */

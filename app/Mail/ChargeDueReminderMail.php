@@ -7,16 +7,11 @@ use App\Services\Bcv\ExchangeRateService;
 use App\Support\FinanceReconcile;
 use App\Support\MoneyFormat;
 use App\Support\PaymentCurrencyConverter;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class ChargeDueReminderMail extends Mailable
+class ChargeDueReminderMail extends QueuedMailable
 {
-    use Queueable, SerializesModels;
-
     public function __construct(public Charge $charge, public string $reminderType = 'upcoming')
     {
     }

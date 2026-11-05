@@ -54,17 +54,17 @@ class DailyPendingSummaryTest extends TestCase
             ->expectsOutputToContain('Correos: 2. Sin pendientes (no se envía): 1.')
             ->assertSuccessful();
 
-        Mail::assertSent(DailyPendingMail::class, 2);
-        Mail::assertSent(DailyPendingMail::class, fn (DailyPendingMail $mail) => $mail->hasTo('picacho@test.com') && $mail->scopeLabel === 'Picacho');
-        Mail::assertSent(DailyPendingMail::class, fn (DailyPendingMail $mail) => $mail->hasTo('master@test.com') && $mail->scopeLabel === 'Todas las sedes');
-        Mail::assertNotSent(DailyPendingMail::class, fn (DailyPendingMail $mail) => $mail->hasTo('cascada@test.com') || $mail->hasTo('off@test.com') || $mail->hasTo('teacher@test.com'));
+        Mail::assertQueued(DailyPendingMail::class, 2);
+        Mail::assertQueued(DailyPendingMail::class, fn (DailyPendingMail $mail) => $mail->hasTo('picacho@test.com') && $mail->scopeLabel === 'Picacho');
+        Mail::assertQueued(DailyPendingMail::class, fn (DailyPendingMail $mail) => $mail->hasTo('master@test.com') && $mail->scopeLabel === 'Todas las sedes');
+        Mail::assertNotQueued(DailyPendingMail::class, fn (DailyPendingMail $mail) => $mail->hasTo('cascada@test.com') || $mail->hasTo('off@test.com') || $mail->hasTo('teacher@test.com'));
     }
 
     public function test_mail_lists_only_pending_items_with_direct_links(): void
     {
         $this->artisan('admins:send-daily-pending')->assertSuccessful();
 
-        Mail::assertSent(DailyPendingMail::class, function (DailyPendingMail $mail) {
+        Mail::assertQueued(DailyPendingMail::class, function (DailyPendingMail $mail) {
             if (! $mail->hasTo('picacho@test.com')) {
                 return false;
             }
@@ -83,7 +83,7 @@ class DailyPendingSummaryTest extends TestCase
         $this->artisan('admins:send-daily-pending', ['--dry-run' => true])
             ->expectsOutputToContain('[dry-run] picacho@test.com (Picacho)')
             ->assertSuccessful();
-        Mail::assertNothingSent();
+        Mail::assertNothingOutgoing();
 
         $event = collect(app(Schedule::class)->events())->first(fn ($event) => str_contains($event->command, 'admins:send-daily-pending'));
         $this->assertNotNull($event);

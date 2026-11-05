@@ -250,7 +250,7 @@ class EurPricingFinanceTest extends TestCase
         $this->assertEquals(240.0, (float) $first->amount);
         $this->assertSame('tuition', $first->charge_type);
         $this->assertSame('enrollment_auto', $first->origin);
-        Mail::assertSent(ChargePendingMail::class);
+        Mail::assertQueued(ChargePendingMail::class);
     }
 
     public function test_partial_eur_payment_updates_balance_and_due_date(): void
@@ -355,7 +355,7 @@ class EurPricingFinanceTest extends TestCase
         $this->artisan('finance:send-payment-reminders')->assertSuccessful();
         $this->artisan('finance:send-payment-reminders')->assertSuccessful();
 
-        Mail::assertSent(ChargeDueReminderMail::class, 1);
+        Mail::assertQueued(ChargeDueReminderMail::class, 1);
     }
 
     public function test_finance_summary_reports_invoiced_collected_and_projection(): void
