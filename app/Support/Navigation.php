@@ -25,7 +25,7 @@ class Navigation
 
         $items = [
             self::link('Inicio', 'home', 'dashboard', ['dashboard'], true, $current),
-            self::link('Alumnos', 'students', 'students.index', ['students.', 'enrollments.'], $isAdmin, $current),
+            self::link('Alumnos', 'students', 'students.index', ['students.', 'enrollments.', 'portal-access.'], $isAdmin, $current),
             self::link('Cursos', 'courses', 'courses.index', ['courses.', 'groups.', 'sessions.', 'program-levels.'], $isAdmin, $current),
             self::link('Asistencia', 'attendance', 'attendance.index', ['attendance.'], in_array($user->role, [User::ROLE_ADMIN, User::ROLE_TEACHER], true), $current),
             self::link('Finanzas', 'finance', 'finance.index', ['finance.index', 'finance.students.', 'finance.receipts.'], $isAdmin && $user->hasPermission('finance.manage'), $current),

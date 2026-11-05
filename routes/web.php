@@ -77,6 +77,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/students/{student}/move-to-historical', [StudentController::class, 'moveToHistorical'])->name('students.move-to-historical');
         Route::resource('students', StudentController::class)->except('show');
         Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
+        Route::get('/portal-access', [\App\Http\Controllers\PortalAccessController::class, 'index'])->name('portal-access.index');
+        Route::post('/portal-access/invite', [\App\Http\Controllers\PortalAccessController::class, 'invite'])->name('portal-access.invite');
         Route::post('/students/{student}/portal-access/invite', [\App\Http\Controllers\StudentPortalAccessController::class, 'invite'])->name('students.portal-access.invite');
         Route::post('/students/{student}/portal-access/deactivate', [\App\Http\Controllers\StudentPortalAccessController::class, 'deactivate'])->name('students.portal-access.deactivate');
         Route::post('/students/{student}/attachments', [StudentController::class, 'storeAttachment'])->name('students.attachments.store');

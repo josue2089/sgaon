@@ -12,6 +12,7 @@
         @if(\Illuminate\Support\Facades\Route::has('students.import'))
             <a class="btn secondary" href="{{ route('students.import') }}">Importar</a>
         @endif
+        <a class="btn secondary" href="{{ route('portal-access.index') }}">Accesos al portal</a>
         <a class="btn" href="{{ route('students.create') }}">Nuevo Alumno</a>
     </div>
 </div>

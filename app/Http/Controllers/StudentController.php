@@ -16,6 +16,7 @@ use App\Models\Representative;
 use App\Models\StudentAttachment;
 use App\Models\Student;
 use App\Support\AuditTrail;
+use App\Support\DocumentNumber;
 use App\Support\ExtracurricularSheet;
 use App\Support\CampusScope;
 use App\Support\FinanceReconcile;
@@ -24,6 +25,7 @@ use App\Services\Bcv\ExchangeRateService;
 use App\Services\ChargeRegistrationService;
 use App\Services\PaymentRegistrationService;
 use App\Support\PaymentCurrencyConverter;
+use App\Support\PersonName;
 use App\Support\PrivateFiles;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Support\StudentSearch;
@@ -688,9 +690,8 @@ class StudentController extends Controller
             return;
         }
 
-        $representative = $student->representatives()->first() ?: new Representative();
-        $representative->fill([
-            'campus_id' => $student->campus_id,
+        $current = $student->representatives()->first();
+        $attributes = [
             'first_name' => $data['first_name'] ?? '',
             'last_name' => $data['last_name'] ?? '',
             'document_id' => $data['document_id'] ?? null,
@@ -704,9 +705,72 @@ class StudentController extends Controller
             'email' => $data['email'] ?? null,
             'office_phone' => $data['office_phone'] ?? null,
             'relation' => filled($data['relation'] ?? null) ? $data['relation'] : 'Representante',
-        ]);
-        $representative->save();
+        ];
+
+        // Si la persona ya existe (hermanos), se reutiliza su ficha en lugar de duplicarla. #472
+        $existing = $this->matchingRepresentative($attributes, $current);
+        if ($existing && ! $existing->is($current)) {
+            $existing->fill(array_filter($attributes, fn ($value) => filled($value)))->save();
+            $this->replaceRepresentative($student, $current, $existing);
+
+            return;
+        }
+
+        // Otra persona, y la ficha actual la comparte un hermano: no se le cambian sus datos a él.
+        if ($current && $this->isAnotherPerson($current, $attributes) && $current->students()->count() > 1) {
+            $this->replaceRepresentative($student, $current, Representative::create($attributes + ['campus_id' => $student->campus_id]));
+
+            return;
+        }
+
+        $representative = $current ?: new Representative(['campus_id' => $student->campus_id]);
+        $representative->fill($attributes)->save();
         $student->representatives()->syncWithoutDetaching([$representative->id]);
+    }
+
+    private function matchingRepresentative(array $attributes, ?Representative $current): ?Representative
+    {
+        $name = trim($attributes['first_name'].' '.$attributes['last_name']);
+        $sameName = fn (Representative $candidate) => PersonName::compatible($candidate->full_name, $name);
+
+        $byDocument = Representative::withDocument($attributes['document_id']);
+        if ($byDocument->isNotEmpty()) {
+            return $byDocument->first(fn (Representative $candidate) => $candidate->is($current) && $sameName($candidate))
+                ?? $byDocument->first($sameName);
+        }
+
+        $email = mb_strtolower(trim((string) $attributes['email']));
+        if ($email === '' || filled($attributes['document_id'])) {
+            return null;
+        }
+
+        return Representative::query()
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->orderBy('id')
+            ->get()
+            ->first($sameName);
+    }
+
+    private function isAnotherPerson(Representative $current, array $attributes): bool
+    {
+        $currentDocument = DocumentNumber::normalize($current->document_id);
+        $newDocument = DocumentNumber::normalize($attributes['document_id']);
+        if ($currentDocument && $newDocument) {
+            return $currentDocument !== $newDocument;
+        }
+
+        return ! PersonName::compatible($current->full_name, trim($attributes['first_name'].' '.$attributes['last_name']));
+    }
+
+    private function replaceRepresentative(Student $student, ?Representative $current, Representative $new): void
+    {
+        if ($current) {
+            $student->representatives()->detach($current->id);
+            if (! $current->user_id && ! $current->students()->exists() && ! $current->chargePaymentRequests()->exists()) {
+                $current->delete();
+            }
+        }
+        $student->representatives()->syncWithoutDetaching([$new->id]);
     }
 
     private function syncAuthorizedContacts(Student $student, array $rows): void
