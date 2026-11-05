@@ -14,7 +14,7 @@
         @forelse($logs as $log)
             <tr>
                 <td>{{ $log->created_at }}</td>
-                <td>{{ $log->user->email ?? 'system' }}</td>
+                <td>{{ $log->user?->email ?: ($log->user?->login_document ?: 'system') }}</td>
                 <td>{{ $log->action }}</td>
                 <td>{{ $log->auditable_type ? class_basename($log->auditable_type).'#'.$log->auditable_id : '-' }}</td>
                 <td><small>{{ json_encode($log->payload) }}</small></td>

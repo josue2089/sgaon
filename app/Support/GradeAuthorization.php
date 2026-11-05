@@ -52,14 +52,8 @@ final class GradeAuthorization
             return false;
         }
 
-        $representative = Representative::query()
-            ->where(function ($query) use ($user) {
-                $query->where('user_id', $user->id)
-                    ->orWhere(function ($q) use ($user) {
-                        $q->whereNull('user_id')->where('email', $user->email);
-                    });
-            })
-            ->first();
+        $representative = Representative::query()->where('user_id', $user->id)->first()
+            ?? ($user->email ? Representative::query()->whereNull('user_id')->where('email', $user->email)->first() : null);
 
         return $representative && $representative->students()->where('students.id', $student->id)->exists();
     }

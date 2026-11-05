@@ -362,9 +362,9 @@ class PortalController extends Controller
             return null;
         }
 
-        return Student::where('user_id', $user->id)
-            ->orWhere(fn ($q) => $q->whereNull('user_id')->where('email', $user->email))
-            ->first();
+        // Primero la ficha vinculada. Sin correo no hay respaldo: where('email', null) traería fichas ajenas. #471
+        return Student::where('user_id', $user->id)->first()
+            ?? ($user->email ? Student::whereNull('user_id')->where('email', $user->email)->first() : null);
     }
 
     private function resolveRepresentative(Request $request): ?Representative
@@ -374,9 +374,8 @@ class PortalController extends Controller
             return null;
         }
 
-        return Representative::where('user_id', $user->id)
-            ->orWhere(fn ($q) => $q->whereNull('user_id')->where('email', $user->email))
-            ->first();
+        return Representative::where('user_id', $user->id)->first()
+            ?? ($user->email ? Representative::whereNull('user_id')->where('email', $user->email)->first() : null);
     }
 
     private function storeChargePaymentRequest(Request $request, Charge $charge, Student $student, ?Representative $representative): void

@@ -38,15 +38,21 @@ Route::redirect('/', '/login');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.attempt');
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.email');
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 });
 
+// Enlace de invitación o recuperación del portal: el token identifica a la persona. #471
+Route::get('/activar/{token}', [\App\Http\Controllers\PortalActivationController::class, 'show'])->name('portal.activate');
+Route::post('/activar/{token}', [\App\Http\Controllers\PortalActivationController::class, 'store'])->middleware('throttle:10,1')->name('portal.activate.store');
+
 Route::middleware(['auth', 'campus.access'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/cuenta/password', [\App\Http\Controllers\AccountPasswordController::class, 'edit'])->name('account.password.edit');
+    Route::put('/cuenta/password', [\App\Http\Controllers\AccountPasswordController::class, 'update'])->name('account.password.update');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/api/finance/exchange-rate', [\App\Http\Controllers\ExchangeRateController::class, 'latest'])->name('finance.exchange-rate');
     // Archivos privados: el controlador verifica sede, alumno o representante. #438
@@ -71,6 +77,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/students/{student}/move-to-historical', [StudentController::class, 'moveToHistorical'])->name('students.move-to-historical');
         Route::resource('students', StudentController::class)->except('show');
         Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
+        Route::post('/students/{student}/portal-access/invite', [\App\Http\Controllers\StudentPortalAccessController::class, 'invite'])->name('students.portal-access.invite');
+        Route::post('/students/{student}/portal-access/deactivate', [\App\Http\Controllers\StudentPortalAccessController::class, 'deactivate'])->name('students.portal-access.deactivate');
         Route::post('/students/{student}/attachments', [StudentController::class, 'storeAttachment'])->name('students.attachments.store');
         Route::get('/students/{student}/attachments/{attachment}', [StudentController::class, 'downloadAttachment'])->name('students.attachments.download');
         Route::delete('/students/{student}/attachments/{attachment}', [StudentController::class, 'destroyAttachment'])->name('students.attachments.destroy');

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Representative;
-use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\PortalAccessService;
 use App\Support\AuditTrail;
+use App\Support\DocumentNumber;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -28,30 +29,25 @@ class AuthController extends Controller
         return view('auth.forgot-password');
     }
 
-    public function sendResetLink(Request $request): RedirectResponse
+    public function sendResetLink(Request $request, PortalAccessService $access): RedirectResponse
     {
         $data = $request->validate([
-            'email' => ['required', 'email'],
+            'login' => ['required', 'string', 'max:255'],
         ]);
 
-        $user = $this->resolveRecoverableUser($data['email']);
-        if (! $user) {
-            return back()->withErrors([
-                'email' => 'No encontramos una cuenta con ese correo.',
-            ])->onlyInput('email');
+        // El mensaje es siempre el mismo: no revela si la cuenta existe. #471
+        try {
+            $user = $this->findByLogin($data['login']) ?? $this->provisionTeacherFromEmail($data['login']);
+            if ($user && $user->status !== 'inactive') {
+                $user->email
+                    ? Password::sendResetLink(['email' => $user->email])
+                    : $access->sendRecovery($user);
+            }
+        } catch (Throwable $exception) {
+            report($exception);
         }
 
-        $status = Password::sendResetLink([
-            'email' => $user->email,
-        ]);
-
-        if ($status !== Password::RESET_LINK_SENT) {
-            return back()->withErrors([
-                'email' => __($status),
-            ])->onlyInput('email');
-        }
-
-        return back()->with('status', 'Te enviamos un enlace para restablecer tu contraseña.');
+        return back()->with('status', 'Si los datos corresponden a una cuenta, enviamos un enlace para restablecer la contraseña al correo registrado.');
     }
 
     public function showResetPassword(Request $request, string $token): View
@@ -77,6 +73,7 @@ class AuthController extends Controller
                     'password' => Hash::make($data['password']),
                     'remember_token' => Str::random(60),
                 ])->save();
+                $user->portalInvitations()->whereNull('accepted_at')->update(['accepted_at' => now()]);
 
                 event(new PasswordReset($user));
             }
@@ -91,102 +88,66 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success', 'Contraseña actualizada. Ya puedes iniciar sesión.');
     }
 
-    private function resolveRecoverableUser(string $email): ?User
+    private function findByLogin(string $login): ?User
     {
-        $normalizedEmail = Str::lower(trim($email));
-
-        $user = User::query()
-            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
-            ->first();
-
-        if ($user) {
-            return $user;
+        $login = trim($login);
+        if (str_contains($login, '@')) {
+            return User::query()->whereRaw('LOWER(email) = ?', [Str::lower($login)])->first();
         }
 
-        $student = Student::query()
-            ->whereNotNull('email')
-            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
-            ->first();
-        if ($student) {
-            $user = User::create([
-                'campus_id' => $student->campus_id,
-                'name' => $student->full_name ?: 'Alumno',
-                'email' => trim((string) $student->email),
-                'phone' => $student->mobile_phone ?: $student->phone,
-                'password' => Hash::make(Str::random(32)),
-                'role' => User::ROLE_STUDENT,
-                'status' => 'active',
-            ]);
+        $document = DocumentNumber::normalize($login);
 
-            if (! $student->user_id) {
-                $student->forceFill(['user_id' => $user->id])->save();
-            }
+        return $document ? User::query()->where('login_document', $document)->first() : null;
+    }
 
-            return $user;
+    /**
+     * Los profesores sin usuario aún obtienen su acceso con "Olvidé mi contraseña"; el enlace solo llega
+     * al correo de su ficha. Se retira cuando el admin pueda darles acceso desde la ficha (#445).
+     */
+    private function provisionTeacherFromEmail(string $login): ?User
+    {
+        $email = Str::lower(trim($login));
+        $teacher = str_contains($email, '@')
+            ? Teacher::query()->whereNull('user_id')->where('status', '!=', 'inactive')->whereRaw('LOWER(email) = ?', [$email])->first()
+            : null;
+        if (! $teacher) {
+            return null;
         }
 
-        $teacher = Teacher::query()
-            ->whereNotNull('email')
-            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
-            ->first();
-        if ($teacher) {
-            $user = User::create([
-                'campus_id' => $teacher->campus_id,
-                'name' => $teacher->full_name ?: 'Profesor',
-                'email' => trim((string) $teacher->email),
-                'phone' => $teacher->phone,
-                'password' => Hash::make(Str::random(32)),
-                'role' => User::ROLE_TEACHER,
-                'status' => 'active',
-            ]);
+        $user = User::create([
+            'campus_id' => $teacher->campus_id,
+            'name' => $teacher->full_name ?: 'Profesor',
+            'email' => trim((string) $teacher->email),
+            'phone' => $teacher->phone,
+            'password' => Hash::make(Str::random(32)),
+            'role' => User::ROLE_TEACHER,
+            'status' => 'active',
+        ]);
+        $teacher->forceFill(['user_id' => $user->id])->save();
 
-            if (! $teacher->user_id) {
-                $teacher->forceFill(['user_id' => $user->id])->save();
-            }
-
-            return $user;
-        }
-
-        $representative = Representative::query()
-            ->whereNotNull('email')
-            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
-            ->first();
-        if ($representative) {
-            $user = User::create([
-                'campus_id' => $representative->campus_id,
-                'name' => $representative->full_name ?: 'Representante',
-                'email' => trim((string) $representative->email),
-                'phone' => $representative->mobile_phone ?: $representative->phone,
-                'password' => Hash::make(Str::random(32)),
-                'role' => User::ROLE_REPRESENTATIVE,
-                'status' => 'active',
-            ]);
-
-            if (! $representative->user_id) {
-                $representative->forceFill(['user_id' => $user->id])->save();
-            }
-
-            return $user;
-        }
-
-        return null;
+        return $user;
     }
 
     public function login(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $data = $request->validate([
+            'login' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()->withErrors(['email' => 'Credenciales inválidas.'])->onlyInput('email');
+        $login = trim($data['login']);
+        $credentials = str_contains($login, '@')
+            ? ['email' => $login]
+            : ['login_document' => DocumentNumber::normalize($login)];
+
+        if (! reset($credentials) || ! Auth::attempt($credentials + ['password' => $data['password']], $request->boolean('remember'))) {
+            return back()->withErrors(['login' => 'Credenciales inválidas.'])->onlyInput('login');
         }
 
         if (Auth::user()?->status === 'inactive') {
             Auth::logout();
 
-            return back()->withErrors(['email' => 'Este usuario está desactivado. Consulta con la administración.'])->onlyInput('email');
+            return back()->withErrors(['login' => 'Este usuario está desactivado. Consulta con la administración.'])->onlyInput('login');
         }
 
         $request->session()->regenerate();

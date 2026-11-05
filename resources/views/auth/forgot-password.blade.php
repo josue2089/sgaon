@@ -18,7 +18,7 @@
     <section class="login-panel">
         <div class="login-card">
             <h2>Recuperar contraseña</h2>
-            <span class="muted">Ingresa tu correo para continuar.</span>
+            <span class="muted">Ingresa tu correo o tu cédula para continuar.</span>
             @if(session('status'))
                 <div class="flash ok">{{ session('status') }}</div>
             @endif
@@ -28,8 +28,8 @@
             <form class="login-form" method="POST" action="{{ route('password.email') }}">
                 @csrf
                 <div>
-                    <label for="email">Correo</label>
-                    <input id="email" type="email" name="email" placeholder="tu@email.com" required value="{{ old('email') }}">
+                    <label for="login">Correo o cédula</label>
+                    <input id="login" type="text" name="login" placeholder="tu@email.com o 12345678" autocomplete="username" required value="{{ old('login') }}">
                 </div>
                 <button class="btn" type="submit">Enviar enlace</button>
                 <a href="{{ route('login') }}">Volver al inicio de sesión</a>

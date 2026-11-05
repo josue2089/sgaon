@@ -31,8 +31,8 @@
             <form class="login-form" method="POST" action="{{ route('login.attempt') }}">
                 @csrf
                 <div>
-                    <label for="email">Correo</label>
-                    <input id="email" type="email" name="email" placeholder="tu@email.com" required value="{{ old('email') }}">
+                    <label for="login">Correo o cédula</label>
+                    <input id="login" type="text" name="login" placeholder="tu@email.com o 12345678" autocomplete="username" required value="{{ old('login') }}">
                 </div>
                 <div>
                     <label for="password">Contraseña</label>

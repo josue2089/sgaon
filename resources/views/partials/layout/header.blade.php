@@ -97,6 +97,7 @@
                     @if($user?->role === 'representative')
                         <a href="{{ route('portal.representative') }}" class="fi-menu-link">Portal familia</a>
                     @endif
+                    <a href="{{ route('account.password.edit') }}" class="fi-menu-link">Cambiar contraseña</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button class="fi-menu-logout" type="submit">Cerrar sesión</button>
