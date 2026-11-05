@@ -40,6 +40,17 @@ class PortalAccessService
 
     public const RECOVERY_MINUTES = 60;
 
+    /** Pueden ocultarse del lote: no es un dato que falte, entran por su representante. */
+    public const BLOCKER_KIDS = 'Alumno de Pre-Primary o Primary: entra por el portal del representante.';
+
+    /** @var array<string, User>|null */
+    private ?array $usersByEmail = null;
+
+    /** @var array<string, int>|null */
+    private ?array $userIdsByDocument = null;
+
+    private ?int $highSchoolMinimumAge = null;
+
     private const STATE_LABELS = [
         self::STATE_NONE => 'Sin acceso',
         self::STATE_INVITED => 'Invitado',
@@ -60,9 +71,9 @@ class PortalAccessService
         }
 
         // Programas sin público definido (robótica, deportes…): se decide por la edad de High School.
-        $minimumAge = (int) (Program::query()->where('code', 'HS')->value('age_min') ?: 11);
+        $this->highSchoolMinimumAge ??= (int) (Program::query()->where('code', 'HS')->value('age_min') ?: 11);
 
-        return $student->birth_date && $student->birth_date->age >= $minimumAge;
+        return $student->birth_date && $student->birth_date->age >= $this->highSchoolMinimumAge;
     }
 
     public function inviteStudent(Student $student, ?User $actor = null): PortalInvitation
@@ -91,6 +102,34 @@ class PortalAccessService
 
             return $this->issue($user, $plan['recipient'], $actor);
         });
+    }
+
+    /**
+     * Personas de estos alumnos, una fila por persona: un representante con dos hijos sale una vez. #472
+     *
+     * @param  iterable<Student>  $students
+     * @return list<array<string, mixed>>
+     */
+    public function peopleFor(iterable $students): array
+    {
+        $rows = [];
+        foreach ($students as $student) {
+            foreach ($student->representatives as $representative) {
+                $key = 'representative:'.$representative->id;
+                $rows[$key] ??= $this->row('representative', $representative, 'Representante', $representative->user, $this->representativePlan($representative)['blocker']) + ['key' => $key, 'students' => []];
+                $rows[$key]['students'][] = $student->full_name;
+            }
+            $key = 'student:'.$student->id;
+            $rows[$key] = $this->row('student', $student, 'Alumno', $student->user, $this->studentPlan($student)['blocker']) + ['key' => $key, 'students' => []];
+        }
+
+        return array_values($rows);
+    }
+
+    /** Solo se invita en lote a quien no tiene una cuenta activa o desactivada a propósito. */
+    public function canInviteInBulk(array $row): bool
+    {
+        return $row['can_invite'] && in_array($row['state'], [self::STATE_NONE, self::STATE_INVITED, self::STATE_EXPIRED], true);
     }
 
     public function deactivate(User $user): void
@@ -183,7 +222,10 @@ class PortalAccessService
             return self::STATE_DISABLED;
         }
 
-        $latest = $user->portalInvitations()->where('purpose', PortalInvitation::PURPOSE_INVITATION)->latest('id')->first();
+        $latest = $user->portalInvitations
+            ->where('purpose', PortalInvitation::PURPOSE_INVITATION)
+            ->sortByDesc('id')
+            ->first();
         if (! $latest || $latest->accepted_at) {
             return self::STATE_ACTIVE;
         }
@@ -198,7 +240,7 @@ class PortalAccessService
         $existing = $student->user;
 
         if (! $existing && ! $this->studentCanHaveAccount($student)) {
-            return $this->blocked('Alumno de Pre-Primary o Primary: entra por el portal del representante.');
+            return $this->blocked(self::BLOCKER_KIDS);
         }
 
         $representativeEmails = $student->representatives
@@ -282,6 +324,8 @@ class PortalAccessService
 
     private function ensureUser(Student|Representative $profile, string $role, array $plan): User
     {
+        $this->usersByEmail = $this->userIdsByDocument = null;
+
         /** @var User|null $user */
         $user = $plan['existing'];
 
@@ -362,7 +406,13 @@ class PortalAccessService
 
     private function userWithEmail(string $email): ?User
     {
-        return User::query()->whereRaw('LOWER(email) = ?', [$email])->first();
+        $this->usersByEmail ??= User::query()
+            ->whereNotNull('email')
+            ->get()
+            ->keyBy(fn (User $user) => mb_strtolower(trim((string) $user->email)))
+            ->all();
+
+        return $this->usersByEmail[$email] ?? null;
     }
 
     private function documentIsFree(?string $document, ?User $existing): bool
@@ -371,10 +421,10 @@ class PortalAccessService
             return false;
         }
 
-        return ! User::query()
-            ->where('login_document', $document)
-            ->when($existing, fn ($query) => $query->whereKeyNot($existing->id))
-            ->exists();
+        $this->userIdsByDocument ??= User::query()->whereNotNull('login_document')->pluck('id', 'login_document')->all();
+        $owner = $this->userIdsByDocument[$document] ?? null;
+
+        return ! $owner || (int) $owner === (int) $existing?->id;
     }
 
     private function normalizeEmail(?string $email): ?string

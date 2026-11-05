@@ -15,6 +15,7 @@ use App\Models\SystemSetting;
 use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
 use App\Support\FinanceReconcile;
+use App\Support\GradeAuthorization;
 use App\Support\PaymentSubmission;
 use App\Support\PrivateFiles;
 use App\Support\MakeupRecoveryEngine;
@@ -303,7 +304,9 @@ class PortalController extends Controller
         $representative = $this->resolveRepresentative($request);
         abort_if(! $representative, 404, 'Perfil de representante no vinculado.');
 
-        $students = $representative->students()
+        $students = Student::query()
+            ->whereHas('representatives', fn ($query) => $query->whereKey(Representative::forUser($request->user())->pluck('id')))
+            ->orderBy('first_name')
             ->with([
                 'enrollments.group.course',
                 'charges.paymentRequests',
@@ -347,8 +350,8 @@ class PortalController extends Controller
     {
         $representative = $this->resolveRepresentative($request);
         abort_if(! $representative, 404, 'Perfil de representante no vinculado.');
-        $student = $representative->students()->where('students.id', $charge->student_id)->first();
-        abort_if(! $student, 403);
+        $student = Student::query()->find($charge->student_id);
+        abort_if(! $student || ! GradeAuthorization::representativeCanAccessStudent($request->user(), $student), 403);
 
         $this->storeChargePaymentRequest($request, $charge, $student, $representative);
 
