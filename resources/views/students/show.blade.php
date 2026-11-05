@@ -308,6 +308,7 @@
                     <th>Fechas</th>
                     <th>Asistencia</th>
                     <th>Estado</th>
+                    <th><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -331,9 +332,10 @@
                         <td>{{ $course?->start_date?->format('d/m/Y') ?? 'N/D' }} - {{ $course?->end_date?->format('d/m/Y') ?? 'N/D' }}</td>
                         <td>{{ is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%' }}</td>
                         <td>@include('partials.ui.status', ['status' => $enrollment->status, 'domain' => 'enrollment'])</td>
+                        <td class="table-actions">@include('partials.enrollments.change-actions', ['enrollment' => $enrollment->setRelation('student', $student)])</td>
                     </tr>
                 @empty
-                    <tr><td colspan="7"><div class="empty-state-inline">No hay historico de cursos para este alumno.</div></td></tr>
+                    <tr><td colspan="8"><div class="empty-state-inline">No hay historico de cursos para este alumno.</div></td></tr>
                 @endforelse
                 </tbody>
             </table>

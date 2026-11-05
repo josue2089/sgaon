@@ -108,6 +108,9 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             ->name('courses.report.pdf');
         Route::resource('courses', CourseController::class);
         Route::resource('groups', GroupController::class)->except('show');
+        Route::post('/enrollments/{enrollment}/withdraw', [\App\Http\Controllers\EnrollmentChangeController::class, 'withdraw'])->name('enrollments.withdraw');
+        Route::get('/enrollments/{enrollment}/transfer', [\App\Http\Controllers\EnrollmentChangeController::class, 'editTransfer'])->name('enrollments.transfer.edit');
+        Route::post('/enrollments/{enrollment}/transfer', [\App\Http\Controllers\EnrollmentChangeController::class, 'transfer'])->name('enrollments.transfer');
         Route::resource('enrollments', EnrollmentController::class)->except('show');
         Route::resource('sessions', ClassSessionController::class)->except('show');
         Route::get('/makeups', [MakeupRecoveryController::class, 'index'])->name('makeups.index');

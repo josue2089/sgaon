@@ -202,11 +202,14 @@
                         <td>@include('partials.ui.status', ['status' => $enrollment->status, 'domain' => 'enrollment'])</td>
                         <td>{{ (int) $enrollment->progress }}%</td>
                         <td class="table-actions">
-                            <form method="POST" action="{{ route('courses.students.remove', [$course, $enrollment]) }}" data-confirm="¿Quitar este alumno del curso?" data-confirm-danger>
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn-link-danger" type="submit">Quitar</button>
-                            </form>
+                            @include('partials.enrollments.change-actions', ['enrollment' => $enrollment])
+                            @if(! $enrollment->attendance_records_count && ! $enrollment->charges_count)
+                                <form method="POST" action="{{ route('courses.students.remove', [$course, $enrollment]) }}" data-confirm="¿Quitar este alumno del curso? No tiene asistencia ni cargos, así que se borra la inscripción." data-confirm-danger>
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn-link-danger" type="submit">Quitar</button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

@@ -532,7 +532,7 @@ class CourseController extends Controller
             'period',
             'scheduleTemplate',
             'managedGroup.teacher',
-            'managedGroup.enrollments.student',
+            'managedGroup.enrollments' => fn ($query) => $query->with('student')->withCount(['attendanceRecords', 'charges']),
             'managedGroup.sessions' => fn ($query) => $query
                 ->with('plannedLesson')
                 ->withCount('attendanceRecords')
