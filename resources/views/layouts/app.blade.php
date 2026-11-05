@@ -64,6 +64,7 @@
 @if($errors->any())
     <script type="application/json" id="form-errors">@json($errors->getMessages())</script>
 @endif
+@stack('modals')
 @stack('scripts')
 </body>
 </html>

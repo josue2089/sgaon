@@ -12,6 +12,7 @@ use App\Services\EnrollmentBillingService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -103,7 +104,7 @@ class EnrollmentController extends Controller
                 'group_id' => 'No se puede inscribir en un grupo inactivo.',
             ]);
         }
-        $this->assertStudentCanEnrollByGrade($student, $group);
+        RenewalEnrollmentEligibility::assertCanEnrollInGroup($student, $group);
         $alreadyInGroup = Enrollment::query()
             ->where('group_id', $group->id)
             ->where('student_id', $student->id)
@@ -136,68 +137,19 @@ class EnrollmentController extends Controller
 
     public function edit(Enrollment $enrollment): View
     {
-        $students = Student::orderBy('first_name');
-        $groups = Group::with('course')->orderBy('name');
-        if ($this->campusScoped()) {
-            $this->applyCampusScope($students, 'campus_id');
-            $this->applyCampusScope($groups, 'campus_id');
-        }
-
-        return view('enrollments.edit', [
-            'enrollment' => $enrollment,
-            'students' => $students->get(),
-            'groups' => $groups->get(),
-        ]);
+        return view('enrollments.edit', ['enrollment' => $enrollment->load(['student', 'group.course'])]);
     }
 
     public function update(Request $request, Enrollment $enrollment): RedirectResponse
     {
+        // Alumno y curso no se editan: un cambio pasa por "Cambiar de curso", que maneja los cargos. #441
+        $statuses = array_values(array_unique(['active', 'inactive', 'completed', $enrollment->status]));
         $data = $request->validate([
-            'student_id' => ['required', 'exists:students,id'],
-            'group_id' => ['required', 'exists:groups,id'],
             'enrolled_at' => ['nullable', 'date', 'sane_date'],
-            'status' => ['required', 'string'],
+            'status' => ['required', Rule::in($statuses)],
             'progress' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
         ]);
-
-        $student = Student::findOrFail($data['student_id']);
-        $group = Group::findOrFail($data['group_id']);
-        if (! $this->canAccessCampus((int) $student->campus_id)) {
-            abort(403);
-        }
-        if (! $this->canAccessCampus((int) $group->campus_id)) {
-            abort(403);
-        }
-        if ($group->status !== 'active') {
-            throw ValidationException::withMessages([
-                'group_id' => 'No se puede inscribir en un grupo inactivo.',
-            ]);
-        }
-        $this->assertStudentCanEnrollByGrade($student, $group);
-        $duplicate = Enrollment::query()
-            ->where('group_id', $group->id)
-            ->where('student_id', $student->id)
-            ->where('id', '!=', $enrollment->id)
-            ->exists();
-        if ($duplicate) {
-            throw ValidationException::withMessages([
-                'group_id' => 'Ese alumno ya está inscrito en el grupo seleccionado.',
-            ]);
-        }
-
-        if ($group->capacity) {
-            $currentSeats = Enrollment::query()
-                ->where('group_id', $group->id)
-                ->when((int) $enrollment->group_id === (int) $group->id, fn (Builder $builder) => $builder->where('id', '!=', $enrollment->id))
-                ->count();
-            if ($currentSeats >= (int) $group->capacity) {
-                throw ValidationException::withMessages([
-                    'group_id' => 'El grupo alcanzó su capacidad máxima.',
-                ]);
-            }
-        }
-        $data['campus_id'] = $this->singleAllowedCampusId() ?: $student->campus_id;
 
         $enrollment->update($data);
         AuditTrail::log($request, 'enrollment.update', $enrollment, $data);
@@ -221,47 +173,5 @@ class EnrollmentController extends Controller
         AuditTrail::log(request(), 'enrollment.delete', null, $payload);
 
         return redirect()->route('enrollments.index')->with('success', 'Inscripción eliminada.');
-    }
-
-    private function assertStudentCanEnrollByGrade(Student $student, Group $targetGroup): void
-    {
-        $targetCourse = $targetGroup->course()->with(['programLevel', 'courseLevel'])->first();
-        if (! $targetCourse) {
-            return;
-        }
-
-        $candidatePreviousEnrollment = Enrollment::query()
-            ->where('student_id', $student->id)
-            ->with(['group.course.programLevel', 'group.course.courseLevel'])
-            ->orderByDesc('enrolled_at')
-            ->orderByDesc('id')
-            ->get()
-            ->first(function (Enrollment $enrollment) use ($targetCourse): bool {
-                $sourceCourse = $enrollment->group?->course;
-                if (! $sourceCourse || (int) $sourceCourse->id === (int) $targetCourse->id) {
-                    return false;
-                }
-
-                if ($sourceCourse->programLevel && $targetCourse->program_level_id) {
-                    return (int) ($sourceCourse->programLevel?->nextLevel()?->id ?? 0) === (int) $targetCourse->program_level_id;
-                }
-
-                if ($sourceCourse->courseLevel && $targetCourse->course_level_id) {
-                    return (int) ($sourceCourse->courseLevel?->nextLevel()?->id ?? 0) === (int) $targetCourse->course_level_id;
-                }
-
-                return false;
-            });
-
-        if (! $candidatePreviousEnrollment || ! $candidatePreviousEnrollment->group?->course) {
-            return;
-        }
-
-        $eligibility = RenewalEnrollmentEligibility::evaluateForCourse($student, $candidatePreviousEnrollment->group->course);
-        if (! $eligibility['eligible']) {
-            throw ValidationException::withMessages([
-                'student_id' => 'El alumno no puede inscribirse al siguiente curso porque su evaluación final está en Need Support.',
-            ]);
-        }
     }
 }

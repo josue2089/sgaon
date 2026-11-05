@@ -63,7 +63,10 @@
                     </div>
                 </div>
                 <div style="margin-top:.8rem; display:flex; justify-content:flex-end;">
-                    <a href="{{ route('enrollments.edit',$enrollment) }}">Editar</a>
+                    <div class="table-actions">
+                        @include('partials.enrollments.change-actions', ['enrollment' => $enrollment])
+                        <a href="{{ route('enrollments.edit',$enrollment) }}">Editar</a>
+                    </div>
                 </div>
             </div>
         @endforeach
