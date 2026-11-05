@@ -21,6 +21,7 @@ class User extends Authenticatable
         'campus_id',
         'name',
         'email',
+        'login_document',
         'phone',
         'password',
         'role',
@@ -52,6 +53,11 @@ class User extends Authenticatable
     public function campuses()
     {
         return $this->belongsToMany(Campus::class)->withTimestamps();
+    }
+
+    public function portalInvitations()
+    {
+        return $this->hasMany(PortalInvitation::class);
     }
 
     public function roles()

@@ -135,8 +135,8 @@ class TeacherUserLinkTest extends TestCase
     {
         User::factory()->create(['email' => 'off@test.com', 'password' => Hash::make('secret123'), 'status' => 'inactive', 'role' => 'teacher']);
 
-        $this->post(route('login'), ['email' => 'off@test.com', 'password' => 'secret123'])
-            ->assertSessionHasErrors('email');
+        $this->post(route('login'), ['login' => 'off@test.com', 'password' => 'secret123'])
+            ->assertSessionHasErrors('login');
         $this->assertGuest();
     }
 }

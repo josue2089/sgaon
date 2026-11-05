@@ -173,6 +173,8 @@
     </div>
 </div>
 
+@include('partials.students.portal-access')
+
 <div class="detail-grid student-detail-grid">
     <div class="card">
         <div class="section-head section-head-tight">

@@ -199,6 +199,7 @@ class StudentController extends Controller
 
         $data = $this->detailData($student);
         $data['enrollableGroups'] = $this->enrollableGroups($student);
+        $data['portalAccess'] = app(\App\Services\PortalAccessService::class)->summaryFor($student);
         if ($request->user()?->hasPermission('finance.manage')) {
             $data = array_merge($data, $this->paymentFormData($student));
         }

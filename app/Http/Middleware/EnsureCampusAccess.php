@@ -11,6 +11,7 @@ use App\Support\CampusScope;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureCampusAccess
@@ -21,6 +22,15 @@ class EnsureCampusAccess
 
         if (! $user) {
             return $next($request);
+        }
+
+        // Un usuario desactivado pierde la sesión que tenía abierta. #471
+        if ($user->status === 'inactive') {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors(['login' => 'Este usuario está desactivado. Consulta con la administración.']);
         }
 
         foreach ($request->route()?->parameters() ?? [] as $parameter) {
