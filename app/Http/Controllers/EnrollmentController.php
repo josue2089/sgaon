@@ -43,6 +43,10 @@ class EnrollmentController extends Controller
             $query->where('group_id', $groupId);
         }
 
+        if ($request->query('source') === 'portal') {
+            $query->whereNotNull('renewed_from_portal_at');
+        }
+
         $status = (string) $request->query('status', '');
         if ($status !== '') {
             $query->where('status', $status);

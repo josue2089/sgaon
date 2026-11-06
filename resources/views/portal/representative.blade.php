@@ -54,6 +54,16 @@
         </div>
 
         <section class="portal-tab-panel is-active" data-tab-panel="resumen">
+            @if(($renewalOffersByStudentId[$student->id] ?? collect())->isNotEmpty())
+                <div class="card">
+                    <h4 class="section-title section-title-sm">Inscripción al siguiente curso</h4>
+                    @include('partials.portal.renewal-offers', [
+                        'offers' => $renewalOffersByStudentId[$student->id],
+                        'renewRoute' => fn ($course) => route('portal.representative.renewals.enroll', [$student, $course]),
+                        'buttonLabel' => 'Renovar a '.$student->first_name,
+                    ])
+                </div>
+            @endif
             <div class="grid-2">
                 <div class="card table-card">
                     <h4 class="section-title section-title-sm">Resumen financiero</h4>

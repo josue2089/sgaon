@@ -22,6 +22,9 @@
                 <button class="btn secondary" type="submit" data-submit-busy-label="Generando…">Generar cuotas faltantes</button>
             </form>
         @endif
+        @if(! $course->isExtracurricular() && $course->programLevel?->nextLevel())
+            <a class="btn" href="{{ route('courses.next-level.create', $course) }}">Abrir siguiente nivel</a>
+        @endif
         <a class="btn secondary" href="{{ route('courses.edit', $course) }}">Editar curso</a>
         <a class="btn secondary" href="{{ route('courses.index') }}">Volver</a>
     </div>

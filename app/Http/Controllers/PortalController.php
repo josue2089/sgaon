@@ -14,12 +14,12 @@ use App\Models\Student;
 use App\Models\SystemSetting;
 use App\Models\PaymentMethod;
 use App\Services\Bcv\ExchangeRateService;
+use App\Services\LevelRenewalService;
 use App\Support\FinanceReconcile;
 use App\Support\GradeAuthorization;
 use App\Support\PaymentSubmission;
 use App\Support\PrivateFiles;
 use App\Support\MakeupRecoveryEngine;
-use App\Support\RenewalEnrollmentEligibility;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
@@ -145,7 +145,7 @@ class PortalController extends Controller
             ->sortByDesc(fn ($entry) => optional($entry->evaluationSet)->evaluated_on)
             ->values();
 
-        $renewalOffers = $this->buildRenewalOffers($student);
+        $renewalOffers = app(LevelRenewalService::class)->offersFor($student);
 
         $paymentMethods = PaymentMethod::query()
             ->where('is_active', true)
@@ -158,66 +158,26 @@ class PortalController extends Controller
         return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'balance', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions', 'pendingCharges', 'chargePaymentRequests', 'portalGradeEntries', 'renewalOffers', 'paymentMethods', 'bcvRate', 'bcvEurRate'));
     }
 
-    public function enrollInRenewalCourse(Request $request, Course $course): RedirectResponse
+    public function enrollInRenewalCourse(Request $request, Course $course, LevelRenewalService $renewals): RedirectResponse
     {
         $student = $this->resolveStudent($request);
-        abort_if(! $student || (int) $student->campus_id !== (int) $course->campus_id, 403);
+        abort_if(! $student, 403);
 
-        $targetGroup = $course->managedGroup;
-        if (! $targetGroup || $course->status !== 'active') {
-            return back()->withErrors(['renewal' => 'El curso de renovación aún no está disponible para inscripción.']);
-        }
+        return $this->renew($request, $student, $course, $renewals, 'Ya estás inscrito en este curso.');
+    }
 
-        $alreadyEnrolled = Enrollment::query()
-            ->where('student_id', $student->id)
-            ->where('group_id', $targetGroup->id)
-            ->exists();
-        if ($alreadyEnrolled) {
-            return back()->with('success', 'Ya estás inscrito en este curso.');
-        }
+    public function enrollInRenewalCourseAsRepresentative(Request $request, Student $student, Course $course, LevelRenewalService $renewals): RedirectResponse
+    {
+        abort_unless(GradeAuthorization::representativeCanAccessStudent($request->user(), $student), 403);
 
-        $sourceEnrollment = Enrollment::query()
-            ->where('student_id', $student->id)
-            ->with(['group.course.programLevel', 'group.course.courseLevel'])
-            ->orderByDesc('enrolled_at')
-            ->orderByDesc('id')
-            ->get()
-            ->first(function (Enrollment $enrollment) use ($course): bool {
-                $sourceCourse = $enrollment->group?->course;
-                if (! $sourceCourse || (int) $sourceCourse->id === (int) $course->id) {
-                    return false;
-                }
+        return $this->renew($request, $student, $course, $renewals, $student->full_name.' ya está inscrito en este curso.');
+    }
 
-                if ($sourceCourse->programLevel && $course->program_level_id) {
-                    return (int) ($sourceCourse->programLevel?->nextLevel()?->id ?? 0) === (int) $course->program_level_id;
-                }
-
-                if ($sourceCourse->courseLevel && $course->course_level_id) {
-                    return (int) ($sourceCourse->courseLevel?->nextLevel()?->id ?? 0) === (int) $course->course_level_id;
-                }
-
-                return false;
-            });
-
-        if (! $sourceEnrollment || ! $sourceEnrollment->group?->course) {
-            return back()->withErrors(['renewal' => 'No encontramos un curso previo válido para procesar la renovación.']);
-        }
-
-        $eligibility = RenewalEnrollmentEligibility::evaluateForCourse($student, $sourceEnrollment->group->course);
-        if (! $eligibility['eligible']) {
-            return back()->withErrors(['renewal' => 'Tu evaluación final no permite inscripción automática al siguiente curso.']);
-        }
-
-        Enrollment::create([
-            'campus_id' => $student->campus_id,
-            'student_id' => $student->id,
-            'group_id' => $targetGroup->id,
-            'enrolled_at' => now()->toDateString(),
-            'status' => 'active',
-            'progress' => 0,
-        ]);
-
-        return back()->with('success', 'Inscripción realizada con éxito.');
+    private function renew(Request $request, Student $student, Course $course, LevelRenewalService $renewals, string $alreadyMessage): RedirectResponse
+    {
+        return back()->with('success', $renewals->renewFromPortal($student, $course, $request)
+            ? 'Inscripción realizada con éxito. La mensualidad ya aparece en Pagos.'
+            : $alreadyMessage);
     }
 
     public function submitMakeupPayment(Request $request, MakeupRequest $makeupRequest): RedirectResponse
@@ -333,7 +293,10 @@ class PortalController extends Controller
         $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
         $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
 
-        return view('portal.representative', compact('representative', 'students', 'repGradeEntriesByStudentId', 'paymentMethods', 'bcvRate', 'bcvEurRate'));
+        $renewals = app(LevelRenewalService::class);
+        $renewalOffersByStudentId = $students->mapWithKeys(fn (Student $student) => [$student->id => $renewals->offersFor($student)]);
+
+        return view('portal.representative', compact('representative', 'students', 'repGradeEntriesByStudentId', 'paymentMethods', 'bcvRate', 'bcvEurRate', 'renewalOffersByStudentId'));
     }
 
     public function submitChargePaymentAsStudent(Request $request, Charge $charge): RedirectResponse
@@ -424,62 +387,5 @@ class PortalController extends Controller
             'status' => ChargePaymentRequest::STATUS_PENDING_VALIDATION,
             'submitted_at' => now(),
         ]);
-    }
-
-    private function buildRenewalOffers(Student $student)
-    {
-        $activeEnrollments = $student->enrollments()
-            ->where('status', 'active')
-            ->with(['group.course.programLevel', 'group.course.courseLevel'])
-            ->get();
-
-        return $activeEnrollments
-            ->map(function (Enrollment $enrollment) use ($student) {
-                $course = $enrollment->group?->course;
-                if (! $course || ! $course->end_date) {
-                    return null;
-                }
-
-                $nextLevelId = $course->programLevel?->nextLevel()?->id;
-                $nextCourseLevelId = $course->courseLevel?->nextLevel()?->id;
-                $nextCourse = null;
-                if ($nextLevelId) {
-                    $nextCourse = Course::query()
-                        ->with(['managedGroup', 'scheduleTemplate'])
-                        ->where('campus_id', $course->campus_id)
-                        ->where('program_level_id', $nextLevelId)
-                        ->whereNull('teacher_id')
-                        ->whereDate('start_date', $course->end_date->copy()->addDay()->toDateString())
-                        ->first();
-                } elseif ($nextCourseLevelId) {
-                    $nextCourse = Course::query()
-                        ->with(['managedGroup', 'scheduleTemplate'])
-                        ->where('campus_id', $course->campus_id)
-                        ->where('course_level_id', $nextCourseLevelId)
-                        ->whereNull('teacher_id')
-                        ->whereDate('start_date', $course->end_date->copy()->addDay()->toDateString())
-                        ->first();
-                }
-
-                if (! $nextCourse || ! $nextCourse->managedGroup) {
-                    return null;
-                }
-
-                $alreadyEnrolled = Enrollment::query()
-                    ->where('student_id', $student->id)
-                    ->where('group_id', $nextCourse->managed_group_id)
-                    ->exists();
-
-                $eligibility = RenewalEnrollmentEligibility::evaluateForCourse($student, $course);
-
-                return [
-                    'source_course' => $course,
-                    'target_course' => $nextCourse,
-                    'already_enrolled' => $alreadyEnrolled,
-                    'eligible' => $eligibility['eligible'],
-                ];
-            })
-            ->filter()
-            ->values();
     }
 }

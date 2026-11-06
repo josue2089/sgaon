@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Charge;
 use App\Models\ChargePaymentRequest;
 use App\Models\ClassSession;
+use App\Models\Enrollment;
 use App\Models\MakeupRequest;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -76,6 +77,12 @@ class TodayInbox
             )->count();
             $items[] = self::item('extracurricular', 'Mensualidades extracurriculares del mes', 'Cuotas de este mes que siguen sin pagarse.', $extracurricular, 'finance.index', [], 'Ver cobros', 'info');
         }
+
+        $portalRenewals = CampusScope::apply(
+            Enrollment::query()->where('renewed_from_portal_at', '>=', now()->subDay()),
+            $user
+        )->count();
+        $items[] = self::item('portal_renewals', 'Renovaciones desde el portal', 'Familias que inscribieron al siguiente nivel en las últimas 24 horas.', $portalRenewals, 'enrollments.index', ['source' => 'portal'], 'Ver inscripciones', 'info');
 
         $withoutEnrollment = CampusScope::apply(
             Student::query()

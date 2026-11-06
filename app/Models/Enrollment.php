@@ -28,6 +28,7 @@ class Enrollment extends Model
         'student_id',
         'group_id',
         'enrolled_at',
+        'renewed_from_portal_at',
         'status',
         'progress',
         'notes',
@@ -37,6 +38,7 @@ class Enrollment extends Model
     {
         return [
             'enrolled_at' => 'date',
+            'renewed_from_portal_at' => 'datetime',
             'progress' => 'float',
         ];
     }
