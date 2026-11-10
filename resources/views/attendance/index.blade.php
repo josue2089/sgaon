@@ -160,7 +160,24 @@
                     <div><strong>Clase planificada:</strong> {{ $selectedSession->planned_class_label ?: 'N/D' }}</div>
                     <div><strong>Unidad:</strong> {{ $selectedSession->planned_unit ?: 'N/D' }}</div>
                     <div><strong>Contenido esperado:</strong> {{ $selectedSession->planned_content ?: 'Sin contenido planificado' }}</div>
+                    @if($selectedSession->plannedLesson?->typeLabel())
+                        <div><strong>Tipo de clase:</strong> {{ $selectedSession->plannedLesson->typeLabel() }}</div>
+                    @endif
                 </div>
+                {{-- #470: estructura oficial de la clase del programa, como guía para el profesor. --}}
+                @php
+                    $framework = $selectedSession->group?->course?->program?->class_framework ?? [];
+                @endphp
+                @if($framework !== [])
+                    <details class="attendance-framework" open>
+                        <summary><strong>Estructura de la clase</strong></summary>
+                        <ol>
+                            @foreach($framework as $step)
+                                <li>{{ $step }}</li>
+                            @endforeach
+                        </ol>
+                    </details>
+                @endif
                 <div class="grid-3">
                     <div>
                         <label>Programa ejecutado / tema visto</label>

@@ -98,6 +98,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/students/{student}/enrollment-sheet', [StudentController::class, 'enrollmentSheet'])->name('students.enrollment-sheet');
         Route::get('/students/{student}/enrollment-sheet/pdf', [StudentController::class, 'enrollmentSheetPdf'])->name('students.enrollment-sheet.pdf');
         Route::get('/students/{student}/extracurricular-sheet/pdf', [StudentController::class, 'extracurricularSheetPdf'])->name('students.extracurricular-sheet.pdf');
+        Route::get('/students/{student}/logbook/{enrollment}', [StudentController::class, 'logbook'])->name('students.logbook');
+        Route::get('/students/{student}/logbook/{enrollment}/pdf', [StudentController::class, 'logbookPdf'])->name('students.logbook.pdf');
         Route::post('/students/{student}/payments', [StudentController::class, 'storePayment'])
             ->middleware('permission:finance.manage')
             ->name('students.payments.store');
@@ -167,6 +169,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::post('/program-levels/{programLevel}/duplicate', [ProgramLevelController::class, 'duplicate'])->name('program-levels.duplicate');
             Route::get('/program-levels/{programLevel}/lessons/create', [ProgramLevelLessonController::class, 'create'])->name('program-level-lessons.create');
             Route::post('/program-levels/{programLevel}/lessons', [ProgramLevelLessonController::class, 'store'])->name('program-level-lessons.store');
+            Route::post('/program-levels/{programLevel}/lessons/import/preview', [ProgramLevelLessonController::class, 'importPreview'])->name('program-level-lessons.import.preview');
+            Route::post('/program-levels/{programLevel}/lessons/import', [ProgramLevelLessonController::class, 'importStore'])->name('program-level-lessons.import.store');
             Route::get('/program-level-lessons/{programLevelLesson}/edit', [ProgramLevelLessonController::class, 'edit'])->name('program-level-lessons.edit');
             Route::put('/program-level-lessons/{programLevelLesson}', [ProgramLevelLessonController::class, 'update'])->name('program-level-lessons.update');
             Route::delete('/program-level-lessons/{programLevelLesson}', [ProgramLevelLessonController::class, 'destroy'])->name('program-level-lessons.destroy');
@@ -229,6 +233,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/portal/student/makeups/{makeupRequest}/book', [PortalController::class, 'bookMakeupSession'])->name('portal.student.makeups.book');
         Route::post('/portal/student/charges/{charge}/payment', [PortalController::class, 'submitChargePaymentAsStudent'])->name('portal.student.charges.payment');
         Route::get('/portal/student/receipts/{receipt}/pdf', [PortalController::class, 'downloadReceiptAsStudent'])->name('portal.student.receipts.pdf');
+        Route::get('/portal/student/logbook/{enrollment}/pdf', [PortalController::class, 'downloadLogbookAsStudent'])->name('portal.student.logbook.pdf');
     });
 
     Route::middleware(['role:representative', 'permission:portal.representative.view'])->group(function () {
@@ -238,5 +243,6 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/portal/representative/makeups/{makeupRequest}/payment', [PortalController::class, 'submitMakeupPaymentAsRepresentative'])->name('portal.representative.makeups.payment');
         Route::post('/portal/representative/makeups/{makeupRequest}/book', [PortalController::class, 'bookMakeupSessionAsRepresentative'])->name('portal.representative.makeups.book');
         Route::get('/portal/representative/receipts/{receipt}/pdf', [PortalController::class, 'downloadReceiptAsRepresentative'])->name('portal.representative.receipts.pdf');
+        Route::get('/portal/representative/logbook/{enrollment}/pdf', [PortalController::class, 'downloadLogbookAsRepresentative'])->name('portal.representative.logbook.pdf');
     });
 });

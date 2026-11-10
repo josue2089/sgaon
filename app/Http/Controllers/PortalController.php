@@ -22,6 +22,7 @@ use App\Support\FinanceReconcile;
 use App\Support\GradeAuthorization;
 use App\Support\PaymentSubmission;
 use App\Support\PortalStudentData;
+use App\Support\StudentLogbook;
 use App\Support\PrivateFiles;
 use App\Support\MakeupRecoveryEngine;
 use Illuminate\Http\Request;
@@ -227,6 +228,22 @@ class PortalController extends Controller
         $this->authorizeRepresentativeFor($request, $receipt->payment?->student);
 
         return $this->streamReceipt($receipt);
+    }
+
+    /** Bitácora File A/B en PDF. #470 */
+    public function downloadLogbookAsStudent(Request $request, Enrollment $enrollment)
+    {
+        $student = $this->resolveStudent($request);
+        abort_if(! $student || (int) $enrollment->student_id !== (int) $student->id, 403);
+
+        return StudentLogbook::download($enrollment);
+    }
+
+    public function downloadLogbookAsRepresentative(Request $request, Enrollment $enrollment)
+    {
+        $this->authorizeRepresentativeFor($request, $enrollment->student);
+
+        return StudentLogbook::download($enrollment);
     }
 
     private function streamReceipt(Receipt $receipt): StreamedResponse

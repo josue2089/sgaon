@@ -47,6 +47,23 @@
     </div>
 </div>
 
+<div class="card">
+    <div class="section-head">
+        <h2 class="section-title">Importar plan de clases (CSV)</h2>
+        <div class="entity-sub">Columnas: clase; unidad; contenido; tipo. Primero verás una vista previa.</div>
+    </div>
+    <form method="POST" action="{{ route('program-level-lessons.import.preview', $level) }}" enctype="multipart/form-data" class="fi-filter-bar">
+        @csrf
+        <div>
+            <label for="lessons-csv">Archivo CSV</label>
+            <input id="lessons-csv" type="file" name="file" accept=".csv,text/csv,text/plain" required>
+            @error('file')<div class="field-error">{{ $message }}</div>@enderror
+        </div>
+        <button class="btn secondary" type="submit">Ver vista previa</button>
+    </form>
+    <div class="form-hint">Tipos: {{ implode(', ', array_keys(\App\Support\LessonTemplates::TYPES)) }}. Una clase con el mismo número se reemplaza; las demás no se tocan.</div>
+</div>
+
 <div class="card table-card">
     <div class="section-head">
         <h2 class="section-title">Clases base</h2>
@@ -59,6 +76,7 @@
                 <tr>
                     <th>Clase</th>
                     <th>Unidad</th>
+                    <th>Tipo</th>
                     <th>Contenido</th>
                     <th>Orden</th>
                     <th></th>
@@ -69,6 +87,12 @@
                     <tr>
                         <td>{{ $lesson->class_number }}</td>
                         <td>{{ $lesson->unit ?: 'N/D' }}</td>
+                        <td>
+                            {{ $lesson->typeLabel() ?? '—' }}
+                            @if($lesson->activity_tags)
+                                <div class="table-sub">{{ collect($lesson->activity_tags)->map(fn ($tag) => \App\Support\LessonTemplates::TAGS[$tag] ?? $tag)->implode(' · ') }}</div>
+                            @endif
+                        </td>
                         <td>
                             <div class="table-title">{{ $lesson->content }}</div>
                             <div class="table-sub">{{ $lesson->notes ?: 'Sin nota' }}</div>

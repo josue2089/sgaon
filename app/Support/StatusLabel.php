@@ -73,7 +73,7 @@ class StatusLabel
             return MakeupRequest::STATUS_LABELS[$status];
         }
 
-        return self::DOMAIN_LABELS[$domain][$status]
+        return ($domain !== null ? (self::DOMAIN_LABELS[$domain][$status] ?? null) : null)
             ?? self::LABELS[$status]
             ?? MakeupRequest::STATUS_LABELS[$status]
             ?? ucfirst(str_replace('_', ' ', $status));

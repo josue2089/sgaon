@@ -332,7 +332,10 @@
                         <td>{{ $course?->start_date?->format('d/m/Y') ?? 'N/D' }} - {{ $course?->end_date?->format('d/m/Y') ?? 'N/D' }}</td>
                         <td>{{ is_null($attendanceRate) ? 'N/D' : $attendanceRate.'%' }}</td>
                         <td>@include('partials.ui.status', ['status' => $enrollment->status, 'domain' => 'enrollment'])</td>
-                        <td class="table-actions">@include('partials.enrollments.change-actions', ['enrollment' => $enrollment->setRelation('student', $student)])</td>
+                        <td class="table-actions">
+                            @if($enrollment->group_id)<a href="{{ route('students.logbook', [$student, $enrollment]) }}">Bitácora</a>@endif
+                            @include('partials.enrollments.change-actions', ['enrollment' => $enrollment->setRelation('student', $student)])
+                        </td>
                     </tr>
                 @empty
                     <tr><td colspan="8"><div class="empty-state-inline">No hay historico de cursos para este alumno.</div></td></tr>

@@ -23,6 +23,7 @@ class Program extends Model
         'age_min',
         'age_max',
         'uses_cefr',
+        'class_framework',
     ];
 
     protected function casts(): array
@@ -33,6 +34,7 @@ class Program extends Model
             'uses_cefr' => 'boolean',
             'age_min' => 'integer',
             'age_max' => 'integer',
+            'class_framework' => 'array',
         ];
     }
 

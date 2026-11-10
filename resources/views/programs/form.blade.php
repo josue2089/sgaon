@@ -49,6 +49,11 @@
         <p class="entity-sub">Desmárcalo para programas que no son de inglés (robótica, deportes…).</p>
     </div>
     <div class="col-span-full">
+        <label for="program-class-framework">Estructura de la clase</label>
+        <textarea id="program-class-framework" name="class_framework" rows="5" placeholder="Lead In&#10;Intro vocab&#10;Closure">{{ old('class_framework', implode("\n", $program->class_framework ?? [])) }}</textarea>
+        <p class="entity-sub">Un paso por línea. El profesor lo ve como guía al pasar asistencia.</p>
+    </div>
+    <div class="col-span-full">
         <label>Descripción</label>
         <textarea name="description">{{ old('description', $program->description ?? '') }}</textarea>
     </div>
