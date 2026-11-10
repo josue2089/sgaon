@@ -2,24 +2,37 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ScopesCampusAccess;
 use App\Jobs\GenerateReportExportJob;
 use App\Models\Alert;
-use App\Models\AuditLog;
 use App\Models\AttendanceRecord;
+use App\Models\AuditLog;
+use App\Models\Campus;
 use App\Models\Charge;
+use App\Models\Course;
+use App\Models\Enrollment;
+use App\Models\Group;
 use App\Models\Payment;
+use App\Models\Period;
 use App\Models\ReportExport;
 use App\Models\ReportPreset;
+use App\Models\Student;
+use App\Models\SystemSetting;
+use App\Models\Teacher;
+use App\Support\CampusScope;
+use App\Support\CsvExport;
+use App\Support\DateFormat;
 use App\Support\FinanceReconcile;
 use App\Support\PrivateFiles;
-use Illuminate\Http\Request;
+use App\Support\StatusLabel;
 use Illuminate\Http\RedirectResponse;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
-    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
+    use ScopesCampusAccess;
 
     public function attendance(Request $request): View|StreamedResponse
     {
@@ -47,7 +60,7 @@ class ReportController extends Controller
 
         return view('reports.attendance', [
             'records' => $query->latest()->paginate(40)->withQueryString(),
-            'groups' => \App\Models\Group::query()
+            'groups' => Group::query()
                 ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
                 ->orderBy('name')
                 ->get(['id', 'name']),
@@ -67,10 +80,22 @@ class ReportController extends Controller
 
     public function payments(Request $request): View|StreamedResponse
     {
-        $query = Charge::with(['student', 'payments', 'course', 'group', 'period'])->latest();
+        $filters = $request->validate([
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'campus_id' => ['nullable', 'integer'],
+        ]);
+        $campusId = ! empty($filters['campus_id']) && $this->canAccessCampus((int) $filters['campus_id']) ? (int) $filters['campus_id'] : null;
+        $start = $filters['start_date'] ?? null;
+        $end = $filters['end_date'] ?? null;
+
+        $query = Charge::with(['student.representatives', 'payments', 'course', 'group', 'period'])->latest();
         if ($this->campusScoped()) {
             $this->applyCampusScope($query, 'campus_id');
         }
+        $query->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($start, fn ($q) => $q->whereDate('due_date', '>=', $start))
+            ->when($end, fn ($q) => $q->whereDate('due_date', '<=', $end));
 
         if ($request->filled('status')) {
             $query->where('status', (string) $request->query('status'));
@@ -88,23 +113,36 @@ class ReportController extends Controller
             $query->where('charge_type', (string) $request->query('charge_type'));
         }
 
+        // Pagos recibidos: mismo rango (por fecha de pago) y sede. #449
+        $paymentsQuery = Payment::query()->whereNull('voided_at')->with(['student.representatives', 'paymentMethod', 'receipt'])
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($start, fn ($q) => $q->whereDate('paid_at', '>=', $start))
+            ->when($end, fn ($q) => $q->whereDate('paid_at', '<=', $end));
+        if ($this->campusScoped()) {
+            $this->applyCampusScope($paymentsQuery, 'campus_id');
+        }
+
         if ($request->query('export') === 'csv') {
             return $this->paymentsCsv($query->get());
         }
 
         if ($request->query('export') === 'payments_detail_csv') {
-            return $this->paymentsDetailCsv($request);
+            return $this->paymentsDetailCsv((clone $paymentsQuery)->latest('paid_at')->latest('id'));
         }
 
-        $paymentsQuery = Payment::query()->whereNull('voided_at')->with(['student', 'paymentMethod'])->latest();
-        if ($this->campusScoped()) {
-            $this->applyCampusScope($paymentsQuery, 'campus_id');
-        }
+        $totalsByCurrency = (clone $paymentsQuery)
+            ->selectRaw("COALESCE(currency, 'USD') as currency_code, COUNT(*) as total_count, SUM(COALESCE(original_amount, amount)) as original_total, SUM(amount) as applied_total")
+            ->groupByRaw("COALESCE(currency, 'USD')")
+            ->orderByRaw("COALESCE(currency, 'USD')")
+            ->get();
 
         return view('reports.payments', [
             'charges' => $query->paginate(40)->withQueryString(),
-            'recentPayments' => $paymentsQuery->take(50)->get(),
-            'periods' => \App\Models\Period::query()
+            'recentPayments' => (clone $paymentsQuery)->latest('paid_at')->latest('id')->paginate(50, ['*'], 'pagos_page')->withQueryString(),
+            'paymentTotals' => $totalsByCurrency,
+            'filters' => $filters + ['campus_id' => $campusId],
+            'campuses' => $this->applyCampusScope(Campus::query()->orderBy('name'), 'id')->get(['id', 'name']),
+            'periods' => Period::query()
                 ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
                 ->orderBy('code')
                 ->get(['id', 'code']),
@@ -186,42 +224,42 @@ class ReportController extends Controller
     public function campusTotals(Request $request): View|StreamedResponse
     {
         $user = $request->user();
-        $allowedIds = \App\Support\CampusScope::allowedCampusIds($user);
+        $allowedIds = CampusScope::allowedCampusIds($user);
 
-        $campuses = \App\Models\Campus::query()
+        $campuses = Campus::query()
             ->when(is_array($allowedIds), fn ($q) => $q->whereIn('id', $allowedIds ?: [0]))
             ->orderBy('name')
             ->get();
 
         $ids = $campuses->pluck('id');
 
-        $studentsByCampus = \App\Models\Student::query()
+        $studentsByCampus = Student::query()
             ->whereIn('campus_id', $ids)
             ->selectRaw("campus_id, SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_count, COUNT(*) as total_count")
             ->groupBy('campus_id')
             ->get()
             ->keyBy('campus_id');
 
-        $groupsByCampus = \App\Models\Group::query()
+        $groupsByCampus = Group::query()
             ->whereIn('campus_id', $ids)
             ->selectRaw("campus_id, SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_count, COUNT(*) as total_count")
             ->groupBy('campus_id')
             ->get()
             ->keyBy('campus_id');
 
-        $teachersByCampus = \App\Models\Teacher::query()
+        $teachersByCampus = Teacher::query()
             ->whereIn('campus_id', $ids)
             ->selectRaw('campus_id, COUNT(*) as total_count')
             ->groupBy('campus_id')
             ->pluck('total_count', 'campus_id');
 
-        $coursesByCampus = \App\Models\Course::query()
+        $coursesByCampus = Course::query()
             ->whereIn('campus_id', $ids)
             ->selectRaw('campus_id, COUNT(*) as total_count')
             ->groupBy('campus_id')
             ->pluck('total_count', 'campus_id');
 
-        $enrollmentsByCampus = \App\Models\Enrollment::query()
+        $enrollmentsByCampus = Enrollment::query()
             ->whereIn('campus_id', $ids)
             ->where('status', 'active')
             ->selectRaw('campus_id, COUNT(*) as total_count')
@@ -272,21 +310,21 @@ class ReportController extends Controller
     public function campusProjection(Request $request): View|StreamedResponse
     {
         $user = $request->user();
-        $allowedIds = \App\Support\CampusScope::allowedCampusIds($user);
+        $allowedIds = CampusScope::allowedCampusIds($user);
 
-        $fee = (float) \App\Models\SystemSetting::getValue(
+        $fee = (float) SystemSetting::getValue(
             SystemSettingController::BILLING_MONTHLY_FEE_KEY,
             SystemSettingController::BILLING_MONTHLY_FEE_DEFAULT,
         );
 
-        $campuses = \App\Models\Campus::query()
+        $campuses = Campus::query()
             ->when(is_array($allowedIds), fn ($q) => $q->whereIn('id', $allowedIds ?: [0]))
             ->orderBy('name')
             ->get();
 
         $ids = $campuses->pluck('id');
 
-        $stats = \App\Models\Enrollment::query()
+        $stats = Enrollment::query()
             ->where('status', 'active')
             ->whereIn('campus_id', $ids)
             ->selectRaw('campus_id, COUNT(*) as active_enrollments, COUNT(DISTINCT student_id) as unique_students')
@@ -407,69 +445,73 @@ class ReportController extends Controller
 
     private function attendanceCsv($records): StreamedResponse
     {
-        return response()->streamDownload(function () use ($records) {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, ['date', 'group', 'student', 'status', 'notes']);
+        return CsvExport::download('asistencia-'.now()->format('Y-m-d').'.csv', ['Fecha', 'Grupo', 'Alumno', 'Cédula', 'Estado', 'Notas'], function () use ($records) {
             foreach ($records as $record) {
-                fputcsv($out, [
-                    $record->classSession->session_date?->format('Y-m-d'),
+                yield [
+                    DateFormat::date($record->classSession->session_date, ''),
                     $record->classSession->group->name ?? '',
                     $record->enrollment->student->full_name ?? '',
-                    $record->status,
+                    $record->enrollment->student->document_id ?? '',
+                    StatusLabel::label($record->status, 'attendance'),
                     $record->notes ?? '',
-                ]);
+                ];
             }
-            fclose($out);
-        }, 'attendance_report.csv', ['Content-Type' => 'text/csv']);
+        });
     }
 
-    private function paymentsDetailCsv(Request $request): StreamedResponse
+    private function paymentsDetailCsv($query): StreamedResponse
     {
-        $query = Payment::query()->whereNull('voided_at')->with(['student'])->latest();
-        if ($this->campusScoped()) {
-            $this->applyCampusScope($query, 'campus_id');
-        }
-
-        return response()->streamDownload(function () use ($query): void {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, ['student', 'paid_at', 'currency', 'original_amount', 'exchange_rate', 'amount_usd', 'method', 'reference']);
+        return CsvExport::download('pagos-'.now()->format('Y-m-d').'.csv', [
+            'Fecha de pago', 'Recibo', 'Alumno', 'Cédula del alumno', 'Representante', 'Cédula del representante', 'Teléfono del representante',
+            'Moneda', 'Monto original', 'Tasa', 'Monto aplicado', 'Método', 'Referencia',
+        ], function () use ($query) {
             foreach ($query->cursor() as $payment) {
-                fputcsv($out, [
+                $representative = $payment->student?->representatives->first();
+                yield [
+                    DateFormat::date($payment->paid_at, ''),
+                    $payment->receipt?->receipt_number ?? '',
                     $payment->student->full_name ?? '',
-                    optional($payment->paid_at)->format('Y-m-d'),
+                    $payment->student->document_id ?? '',
+                    $representative?->full_name ?? '',
+                    $representative?->document_id ?? '',
+                    $representative ? ($representative->mobile_phone ?: $representative->phone) : '',
                     $payment->currency ?? 'USD',
-                    $payment->original_amount ?? $payment->amount,
-                    $payment->exchange_rate,
-                    $payment->amount,
-                    $payment->method,
-                    $payment->reference,
-                ]);
+                    CsvExport::amount($payment->original_amount ?? $payment->amount),
+                    $payment->exchange_rate ? CsvExport::amount($payment->exchange_rate, 4) : '',
+                    CsvExport::amount($payment->amount),
+                    $payment->paymentMethod?->label ?? $payment->method ?? '',
+                    $payment->reference ?? '',
+                ];
             }
-            fclose($out);
-        }, 'payments_detail_report.csv', ['Content-Type' => 'text/csv']);
+        });
     }
 
     private function paymentsCsv($charges): StreamedResponse
     {
-        return response()->streamDownload(function () use ($charges) {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, ['student', 'course', 'group', 'period', 'type', 'concept', 'amount', 'status', 'paid', 'balance']);
+        return CsvExport::download('cuentas-por-cobrar-'.now()->format('Y-m-d').'.csv', [
+            'Alumno', 'Cédula del alumno', 'Representante', 'Teléfono del representante', 'Curso', 'Grupo', 'Período',
+            'Tipo', 'Concepto', 'Moneda', 'Monto', 'Vence', 'Estado', 'Pagado', 'Saldo',
+        ], function () use ($charges) {
             foreach ($charges as $charge) {
-                $paid = FinanceReconcile::paidTotalForCharge($charge);
-                fputcsv($out, [
+                $representative = $charge->student?->representatives->first();
+                yield [
                     $charge->student->full_name ?? '',
+                    $charge->student->document_id ?? '',
+                    $representative?->full_name ?? '',
+                    $representative ? ($representative->mobile_phone ?: $representative->phone) : '',
                     $charge->course->name ?? '',
                     $charge->group->name ?? '',
                     $charge->period->code ?? '',
-                    $charge->charge_type ?? '',
+                    StatusLabel::chargeType($charge->charge_type),
                     $charge->concept,
-                    $charge->amount,
-                    $charge->status,
-                    $paid,
-                    FinanceReconcile::outstandingForCharge($charge),
-                ]);
+                    $charge->currency ?? 'USD',
+                    CsvExport::amount($charge->amount),
+                    DateFormat::date($charge->due_date, ''),
+                    StatusLabel::label($charge->status),
+                    CsvExport::amount(FinanceReconcile::paidTotalForCharge($charge)),
+                    CsvExport::amount(FinanceReconcile::outstandingForCharge($charge)),
+                ];
             }
-            fclose($out);
-        }, 'payments_report.csv', ['Content-Type' => 'text/csv']);
+        });
     }
 }

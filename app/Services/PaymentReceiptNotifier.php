@@ -31,6 +31,19 @@ class PaymentReceiptNotifier
         Mail::to($recipients->all())->send(new PaymentReceiptMail($payment));
     }
 
+    /** @return list<string> correos a los que se reenvió (vacío si no hay a quién). #449 */
+    public function resend(Payment $payment): array
+    {
+        $payment->loadMissing(['receipt', 'student.representatives']);
+        $recipients = $this->recipientsForStudent($payment->student);
+        if (! $payment->receipt || $recipients->isEmpty()) {
+            return [];
+        }
+        Mail::to($recipients->all())->send(new PaymentReceiptMail($payment));
+
+        return $recipients->all();
+    }
+
     public function hasRecipients(Payment $payment): bool
     {
         return $this->recipientsForStudent($payment->student)->isNotEmpty();

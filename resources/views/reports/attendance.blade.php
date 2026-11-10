@@ -76,7 +76,7 @@
         <tbody>
         @forelse($records as $record)
             <tr>
-                <td>{{ $record->classSession->session_date?->format('Y-m-d') }}</td>
+                <td>{{ \App\Support\DateFormat::date($record->classSession->session_date) }}</td>
                 <td>{{ $record->classSession->group->name ?? '' }}</td>
                 <td>{{ $record->enrollment->student->full_name ?? '' }}</td>
                 <td>@include('partials.ui.status', ['status' => $record->status, 'domain' => 'attendance'])</td>

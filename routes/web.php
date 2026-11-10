@@ -176,6 +176,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::get('/finance/summary', [FinanceController::class, 'summary'])->name('finance.summary');
             Route::get('/finance/receipts/{receipt}', [FinanceController::class, 'showReceipt'])->name('finance.receipts.show');
             Route::get('/finance/receipts/{receipt}/pdf', [FinanceController::class, 'downloadReceiptPdf'])->name('finance.receipts.pdf');
+            Route::post('/finance/receipts/{receipt}/resend', [FinanceController::class, 'resendReceipt'])->middleware('throttle:10,1')->name('finance.receipts.resend');
             Route::get('/finance/students/{student}/history', [FinanceController::class, 'studentHistory'])->name('finance.students.history');
             Route::post('/finance/charges', [FinanceController::class, 'storeCharge'])->name('finance.charges.store');
             Route::get('/settings/exchange-rates', [ExchangeRateSettingsController::class, 'index'])->name('settings.exchange-rates.index');

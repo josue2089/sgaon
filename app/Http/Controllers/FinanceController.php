@@ -18,16 +18,20 @@ use App\Services\Bcv\ExchangeRateService;
 use App\Services\ChargeRegistrationService;
 use App\Services\ChargeVoidService;
 use App\Services\FinanceSummaryExportService;
+use App\Services\PaymentReceiptNotifier;
 use App\Services\PaymentRegistrationService;
 use App\Services\PaymentVoidService;
 use App\Services\ReceiptPdfService;
 use App\Support\AuditTrail;
 use App\Support\CampusScope;
+use App\Support\CsvExport;
+use App\Support\DateFormat;
 use App\Support\FinanceReconcile;
 use App\Support\FinanceSummary;
 use App\Support\MoneyFormat;
 use App\Support\PaymentCurrencyConverter;
 use App\Support\StatusLabel;
+use App\Support\StudentSearch;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -54,7 +58,11 @@ class FinanceController extends Controller
             'month' => ['nullable', 'date_format:Y-m'],
             'currency' => ['nullable', 'in:USD,EUR,VES'],
             'open' => ['nullable', 'in:payment,charge'],
+            'q' => ['nullable', 'string', 'max:100'],
         ]);
+        $search = trim((string) ($filters['q'] ?? ''));
+        // Busca por concepto, referencia o recibo, y también por alumno, cédula o representante.
+        $searchStudent = fn ($query) => $query->whereHas('student', fn ($student) => StudentSearch::applyTerm($student, $search));
         $tab = $filters['tab'] ?? 'cobrar';
         $campusId = ! empty($filters['campus_id']) && CampusScope::userCanAccessCampus($user, (int) $filters['campus_id']) ? (int) $filters['campus_id'] : null;
         $month = ! empty($filters['month']) ? Carbon::createFromFormat('Y-m', $filters['month'])->startOfMonth() : null;
@@ -80,27 +88,38 @@ class FinanceController extends Controller
             ->when(! $status && ! $showVoided, fn ($query) => $query->whereIn('status', ['pending', 'partial', 'overdue']))
             ->when($month, fn ($query) => $query->whereBetween('due_date', [$month->toDateString(), $month->copy()->endOfMonth()->toDateString()]))
             ->when(in_array($filters['currency'] ?? null, ['USD', 'EUR'], true), fn ($query) => $query->where('currency', $filters['currency']))
+            ->when($search !== '', fn ($query) => $query->where(fn ($inner) => $inner->where('concept', 'like', '%'.$search.'%')->orWhere($searchStudent)))
             ->select('charges.*')
             ->selectRaw($daysOverdueExpression.' as days_overdue')
             ->orderByDesc('days_overdue')
             ->orderByDesc('amount');
 
         if ($request->query('export') === 'mora_csv') {
-            return response()->streamDownload(function () use ($chargesQuery): void {
-                $out = fopen('php://output', 'w');
-                fputcsv($out, ['student', 'concept', 'amount', 'due_date', 'days_overdue', 'status']);
+            $chargesQuery->with('student.representatives');
+
+            return CsvExport::download('mora-'.now()->format('Y-m-d').'.csv', [
+                'Alumno', 'Cédula del alumno', 'Representante', 'Cédula del representante', 'Teléfono del representante',
+                'Concepto', 'Moneda', 'Monto', 'Pagado', 'Saldo', 'Vence', 'Días de atraso', 'Estado',
+            ], function () use ($chargesQuery) {
                 foreach ($chargesQuery->whereIn('status', ['pending', 'partial', 'overdue'])->get() as $charge) {
-                    fputcsv($out, [
+                    $representative = $charge->student?->representatives->first();
+                    yield [
                         $charge->student->full_name ?? '',
+                        $charge->student->document_id ?? '',
+                        $representative?->full_name ?? '',
+                        $representative?->document_id ?? '',
+                        $representative ? ($representative->mobile_phone ?: $representative->phone) : '',
                         $charge->concept,
-                        $charge->amount,
-                        optional($charge->due_date)->format('Y-m-d'),
+                        $charge->currency ?? 'USD',
+                        CsvExport::amount($charge->amount),
+                        CsvExport::amount(FinanceReconcile::paidTotalForCharge($charge)),
+                        CsvExport::amount(FinanceReconcile::outstandingForCharge($charge)),
+                        DateFormat::date($charge->due_date, ''),
                         (int) ($charge->days_overdue ?? 0),
-                        $charge->status,
-                    ]);
+                        StatusLabel::label($charge->status),
+                    ];
                 }
-                fclose($out);
-            }, 'mora_report.csv', ['Content-Type' => 'text/csv']);
+            });
         }
 
         $openCharges = CampusScope::apply(Charge::query()->whereNull('voided_at')->whereIn('status', ['pending', 'partial', 'overdue']), $user)
@@ -134,6 +153,10 @@ class FinanceController extends Controller
                 ->when($month, fn ($query) => $query->whereBetween('paid_at', [$month->toDateString(), $month->copy()->endOfMonth()->toDateString()]))
                 ->when(! empty($filters['currency']), fn ($query) => $query->where('currency', $filters['currency']))
                 ->when($status === 'voided', fn ($query) => $query->whereNotNull('voided_at'))
+                ->when($search !== '', fn ($query) => $query->where(fn ($inner) => $inner
+                    ->where('reference', 'like', '%'.$search.'%')
+                    ->orWhereHas('receipt', fn ($receipt) => $receipt->where('receipt_number', 'like', '%'.$search.'%'))
+                    ->orWhere($searchStudent)))
                 ->paginate(25)
                 ->withQueryString();
         } else {
@@ -143,6 +166,7 @@ class FinanceController extends Controller
                 $user
             )
                 ->where('status', $requestStatus)
+                ->when($search !== '', fn ($query) => $query->where(fn ($inner) => $inner->where('reference', 'like', '%'.$search.'%')->orWhere($searchStudent)))
                 ->when($focusStudentId, fn ($query) => $query->where('student_id', $focusStudentId))
                 ->when($campusId, fn ($query) => $query->where('campus_id', $campusId))
                 ->paginate(20)
@@ -282,6 +306,20 @@ class FinanceController extends Controller
             'payment' => $payment,
             'allocations' => $allocations,
         ]);
+    }
+
+    public function resendReceipt(Request $request, Receipt $receipt, PaymentReceiptNotifier $notifier): RedirectResponse
+    {
+        [$receipt, $payment] = $this->resolveReceiptContext($request, $receipt);
+        abort_if($payment->voided_at, 422, 'El pago está anulado.');
+
+        $sentTo = $notifier->resend($payment);
+        if ($sentTo === []) {
+            return back()->with('error', 'El alumno y sus representantes no tienen correo registrado.');
+        }
+        AuditTrail::log($request, 'receipt.resent', $payment, ['receipt_number' => $receipt->receipt_number, 'recipients' => count($sentTo)]);
+
+        return back()->with('success', 'Recibo reenviado a '.implode(', ', $sentTo).'.');
     }
 
     public function downloadReceiptPdf(Request $request, Receipt $receipt)

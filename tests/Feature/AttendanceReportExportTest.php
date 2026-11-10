@@ -44,7 +44,7 @@ class AttendanceReportExportTest extends TestCase
         $this->assertStringContainsString('text/csv', (string) $response->headers->get('content-type'));
 
         $csv = $response->streamedContent();
-        $this->assertStringContainsString('notes', $csv);
+        $this->assertStringContainsString('Notas', $csv);
         $this->assertStringContainsString('Llegó 10 minutos tarde por tráfico', $csv);
     }
 }
