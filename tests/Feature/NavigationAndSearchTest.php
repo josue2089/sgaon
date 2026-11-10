@@ -41,8 +41,8 @@ class NavigationAndSearchTest extends TestCase
         $this->assertContains('Resumen financiero', $reports);
         $this->assertNotContains('Proyección por sede', $reports, 'Solo master.');
         $config = collect($groups['Configuración']['children']);
-        $this->assertSame(['Profesores', 'Feriados y días sin clase'], $config->whereNull('heading')->pluck('label')->values()->all());
-        $this->assertSame(['Personas', 'Calendario'], $config->where('heading', true)->pluck('label')->values()->all());
+        $this->assertSame(['Profesores', 'Feriados y días sin clase', 'Tasas BCV'], $config->whereNull('heading')->pluck('label')->values()->all());
+        $this->assertSame(['Personas', 'Calendario', 'Pagos'], $config->where('heading', true)->pluck('label')->values()->all());
     }
 
     public function test_master_sees_full_configuration_and_teacher_sees_only_attendance(): void

@@ -1,35 +1,44 @@
 <?php
 
-use App\Http\Controllers\AttendanceController;
-use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AcademicLevelController;
+use App\Http\Controllers\AccountPasswordController;
+use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampusController;
 use App\Http\Controllers\CampusProgramPriceController;
 use App\Http\Controllers\ClassSessionController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseGradeController;
-use App\Http\Controllers\CourseObservationController;
 use App\Http\Controllers\CourseLevelController;
+use App\Http\Controllers\CourseNextLevelController;
+use App\Http\Controllers\CourseObservationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EnrollmentChangeController;
 use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\ExchangeRateController;
+use App\Http\Controllers\ExchangeRateSettingsController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\HistoricalStudentController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\MakeupRecoveryController;
-use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PeriodController;
+use App\Http\Controllers\PortalAccessController;
+use App\Http\Controllers\PortalActivationController;
+use App\Http\Controllers\PortalController;
+use App\Http\Controllers\PrivateFileController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ProgramLevelController;
 use App\Http\Controllers\ProgramLevelLessonController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleTemplateController;
-use App\Http\Controllers\HistoricalStudentController;
 use App\Http\Controllers\StudentController;
-use App\Http\Controllers\StudentSearchController;
-use App\Http\Controllers\StudentMakeupController;
 use App\Http\Controllers\StudentImportController;
+use App\Http\Controllers\StudentMakeupController;
+use App\Http\Controllers\StudentPortalAccessController;
+use App\Http\Controllers\StudentSearchController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
@@ -46,18 +55,18 @@ Route::middleware('guest')->group(function () {
 });
 
 // Enlace de invitación o recuperación del portal: el token identifica a la persona. #471
-Route::get('/activar/{token}', [\App\Http\Controllers\PortalActivationController::class, 'show'])->name('portal.activate');
-Route::post('/activar/{token}', [\App\Http\Controllers\PortalActivationController::class, 'store'])->middleware('throttle:10,1')->name('portal.activate.store');
+Route::get('/activar/{token}', [PortalActivationController::class, 'show'])->name('portal.activate');
+Route::post('/activar/{token}', [PortalActivationController::class, 'store'])->middleware('throttle:10,1')->name('portal.activate.store');
 
 Route::middleware(['auth', 'campus.access'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::get('/cuenta/password', [\App\Http\Controllers\AccountPasswordController::class, 'edit'])->name('account.password.edit');
-    Route::put('/cuenta/password', [\App\Http\Controllers\AccountPasswordController::class, 'update'])->name('account.password.update');
+    Route::get('/cuenta/password', [AccountPasswordController::class, 'edit'])->name('account.password.edit');
+    Route::put('/cuenta/password', [AccountPasswordController::class, 'update'])->name('account.password.update');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
-    Route::get('/api/finance/exchange-rate', [\App\Http\Controllers\ExchangeRateController::class, 'latest'])->name('finance.exchange-rate');
+    Route::get('/api/finance/exchange-rate', [ExchangeRateController::class, 'latest'])->name('finance.exchange-rate');
     // Archivos privados: el controlador verifica sede, alumno o representante. #438
-    Route::get('/files/payment-proofs/{paymentRequest}', [\App\Http\Controllers\PrivateFileController::class, 'paymentProof'])->name('files.payment-proof');
-    Route::get('/files/makeup-attachments/{attachment}', [\App\Http\Controllers\PrivateFileController::class, 'makeupAttachment'])->name('files.makeup-attachment');
+    Route::get('/files/payment-proofs/{paymentRequest}', [PrivateFileController::class, 'paymentProof'])->name('files.payment-proof');
+    Route::get('/files/makeup-attachments/{attachment}', [PrivateFileController::class, 'makeupAttachment'])->name('files.makeup-attachment');
 
     Route::middleware('role:admin')->group(function () {
         Route::get('/students/import', [StudentImportController::class, 'create'])->name('students.import');
@@ -77,10 +86,10 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/students/{student}/move-to-historical', [StudentController::class, 'moveToHistorical'])->name('students.move-to-historical');
         Route::resource('students', StudentController::class)->except('show');
         Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
-        Route::get('/portal-access', [\App\Http\Controllers\PortalAccessController::class, 'index'])->name('portal-access.index');
-        Route::post('/portal-access/invite', [\App\Http\Controllers\PortalAccessController::class, 'invite'])->name('portal-access.invite');
-        Route::post('/students/{student}/portal-access/invite', [\App\Http\Controllers\StudentPortalAccessController::class, 'invite'])->name('students.portal-access.invite');
-        Route::post('/students/{student}/portal-access/deactivate', [\App\Http\Controllers\StudentPortalAccessController::class, 'deactivate'])->name('students.portal-access.deactivate');
+        Route::get('/portal-access', [PortalAccessController::class, 'index'])->name('portal-access.index');
+        Route::post('/portal-access/invite', [PortalAccessController::class, 'invite'])->name('portal-access.invite');
+        Route::post('/students/{student}/portal-access/invite', [StudentPortalAccessController::class, 'invite'])->name('students.portal-access.invite');
+        Route::post('/students/{student}/portal-access/deactivate', [StudentPortalAccessController::class, 'deactivate'])->name('students.portal-access.deactivate');
         Route::post('/students/{student}/attachments', [StudentController::class, 'storeAttachment'])->name('students.attachments.store');
         Route::get('/students/{student}/attachments/{attachment}', [StudentController::class, 'downloadAttachment'])->name('students.attachments.download');
         Route::delete('/students/{student}/attachments/{attachment}', [StudentController::class, 'destroyAttachment'])->name('students.attachments.destroy');
@@ -106,13 +115,13 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/courses/{course}/report.pdf', [CourseController::class, 'reportPdf'])
             ->middleware('master.admin')
             ->name('courses.report.pdf');
-        Route::get('/courses/{course}/next-level', [\App\Http\Controllers\CourseNextLevelController::class, 'create'])->name('courses.next-level.create');
-        Route::post('/courses/{course}/next-level', [\App\Http\Controllers\CourseNextLevelController::class, 'store'])->name('courses.next-level.store');
+        Route::get('/courses/{course}/next-level', [CourseNextLevelController::class, 'create'])->name('courses.next-level.create');
+        Route::post('/courses/{course}/next-level', [CourseNextLevelController::class, 'store'])->name('courses.next-level.store');
         Route::resource('courses', CourseController::class);
         Route::resource('groups', GroupController::class)->except('show');
-        Route::post('/enrollments/{enrollment}/withdraw', [\App\Http\Controllers\EnrollmentChangeController::class, 'withdraw'])->name('enrollments.withdraw');
-        Route::get('/enrollments/{enrollment}/transfer', [\App\Http\Controllers\EnrollmentChangeController::class, 'editTransfer'])->name('enrollments.transfer.edit');
-        Route::post('/enrollments/{enrollment}/transfer', [\App\Http\Controllers\EnrollmentChangeController::class, 'transfer'])->name('enrollments.transfer');
+        Route::post('/enrollments/{enrollment}/withdraw', [EnrollmentChangeController::class, 'withdraw'])->name('enrollments.withdraw');
+        Route::get('/enrollments/{enrollment}/transfer', [EnrollmentChangeController::class, 'editTransfer'])->name('enrollments.transfer.edit');
+        Route::post('/enrollments/{enrollment}/transfer', [EnrollmentChangeController::class, 'transfer'])->name('enrollments.transfer');
         Route::resource('enrollments', EnrollmentController::class)->except('show');
         Route::resource('sessions', ClassSessionController::class)->except('show');
         Route::get('/makeups', [MakeupRecoveryController::class, 'index'])->name('makeups.index');
@@ -163,10 +172,13 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::get('/finance/receipts/{receipt}/pdf', [FinanceController::class, 'downloadReceiptPdf'])->name('finance.receipts.pdf');
             Route::get('/finance/students/{student}/history', [FinanceController::class, 'studentHistory'])->name('finance.students.history');
             Route::post('/finance/charges', [FinanceController::class, 'storeCharge'])->name('finance.charges.store');
+            Route::get('/settings/exchange-rates', [ExchangeRateSettingsController::class, 'index'])->name('settings.exchange-rates.index');
+            Route::post('/settings/exchange-rates/sync', [ExchangeRateSettingsController::class, 'sync'])->middleware('throttle:6,1')->name('settings.exchange-rates.sync');
+            Route::post('/settings/exchange-rates/manual', [ExchangeRateSettingsController::class, 'storeManual'])->name('settings.exchange-rates.manual');
             Route::post('/finance/charges/{charge}/void', [FinanceController::class, 'voidCharge'])->name('finance.charges.void');
             Route::post('/finance/payments', [FinanceController::class, 'storePayment'])->name('finance.payments.store');
             Route::post('/finance/payments/{payment}/void', [FinanceController::class, 'voidPayment'])->name('finance.payments.void');
-        Route::patch('/finance/payment-requests/{paymentRequest}', [FinanceController::class, 'reviewPaymentRequest'])->name('finance.payment-requests.review');
+            Route::patch('/finance/payment-requests/{paymentRequest}', [FinanceController::class, 'reviewPaymentRequest'])->name('finance.payment-requests.review');
         });
         Route::middleware('permission:reports.view')->group(function () {
             Route::get('/reports/attendance', [ReportController::class, 'attendance'])->name('reports.attendance');

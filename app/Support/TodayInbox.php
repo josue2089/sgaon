@@ -6,6 +6,7 @@ use App\Models\Charge;
 use App\Models\ChargePaymentRequest;
 use App\Models\ClassSession;
 use App\Models\Enrollment;
+use App\Models\ExchangeRate;
 use App\Models\MakeupRequest;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -75,6 +76,14 @@ class TodayInbox
                     ->whereHas('course.program', fn ($query) => $query->where('is_extracurricular', true)),
                 $user
             )->count();
+            // Sin ninguna tasa guardada (instalación nueva) no hay nada que comparar; la página lo muestra.
+            $latestRates = collect(['USD', 'EUR'])->map(fn ($code) => ExchangeRate::latestFor($code))->filter();
+            $staleRates = $latestRates->filter(fn (ExchangeRate $rate) => $rate->isStale());
+            $oldest = $staleRates->sortBy('effective_at')->first();
+            $items[] = self::item('bcv_stale', 'Tasa BCV desactualizada', $oldest
+                ? 'La última tasa guardada es del '.$oldest->effective_at->format('d/m/Y').'. Los pagos en Bs usan esa tasa.'
+                : 'Las tasas USD y EUR están al día.', $staleRates->count(), 'settings.exchange-rates.index', [], 'Revisar tasas', 'danger');
+
             $items[] = self::item('extracurricular', 'Mensualidades extracurriculares del mes', 'Cuotas de este mes que siguen sin pagarse.', $extracurricular, 'finance.index', [], 'Ver cobros', 'info');
         }
 
