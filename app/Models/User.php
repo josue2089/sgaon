@@ -85,6 +85,22 @@ class User extends Authenticatable
         return false;
     }
 
+    /** @return list<int> */
+    public function representedCampusIds(): array
+    {
+        if ($this->role !== self::ROLE_REPRESENTATIVE) {
+            return [];
+        }
+
+        return once(fn (): array => Student::query()
+            ->whereHas('representatives', fn ($query) => $query->whereKey(Representative::forUser($this)->pluck('id')))
+            ->distinct()
+            ->pluck('campus_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->all());
+    }
+
     /**
      * Sedes donde el profesor dicta (por sus grupos y cursos). Un profesor puede dar clases en una sede
      * distinta a la de su usuario y debe ver esas clases (#304). Memorizado por instancia.

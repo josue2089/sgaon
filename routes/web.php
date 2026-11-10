@@ -106,6 +106,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/courses/{course}/report.pdf', [CourseController::class, 'reportPdf'])
             ->middleware('master.admin')
             ->name('courses.report.pdf');
+        Route::get('/courses/{course}/next-level', [\App\Http\Controllers\CourseNextLevelController::class, 'create'])->name('courses.next-level.create');
+        Route::post('/courses/{course}/next-level', [\App\Http\Controllers\CourseNextLevelController::class, 'store'])->name('courses.next-level.store');
         Route::resource('courses', CourseController::class);
         Route::resource('groups', GroupController::class)->except('show');
         Route::post('/enrollments/{enrollment}/withdraw', [\App\Http\Controllers\EnrollmentChangeController::class, 'withdraw'])->name('enrollments.withdraw');
@@ -211,6 +213,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
 
     Route::middleware(['role:representative', 'permission:portal.representative.view'])->group(function () {
         Route::get('/portal/representative', [PortalController::class, 'representative'])->name('portal.representative');
+        Route::post('/portal/representative/students/{student}/renewals/{course}', [PortalController::class, 'enrollInRenewalCourseAsRepresentative'])->name('portal.representative.renewals.enroll');
         Route::post('/portal/representative/charges/{charge}/payment', [PortalController::class, 'submitChargePaymentAsRepresentative'])->name('portal.representative.charges.payment');
     });
 });

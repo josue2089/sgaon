@@ -15,6 +15,7 @@ class LevelRenewalReminderMail extends QueuedMailable
         public $currentLevel,
         public $nextLevel,
         public ?Course $nextCourse = null,
+        public bool $forRepresentative = false,
     ) {
     }
 

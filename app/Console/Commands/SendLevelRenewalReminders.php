@@ -6,9 +6,11 @@ use App\Mail\LevelRenewalReminderMail;
 use App\Models\AcademicLevel;
 use App\Models\Alert;
 use App\Models\Course;
+use App\Models\Student;
 use App\Models\CourseLevel;
 use App\Models\Enrollment;
 use App\Models\ProgramLevel;
+use App\Services\LevelRenewalService;
 use App\Support\CoursePlanner;
 use App\Support\RenewalEnrollmentEligibility;
 use Carbon\CarbonImmutable;
@@ -31,7 +33,7 @@ class SendLevelRenewalReminders extends Command
         $processed = 0;
 
         Enrollment::query()
-            ->with(['student', 'group.course.program', 'group.course.programLevel', 'group.course.courseLevel'])
+            ->with(['student.representatives', 'group.course.program', 'group.course.programLevel', 'group.course.courseLevel'])
             ->where('status', 'active')
             ->get()
             ->each(function (Enrollment $enrollment) use ($today, &$dueStudentIds, &$processed): void {
@@ -90,15 +92,7 @@ class SendLevelRenewalReminders extends Command
                 $shouldSendEmail = ! $alert->exists || is_null($alert->emailed_at);
                 $alert->save();
 
-                if ($shouldSendEmail && ! empty($student->email) && $eligibility['eligible']) {
-                    Mail::to($student->email)->send(new LevelRenewalReminderMail(
-                        student: $student,
-                        course: $course,
-                        currentLevel: $courseLevel,
-                        nextLevel: $nextLevel,
-                        nextCourse: $nextCourse,
-                    ));
-
+                if ($shouldSendEmail && $eligibility['eligible'] && $this->sendReminder($student, $course, $courseLevel, $nextLevel, $nextCourse)) {
                     $alert->forceFill(['emailed_at' => now()])->save();
                 }
             });
@@ -117,6 +111,35 @@ class SendLevelRenewalReminders extends Command
         $this->info("Recordatorios procesados: {$processed}");
 
         return self::SUCCESS;
+    }
+
+    /** Al alumno y a sus representantes, cada uno con el enlace de su portal (#442). */
+    private function sendReminder(Student $student, Course $course, Model $currentLevel, Model $nextLevel, ?Course $nextCourse): bool
+    {
+        $representativeEmails = $student->representatives
+            ->pluck('email')
+            ->filter(fn ($email) => filled($email))
+            ->map(fn ($email) => mb_strtolower(trim((string) $email)))
+            ->unique();
+        $studentEmail = filled($student->email) ? mb_strtolower(trim((string) $student->email)) : null;
+
+        $mail = fn (bool $forRepresentative) => new LevelRenewalReminderMail(
+            student: $student,
+            course: $course,
+            currentLevel: $currentLevel,
+            nextLevel: $nextLevel,
+            nextCourse: $nextCourse,
+            forRepresentative: $forRepresentative,
+        );
+
+        if ($studentEmail && ! $representativeEmails->contains($studentEmail)) {
+            Mail::to($studentEmail)->send($mail(false));
+        }
+        if ($representativeEmails->isNotEmpty()) {
+            Mail::to($representativeEmails->all())->send($mail(true));
+        }
+
+        return $studentEmail !== null || $representativeEmails->isNotEmpty();
     }
 
     private function resolveNextLevel(Course $course): ProgramLevel|CourseLevel|null
@@ -147,22 +170,15 @@ class SendLevelRenewalReminders extends Command
         }
 
         $nextCourseStartDate = $course->end_date->copy()->addDay()->toDateString();
-        $query = Course::query()
-            ->where('campus_id', $course->campus_id)
-            ->where('schedule_template_id', $course->schedule_template_id)
-            ->whereDate('start_date', $nextCourseStartDate)
-            ->whereNull('teacher_id');
 
-        if ($nextLevel instanceof ProgramLevel) {
-            $query->where('program_level_id', $nextLevel->id);
-        } else {
-            $query->where('course_level_id', $nextLevel->id);
-        }
-
-        $existing = $query->first();
+        // Un curso ya abierto en la ventana (con o sin profesor) sirve: no se crea otro. #442
+        $existing = app(LevelRenewalService::class)->nextCourseFor($course, sameScheduleOnly: true);
         if ($existing) {
-            $existing->load(['period', 'scheduleTemplate', 'managedGroup.sessions.attendanceRecords']);
-            CoursePlanner::sync($existing);
+            if (! $existing->teacher_id) {
+                $existing->load(['period', 'scheduleTemplate', 'managedGroup.sessions.attendanceRecords']);
+                CoursePlanner::sync($existing);
+            }
+
             return $existing->fresh();
         }
 

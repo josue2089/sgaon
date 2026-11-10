@@ -28,6 +28,9 @@ class CampusScope
         // El profesor también accede a las sedes donde dicta clases; sus consultas ya filtran por sus grupos.
         $ids = array_merge($ids, $user->teachingCampusIds());
 
+        // El representante también accede a las sedes de sus hijos: una ficha puede tener hijos en dos sedes. #442
+        $ids = array_merge($ids, $user->representedCampusIds());
+
         return array_values(array_unique($ids));
     }
 

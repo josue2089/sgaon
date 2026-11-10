@@ -21,7 +21,7 @@
             <div style="margin-top:24px;display:inline-block;background:rgba(255,255,255,.14);padding:10px 16px;border-radius:999px;font-size:13px;font-weight:700;">
                 Renovación de nivel
             </div>
-            <h1 style="font-size:34px;line-height:1.05;margin:18px 0 0;font-weight:900;">Tu siguiente nivel ya está cerca</h1>
+            <h1 style="font-size:34px;line-height:1.05;margin:18px 0 0;font-weight:900;">{{ $forRepresentative ? 'El siguiente nivel ya está cerca' : 'Tu siguiente nivel ya está cerca' }}</h1>
             <p style="font-size:15px;line-height:1.6;margin:14px 0 0;max-width:520px;color:rgba(255,255,255,.9);">
                 Queremos que mantengas continuidad en tu proceso académico y no pierdas el ritmo de avance en la plataforma ON English.
             </p>
@@ -29,7 +29,11 @@
 
         <div style="background:#ffffff;border:1px solid #d8e1f0;border-top:0;border-radius:0 0 28px 28px;padding:30px 28px 28px;">
             <p style="font-size:16px;line-height:1.7;margin:0 0 18px;">
-                {{ $student->full_name }}, tu curso <strong>{{ $course->name }}</strong> finaliza el
+                @if($forRepresentative)
+                    Hola, el curso de {{ $student->full_name }}, <strong>{{ $course->name }}</strong>, finaliza el
+                @else
+                    {{ $student->full_name }}, tu curso <strong>{{ $course->name }}</strong> finaliza el
+                @endif
                 <strong>{{ $course->end_date?->format('d/m/Y') ?? 'N/D' }}</strong>.
             </p>
 
@@ -66,7 +70,7 @@
             </div>
 
             <p style="margin:0 0 18px;">
-                <a href="{{ url('/portal/student#renewal-enrollment') }}" style="display:inline-block;background:#1b3f9d;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-size:14px;font-weight:700;">
+                <a href="{{ url($forRepresentative ? '/portal/representative' : '/portal/student#renewal-enrollment') }}" style="display:inline-block;background:#1b3f9d;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-size:14px;font-weight:700;">
                     Ir al portal para inscripción
                 </a>
             </p>
