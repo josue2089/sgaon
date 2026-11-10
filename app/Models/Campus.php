@@ -10,7 +10,7 @@ class Campus extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'code', 'city', 'state', 'country', 'logo_path', 'status'];
+    protected $fillable = ['name', 'code', 'city', 'state', 'country', 'contact_phone', 'contact_email', 'logo_path', 'status'];
 
     /**
      * Logo de la sede como data URI para los PDF (DomPDF no lee URLs del disco público).

@@ -501,11 +501,17 @@ class MakeupRecoveryEngine
 
     private static function emailCreatedIfNeeded(MakeupRequest $request): void
     {
-        if ($request->notification_emailed_at || empty($request->student?->email)) {
+        if ($request->notification_emailed_at) {
             return;
         }
 
-        Mail::to($request->student->email)->send(new MakeupRecoveryCreatedMail($request));
+        // #448: el aviso de inasistencia también va a los representantes (y llega aunque el alumno no tenga correo).
+        $recipients = self::notificationRecipients($request);
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Mail::to($recipients->all())->send(new MakeupRecoveryCreatedMail($request));
         $request->forceFill(['notification_emailed_at' => now()])->save();
     }
 
@@ -541,11 +547,16 @@ class MakeupRecoveryEngine
 
     private static function emailBookedIfNeeded(MakeupRequest $request): void
     {
-        if ($request->booking_emailed_at || empty($request->student?->email)) {
+        if ($request->booking_emailed_at) {
             return;
         }
 
-        Mail::to($request->student->email)->send(new MakeupRecoveryBookedMail($request));
+        $recipients = self::notificationRecipients($request);
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Mail::to($recipients->all())->send(new MakeupRecoveryBookedMail($request));
         $request->forceFill(['booking_emailed_at' => now()])->save();
     }
 

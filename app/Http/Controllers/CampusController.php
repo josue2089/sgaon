@@ -155,6 +155,8 @@ class CampusController extends Controller
             'city' => ['nullable', 'string', 'max:120'],
             'state' => ['nullable', 'string', 'max:120'],
             'country' => ['nullable', 'string', 'max:120'],
+            'contact_phone' => ['nullable', 'string', 'max:40'],
+            'contact_email' => ['nullable', 'email', 'max:160'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
         ]);
