@@ -54,6 +54,7 @@
         </div>
 
         <section class="portal-tab-panel is-active" data-tab-panel="resumen">
+            @include('partials.portal.learning-path', ['path' => \App\Support\LearningPath::for($student)])
             @if(($renewalOffersByStudentId[$student->id] ?? collect())->isNotEmpty())
                 <div class="card">
                     <h4 class="section-title section-title-sm">Inscripción al siguiente curso</h4>

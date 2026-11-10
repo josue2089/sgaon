@@ -35,6 +35,7 @@
 </div>
 
 <section class="portal-tab-panel is-active" data-tab-panel="resumen">
+    @include('partials.portal.learning-path', ['path' => \App\Support\LearningPath::for($student)])
     <div class="card" id="renewal-enrollment">
         <div class="section-head section-head-tight">
             <h2 class="section-title section-title-md">Inscripción al siguiente curso</h2>
