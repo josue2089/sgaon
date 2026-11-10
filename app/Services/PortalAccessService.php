@@ -8,8 +8,10 @@ use App\Models\Program;
 use App\Models\Representative;
 use App\Models\Role;
 use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\User;
 use App\Support\DocumentNumber;
+use App\Support\StatusLabel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -130,6 +132,69 @@ class PortalAccessService
     public function canInviteInBulk(array $row): bool
     {
         return $row['can_invite'] && in_array($row['state'], [self::STATE_NONE, self::STATE_INVITED, self::STATE_EXPIRED], true);
+    }
+
+    /** Acceso del profesor a la plataforma: con su correo, por invitación. #445 */
+    public function inviteTeacher(Teacher $teacher, ?User $actor = null): PortalInvitation
+    {
+        $plan = $this->teacherPlan($teacher);
+        if ($plan['blocker']) {
+            throw ValidationException::withMessages(['portal_access' => $plan['blocker']]);
+        }
+
+        return DB::transaction(function () use ($teacher, $plan, $actor) {
+            $user = $this->ensureUser($teacher, User::ROLE_TEACHER, $plan);
+
+            return $this->issue($user, $plan['recipient'], $actor);
+        });
+    }
+
+    /** @return array{state: string, state_label: string, login: ?string, user_id: ?int, can_invite: bool, blocker: ?string} */
+    public function teacherSummary(Teacher $teacher): array
+    {
+        $teacher->loadMissing('user.portalInvitations');
+        $state = $this->stateFor($teacher->user);
+
+        return [
+            'state' => $state,
+            'state_label' => self::STATE_LABELS[$state],
+            'login' => $teacher->user?->email,
+            'user_id' => $teacher->user?->id,
+            'can_invite' => ! ($blocker = $this->teacherPlan($teacher)['blocker']),
+            'blocker' => $blocker,
+        ];
+    }
+
+    /** @return array{blocker: ?string, recipient: ?string, email: ?string, document: ?string, existing: ?User, to_representative: bool} */
+    private function teacherPlan(Teacher $teacher): array
+    {
+        $teacher->loadMissing('user');
+        $existing = $teacher->user;
+        $email = $this->normalizeEmail($teacher->email);
+        if (! $email) {
+            return $this->blocked('El profesor no tiene correo.');
+        }
+
+        $owner = $this->userWithEmail($email);
+        if ($owner && ! $owner->is($existing)) {
+            $linkedElsewhere = Teacher::query()->where('user_id', $owner->id)->whereKeyNot($teacher->id)->exists();
+            if ($existing || $owner->role !== User::ROLE_TEACHER || $linkedElsewhere) {
+                return $this->blocked('Su correo ya lo usa otra cuenta ('.StatusLabel::role($owner->role).'). Cámbialo o consúltalo con soporte.');
+            }
+            $existing = $owner;
+        }
+        if ($existing && $existing->role !== User::ROLE_TEACHER) {
+            return $this->blocked('Su usuario tiene el rol '.StatusLabel::role($existing->role).': se gestiona en Usuarios.');
+        }
+
+        return [
+            'blocker' => null,
+            'recipient' => $existing?->email ?: $email,
+            'email' => $email,
+            'document' => null,
+            'existing' => $existing,
+            'to_representative' => false,
+        ];
     }
 
     public function deactivate(User $user): void
@@ -322,7 +387,7 @@ class PortalAccessService
         return ['blocker' => $reason, 'recipient' => null, 'email' => null, 'document' => null, 'existing' => null, 'to_representative' => false];
     }
 
-    private function ensureUser(Student|Representative $profile, string $role, array $plan): User
+    private function ensureUser(Student|Representative|Teacher $profile, string $role, array $plan): User
     {
         $this->usersByEmail = $this->userIdsByDocument = null;
 
@@ -334,7 +399,7 @@ class PortalAccessService
                 'campus_id' => $profile->campus_id,
                 'name' => $profile->full_name,
                 'email' => $plan['email'],
-                'phone' => $profile->mobile_phone ?: $profile->phone,
+                'phone' => ($profile->mobile_phone ?? null) ?: $profile->phone,
                 'password' => Str::random(40),
                 'role' => $role,
                 'status' => 'active',

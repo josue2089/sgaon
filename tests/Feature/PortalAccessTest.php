@@ -257,16 +257,16 @@ class PortalAccessTest extends TestCase
         $this->assertTrue($recovery->expires_at->lessThanOrEqualTo(now()->addHour()));
     }
 
-    public function test_teacher_without_user_still_gets_access_from_forgot_password(): void
+    public function test_forgot_password_no_longer_creates_teacher_users(): void
     {
         Notification::fake();
         $teacher = Teacher::create(['campus_id' => $this->campus->id, 'first_name' => 'Filip', 'last_name' => 'Rachev', 'email' => 'filip@test.com', 'status' => 'active']);
 
         $this->post(route('password.email'), ['login' => 'filip@test.com'])->assertSessionHas('status');
 
-        $user = $teacher->fresh()->user;
-        $this->assertSame('teacher', $user->role);
-        Notification::assertSentTo($user, ResetPasswordNotification::class);
+        $this->assertNull($teacher->fresh()->user_id);
+        $this->assertSame(0, User::query()->where('email', 'filip@test.com')->count());
+        Notification::assertNothingSent();
     }
 
     public function test_deactivated_user_loses_access_and_can_be_reactivated(): void

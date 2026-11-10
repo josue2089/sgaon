@@ -68,6 +68,23 @@ class FinanceReconcile
         return array_map(fn (int $value) => round($value / 100, 2), $cents);
     }
 
+    /** Estado que corresponde al cargo según sus pagos y su vencimiento. */
+    public static function expectedStatus(Charge $charge): string
+    {
+        $paidTotal = self::paidTotalForCharge($charge);
+        $amount = (float) $charge->amount;
+
+        if (self::cents($paidTotal) >= self::cents($amount) && self::cents($amount) > 0) {
+            return 'paid';
+        }
+        if (self::cents($paidTotal) > 0) {
+            return 'partial';
+        }
+
+        // Vence al terminar el día de vencimiento (hora de Caracas), no al empezar. #368
+        return $charge->due_date && $charge->due_date->lt(today()) ? 'overdue' : 'pending';
+    }
+
     public static function syncCharge(Charge $charge): Charge
     {
         if ($charge->voided_at) {
@@ -76,19 +93,7 @@ class FinanceReconcile
             return $charge;
         }
 
-        $paidTotal = self::paidTotalForCharge($charge);
-        $amount = (float) $charge->amount;
-
-        if (self::cents($paidTotal) >= self::cents($amount) && self::cents($amount) > 0) {
-            $nextStatus = 'paid';
-        } elseif (self::cents($paidTotal) > 0) {
-            $nextStatus = 'partial';
-        } elseif ($charge->due_date && $charge->due_date->lt(today())) {
-            // Vence al terminar el día de vencimiento (hora de Caracas), no al empezar. #368
-            $nextStatus = 'overdue';
-        } else {
-            $nextStatus = 'pending';
-        }
+        $nextStatus = self::expectedStatus($charge);
 
         $statusChanged = $charge->status !== $nextStatus;
         if ($statusChanged) {

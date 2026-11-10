@@ -12,7 +12,7 @@
         <p>{{ $isRecovery ? 'Se pidió recuperar el acceso de su cuenta.' : 'Ya puede tener su propia cuenta en el portal.' }} Con este enlace se elige la contraseña:</p>
     @else
         <p>Hola {{ $user->name }},</p>
-        <p>{{ $isRecovery ? 'Recibimos una solicitud para recuperar tu acceso.' : 'Ya puedes entrar al portal para ver la información académica y los pagos.' }} Con este enlace eliges tu contraseña:</p>
+        <p>{{ $isRecovery ? 'Recibimos una solicitud para recuperar tu acceso.' : ($user->role === \App\Models\User::ROLE_TEACHER ? 'Ya puedes entrar a la plataforma para ver tus grupos y pasar asistencia.' : 'Ya puedes entrar al portal para ver la información académica y los pagos.') }} Con este enlace eliges tu contraseña:</p>
     @endif
     <p style="margin: 24px 0;">
         <a href="{{ $url }}" style="background:#172554;color:#ffffff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold;">{{ $isRecovery ? 'Elegir nueva contraseña' : 'Activar mi acceso' }}</a>

@@ -72,6 +72,8 @@
     </form>
 </div>
 
+@include('partials.teachers.access')
+
 <div class="detail-grid">
     <div class="card">
         <h2 class="section-title">Datos del profesor</h2>
