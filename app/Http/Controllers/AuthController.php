@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Teacher;
 use App\Models\User;
 use App\Services\PortalAccessService;
 use App\Support\AuditTrail;
@@ -37,7 +36,7 @@ class AuthController extends Controller
 
         // El mensaje es siempre el mismo: no revela si la cuenta existe. #471
         try {
-            $user = $this->findByLogin($data['login']) ?? $this->provisionTeacherFromEmail($data['login']);
+            $user = $this->findByLogin($data['login']);
             if ($user && $user->status !== 'inactive') {
                 $user->email
                     ? Password::sendResetLink(['email' => $user->email])
@@ -98,34 +97,6 @@ class AuthController extends Controller
         $document = DocumentNumber::normalize($login);
 
         return $document ? User::query()->where('login_document', $document)->first() : null;
-    }
-
-    /**
-     * Los profesores sin usuario aún obtienen su acceso con "Olvidé mi contraseña"; el enlace solo llega
-     * al correo de su ficha. Se retira cuando el admin pueda darles acceso desde la ficha (#445).
-     */
-    private function provisionTeacherFromEmail(string $login): ?User
-    {
-        $email = Str::lower(trim($login));
-        $teacher = str_contains($email, '@')
-            ? Teacher::query()->whereNull('user_id')->where('status', '!=', 'inactive')->whereRaw('LOWER(email) = ?', [$email])->first()
-            : null;
-        if (! $teacher) {
-            return null;
-        }
-
-        $user = User::create([
-            'campus_id' => $teacher->campus_id,
-            'name' => $teacher->full_name ?: 'Profesor',
-            'email' => trim((string) $teacher->email),
-            'phone' => $teacher->phone,
-            'password' => Hash::make(Str::random(32)),
-            'role' => User::ROLE_TEACHER,
-            'status' => 'active',
-        ]);
-        $teacher->forceFill(['user_id' => $user->id])->save();
-
-        return $user;
     }
 
     public function login(Request $request): RedirectResponse

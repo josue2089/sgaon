@@ -2,28 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ScopesCampusAccess;
+use App\Models\AuditLog;
 use App\Models\Campus;
 use App\Models\Charge;
 use App\Models\ClassSession;
 use App\Models\Course;
-use App\Models\AuditLog;
 use App\Models\ScheduleTemplate;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\PortalAccessService;
 use App\Support\AuditTrail;
 use App\Support\CampusScope;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class TeacherController extends Controller
 {
-    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
+    use ScopesCampusAccess;
 
     public function index(Request $request): View
     {
@@ -378,6 +380,7 @@ class TeacherController extends Controller
 
         return view('teachers.show', [
             'teacher' => $teacher,
+            'access' => app(PortalAccessService::class)->teacherSummary($teacher),
             'courses' => $filteredCourses,
             'allCoursesCount' => $courses->count(),
             'studentRows' => $studentRows,

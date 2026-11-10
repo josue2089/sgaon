@@ -70,6 +70,7 @@ class Navigation
             ],
             'Sedes' => [
                 self::child('Sedes', 'campuses.index', ['campuses.'], $isMaster, $current),
+                self::child('Salud de datos', 'data-health.index', ['data-health.'], $isMaster, $current),
             ],
         ];
 
