@@ -6,6 +6,7 @@ use App\Models\Campus;
 use App\Models\Charge;
 use App\Models\Payment;
 use App\Models\User;
+use App\Support\CsvExport;
 use App\Support\FinanceReconcile;
 use App\Support\FinanceSummary;
 use App\Support\PaymentCurrencyConverter;
@@ -216,14 +217,7 @@ class FinanceSummaryExportService
      */
     private function csvResponse(array $dataset, string $filename): StreamedResponse
     {
-        return response()->streamDownload(function () use ($dataset): void {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, $dataset['headers']);
-            foreach ($dataset['rows'] as $row) {
-                fputcsv($out, $row);
-            }
-            fclose($out);
-        }, $filename, ['Content-Type' => 'text/csv']);
+        return CsvExport::download($filename, $dataset['headers'], $dataset['rows']);
     }
 
     /**

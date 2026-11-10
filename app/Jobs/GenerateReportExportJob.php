@@ -4,22 +4,25 @@ namespace App\Jobs;
 
 use App\Models\AttendanceRecord;
 use App\Models\Charge;
+use App\Models\Payment;
 use App\Models\ReportExport;
+use App\Support\CampusScope;
+use App\Support\CsvExport;
+use App\Support\DateFormat;
+use App\Support\FinanceReconcile;
+use App\Support\PrivateFiles;
+use App\Support\StatusLabel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Support\CampusScope;
-use App\Support\PrivateFiles;
 
 class GenerateReportExportJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function __construct(public int $reportExportId)
-    {
-    }
+    public function __construct(public int $reportExportId) {}
 
     public function handle(): void
     {
@@ -36,7 +39,6 @@ class GenerateReportExportJob implements ShouldQueue
             $handle = fopen('php://temp', 'w+');
 
             if ($export->type === 'attendance') {
-                fputcsv($handle, ['date', 'group', 'student', 'status', 'notes']);
                 $query = AttendanceRecord::query()->with(['classSession.group', 'enrollment.student']);
                 $query->whereHas('classSession', fn ($q) => $this->scopeCampus($q, $export));
                 if (! empty($filters['from'])) {
@@ -49,17 +51,19 @@ class GenerateReportExportJob implements ShouldQueue
                     $query->whereHas('classSession', fn ($q) => $q->where('group_id', (int) $filters['group_id']));
                 }
 
-                foreach ($query->latest()->cursor() as $record) {
-                    fputcsv($handle, [
-                        $record->classSession->session_date?->format('Y-m-d'),
-                        $record->classSession->group->name ?? '',
-                        $record->enrollment->student->full_name ?? '',
-                        $record->status,
-                        $record->notes ?? '',
-                    ]);
-                }
+                CsvExport::write($handle, ['Fecha', 'Grupo', 'Alumno', 'Cédula', 'Estado', 'Notas'], function () use ($query) {
+                    foreach ($query->latest()->cursor() as $record) {
+                        yield [
+                            DateFormat::date($record->classSession->session_date, ''),
+                            $record->classSession->group->name ?? '',
+                            $record->enrollment->student->full_name ?? '',
+                            $record->enrollment->student->document_id ?? '',
+                            StatusLabel::label($record->status, 'attendance'),
+                            $record->notes ?? '',
+                        ];
+                    }
+                });
             } elseif ($export->type === 'payments') {
-                fputcsv($handle, ['student', 'concept', 'amount', 'status', 'paid', 'balance']);
                 $chargesQuery = Charge::query()->with(['student', 'payments']);
                 $this->scopeCampus($chargesQuery, $export);
                 if (! empty($filters['status'])) {
@@ -69,30 +73,34 @@ class GenerateReportExportJob implements ShouldQueue
                     $chargesQuery->where('status', 'overdue');
                 }
 
-                foreach ($chargesQuery->latest()->cursor() as $charge) {
-                    $paid = (float) $charge->payments->sum('amount');
-                    fputcsv($handle, [
-                        $charge->student->full_name ?? '',
-                        $charge->concept,
-                        $charge->amount,
-                        $charge->status,
-                        $paid,
-                        max(0, (float) $charge->amount - $paid),
-                    ]);
-                }
+                CsvExport::write($handle, ['Alumno', 'Cédula', 'Concepto', 'Moneda', 'Monto', 'Vence', 'Estado', 'Pagado', 'Saldo'], function () use ($chargesQuery) {
+                    foreach ($chargesQuery->latest()->cursor() as $charge) {
+                        yield [
+                            $charge->student->full_name ?? '',
+                            $charge->student->document_id ?? '',
+                            $charge->concept,
+                            $charge->currency ?? 'USD',
+                            (float) $charge->amount,
+                            DateFormat::date($charge->due_date, ''),
+                            StatusLabel::label($charge->status),
+                            (float) FinanceReconcile::paidTotalForCharge($charge),
+                            (float) FinanceReconcile::outstandingForCharge($charge),
+                        ];
+                    }
+                });
 
-                fputcsv($handle, []);
-                fputcsv($handle, ['student', 'paid_at', 'currency', 'original_amount', 'exchange_rate', 'amount_usd', 'method', 'reference']);
-                $paymentsQuery = \App\Models\Payment::query()->whereNull('voided_at')->with(['student'])->latest();
+                CsvExport::row($handle, []);
+                CsvExport::row($handle, ['Alumno', 'Fecha de pago', 'Moneda', 'Monto original', 'Tasa', 'Monto aplicado', 'Método', 'Referencia']);
+                $paymentsQuery = Payment::query()->whereNull('voided_at')->with(['student'])->latest();
                 $this->scopeCampus($paymentsQuery, $export);
                 foreach ($paymentsQuery->cursor() as $payment) {
-                    fputcsv($handle, [
+                    CsvExport::row($handle, [
                         $payment->student->full_name ?? '',
-                        optional($payment->paid_at)->format('Y-m-d'),
+                        DateFormat::date($payment->paid_at, ''),
                         $payment->currency ?? 'USD',
-                        $payment->original_amount ?? $payment->amount,
-                        $payment->exchange_rate,
-                        $payment->amount,
+                        (float) ($payment->original_amount ?? $payment->amount),
+                        $payment->exchange_rate ? CsvExport::amount($payment->exchange_rate, 4) : '',
+                        (float) $payment->amount,
                         $payment->method,
                         $payment->reference,
                     ]);

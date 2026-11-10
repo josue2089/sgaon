@@ -8,6 +8,22 @@
     <div class="form-actions">
         <button class="btn secondary" type="button" onclick="window.print()">Imprimir</button>
         <a class="btn secondary" href="{{ route('finance.receipts.pdf', $receipt) }}">Exportar PDF</a>
+        @unless($payment->voided_at)
+            @php
+                $payment->loadMissing('student.representatives');
+                $contact = $payment->student?->representatives->first(fn ($rep) => filled($rep->mobile_phone ?: $rep->phone));
+                $whatsappPhone = $contact ? ($contact->mobile_phone ?: $contact->phone) : ($payment->student?->mobile_phone ?: $payment->student?->phone);
+                $whatsappText = 'Hola, ON English Academy confirma el pago de '.($payment->student->full_name ?? 'el alumno')
+                    .': recibo '.$receipt->receipt_number.' por '.\App\Support\MoneyFormat::dualLine($payment)
+                    .', del '.\App\Support\DateFormat::date($receipt->issued_at ?? $payment->paid_at).'. ¡Gracias!';
+            @endphp
+            <form method="POST" action="{{ route('finance.receipts.resend', $receipt) }}" data-guard-submit>
+                @csrf
+                <button class="btn secondary" type="submit" data-submit-busy-label="Enviando…">Reenviar por correo</button>
+            </form>
+            <a class="btn secondary" href="{{ \App\Support\WhatsappLink::to($whatsappPhone, $whatsappText) }}" target="_blank" rel="noopener"
+               title="{{ \App\Support\WhatsappLink::normalizePhone($whatsappPhone) ? 'Abre WhatsApp con el mensaje listo' : 'No hay teléfono registrado: elige el contacto en WhatsApp' }}">Compartir por WhatsApp</a>
+        @endunless
         <a class="btn secondary" href="{{ route('finance.students.history', $payment->student) }}">Historial del alumno</a>
         @include('partials.finance.void-payment', ['payment' => $payment])
         <a class="btn secondary" href="{{ route('finance.index') }}">Volver</a>

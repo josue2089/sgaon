@@ -83,7 +83,7 @@ class FinanceTabsTest extends TestCase
         $this->actingAs($this->master)->get(route('finance.index', ['tab' => 'pagos']))
             ->assertOk()
             ->assertSee('Pagos y recibos')
-            ->assertSee('2026-10-10')
+            ->assertSee('10/10/2026')
             ->assertDontSee('Cuentas por cobrar');
 
         $this->actingAs($this->master)->get(route('finance.index', ['tab' => 'comprobantes']))

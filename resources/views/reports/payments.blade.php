@@ -10,6 +10,29 @@
     </div>
 @include('partials.layout.reports-tabs')
     <form method="GET" action="{{ route('reports.payments') }}">
+        <div class="grid-3">
+            <div>
+                <label for="report-start">Desde</label>
+                <input id="report-start" type="date" name="start_date" value="{{ $filters['start_date'] ?? '' }}">
+            </div>
+            <div>
+                <label for="report-end">Hasta</label>
+                <input id="report-end" type="date" name="end_date" value="{{ $filters['end_date'] ?? '' }}">
+                @error('end_date')<div class="form-error">{{ $message }}</div>@enderror
+            </div>
+            @if($campuses->count() > 1)
+                <div>
+                    <label for="report-campus">Sede</label>
+                    <select id="report-campus" name="campus_id">
+                        <option value="">Todas las sedes</option>
+                        @foreach($campuses as $campus)
+                            <option value="{{ $campus->id }}" @selected((int) ($filters['campus_id'] ?? 0) === $campus->id)>{{ $campus->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+        </div>
+        <p class="entity-sub">El rango filtra los cargos por fecha de vencimiento y los pagos por fecha de pago.</p>
         <div class="grid-2">
             <div>
                 <label>Estado</label>
@@ -135,6 +158,24 @@
 
 <div class="card">
     <h3 class="section-title section-title-sm">Desglose de pagos recibidos</h3>
+    <div class="detail-list">
+        @forelse($paymentTotals as $total)
+            <div>
+                <strong>{{ $total->currency_code }}:</strong>
+                {{ $total->total_count }} {{ (int) $total->total_count === 1 ? 'pago' : 'pagos' }} ·
+                @if($total->currency_code === 'VES')
+                    {{ MoneyFormat::ves((float) $total->original_total) }}
+                @elseif($total->currency_code === 'EUR')
+                    {{ MoneyFormat::eur((float) $total->original_total) }}
+                @else
+                    {{ MoneyFormat::usd((float) $total->original_total) }}
+                @endif
+            </div>
+        @empty
+            <div class="table-sub">Sin pagos en este rango.</div>
+        @endforelse
+    </div>
+    <div class="table-wrap">
     <table>
         <thead>
         <tr>
@@ -151,7 +192,7 @@
         @forelse($recentPayments ?? [] as $payment)
             <tr>
                 <td>{{ $payment->student->full_name ?? '' }}</td>
-                <td>{{ $payment->paid_at?->format('Y-m-d') }}</td>
+                <td>{{ \App\Support\DateFormat::date($payment->paid_at) }}</td>
                 <td>{{ $payment->currency ?? 'USD' }}</td>
                 <td>
                     @if(($payment->currency ?? 'USD') === 'VES')
@@ -173,5 +214,9 @@
         @endforelse
         </tbody>
     </table>
+    </div>
+    @if($recentPayments->hasPages())
+        {{ $recentPayments->links() }}
+    @endif
 </div>
 @endsection

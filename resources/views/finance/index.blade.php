@@ -58,6 +58,8 @@
     <input type="hidden" name="tab" value="{{ $tab }}">
     @if($focusStudentId)<input type="hidden" name="student_id" value="{{ $focusStudentId }}">@endif
     <div class="fi-filter-bar">
+        <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" maxlength="100" aria-label="Buscar"
+               placeholder="{{ $tab === 'cobrar' ? 'Concepto, alumno o cédula' : 'Referencia, recibo, alumno o cédula' }}">
         @if($campuses->count() > 1)
             <select name="campus_id" aria-label="Sede">
                 <option value="">Todas las sedes</option>
@@ -174,7 +176,7 @@
                 </td>
                 <td>{{ \App\Support\MoneyFormat::formatLedgerAmount((float) $payment->amount, $payment->currency) }}</td>
                 <td>{{ $payment->exchange_rate ? MoneyFormat::rate((float) $payment->exchange_rate) : '—' }}</td>
-                <td>{{ $payment->paid_at?->format('Y-m-d') }}</td>
+                <td>{{ \App\Support\DateFormat::date($payment->paid_at) }}</td>
                 <td>
                     @if($payment->receipt)
                         <a href="{{ route('finance.receipts.show', $payment->receipt) }}">{{ $payment->receipt->receipt_number }}</a>
