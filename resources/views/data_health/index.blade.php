@@ -7,6 +7,7 @@
         <p class="page-subtitle">Verificaciones de solo lectura. Nada de esta página cambia datos, salvo el botón de recalcular.</p>
     </div>
 </div>
+@include('partials.layout.config-tabs')
 
 <div class="soft-kpi-grid soft-kpi-grid-4">
     @include('partials.ui.soft-kpi', ['class' => 'centered', 'label' => 'Alumnos activos', 'value' => $summary['active_students'], 'subtitle' => $summary['students'].' en total'])
