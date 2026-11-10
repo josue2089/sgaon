@@ -9,17 +9,29 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('exchange_rates', function (Blueprint $table) {
-            $table->string('note', 255)->nullable()->after('source');
-            $table->foreignId('created_by')->nullable()->after('note')->constrained('users')->nullOnDelete();
-        });
+        if (! Schema::hasColumn('exchange_rates', 'note')) {
+            Schema::table('exchange_rates', function (Blueprint $table) {
+                $table->string('note', 255)->nullable()->after('source');
+            });
+        }
+        if (! Schema::hasColumn('exchange_rates', 'created_by')) {
+            Schema::table('exchange_rates', function (Blueprint $table) {
+                $table->foreignId('created_by')->nullable()->after('note')->constrained('users')->nullOnDelete();
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('exchange_rates', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('created_by');
-            $table->dropColumn('note');
-        });
+        if (Schema::hasColumn('exchange_rates', 'created_by')) {
+            Schema::table('exchange_rates', function (Blueprint $table) {
+                $table->dropConstrainedForeignId('created_by');
+            });
+        }
+        if (Schema::hasColumn('exchange_rates', 'note')) {
+            Schema::table('exchange_rates', function (Blueprint $table) {
+                $table->dropColumn('note');
+            });
+        }
     }
 };

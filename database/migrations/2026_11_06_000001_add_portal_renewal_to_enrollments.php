@@ -9,6 +9,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('enrollments', 'renewed_from_portal_at')) {
+            return;
+        }
         Schema::table('enrollments', function (Blueprint $table) {
             $table->timestamp('renewed_from_portal_at')->nullable()->after('enrolled_at');
         });
@@ -16,6 +19,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasColumn('enrollments', 'renewed_from_portal_at')) {
+            return;
+        }
         Schema::table('enrollments', function (Blueprint $table) {
             $table->dropColumn('renewed_from_portal_at');
         });
