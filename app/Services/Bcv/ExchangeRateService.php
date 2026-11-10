@@ -9,9 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class ExchangeRateService
 {
-    public function __construct(private BcvApiClient $client)
-    {
-    }
+    public function __construct(private BcvApiClient $client) {}
 
     /**
      * @return array{rate: float, effective_at: ?Carbon, captured_at: ?Carbon, source: string}
@@ -54,6 +52,30 @@ class ExchangeRateService
     public function getEurRateForDate(?Carbon $date = null): array
     {
         return $this->getRateForDate('EUR', $date);
+    }
+
+    /** Borra la tasa recordada para que la próxima consulta lea la nueva. */
+    public function forgetCachedLatest(): void
+    {
+        Cache::forget('bcv_api_latest_usd');
+        Cache::forget('bcv_api_latest_eur');
+    }
+
+    /** Tasa cargada a mano cuando la API del BCV no responde. #443 */
+    public function storeManual(string $currency, float $rate, Carbon $effectiveAt, string $note, ?int $userId): ExchangeRate
+    {
+        $record = ExchangeRate::query()->create([
+            'currency' => $currency,
+            'rate' => $rate,
+            'effective_at' => $effectiveAt,
+            'captured_at' => now(),
+            'source' => ExchangeRate::SOURCE_MANUAL,
+            'note' => $note,
+            'created_by' => $userId,
+        ]);
+        $this->forgetCachedLatest();
+
+        return $record;
     }
 
     public function syncLatest(): ExchangeRate
@@ -191,10 +213,7 @@ class ExchangeRateService
      */
     private function fallbackSnapshot(string $currency): array
     {
-        $local = ExchangeRate::query()
-            ->where('currency', $currency)
-            ->orderByDesc('effective_at')
-            ->first();
+        $local = ExchangeRate::latestFor($currency);
 
         if ($local) {
             return $this->snapshotFromModel($local);

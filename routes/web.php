@@ -18,6 +18,7 @@ use App\Http\Controllers\DataHealthController;
 use App\Http\Controllers\EnrollmentChangeController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ExchangeRateController;
+use App\Http\Controllers\ExchangeRateSettingsController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\HistoricalStudentController;
@@ -177,6 +178,9 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::get('/finance/receipts/{receipt}/pdf', [FinanceController::class, 'downloadReceiptPdf'])->name('finance.receipts.pdf');
             Route::get('/finance/students/{student}/history', [FinanceController::class, 'studentHistory'])->name('finance.students.history');
             Route::post('/finance/charges', [FinanceController::class, 'storeCharge'])->name('finance.charges.store');
+            Route::get('/settings/exchange-rates', [ExchangeRateSettingsController::class, 'index'])->name('settings.exchange-rates.index');
+            Route::post('/settings/exchange-rates/sync', [ExchangeRateSettingsController::class, 'sync'])->middleware('throttle:6,1')->name('settings.exchange-rates.sync');
+            Route::post('/settings/exchange-rates/manual', [ExchangeRateSettingsController::class, 'storeManual'])->name('settings.exchange-rates.manual');
             Route::post('/finance/charges/{charge}/void', [FinanceController::class, 'voidCharge'])->name('finance.charges.void');
             Route::post('/finance/payments', [FinanceController::class, 'storePayment'])->name('finance.payments.store');
             Route::post('/finance/payments/{payment}/void', [FinanceController::class, 'voidPayment'])->name('finance.payments.void');

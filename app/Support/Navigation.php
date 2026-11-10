@@ -67,6 +67,7 @@ class Navigation
                 self::child('Métodos de pago', 'settings.payment-methods.index', ['settings.payment-methods.'], $isMaster, $current),
                 self::child('Pago de recuperativas', 'settings.makeup-payment-instructions.edit', ['settings.makeup-payment-instructions.'], $isMaster, $current),
                 self::child('Tarifa mensual', 'settings.billing.edit', ['settings.billing.'], $isMaster, $current),
+                self::child('Tasas BCV', 'settings.exchange-rates.index', ['settings.exchange-rates.'], $isAdmin && $user->hasPermission('finance.manage'), $current),
             ],
             'Sedes' => [
                 self::child('Sedes', 'campuses.index', ['campuses.'], $isMaster, $current),
