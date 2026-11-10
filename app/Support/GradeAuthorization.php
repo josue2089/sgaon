@@ -24,7 +24,7 @@ final class GradeAuthorization
 
         $teacher = Teacher::forUser($user);
 
-        if (! $teacher || (int) $course->teacher_id !== (int) $teacher->id) {
+        if (! $teacher || ! $teacher->ownsCourse($course)) {
             throw new AuthorizationException('Solo el profesor titular puede cargar evaluaciones en este curso.');
         }
     }
@@ -43,7 +43,7 @@ final class GradeAuthorization
 
         $teacher = Teacher::forUser($user);
 
-        return $teacher && (int) $course->teacher_id === (int) $teacher->id;
+        return (bool) $teacher?->ownsCourse($course);
     }
 
     public static function representativeCanAccessStudent(User $user, Student $student): bool

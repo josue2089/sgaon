@@ -56,7 +56,7 @@ class NavigationAndSearchTest extends TestCase
         $this->assertSame(['Personas', 'Calendario', 'Programas', 'Pagos', 'Sedes'], collect($config['children'])->where('heading', true)->pluck('label')->values()->all());
 
         $teacher = User::factory()->create(['role' => 'teacher', 'campus_id' => $this->campus->id]);
-        $this->assertSame(['Inicio', 'Asistencia'], $this->labels($teacher));
+        $this->assertSame(['Inicio', 'Asistencia', 'Mis recuperativas'], $this->labels($teacher));
     }
 
     public function test_header_renders_single_menu_without_mas_and_marks_active_section(): void

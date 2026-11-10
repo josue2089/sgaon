@@ -66,7 +66,7 @@
             </div>
             <div class="search">
                 <select name="class_session_id">
-                    <option value="">{{ $sessionGroups->isEmpty() ? ($filterDate ? 'No hay clases ese día' : 'No hay clases en estas fechas') : 'Seleccione sesión' }}</option>
+                    <option value="">{{ $sessionGroups->isEmpty() ? ($pendingOnly ? 'No hay clases pendientes' : ($filterDate ? 'No hay clases ese día' : 'No hay clases en estas fechas')) : 'Seleccione sesión' }}</option>
                     @foreach($sessionGroups as $label => $items)
                         <optgroup label="{{ $label }}">
                             @foreach($items as $session)
@@ -79,11 +79,13 @@
                 </select>
             </div>
             <button class="btn" type="submit">Cargar sesión</button>
-            @if($filterDate)
+            @if($filterDate || $pendingOnly)
                 <a class="btn secondary" href="{{ route('attendance.index') }}">Hoy</a>
             @endif
         </div>
-        @if(! $filterDate && ! $selectedSession)
+        @if($pendingOnly)
+            <div class="form-hint">{{ $sessionGroups->flatten()->count() ? 'Estas clases de los últimos 14 días todavía no tienen asistencia.' : 'No quedan clases sin asistencia en los últimos 14 días.' }}</div>
+        @elseif(! $filterDate && ! $selectedSession)
             <div class="form-hint">{{ $todayCount ? 'Hoy hay '.$todayCount.' '.($todayCount === 1 ? 'clase' : 'clases').'.' : 'No hay clases hoy.' }} Para otra fecha, usa el calendario.</div>
         @endif
     </form>

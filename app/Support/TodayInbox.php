@@ -25,19 +25,31 @@ class TodayInbox
     public static function for(User $user, ?Teacher $teacher = null): array
     {
         $today = now()->toDateString();
-
-        $sessionsWithoutAttendance = CampusScope::apply(
+        // Un usuario profesor siempre se limita a sus clases, aunque no tenga ficha (entonces no ve ninguna). #446
+        $isTeacher = $user->role === User::ROLE_TEACHER;
+        $teacher ??= $isTeacher ? Teacher::forUser($user) : null;
+        $pendingAttendance = fn () => CampusScope::apply(
             ClassSession::query()
-                ->whereDate('session_date', $today)
                 ->whereDoesntHave('attendanceRecords')
                 ->whereHas('group.enrollments', fn ($query) => $query->where('status', 'active'))
-                ->when($teacher, fn ($query) => $query->whereHas('group', fn ($group) => $group->where('teacher_id', $teacher->id))),
+                ->when($teacher || $isTeacher, fn ($query) => Teacher::constrainSessions($query, $teacher)),
             $user
-        )->count();
+        );
+
+        $sessionsWithoutAttendance = $pendingAttendance()->whereDate('session_date', $today)->count();
+        $pastWithoutAttendance = $pendingAttendance()
+            ->whereDate('session_date', '<', $today)
+            ->whereDate('session_date', '>=', now()->subDays(14)->toDateString())
+            ->count();
 
         $items = [
             self::item('attendance', 'Clases de hoy sin asistencia', 'Grupos con alumnos que todavía no tienen la asistencia tomada.', $sessionsWithoutAttendance, 'attendance.index', [], 'Tomar asistencia', 'warn'),
+            self::item('attendance_past', 'Clases pasadas sin asistencia', 'De los últimos 14 días. Tómala para que cuenten las faltas y las recuperativas.', $pastWithoutAttendance, 'attendance.index', ['pending' => 1], 'Ver clases', 'danger'),
         ];
+
+        if ($teacher || $isTeacher) {
+            $items[] = self::item('teacher_makeups', 'Tus recuperativas próximas', 'Alumnos reservados en tus recuperativas de hoy a 7 días.', self::teacherMakeupBookings($teacher)->count(), 'teacher.makeups.index', [], 'Ver recuperativas', 'info');
+        }
 
         if ($user->role !== User::ROLE_ADMIN) {
             return array_values(array_filter($items));
@@ -102,6 +114,18 @@ class TodayInbox
         $items[] = self::item('no_enrollment', 'Alumnos activos sin inscripción', 'Están activos pero no tienen curso: inscríbelos o pásalos a histórico.', $withoutEnrollment, 'students.index', ['enrollment' => 'none'], 'Ver alumnos', 'info');
 
         return array_values(array_filter($items));
+    }
+
+    /** Reservas activas en las recuperativas del profesor entre hoy y 7 días. #446 */
+    public static function teacherMakeupBookings(?Teacher $teacher): \Illuminate\Database\Eloquent\Builder
+    {
+        return \App\Models\MakeupBooking::query()
+            ->where('status', 'reserved')
+            ->whereHas('makeupSession', fn ($session) => $session
+                ->where('teacher_id', $teacher?->id ?? -1)
+                ->whereNotIn('status', ['cancelled'])
+                ->whereDate('session_date', '>=', now()->toDateString())
+                ->whereDate('session_date', '<=', now()->addDays(7)->toDateString()));
     }
 
     private static function item(string $key, string $label, string $hint, int $count, string $route, array $params, string $action, string $tone, string $anchor = ''): ?array

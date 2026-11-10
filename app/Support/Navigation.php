@@ -30,6 +30,7 @@ class Navigation
             self::link('Asistencia', 'attendance', 'attendance.index', ['attendance.'], in_array($user->role, [User::ROLE_ADMIN, User::ROLE_TEACHER], true), $current),
             self::link('Finanzas', 'finance', 'finance.index', ['finance.index', 'finance.students.', 'finance.receipts.'], $isAdmin && $user->hasPermission('finance.manage'), $current),
             self::link('Recuperativas', 'makeups', 'makeups.index', ['makeups.'], $isAdmin, $current),
+            self::link('Mis recuperativas', 'makeups', 'teacher.makeups.index', ['teacher.makeups.'], $user->role === User::ROLE_TEACHER && $user->hasPermission('attendance.manage'), $current),
             self::group('Reportes', 'reports', $current, self::reportLinks($user)),
             self::group('Configuración', 'config', $current, self::configLinks($user, $current, withHeadings: true)),
         ];

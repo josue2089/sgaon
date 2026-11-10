@@ -4635,3 +4635,15 @@ fieldset {
     padding-left: 1.25rem;
     list-style: decimal;
 }
+
+/* Mis recuperativas del profesor. #446 */
+.makeup-teacher-session {
+    padding: 12px 0;
+    border-top: 1px solid var(--border, #e5e7eb);
+}
+.makeup-teacher-session:first-of-type {
+    border-top: 0;
+}
+.makeup-teacher-session .table-wrap {
+    margin-top: 8px;
+}

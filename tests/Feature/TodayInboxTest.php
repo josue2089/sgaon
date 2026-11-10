@@ -121,7 +121,7 @@ class TodayInboxTest extends TestCase
         [, , $mine] = $this->classToday($this->campus, $teacher, 'Mia');
         $this->classToday($this->campus, null, 'Ajena');
 
-        $this->assertSame(['attendance' => 1], $this->counts($user, $teacher));
+        $this->assertSame(['attendance' => 1, 'attendance_past' => 0, 'teacher_makeups' => 0], $this->counts($user, $teacher));
 
         $this->actingAs($user)->get(route('dashboard'))
             ->assertOk()
