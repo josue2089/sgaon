@@ -11,12 +11,16 @@
 @forelse($students as $student)
     @php
         $gradeEntries = ($repGradeEntriesByStudentId[(int) $student->id] ?? collect())->sortByDesc(fn ($e) => optional($e->evaluationSet)->evaluated_on);
-        $pendingCharges = $student->charges->whereIn('status', ['pending', 'partial', 'overdue'])->values();
+        $data = $portalDataByStudentId[$student->id];
+        $pendingCharges = $data['pendingCharges'];
         $tabCounts = [
             'inscripciones' => $student->enrollments->count(),
             'evaluaciones' => $gradeEntries->count(),
+            'agenda' => $data['agenda']->count(),
             'pagos' => $pendingCharges->count(),
+            'recuperativas' => $data['openMakeupCount'],
         ];
+        $idPrefix = 'rep-'.$student->id.'-';
     @endphp
 
     <div class="card rep-student-card">
@@ -33,8 +37,8 @@
                 <div class="summary-value">{{ $tabCounts['inscripciones'] }}</div>
             </div>
             <div class="card summary-card">
-                <div class="summary-label">Evaluaciones</div>
-                <div class="summary-value">{{ $tabCounts['evaluaciones'] }}</div>
+                <div class="summary-label">Recuperativas abiertas</div>
+                <div class="summary-value">{{ $tabCounts['recuperativas'] }}</div>
             </div>
             <div class="card summary-card">
                 <div class="summary-label">Cargos pendientes</div>
@@ -42,7 +46,7 @@
             </div>
             <div class="card summary-card">
                 <div class="summary-label">Saldo pendiente</div>
-                @include('partials.portal.balance', ['balance' => \App\Support\FinanceReconcile::outstandingByCurrency($student->charges)])
+                @include('partials.portal.balance', ['balance' => $data['balance']])
             </div>
         </div>
 
@@ -50,7 +54,9 @@
             <button type="button" class="portal-tab is-active" data-tab-target="resumen" role="tab" aria-selected="true">Resumen</button>
             <button type="button" class="portal-tab" data-tab-target="inscripciones" role="tab" aria-selected="false">Inscripciones <span class="portal-tab-badge">{{ $tabCounts['inscripciones'] }}</span></button>
             <button type="button" class="portal-tab" data-tab-target="evaluaciones" role="tab" aria-selected="false">Evaluaciones <span class="portal-tab-badge">{{ $tabCounts['evaluaciones'] }}</span></button>
+            <button type="button" class="portal-tab" data-tab-target="agenda" role="tab" aria-selected="false">Agenda y asistencia <span class="portal-tab-badge">{{ $tabCounts['agenda'] }}</span></button>
             <button type="button" class="portal-tab" data-tab-target="pagos" role="tab" aria-selected="false">Pagos <span class="portal-tab-badge">{{ $tabCounts['pagos'] }}</span></button>
+            <button type="button" class="portal-tab" data-tab-target="recuperativas" role="tab" aria-selected="false">Recuperativas <span class="portal-tab-badge">{{ $tabCounts['recuperativas'] }}</span></button>
         </div>
 
         <section class="portal-tab-panel is-active" data-tab-panel="resumen">
@@ -87,8 +93,8 @@
                 </div>
                 <div class="card table-card">
                     <h4 class="section-title section-title-sm">Última actividad</h4>
-                    @if($student->chargePaymentRequests->isNotEmpty())
-                        @php($latestRequest = $student->chargePaymentRequests->sortByDesc('submitted_at')->first())
+                    @if($data['chargePaymentRequests']->isNotEmpty())
+                        @php($latestRequest = $data['chargePaymentRequests']->sortByDesc('submitted_at')->first())
                         <div class="table-sub">Último comprobante: {{ $latestRequest->submitted_at?->format('d/m/Y H:i') ?? 'N/D' }}</div>
                         <div class="table-sub">Estado: {{ \App\Support\StatusLabel::label($latestRequest->status) }}</div>
                     @else
@@ -133,82 +139,26 @@
             </div>
         </section>
 
-        <section class="portal-tab-panel" data-tab-panel="pagos">
-            @if($pendingCharges->isEmpty() && $student->chargePaymentRequests->isEmpty())
-                <div class="card"><div class="empty-state-inline">No hay cargos pendientes ni solicitudes de pago para este alumno.</div></div>
-            @else
-                <div class="card">
-                    <h4 class="section-title section-title-sm">Pagos pendientes</h4>
-                    @if($pendingCharges->isEmpty())
-                        <div class="empty-state-inline">No hay cargos pendientes por pagar.</div>
-                    @else
-                        <div class="table-wrap">
-                            <table class="data-table">
-                                <thead><tr><th>Cargo</th><th>Pendiente</th><th>Estado</th><th>Comprobante</th></tr></thead>
-                                <tbody>
-                                @foreach($pendingCharges as $charge)
-                                    @php($chargeBalance = \App\Support\FinanceReconcile::outstandingForCharge($charge))
-                                    <tr>
-                                        <td>{{ $charge->concept }}</td>
-                                        <td>{{ MoneyFormat::formatLedgerAmount($chargeBalance, $charge->currencyCode()) }}</td>
-                                        <td>@include('partials.ui.status', ['status' => $charge->status])</td>
-                                        <td>
-                                            @if($charge->hasPaymentInValidation())
-                                                @include('partials.portal.charge-payment-state')
-                                            @else
-                                            <form method="POST" action="{{ route('portal.representative.charges.payment', $charge) }}" enctype="multipart/form-data" class="stack-xs" data-guard-submit>
-                                                @csrf
-                                                @include('partials.payment-currency-fields', [
-                                                    'prefix' => 'rep-charge-'.$charge->id,
-                                                    'chargeCurrency' => $charge->currencyCode(),
-                                                    'balanceAmount' => $chargeBalance,
-                                                    'usdExchangeRate' => $bcvRate['rate'] ?? 0,
-                                                    'eurExchangeRate' => $bcvEurRate['rate'] ?? 0,
-                                                    'paymentMethods' => $paymentMethods,
-                                                ])
-                                                <input name="reference" placeholder="Referencia">
-                                                <input type="file" name="payment_proof" required>
-                                                <input name="notes" placeholder="Observaciones">
-                                                <button class="btn secondary" type="submit">Enviar comprobante</button>
-                                            </form>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
+        <section class="portal-tab-panel" data-tab-panel="agenda">
+            @include('partials.portal.agenda', $data + ['emptyText' => $student->first_name.' no tiene clases próximas ni registros de asistencia todavía.'])
+        </section>
 
-                    @if($student->chargePaymentRequests->isNotEmpty())
-                        <div class="charge-request-list">
-                            <h4 class="section-title section-title-sm charge-request-heading">Solicitudes enviadas</h4>
-                            @foreach($student->chargePaymentRequests as $paymentRequest)
-                                <article class="charge-request-card">
-                                    <div class="charge-request-line">
-                                        <span class="table-title">{{ $paymentRequest->charge?->concept ?? 'N/D' }}</span>
-                                        <span>@include('partials.ui.status', ['status' => $paymentRequest->status])</span>
-                                    </div>
-                                    <div class="charge-request-meta">
-                                        <span>{{ $paymentRequest->submitted_at?->format('d/m/Y H:i') ?? 'N/D' }}</span>
-                                        <span>
-                                            @if(($paymentRequest->currency ?? 'USD') === 'VES')
-                                                {{ \App\Support\MoneyFormat::ves((float) ($paymentRequest->original_amount ?? $paymentRequest->amount)) }}
-                                                · {{ \App\Support\MoneyFormat::usd((float) $paymentRequest->amount) }}
-                                            @else
-                                                {{ \App\Support\MoneyFormat::usd((float) $paymentRequest->amount) }}
-                                            @endif
-                                        </span>
-                                    </div>
-                                    @if($paymentRequest->rejection_reason)
-                                        <div class="charge-request-reject"><strong>Motivo:</strong> {{ $paymentRequest->rejection_reason }}</div>
-                                    @endif
-                                </article>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            @endif
+        <section class="portal-tab-panel" data-tab-panel="pagos">
+            @include('partials.portal.charges', $data + [
+                'idPrefix' => $idPrefix,
+                'paymentRoute' => fn ($charge) => route('portal.representative.charges.payment', $charge),
+                'receiptRoute' => fn ($receipt) => route('portal.representative.receipts.pdf', $receipt),
+                'emptyText' => 'No hay cargos ni pagos registrados para '.$student->first_name.'.',
+            ])
+        </section>
+
+        <section class="portal-tab-panel" data-tab-panel="recuperativas">
+            @include('partials.portal.makeups', $data + [
+                'idPrefix' => $idPrefix,
+                'paymentRoute' => fn ($makeupRequest) => route('portal.representative.makeups.payment', $makeupRequest),
+                'bookRoute' => fn ($makeupRequest) => route('portal.representative.makeups.book', $makeupRequest),
+                'emptyText' => $student->first_name.' no tiene recuperativas pendientes.',
+            ])
         </section>
     </div>
 @empty
@@ -217,6 +167,12 @@
 
 @push('scripts')
 <script>
+document.querySelectorAll('dialog.charge-pay-dialog').forEach(function (dlg) {
+    dlg.addEventListener('click', function (e) {
+        if (e.target === dlg) dlg.close();
+    });
+});
+
 (function () {
     document.querySelectorAll('.rep-student-card').forEach(function (card) {
         const tabs = Array.from(card.querySelectorAll('.rep-portal-tabs .portal-tab'));

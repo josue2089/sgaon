@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Campus;
 use App\Models\Charge;
 use App\Models\ChargePaymentRequest;
 use App\Models\Course;
@@ -13,149 +14,42 @@ use App\Models\MakeupSession;
 use App\Models\Student;
 use App\Models\SystemSetting;
 use App\Models\PaymentMethod;
+use App\Models\Receipt;
 use App\Services\Bcv\ExchangeRateService;
 use App\Services\LevelRenewalService;
+use App\Services\ReceiptPdfService;
 use App\Support\FinanceReconcile;
 use App\Support\GradeAuthorization;
 use App\Support\PaymentSubmission;
+use App\Support\PortalStudentData;
 use App\Support\PrivateFiles;
 use App\Support\MakeupRecoveryEngine;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PortalController extends Controller
 {
     public function student(Request $request): View
     {
         $student = $this->resolveStudent($request);
+        if (! $student) {
+            return $this->unlinked($request, 'student');
+        }
 
-        abort_if(! $student, 404, 'Perfil de alumno no vinculado.');
-
+        $data = PortalStudentData::for($student);
         $enrollments = $student->enrollments()->with('group.course')->latest('enrolled_at')->get();
-        $attendance = $student->enrollments()
-            ->withCount([
-                'attendanceRecords as present_count' => fn ($q) => $q->where('status', 'present'),
-                'attendanceRecords as absent_count' => fn ($q) => $q->where('status', 'absent'),
-                'attendanceRecords as late_count' => fn ($q) => $q->where('status', 'late'),
-                'attendanceRecords as justified_count' => fn ($q) => $q->where('status', 'justified'),
-            ])->get();
-
-        $charges = $student->charges()->with(['paymentRequests', 'makeupRequest'])->latest('due_date')->get();
-        $balance = FinanceReconcile::outstandingByCurrency($charges);
-        $payments = $student->payments()->whereNull('voided_at')->latest('paid_at')->get();
-        $makeupRequests = $student->makeupRequests()
-            ->with([
-                'missedSession.group.course.program',
-                'missedSession.group.course.programLevel',
-                'attachments',
-                'booking.makeupSession.teacher',
-                'charge',
-            ])
-            ->latest()
-            ->get();
-
-        $eligibleMakeupSessions = collect();
-        $bookingEligibleRequests = $makeupRequests->where('status', MakeupRequest::STATUS_APPROVED_FOR_BOOKING);
-        if ($bookingEligibleRequests->isNotEmpty()) {
-            $programLevelIds = $bookingEligibleRequests
-                ->map(fn (MakeupRequest $makeupRequest) => $makeupRequest->enrollment?->group?->course?->program_level_id)
-                ->filter()
-                ->unique()
-                ->values();
-
-            $eligibleMakeupSessions = MakeupSession::query()
-                ->with(['teacher', 'program', 'programLevel'])
-                ->withCount('activeBookings')
-                ->where('campus_id', $student->campus_id)
-                ->whereIn('status', ['open', 'full'])
-                ->whereDate('session_date', '>=', now()->toDateString())
-                ->when($programLevelIds->isNotEmpty(), fn ($query) => $query->whereIn('program_level_id', $programLevelIds))
-                ->orderBy('session_date')
-                ->orderBy('starts_at')
-                ->get()
-                ->filter(fn (MakeupSession $session) => $session->available_slots > 0)
-                ->values();
-        }
-
-        $groupIds = $student->enrollments()
-            ->where('status', 'active')
-            ->with(['group.course'])
-            ->get()
-            ->pluck('group_id')
-            ->filter()
-            ->values();
-
-        $regularAgenda = collect();
-        if ($groupIds->isNotEmpty()) {
-            $regularAgenda = \App\Models\ClassSession::query()
-                ->with('group.course.teacher')
-                ->whereIn('group_id', $groupIds)
-                ->whereDate('session_date', '>=', now()->toDateString())
-                ->orderBy('session_date')
-                ->orderBy('starts_at')
-                ->limit(20)
-                ->get()
-                ->map(fn ($session) => [
-                    'kind' => 'regular',
-                    'date' => $session->session_date,
-                    'starts_at' => $session->starts_at,
-                    'ends_at' => $session->ends_at,
-                    'label' => $session->group?->course?->name ?? 'Clase regular',
-                    'teacher' => $session->group?->course?->teacher?->full_name ?? 'N/D',
-                ]);
-        }
-
-        $makeupAgenda = $makeupRequests
-            ->filter(fn (MakeupRequest $makeupRequest) => $makeupRequest->booking && in_array($makeupRequest->booking->status, ['reserved', 'attended'], true))
-            ->map(function (MakeupRequest $makeupRequest) {
-                $session = $makeupRequest->booking?->makeupSession;
-
-                return [
-                    'kind' => 'makeup',
-                    'date' => $session?->session_date,
-                    'starts_at' => $session?->starts_at,
-                    'ends_at' => $session?->ends_at,
-                    'label' => 'Recuperativa · '.($makeupRequest->enrollment?->group?->course?->name ?? 'N/D'),
-                    'teacher' => $session?->teacher?->full_name ?? 'N/D',
-                ];
-            });
-
-        $agenda = $regularAgenda
-            ->concat($makeupAgenda)
-            ->filter(fn (array $item) => ! empty($item['date']))
-            ->sortBy(fn (array $item) => optional($item['date'])->timestamp ?? 0)
-            ->values();
-
-        $makeupPaymentInstructions = SystemSetting::getValue('makeup_payment_instructions', '');
-        $pendingChargeStatuses = ['pending', 'partial', 'overdue'];
-        $pendingCharges = $charges
-            ->filter(fn (Charge $charge) => in_array($charge->status, $pendingChargeStatuses, true))
-            ->values();
-        $chargePaymentRequests = $student->chargePaymentRequests()
-            ->with(['charge'])
-            ->latest()
-            ->get();
-
         $portalGradeEntries = GradeEntry::query()
             ->whereHas('enrollment', fn ($q) => $q->where('student_id', $student->id))
             ->with(['evaluationSet.course'])
             ->get()
             ->sortByDesc(fn ($entry) => optional($entry->evaluationSet)->evaluated_on)
             ->values();
-
         $renewalOffers = app(LevelRenewalService::class)->offersFor($student);
 
-        $paymentMethods = PaymentMethod::query()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('label')
-            ->get();
-        $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
-        $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
-
-        return view('portal.student', compact('student', 'enrollments', 'attendance', 'charges', 'balance', 'payments', 'makeupRequests', 'eligibleMakeupSessions', 'agenda', 'makeupPaymentInstructions', 'pendingCharges', 'chargePaymentRequests', 'portalGradeEntries', 'renewalOffers', 'paymentMethods', 'bcvRate', 'bcvEurRate'));
+        return view('portal.student', $data + $this->paymentContext() + compact('student', 'enrollments', 'portalGradeEntries', 'renewalOffers'));
     }
 
     public function enrollInRenewalCourse(Request $request, Course $course, LevelRenewalService $renewals): RedirectResponse
@@ -184,6 +78,22 @@ class PortalController extends Controller
     {
         $student = $this->resolveStudent($request);
         abort_if(! $student || (int) $makeupRequest->student_id !== (int) $student->id, 403);
+
+        return $this->storeMakeupPayment($request, $makeupRequest);
+    }
+
+    public function submitMakeupPaymentAsRepresentative(Request $request, MakeupRequest $makeupRequest): RedirectResponse
+    {
+        $this->authorizeRepresentativeFor($request, $makeupRequest->student);
+
+        return $this->storeMakeupPayment($request, $makeupRequest);
+    }
+
+    private function storeMakeupPayment(Request $request, MakeupRequest $makeupRequest): RedirectResponse
+    {
+        if (! in_array($makeupRequest->status, [MakeupRequest::STATUS_PENDING_PAYMENT, MakeupRequest::STATUS_REJECTED], true)) {
+            return back()->withErrors(['payment_proof' => 'Esta recuperativa ya tiene un comprobante en validación o ya fue validada.']);
+        }
 
         if ($makeupRequest->charge && $makeupRequest->charge->paymentRequests()->where('status', ChargePaymentRequest::STATUS_PENDING_VALIDATION)->exists()) {
             return back()->withErrors(['payment_proof' => 'Ya hay un comprobante de esta recuperativa en validación.']);
@@ -246,6 +156,18 @@ class PortalController extends Controller
         $student = $this->resolveStudent($request);
         abort_if(! $student || (int) $makeupRequest->student_id !== (int) $student->id, 403);
 
+        return $this->storeMakeupBooking($request, $makeupRequest);
+    }
+
+    public function bookMakeupSessionAsRepresentative(Request $request, MakeupRequest $makeupRequest): RedirectResponse
+    {
+        $this->authorizeRepresentativeFor($request, $makeupRequest->student);
+
+        return $this->storeMakeupBooking($request, $makeupRequest);
+    }
+
+    private function storeMakeupBooking(Request $request, MakeupRequest $makeupRequest): RedirectResponse
+    {
         $data = $request->validate([
             'makeup_session_id' => ['required', 'exists:makeup_sessions,id'],
         ]);
@@ -262,17 +184,14 @@ class PortalController extends Controller
     public function representative(Request $request): View
     {
         $representative = $this->resolveRepresentative($request);
-        abort_if(! $representative, 404, 'Perfil de representante no vinculado.');
+        if (! $representative) {
+            return $this->unlinked($request, 'representative');
+        }
 
         $students = Student::query()
             ->whereHas('representatives', fn ($query) => $query->whereKey(Representative::forUser($request->user())->pluck('id')))
             ->orderBy('first_name')
-            ->with([
-                'enrollments.group.course',
-                'charges.paymentRequests',
-                'charges.makeupRequest',
-                'chargePaymentRequests.charge',
-            ])
+            ->with(['enrollments.group.course'])
             ->get();
 
         $studentIds = $students->pluck('id')->all();
@@ -285,18 +204,64 @@ class PortalController extends Controller
                 ->groupBy(fn ($entry) => (int) $entry->enrollment->student_id);
         }
 
-        $paymentMethods = PaymentMethod::query()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('label')
-            ->get();
-        $bcvRate = app(ExchangeRateService::class)->getLatestUsdRate();
-        $bcvEurRate = app(ExchangeRateService::class)->getLatestEurRate();
-
         $renewals = app(LevelRenewalService::class);
         $renewalOffersByStudentId = $students->mapWithKeys(fn (Student $student) => [$student->id => $renewals->offersFor($student)]);
+        // #448: por cada hijo, lo mismo que ve el alumno en su portal (agenda, asistencia, recuperativas, pagos y recibos).
+        $portalDataByStudentId = $students->mapWithKeys(fn (Student $student) => [$student->id => PortalStudentData::for($student)]);
 
-        return view('portal.representative', compact('representative', 'students', 'repGradeEntriesByStudentId', 'paymentMethods', 'bcvRate', 'bcvEurRate', 'renewalOffersByStudentId'));
+        return view('portal.representative', $this->paymentContext() + compact('representative', 'students', 'repGradeEntriesByStudentId', 'renewalOffersByStudentId', 'portalDataByStudentId'));
+    }
+
+    /** Recibo en PDF de un pago del propio alumno. #448 */
+    public function downloadReceiptAsStudent(Request $request, Receipt $receipt): StreamedResponse
+    {
+        $student = $this->resolveStudent($request);
+        abort_if(! $student || (int) $receipt->payment?->student_id !== (int) $student->id, 403);
+
+        return $this->streamReceipt($receipt);
+    }
+
+    /** Recibo en PDF de un pago de uno de sus hijos. #448 */
+    public function downloadReceiptAsRepresentative(Request $request, Receipt $receipt): StreamedResponse
+    {
+        $this->authorizeRepresentativeFor($request, $receipt->payment?->student);
+
+        return $this->streamReceipt($receipt);
+    }
+
+    private function streamReceipt(Receipt $receipt): StreamedResponse
+    {
+        abort_if($receipt->payment?->voided_at, 404);
+        $pdf = app(ReceiptPdfService::class);
+
+        return response()->streamDownload(fn () => print ($pdf->renderBinary($receipt)), $pdf->filename($receipt), ['Content-Type' => 'application/pdf']);
+    }
+
+    private function authorizeRepresentativeFor(Request $request, ?Student $student): void
+    {
+        abort_if(! $student || ! GradeAuthorization::representativeCanAccessStudent($request->user(), $student), 403);
+    }
+
+    /** Métodos de pago y tasas BCV para el formulario del comprobante. */
+    private function paymentContext(): array
+    {
+        $rates = app(ExchangeRateService::class);
+
+        return [
+            'paymentMethods' => PaymentMethod::query()->where('is_active', true)->orderBy('sort_order')->orderBy('label')->get(),
+            'bcvRate' => $rates->getLatestUsdRate(),
+            'bcvEurRate' => $rates->getLatestEurRate(),
+            'makeupPaymentInstructions' => SystemSetting::getValue('makeup_payment_instructions', ''),
+        ];
+    }
+
+    /** La cuenta existe pero no está vinculada a una ficha: página con el contacto de la sede en lugar de un 404. #448 */
+    private function unlinked(Request $request, string $kind): View
+    {
+        return view('portal.unlinked', [
+            'kind' => $kind,
+            'campus' => Campus::query()->find($request->user()?->campus_id),
+        ]);
     }
 
     public function submitChargePaymentAsStudent(Request $request, Charge $charge): RedirectResponse
@@ -312,9 +277,9 @@ class PortalController extends Controller
     public function submitChargePaymentAsRepresentative(Request $request, Charge $charge): RedirectResponse
     {
         $representative = $this->resolveRepresentative($request);
-        abort_if(! $representative, 404, 'Perfil de representante no vinculado.');
+        abort_if(! $representative, 403);
         $student = Student::query()->find($charge->student_id);
-        abort_if(! $student || ! GradeAuthorization::representativeCanAccessStudent($request->user(), $student), 403);
+        $this->authorizeRepresentativeFor($request, $student);
 
         $this->storeChargePaymentRequest($request, $charge, $student, $representative);
 

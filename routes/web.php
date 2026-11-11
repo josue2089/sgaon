@@ -228,11 +228,15 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/portal/student/makeups/{makeupRequest}/payment', [PortalController::class, 'submitMakeupPayment'])->name('portal.student.makeups.payment');
         Route::post('/portal/student/makeups/{makeupRequest}/book', [PortalController::class, 'bookMakeupSession'])->name('portal.student.makeups.book');
         Route::post('/portal/student/charges/{charge}/payment', [PortalController::class, 'submitChargePaymentAsStudent'])->name('portal.student.charges.payment');
+        Route::get('/portal/student/receipts/{receipt}/pdf', [PortalController::class, 'downloadReceiptAsStudent'])->name('portal.student.receipts.pdf');
     });
 
     Route::middleware(['role:representative', 'permission:portal.representative.view'])->group(function () {
         Route::get('/portal/representative', [PortalController::class, 'representative'])->name('portal.representative');
         Route::post('/portal/representative/students/{student}/renewals/{course}', [PortalController::class, 'enrollInRenewalCourseAsRepresentative'])->name('portal.representative.renewals.enroll');
         Route::post('/portal/representative/charges/{charge}/payment', [PortalController::class, 'submitChargePaymentAsRepresentative'])->name('portal.representative.charges.payment');
+        Route::post('/portal/representative/makeups/{makeupRequest}/payment', [PortalController::class, 'submitMakeupPaymentAsRepresentative'])->name('portal.representative.makeups.payment');
+        Route::post('/portal/representative/makeups/{makeupRequest}/book', [PortalController::class, 'bookMakeupSessionAsRepresentative'])->name('portal.representative.makeups.book');
+        Route::get('/portal/representative/receipts/{receipt}/pdf', [PortalController::class, 'downloadReceiptAsRepresentative'])->name('portal.representative.receipts.pdf');
     });
 });

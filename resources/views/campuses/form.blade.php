@@ -20,6 +20,15 @@
         <input name="country" value="{{ old('country', $campus->country ?? '') }}">
     </div>
     <div>
+        <label for="campus-contact-phone">Teléfono o WhatsApp de contacto</label>
+        <input id="campus-contact-phone" name="contact_phone" value="{{ old('contact_phone', $campus->contact_phone ?? '') }}" placeholder="0414-1234567">
+        <div class="form-hint">Lo ven las familias en el portal cuando necesitan ayuda.</div>
+    </div>
+    <div>
+        <label for="campus-contact-email">Correo de contacto</label>
+        <input id="campus-contact-email" type="email" name="contact_email" value="{{ old('contact_email', $campus->contact_email ?? '') }}">
+    </div>
+    <div>
         <label>Logo de la sede (PNG o JPG)</label>
         @if(!empty($campus->logo_path))
             <img src="{{ \Illuminate\Support\Facades\Storage::url($campus->logo_path) }}" alt="Logo de {{ $campus->name }}" style="max-height:56px;display:block;margin-bottom:.5rem;">
