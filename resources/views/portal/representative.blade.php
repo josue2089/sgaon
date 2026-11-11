@@ -112,13 +112,14 @@
                     <h4 class="section-title section-title-sm">Inscripciones</h4>
                     <div class="table-wrap">
                         <table class="data-table">
-                            <thead><tr><th>Curso</th><th>Grupo</th><th>Estado</th></tr></thead>
+                            <thead><tr><th>Curso</th><th>Grupo</th><th>Estado</th><th>Bitácora</th></tr></thead>
                             <tbody>
                                 @foreach($student->enrollments as $enrollment)
                                     <tr>
                                         <td>{{ $enrollment->group->course->name ?? '' }}</td>
                                         <td>{{ $enrollment->group->name ?? '' }}</td>
                                         <td>{{ \App\Support\StatusLabel::label($enrollment->status, 'enrollment') }}</td>
+                                        <td>@if($enrollment->group_id)<a href="{{ route('portal.representative.logbook.pdf', $enrollment) }}">PDF</a>@endif</td>
                                     </tr>
                                 @endforeach
                             </tbody>

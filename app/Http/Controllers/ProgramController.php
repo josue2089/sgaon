@@ -95,7 +95,11 @@ class ProgramController extends Controller
             'audience' => ['nullable', Rule::in(array_keys(CefrScale::AUDIENCES))],
             'age_min' => ['nullable', 'integer', 'min:1', 'max:99'],
             'age_max' => ['nullable', 'integer', 'min:1', 'max:99', 'gte:age_min'],
+            'class_framework' => ['nullable', 'string', 'max:2000'],
         ]);
+        // #470: un paso por línea.
+        $steps = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) ($data['class_framework'] ?? ''))), fn ($step) => $step !== ''));
+        $data['class_framework'] = $steps === [] ? null : $steps;
         $data['is_extracurricular'] = $request->boolean('is_extracurricular');
         $data['uses_cefr'] = $request->boolean('uses_cefr');
 

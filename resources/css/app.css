@@ -4614,3 +4614,24 @@ fieldset {
 .fi-nav .fi-menu-panel-nav {
     width: 250px;
 }
+
+/* #470: casillas de actividades en el formulario de clase base */
+.checkbox-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+}
+
+/* #470: estructura de la clase en Asistencia */
+.attendance-framework {
+    margin: 0.75rem 0;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--border, #dbe3f0);
+    border-radius: 10px;
+}
+
+.attendance-framework ol {
+    margin: 0.4rem 0 0;
+    padding-left: 1.25rem;
+    list-style: decimal;
+}

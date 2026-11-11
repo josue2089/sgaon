@@ -367,6 +367,20 @@ class CoursePlanner
     }
 
     /**
+     * Vuelve a copiar el plan de clases del nivel en las sesiones del curso sin mover fechas.
+     * Se usa al cargar el plan oficial (#470) sobre cursos que ya tenían el plan de relleno.
+     */
+    public static function refreshPlannedContent(Course $course): void
+    {
+        foreach (Group::query()->where('course_id', $course->id)->get() as $group) {
+            $count = ClassSession::query()->where('group_id', $group->id)->count();
+            if ($count > 0) {
+                self::resequence($course, $group, $count);
+            }
+        }
+    }
+
+    /**
      * Numera las clases en orden cronológico y reparte el programa planificado sobre ese orden.
      */
     private static function resequence(Course $course, Group $group, int $requiredSessions): ?Carbon

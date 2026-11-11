@@ -18,6 +18,7 @@ use App\Models\Student;
 use App\Support\AuditTrail;
 use App\Support\DocumentNumber;
 use App\Support\ExtracurricularSheet;
+use App\Support\StudentLogbook;
 use App\Support\CampusScope;
 use App\Support\FinanceReconcile;
 use App\Models\PaymentMethod;
@@ -478,6 +479,26 @@ class StudentController extends Controller
         ])->setPaper('a4');
 
         return $pdf->download('planilla-extracurricular-'.$student->id.'.pdf');
+    }
+
+    /** Bitácora File A/B del alumno en uno de sus cursos. #470 */
+    public function logbook(Student $student, Enrollment $enrollment): View
+    {
+        $this->authorizeStudent($student);
+        abort_unless((int) $enrollment->student_id === (int) $student->id, 404);
+
+        return view('students.logbook', StudentLogbook::build($enrollment) + [
+            'pdfUrl' => route('students.logbook.pdf', [$student, $enrollment]),
+            'backUrl' => route('students.show', $student),
+        ]);
+    }
+
+    public function logbookPdf(Student $student, Enrollment $enrollment)
+    {
+        $this->authorizeStudent($student);
+        abort_unless((int) $enrollment->student_id === (int) $student->id, 404);
+
+        return StudentLogbook::download($enrollment);
     }
 
     private function detailData(Student $student): array

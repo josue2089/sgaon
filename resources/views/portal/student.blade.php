@@ -72,9 +72,9 @@
     @else
         <div class="card table-card">
             <h3 class="section-title section-title-sm">Inscripciones</h3>
-            <div class="table-wrap"><table class="data-table"><thead><tr><th>Curso</th><th>Grupo</th><th>Estado</th><th>Progreso</th></tr></thead><tbody>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>Curso</th><th>Grupo</th><th>Estado</th><th>Progreso</th><th>Bitácora</th></tr></thead><tbody>
             @foreach($enrollments as $enrollment)
-                <tr><td>{{ $enrollment->group->course->name ?? '' }}</td><td>{{ $enrollment->group->name ?? '' }}</td><td>@include('partials.ui.status', ['status' => $enrollment->status, 'domain' => 'enrollment'])</td><td>{{ $enrollment->progress }}%</td></tr>
+                <tr><td>{{ $enrollment->group->course->name ?? '' }}</td><td>{{ $enrollment->group->name ?? '' }}</td><td>@include('partials.ui.status', ['status' => $enrollment->status, 'domain' => 'enrollment'])</td><td>{{ $enrollment->progress }}%</td><td>@if($enrollment->group_id)<a href="{{ route('portal.student.logbook.pdf', $enrollment) }}">PDF</a>@endif</td></tr>
             @endforeach
             </tbody></table></div>
         </div>
