@@ -221,6 +221,68 @@ class ReportController extends Controller
         ]);
     }
 
+    /** Solvencia por sede y tipo de programa: alumnos al día y con deuda, con la lista y exportación. #514 */
+    public function solvency(Request $request): View|StreamedResponse
+    {
+        $filters = $request->validate([
+            'campus_id' => ['nullable', 'integer'],
+            'month' => ['nullable', 'date_format:Y-m'],
+            'category' => ['nullable', 'in:regular,extracurricular'],
+            'bucket' => ['nullable', 'in:owing,up_to_date,active,over_30'],
+            'list_campus_id' => ['nullable', 'integer'],
+        ]);
+        $user = $request->user();
+        $campusId = ! empty($filters['campus_id']) && CampusScope::userCanAccessCampus($user, (int) $filters['campus_id']) ? (int) $filters['campus_id'] : null;
+        $report = \App\Support\SolvencyReport::build($user, $campusId, $filters['month'] ?? null);
+
+        $bucket = $filters['bucket'] ?? null;
+        $category = $filters['category'] ?? null;
+        $listCampusId = ! empty($filters['list_campus_id']) ? (int) $filters['list_campus_id'] : null;
+        $list = $report['students']
+            ->when($listCampusId, fn ($rows) => $rows->where('campus_id', $listCampusId))
+            ->when($category, fn ($rows) => $rows->where('category', $category))
+            ->when($bucket === 'owing', fn ($rows) => $rows->where('owes', true))
+            ->when($bucket === 'over_30', fn ($rows) => $rows->where('owes', true)->where('max_days', '>', 30))
+            ->when($bucket === 'up_to_date', fn ($rows) => $rows->where('active', true)->where('owes', false))
+            ->when($bucket === 'active', fn ($rows) => $rows->where('active', true))
+            ->when(! $bucket, fn ($rows) => $rows->where('owes', true))
+            ->values();
+        $categories = \App\Support\SolvencyReport::CATEGORIES;
+        $stamp = now()->format('Y-m-d');
+
+        if ($request->query('export') === 'summary_csv') {
+            $lines = $report['rows']->map(fn ($row) => [
+                $row['campus_name'], $categories[$row['category']], $row['active'], $row['up_to_date'], $row['owing'], $row['owing_inactive'], $row['over_30'],
+                $row['amounts']['USD'] ?? 0.0, $row['amounts']['EUR'] ?? 0.0,
+            ])->push([
+                'Total', '', $report['totals']['active'], $report['totals']['up_to_date'], $report['totals']['owing'], $report['totals']['owing_inactive'], $report['totals']['over_30'],
+                $report['totals']['amounts']['USD'] ?? 0.0, $report['totals']['amounts']['EUR'] ?? 0.0,
+            ]);
+
+            return \App\Support\CsvExport::download('solvencia-resumen-'.$stamp.'.csv',
+                ['Sede', 'Tipo', 'Alumnos activos', 'Al día', 'Con deuda', 'Con deuda sin inscripción activa', 'Mora > 30 días', 'Deuda USD', 'Deuda EUR'],
+                $lines->all());
+        }
+
+        if ($request->query('export') === 'list_csv') {
+            return \App\Support\CsvExport::download('solvencia-alumnos-'.$stamp.'.csv',
+                ['Sede', 'Tipo', 'Alumno', 'Cédula', 'Curso', 'Inscripción activa', 'Representante', 'Teléfono', 'Deuda USD', 'Deuda EUR', 'Días de mora', 'Cargos pendientes'],
+                $list->map(fn ($row) => [
+                    $row['campus_name'], $categories[$row['category']], $row['student']->full_name, $row['student']->document_id,
+                    implode(', ', $row['courses']), $row['active'] ? 'Sí' : 'No', $row['representative']?->full_name, $row['phone'],
+                    $row['debt_amounts']['USD'] ?? 0.0, $row['debt_amounts']['EUR'] ?? 0.0, $row['max_days'], implode(' | ', $row['charges']),
+                ])->all());
+        }
+
+        return view('reports.solvency', [
+            'report' => $report,
+            'list' => $list,
+            'categories' => $categories,
+            'filters' => ['campus_id' => $campusId, 'month' => $filters['month'] ?? null, 'category' => $category, 'bucket' => $bucket ?? 'owing', 'list_campus_id' => $listCampusId],
+            'campuses' => CampusScope::apply(Campus::query()->orderBy('name'), $user, 'id')->get(['id', 'name']),
+        ]);
+    }
+
     public function campusTotals(Request $request): View|StreamedResponse
     {
         $user = $request->user();

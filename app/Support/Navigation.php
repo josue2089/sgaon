@@ -115,6 +115,7 @@ class Navigation
         return array_values(array_filter([
             self::child('Asistencia', 'reports.attendance', ['reports.attendance'], $canView, $current),
             self::child('Cobranza y pagos', 'reports.payments', ['reports.payments'], $canView, $current),
+            self::child('Solvencia por sede', 'reports.solvency', ['reports.solvency'], $canView, $current),
             self::child('Resumen financiero', 'finance.summary', ['finance.summary'], $user->role === User::ROLE_ADMIN && $user->hasPermission('finance.manage'), $current),
             self::child('Totales por sede', 'reports.campus-totals', ['reports.campus-totals'], $canView, $current),
             self::child('Proyección por sede', 'reports.campus-projection', ['reports.campus-projection'], $canView && $user->isMasterAdmin(), $current),

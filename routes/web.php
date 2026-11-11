@@ -195,6 +195,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::get('/reports/attendance', [ReportController::class, 'attendance'])->name('reports.attendance');
             Route::get('/reports/payments', [ReportController::class, 'payments'])->name('reports.payments');
             Route::get('/reports/level-renewals', [ReportController::class, 'levelRenewals'])->name('reports.level-renewals');
+            Route::get('/reports/solvency', [ReportController::class, 'solvency'])->name('reports.solvency');
             Route::get('/reports/campus-totals', [ReportController::class, 'campusTotals'])->name('reports.campus-totals');
             Route::get('/reports/campus-projection', [ReportController::class, 'campusProjection'])
                 ->middleware('master.admin')
