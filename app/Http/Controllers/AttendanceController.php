@@ -32,9 +32,7 @@ class AttendanceController extends Controller
         }
 
         if ($user?->role === 'teacher') {
-            $teacher = Teacher::forUser($user);
-            $teacherId = $teacher?->id ?? -1;
-            $sessionsQuery->whereHas('group', fn ($q) => $q->where('teacher_id', $teacherId));
+            Teacher::constrainSessions($sessionsQuery, Teacher::forUser($user));
         }
 
         $sessionId = $request->integer('class_session_id');
@@ -86,6 +84,8 @@ class AttendanceController extends Controller
 
         // Selector: por defecto clases de hoy, próximos 7 días y últimos 30 días; con fecha, solo ese día.
         $request->validate(['date' => ['nullable', 'date', 'sane_date']]);
+        // ?pending=1: clases de los últimos 14 días (hasta hoy) con alumnos y sin asistencia. #446
+        $pendingOnly = $request->boolean('pending');
         $filterDate = $request->filled('date') ? Carbon::parse($request->input('date'))->startOfDay() : null;
         $today = now()->startOfDay();
         $listQuery = (clone $sessionsQuery)
@@ -95,7 +95,12 @@ class AttendanceController extends Controller
             ->withCount('attendanceRecords')
             ->orderBy('starts_at')
             ->orderBy('id');
-        if ($filterDate) {
+        if ($pendingOnly) {
+            $listQuery->whereDate('session_date', '>=', $today->copy()->subDays(14)->toDateString())
+                ->whereDate('session_date', '<=', $today->toDateString())
+                ->whereDoesntHave('attendanceRecords')
+                ->whereHas('group.enrollments', fn ($query) => $query->where('status', 'active'));
+        } elseif ($filterDate) {
             $listQuery->whereDate('session_date', $filterDate);
         } else {
             $listQuery->whereBetween('session_date', [$today->copy()->subDays(30)->toDateString(), $today->copy()->addDays(7)->toDateString()]);
@@ -104,18 +109,21 @@ class AttendanceController extends Controller
         if ($session && ! $listed->contains('id', $session->id)) {
             $listed->push($session->loadMissing('group'));
         }
-        $sessionGroups = $filterDate
+        $sessionGroups = $pendingOnly
+            ? collect(['Sin asistencia (últimos 14 días)' => $listed->sortByDesc(fn ($item) => $item->session_date->toDateString().$item->starts_at)])->filter(fn ($items) => $items->isNotEmpty())
+            : ($filterDate
             ? collect([$filterDate->format('d/m/Y') => $listed])
             : collect([
                 'Hoy' => $listed->filter(fn ($item) => $item->session_date?->isSameDay($today)),
                 'Próximos 7 días' => $listed->filter(fn ($item) => $item->session_date?->gt($today))->sortBy(fn ($item) => $item->session_date->toDateString().$item->starts_at),
                 'Anteriores' => $listed->filter(fn ($item) => $item->session_date?->lt($today))->sortByDesc(fn ($item) => $item->session_date->toDateString().$item->starts_at),
-            ])->filter(fn ($items) => $items->isNotEmpty());
+            ])->filter(fn ($items) => $items->isNotEmpty()));
 
         return view('attendance.index', [
+            'pendingOnly' => $pendingOnly,
             'sessionGroups' => $sessionGroups,
             'filterDate' => $filterDate,
-            'todayCount' => $filterDate ? null : $listed->filter(fn ($item) => $item->session_date?->isSameDay($today))->count(),
+            'todayCount' => ($filterDate || $pendingOnly) ? null : $listed->filter(fn ($item) => $item->session_date?->isSameDay($today))->count(),
             'selectedSession' => $session,
             'sessionHoliday' => $sessionHoliday,
             'canRecordAttendance' => $session?->canRecordAttendance() ?? false,
@@ -189,9 +197,7 @@ class AttendanceController extends Controller
     {
         if ($request->user()?->role === 'teacher') {
             $teacher = Teacher::forUser($request->user());
-            $allowed = ClassSession::where('id', $sessionId)
-                ->whereHas('group', fn ($q) => $q->where('teacher_id', $teacher?->id ?? -1))
-                ->exists();
+            $allowed = Teacher::constrainSessions(ClassSession::where('id', $sessionId), $teacher)->exists();
 
             if (! $allowed) {
                 abort(403);

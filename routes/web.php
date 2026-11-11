@@ -215,6 +215,12 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/attendance/reschedule', [AttendanceController::class, 'reschedule'])->name('attendance.reschedule');
     });
 
+    // Mis recuperativas del profesor. #446
+    Route::middleware(['role:teacher', 'permission:attendance.manage'])->group(function () {
+        Route::get('/my-makeups', [\App\Http\Controllers\TeacherMakeupController::class, 'index'])->name('teacher.makeups.index');
+        Route::patch('/my-makeups/bookings/{booking}', [\App\Http\Controllers\TeacherMakeupController::class, 'updateBooking'])->name('teacher.makeups.bookings.update');
+    });
+
     Route::middleware(['role:admin,teacher', 'permission:grades.manage'])->group(function () {
         Route::get('/courses/{course}/grades', [CourseGradeController::class, 'index'])->name('courses.grades.index');
         Route::get('/courses/{course}/grades/create', [CourseGradeController::class, 'create'])->name('courses.grades.create');

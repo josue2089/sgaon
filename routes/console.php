@@ -17,3 +17,5 @@ Schedule::command('bcv:sync-rates')->dailyAt('05:40');
 Schedule::command('finance:generate-extracurricular-charges')->dailyAt('06:05');
 // Resumen diario de pendientes para cada admin, a las 7:00. #346
 Schedule::command('admins:send-daily-pending')->dailyAt('07:00');
+// Resumen diario de cada profesor (clases de hoy, asistencias pendientes y recuperativas), a las 7:00. #446
+Schedule::command('teachers:send-daily-summary')->dailyAt('07:00');

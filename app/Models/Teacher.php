@@ -80,6 +80,30 @@ class Teacher extends Model
         return $linked->first() ?? $byEmail->first();
     }
 
+    /**
+     * Regla única de propiedad (#446): el profesor es dueño de un curso si es su titular o si dicta alguno de sus grupos.
+     * La usan notas, asistencia, la bandeja "Hoy" y el correo diario.
+     */
+    public function ownsCourse(?Course $course): bool
+    {
+        if (! $course) {
+            return false;
+        }
+
+        return (int) $course->teacher_id === (int) $this->id
+            || $course->groups()->where('teacher_id', $this->id)->exists();
+    }
+
+    /** Limita una consulta de class_sessions a las clases del profesor (grupo propio o curso del que es titular). #446 */
+    public static function constrainSessions(\Illuminate\Database\Eloquent\Builder $query, ?self $teacher): \Illuminate\Database\Eloquent\Builder
+    {
+        $teacherId = $teacher?->id ?? -1;
+
+        return $query->whereHas('group', fn ($group) => $group->where(fn ($owned) => $owned
+            ->where('teacher_id', $teacherId)
+            ->orWhereHas('course', fn ($course) => $course->where('teacher_id', $teacherId))));
+    }
+
     public function getFullNameAttribute(): string
     {
         return trim($this->first_name.' '.$this->last_name);
