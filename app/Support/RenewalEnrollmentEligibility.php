@@ -33,6 +33,8 @@ final class RenewalEnrollmentEligibility
             ->whereIn('enrollment_id', $enrollmentIds)
             ->with('evaluationSet')
             ->get()
+            // #447: una nota a medio cargar (borrador) no decide la renovación; cuenta la última completa.
+            ->filter(fn (GradeEntry $entry) => $entry->isComplete())
             ->sortByDesc(function (GradeEntry $entry) {
                 $evaluatedOn = $entry->evaluationSet?->evaluated_on;
 

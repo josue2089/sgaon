@@ -267,7 +267,7 @@
             <div class="grades-student-entry-head">
                 <div>
                     <div class="table-title">{{ $gcourse?->name ?? 'Curso' }}</div>
-                    <div class="table-sub">{{ $evalSet?->evaluated_on?->format('d/m/Y') ?? '' }} @if($evalSet?->title)· {{ $evalSet->title }}@endif</div>
+                    <div class="table-sub">{{ $evalSet?->evaluated_on?->format('d/m/Y') ?? '' }} @if($evalSet?->title)· {{ $evalSet->title }}@endif @if($evalSet && ! $evalSet->isPublished())· <strong>Borrador</strong>, no visible para la familia @endif</div>
                 </div>
                 @if($gcourse)
                     <a class="btn secondary" href="{{ route('courses.grades.index', $gcourse) }}">Evaluaciones del curso</a>
@@ -278,7 +278,7 @@
                     @php($rating = $entry->ratingForSkill($skill))
                     <div class="grades-student-rubric">
                         <span>{{ \App\Support\GradeRubric::SKILL_LABELS_ES[$skill] }}</span>
-                        @include('partials.ui.status-badge', ['tone' => \App\Support\GradeRubric::ratingTone($rating), 'text' => \App\Support\GradeRubric::RATING_LABELS_ES[$rating] ?? $rating])
+                        @include('partials.ui.status-badge', ['tone' => \App\Support\GradeRubric::ratingTone($rating), 'text' => \App\Support\GradeRubric::RATING_LABELS_ES[$rating] ?? 'Sin nota'])
                     </div>
                 @endforeach
             </div>

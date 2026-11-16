@@ -11,6 +11,7 @@
             <div class="grades-portal-rubrics">
                 @foreach(\App\Support\GradeRubric::SKILL_KEYS as $skill)
                     @php($rating = $entry->ratingForSkill($skill))
+                    @continue($rating === '')
                     <span class="grades-portal-chip">
                         <span>{{ \App\Support\GradeRubric::SKILL_LABELS_ES[$skill] }}</span>
                         @include('partials.ui.status-badge', ['tone' => \App\Support\GradeRubric::ratingTone($rating), 'text' => \App\Support\GradeRubric::RATING_LABELS_ES[$rating] ?? $rating])

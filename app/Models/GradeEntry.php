@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\GradeRubric;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -34,9 +36,27 @@ class GradeEntry extends Model
         return $this->belongsTo(Enrollment::class);
     }
 
+    /** #447: notas del portal, solo de evaluaciones publicadas. */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->whereHas('evaluationSet', fn (Builder $set) => $set->whereNotNull('published_at'));
+    }
+
+    /** Tiene los cinco rubros cargados. */
+    public function isComplete(): bool
+    {
+        foreach (GradeRubric::skillToColumnMap() as $column) {
+            if (blank($this->getAttribute($column))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function ratingForSkill(string $skill): string
     {
-        $column = \App\Support\GradeRubric::skillToColumnMap()[$skill] ?? null;
+        $column = GradeRubric::skillToColumnMap()[$skill] ?? null;
         if (! $column || ! array_key_exists($column, $this->getAttributes())) {
             return '';
         }

@@ -43,6 +43,7 @@ use App\Http\Controllers\StudentSearchController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\TeacherAccessController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\TeacherMakeupController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
@@ -218,8 +219,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
 
     // Mis recuperativas del profesor. #446
     Route::middleware(['role:teacher', 'permission:attendance.manage'])->group(function () {
-        Route::get('/my-makeups', [\App\Http\Controllers\TeacherMakeupController::class, 'index'])->name('teacher.makeups.index');
-        Route::patch('/my-makeups/bookings/{booking}', [\App\Http\Controllers\TeacherMakeupController::class, 'updateBooking'])->name('teacher.makeups.bookings.update');
+        Route::get('/my-makeups', [TeacherMakeupController::class, 'index'])->name('teacher.makeups.index');
+        Route::patch('/my-makeups/bookings/{booking}', [TeacherMakeupController::class, 'updateBooking'])->name('teacher.makeups.bookings.update');
     });
 
     Route::middleware(['role:admin,teacher', 'permission:grades.manage'])->group(function () {
@@ -229,6 +230,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::get('/grade-evaluation-sets/{gradeEvaluationSet}', [CourseGradeController::class, 'show'])->name('grade-evaluation-sets.show');
         Route::get('/grade-evaluation-sets/{gradeEvaluationSet}/edit', [CourseGradeController::class, 'edit'])->name('grade-evaluation-sets.edit');
         Route::put('/grade-evaluation-sets/{gradeEvaluationSet}', [CourseGradeController::class, 'update'])->name('grade-evaluation-sets.update');
+        Route::post('/grade-evaluation-sets/{gradeEvaluationSet}/publish', [CourseGradeController::class, 'publish'])->name('grade-evaluation-sets.publish');
+        Route::delete('/grade-evaluation-sets/{gradeEvaluationSet}/publish', [CourseGradeController::class, 'unpublish'])->name('grade-evaluation-sets.unpublish');
         Route::get('/courses/{course}/observations', [CourseObservationController::class, 'edit'])->name('courses.observations.edit');
         Route::put('/courses/{course}/observations', [CourseObservationController::class, 'update'])->name('courses.observations.update');
     });

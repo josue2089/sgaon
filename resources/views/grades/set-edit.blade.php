@@ -3,7 +3,7 @@
 <div class="module-head">
     <div>
         <h1 class="page-title">Editar evaluación</h1>
-        <p class="page-subtitle">{{ $set->course?->name }} · {{ $set->evaluated_on->format('d/m/Y') }}</p>
+        <p class="page-subtitle">{{ $set->course?->name }} · {{ $set->evaluated_on->format('d/m/Y') }} · {{ $set->isPublished() ? 'Publicada' : 'Borrador' }}</p>
     </div>
     <a class="btn secondary" href="{{ route('grade-evaluation-sets.show', $set) }}">Volver</a>
 </div>
@@ -24,43 +24,16 @@
         </div>
     </div>
 
-    <div class="grades-matrix-scroll card">
-        <table class="grades-matrix-table">
-            <thead>
-            <tr>
-                <th class="grades-matrix-sticky-col">Alumno</th>
-                @foreach($skillKeys as $skill)
-                    <th>{{ $skillLabels[$skill] }}</th>
-                @endforeach
-                <th>Observaciones</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach($set->entries as $entry)
-                <tr>
-                    <td class="grades-matrix-sticky-col">
-                        <div class="table-title">{{ $entry->enrollment?->student?->full_name ?? 'Alumno' }}</div>
-                    </td>
-                    @foreach($skillColumns as $skill => $column)
-                        <td>
-                            <select name="entries[{{ $entry->enrollment_id }}][{{ $column }}]" class="grades-matrix-select" required>
-                                @foreach($ratingOptions as $val)
-                                    <option value="{{ $val }}" @selected(old('entries.'.$entry->enrollment_id.'.'.$column, $entry->{$column}) === $val)>{{ $ratingLabels[$val] }}</option>
-                                @endforeach
-                            </select>
-                        </td>
-                    @endforeach
-                    <td>
-                        <textarea name="entries[{{ $entry->enrollment_id }}][observations]" rows="2" class="grades-matrix-notes">{{ old('entries.'.$entry->enrollment_id.'.observations', $entry->observations) }}</textarea>
-                    </td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-    </div>
+    @include('grades.partials.entry-cards')
 
     <div class="grades-matrix-bar">
-        <button class="btn" type="submit">Guardar cambios</button>
+        @if($set->isPublished())
+            <span class="table-sub grades-bar-note">Publicada: los cambios se ven de inmediato en el portal.</span>
+            <button class="btn" type="submit">Guardar cambios</button>
+        @else
+            <button class="btn secondary" type="submit">Guardar borrador</button>
+            <button class="btn" type="submit" name="publish" value="1">Guardar y publicar</button>
+        @endif
     </div>
 </form>
 @endsection
