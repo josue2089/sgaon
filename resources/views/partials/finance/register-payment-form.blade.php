@@ -50,7 +50,7 @@
                     data-balance="{{ \App\Support\MoneyFormat::raw($balance) }}"
                     data-currency="{{ $charge->currencyCode() }}"
                     data-search="{{ strtolower(($charge->student->full_name ?? '').' '.$charge->concept.' '.($charge->course->name ?? '').' '.($charge->group->name ?? '').' '.($charge->period->code ?? '')) }}"
-                    @selected(in_array((string) $charge->id, array_map('strval', old('charge_ids', old('charge_id') ? [old('charge_id')] : [])), true))
+                    @selected(in_array((string) $charge->id, array_map('strval', old('charge_ids', old('charge_id') ? [old('charge_id')] : array_filter([session('offer_first_payment')]))), true))
                 >{{ $charge->student->full_name ?? '' }} — {{ $charge->concept }} — Saldo {{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</option>
             @endforeach
         </select>

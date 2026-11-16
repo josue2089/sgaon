@@ -340,11 +340,11 @@ document.querySelectorAll('form[data-bulk-form]').forEach((form) => {
     const items = () => [...document.querySelectorAll(`[data-bulk-item][form="${form.id}"]`)];
     const all = document.querySelector(`[data-bulk-all="${form.id}"]`);
     const count = form.querySelector('[data-bulk-count]');
-    const submit = form.querySelector('[data-bulk-submit]');
+    const submits = [...form.querySelectorAll('[data-bulk-submit]')];
     const refresh = () => {
         const checked = items().filter((item) => item.checked).length;
         if (count) count.textContent = String(checked);
-        if (submit) submit.disabled = checked === 0;
+        submits.forEach((button) => { button.disabled = checked === 0; });
         if (all) {
             all.checked = checked > 0 && checked === items().length;
             all.indeterminate = checked > 0 && checked < items().length;

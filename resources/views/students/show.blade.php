@@ -27,6 +27,14 @@
     </div>
 </div>
 
+@if(session('offer_first_payment') && !empty($canManageStudentFinance))
+    {{-- #450: alta → inscripción → pago seguido. --}}
+    <div class="flash info first-payment-offer">
+        <span>Se generó la primera cuota de la inscripción. ¿Quieres registrar su pago ahora?</span>
+        <button class="btn" type="button" data-modal-open="student-payment-modal">Registrar pago de la primera cuota</button>
+    </div>
+@endif
+
 <section class="student-hero">
     <div class="student-hero-main">
         <div class="student-hero-profile">

@@ -31,7 +31,33 @@
             <option value="active" @selected($filters['status'] === 'active')>Activos</option>
             <option value="inactive" @selected($filters['status'] === 'inactive')>Inactivos</option>
         </select>
+        {{-- #450 --}}
+        <select name="teacher_id" aria-label="Profesor">
+            <option value="">Todos los profesores</option>
+            @foreach($teachers as $teacher)
+                <option value="{{ $teacher->id }}" @selected($filters['teacher_id'] === (string) $teacher->id)>{{ $teacher->full_name }}</option>
+            @endforeach
+        </select>
+        <select name="period_id" aria-label="Período">
+            <option value="">Todos los períodos</option>
+            @foreach($periods->unique('code') as $period)
+                <option value="{{ $period->id }}" @selected($filters['period_id'] === (string) $period->id)>{{ $period->code }}</option>
+            @endforeach
+        </select>
+        <select name="program_id" aria-label="Programa">
+            <option value="">Todos los programas</option>
+            @foreach($programs as $program)
+                <option value="{{ $program->id }}" @selected($filters['program_id'] === (string) $program->id)>{{ $program->name }}</option>
+            @endforeach
+        </select>
+        <label class="fi-check">
+            <input type="checkbox" name="ending_soon" value="1" @checked($filters['ending_soon'])>
+            Termina pronto (14 días)
+        </label>
         <button class="btn secondary" type="submit">Filtros</button>
+        @if(collect($filters)->filter()->isNotEmpty())
+            <a class="btn secondary" href="{{ route('courses.index') }}">Quitar filtros</a>
+        @endif
     </div>
 </form>
 

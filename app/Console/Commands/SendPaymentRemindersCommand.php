@@ -2,12 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Mail\ChargeDueReminderMail;
 use App\Models\Charge;
 use App\Support\FinanceReconcile;
+use App\Support\PaymentReminder;
 use Illuminate\Console\Command;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Mail;
 
 class SendPaymentRemindersCommand extends Command
 {
@@ -64,29 +62,14 @@ class SendPaymentRemindersCommand extends Command
                 continue;
             }
 
-            $recipients = $this->recipientsForCharge($charge);
-            if ($recipients->isEmpty()) {
+            if (! PaymentReminder::send($charge, $reminderType)) {
                 continue;
             }
-
-            Mail::to($recipients->all())->send(new ChargeDueReminderMail($charge, $reminderType));
-            $charge->forceFill(['last_reminder_sent_at' => now()])->save();
             $sent++;
         }
 
         $this->info("Recordatorios enviados: {$sent}");
 
         return self::SUCCESS;
-    }
-
-    private function recipientsForCharge(Charge $charge)
-    {
-        return collect([
-            $charge->student?->email,
-            ...($charge->student?->representatives?->pluck('email')->all() ?? []),
-        ])->filter(fn ($email) => filled($email))
-            ->map(fn ($email) => mb_strtolower(trim((string) $email)))
-            ->unique()
-            ->values();
     }
 }

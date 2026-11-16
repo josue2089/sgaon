@@ -55,13 +55,14 @@ class MasterAdminStudentExportTest extends TestCase
         $this->assertStringNotContainsString('Inactivo', $content);
     }
 
-    public function test_non_master_admin_cannot_export_students(): void
+    /** #450: el admin de sede ahora exporta, pero solo su sede. */
+    public function test_campus_admin_exports_only_own_campus(): void
     {
         $admin = User::where('email', 'admina@uat.test')->firstOrFail();
 
-        $this->actingAs($admin)
-            ->get(route('students.export'))
-            ->assertForbidden();
+        $content = $this->actingAs($admin)->get(route('students.export'))->assertOk()->streamedContent();
+        $this->assertStringContainsString('Picacho', $content);
+        $this->assertStringNotContainsString('Cascada', $content);
     }
 
     public function test_master_admin_sees_export_button_on_students_index(): void

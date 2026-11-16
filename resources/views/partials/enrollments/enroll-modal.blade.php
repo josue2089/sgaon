@@ -1,6 +1,6 @@
 {{-- Inscripción en un paso desde la ficha del alumno. --}}
 <x-ui.modal id="enroll-modal" title="Inscribir en curso" subtitle="{{ $student->full_name }} · {{ $student->campus?->name }}" size="md"
-    :data-open-on-load="($errors->has('group_id') && old('return_to') === 'student') ? '1' : null">
+    :data-open-on-load="(($errors->has('group_id') && old('return_to') === 'student') || (request()->boolean('enroll') && ! $errors->any())) ? '1' : null">
     @if($groups->isEmpty())
         <div class="empty-state-inline">No hay cursos activos disponibles en la sede del alumno.</div>
     @else
