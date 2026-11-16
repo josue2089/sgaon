@@ -8,25 +8,25 @@ use App\Models\ChargePaymentRequest;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\GradeEntry;
-use App\Models\Representative;
 use App\Models\MakeupRequest;
 use App\Models\MakeupSession;
-use App\Models\Student;
-use App\Models\SystemSetting;
 use App\Models\PaymentMethod;
 use App\Models\Receipt;
+use App\Models\Representative;
+use App\Models\Student;
+use App\Models\SystemSetting;
 use App\Services\Bcv\ExchangeRateService;
 use App\Services\LevelRenewalService;
 use App\Services\ReceiptPdfService;
 use App\Support\FinanceReconcile;
 use App\Support\GradeAuthorization;
+use App\Support\MakeupRecoveryEngine;
 use App\Support\PaymentSubmission;
 use App\Support\PortalStudentData;
-use App\Support\StudentLogbook;
 use App\Support\PrivateFiles;
-use App\Support\MakeupRecoveryEngine;
-use Illuminate\Http\Request;
+use App\Support\StudentLogbook;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -43,6 +43,7 @@ class PortalController extends Controller
         $data = PortalStudentData::for($student);
         $enrollments = $student->enrollments()->with('group.course')->latest('enrolled_at')->get();
         $portalGradeEntries = GradeEntry::query()
+            ->published()
             ->whereHas('enrollment', fn ($q) => $q->where('student_id', $student->id))
             ->with(['evaluationSet.course'])
             ->get()
@@ -199,6 +200,7 @@ class PortalController extends Controller
         $repGradeEntriesByStudentId = collect();
         if ($studentIds !== []) {
             $repGradeEntriesByStudentId = GradeEntry::query()
+                ->published()
                 ->whereHas('enrollment', fn ($q) => $q->whereIn('student_id', $studentIds))
                 ->with(['evaluationSet.course', 'enrollment'])
                 ->get()

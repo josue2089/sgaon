@@ -24,7 +24,8 @@
             <div class="grades-set-card-head">
                 <div>
                     <div class="table-title">{{ $set->title ?: 'Informe del '.$set->evaluated_on->format('d/m/Y') }}</div>
-                    <div class="table-sub">{{ $set->evaluated_on->format('d/m/Y') }} · {{ $set->entries_count }} alumno(s)</div>
+                    <div class="table-sub">{{ $set->evaluated_on->format('d/m/Y') }} · {{ $set->entries_count }} alumno(s) con notas</div>
+                    <div class="grades-set-status">@include('partials.ui.status-badge', $set->isPublished() ? ['tone' => 'ok', 'text' => 'Publicada'] : ['tone' => 'warn', 'text' => 'Borrador · no visible para familias'])</div>
                 </div>
                 <div class="grades-set-card-actions">
                     <a class="btn secondary" href="{{ route('grade-evaluation-sets.show', $set) }}">Ver detalle</a>

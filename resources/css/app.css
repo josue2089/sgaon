@@ -3471,6 +3471,134 @@ dialog.finance-proof-dialog[open] {
     justify-content: flex-end;
 }
 
+/* #447: carga de notas por tarjeta de alumno, con botones segmentados. Funciona igual en el teléfono. */
+.grades-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+    gap: 0.75rem;
+}
+
+.grades-student-card {
+    margin: 0;
+    min-width: 0;
+    display: grid;
+    gap: 0.6rem;
+}
+
+.grades-student-card-name {
+    float: left;
+    width: 100%;
+    padding: 0;
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+.grades-skill-row {
+    display: grid;
+    gap: 0.3rem;
+}
+
+.grades-skill-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.grades-segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.grades-segment {
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+}
+
+.grades-segment input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.grades-segment span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding: 0 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    background: #fff;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.grades-segment input:focus-visible + span {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.grades-segment input:checked + span { border-color: transparent; }
+.grades-segment-empty input:checked + span { background: #eef2f7; color: var(--muted); }
+.grades-segment-ok input:checked + span { background: #15803d; color: #fff; }
+.grades-segment-info input:checked + span { background: #1d4ed8; color: #fff; }
+.grades-segment-warn input:checked + span { background: #a16207; color: #fff; }
+.grades-segment-danger input:checked + span { background: #be123c; color: #fff; }
+
+.grades-form-error {
+    margin-bottom: 0.75rem;
+}
+
+.grades-matrix-bar {
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.grades-bar-note {
+    margin-right: auto;
+}
+
+@media (max-width: 640px) {
+    .grades-matrix-bar .btn {
+        flex: 1 1 0;
+        min-width: 0;
+        padding-inline: 0.6rem;
+        font-size: 0.88rem;
+    }
+
+    .grades-bar-note {
+        flex-basis: 100%;
+    }
+
+    .grades-segment span {
+        padding: 0 0.6rem;
+    }
+}
+
+.grades-publish-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+
+.grades-publish-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.grades-set-status {
+    margin-top: 0.35rem;
+}
+
 .grades-detail-card {
     padding: 0 1rem 1rem;
 }

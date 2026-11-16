@@ -3,7 +3,7 @@
 <div class="module-head">
     <div>
         <h1 class="page-title">Nueva evaluación · {{ $course->name }}</h1>
-        <p class="page-subtitle">Completa los cinco rubros por alumno</p>
+        <p class="page-subtitle">Puedes guardar a medias y completar después. Las familias la ven solo cuando la publicas.</p>
     </div>
     <a class="btn secondary" href="{{ route('courses.grades.index', $course) }}">Cancelar</a>
 </div>
@@ -26,45 +26,11 @@
         </div>
     </div>
 
-    <div class="grades-matrix-scroll card">
-        <table class="grades-matrix-table">
-            <thead>
-            <tr>
-                <th class="grades-matrix-sticky-col">Alumno</th>
-                @foreach($skillKeys as $skill)
-                    <th>{{ $skillLabels[$skill] }}</th>
-                @endforeach
-                <th>Observaciones</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach($enrollments as $enrollment)
-                <tr>
-                    <td class="grades-matrix-sticky-col">
-                        <div class="table-title">{{ $enrollment->student?->full_name ?? 'Alumno #'.$enrollment->student_id }}</div>
-                    </td>
-                    @foreach($skillColumns as $skill => $column)
-                        <td>
-                            <label class="sr-only">{{ $skillLabels[$skill] }}</label>
-                            <select name="entries[{{ $enrollment->id }}][{{ $column }}]" class="grades-matrix-select" required>
-                                <option value="" disabled selected>—</option>
-                                @foreach($ratingOptions as $val)
-                                    <option value="{{ $val }}" @selected(old('entries.'.$enrollment->id.'.'.$column) === $val)>{{ $ratingLabels[$val] }}</option>
-                                @endforeach
-                            </select>
-                        </td>
-                    @endforeach
-                    <td>
-                        <textarea name="entries[{{ $enrollment->id }}][observations]" rows="2" class="grades-matrix-notes" placeholder="Opcional">{{ old('entries.'.$enrollment->id.'.observations') }}</textarea>
-                    </td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-    </div>
+    @include('grades.partials.entry-cards')
 
     <div class="grades-matrix-bar">
-        <button class="btn" type="submit">Guardar evaluación</button>
+        <button class="btn secondary" type="submit">Guardar borrador</button>
+        <button class="btn" type="submit" name="publish" value="1">Guardar y publicar</button>
     </div>
 </form>
 @endif
