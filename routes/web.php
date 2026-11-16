@@ -187,6 +187,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::get('/settings/exchange-rates', [ExchangeRateSettingsController::class, 'index'])->name('settings.exchange-rates.index');
             Route::post('/settings/exchange-rates/sync', [ExchangeRateSettingsController::class, 'sync'])->middleware('throttle:6,1')->name('settings.exchange-rates.sync');
             Route::post('/settings/exchange-rates/manual', [ExchangeRateSettingsController::class, 'storeManual'])->name('settings.exchange-rates.manual');
+            Route::post('/finance/charges/void-bulk', [FinanceController::class, 'voidChargesBulk'])->name('finance.charges.void-bulk');
             Route::post('/finance/charges/{charge}/void', [FinanceController::class, 'voidCharge'])->name('finance.charges.void');
             Route::post('/finance/payments', [FinanceController::class, 'storePayment'])->name('finance.payments.store');
             Route::post('/finance/payments/{payment}/void', [FinanceController::class, 'voidPayment'])->name('finance.payments.void');

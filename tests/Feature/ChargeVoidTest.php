@@ -150,4 +150,44 @@ class ChargeVoidTest extends TestCase
         Mail::assertQueued(ChargeDueReminderMail::class, 1);
         Mail::assertQueued(ChargeDueReminderMail::class, fn (ChargeDueReminderMail $mail) => $mail->charge->is($valid));
     }
+
+    public function test_admin_can_void_charges_in_bulk_with_one_reason(): void
+    {
+        $a = $this->charge('Mensualidad julio A', '2026-07-05');
+        $b = $this->charge('Mensualidad julio B', '2026-07-05');
+        $paid = $this->charge('Mensualidad julio pagada', '2026-07-05');
+        Payment::create(['campus_id' => $this->campus->id, 'student_id' => $this->student->id, 'charge_id' => $paid->id, 'amount' => 75, 'currency' => 'USD', 'paid_at' => '2026-07-04', 'status' => 'completed']);
+        $already = $this->charge('Ya anulado', '2026-07-05');
+        $already->update(['voided_at' => now(), 'status' => 'void']);
+        $admin = $this->master();
+
+        $this->actingAs($admin)->get(route('finance.index'))
+            ->assertOk()->assertSee('Anular seleccionados')->assertSee('value="'.$a->id.'" form="bulk-void-form"', false)
+            ->assertDontSee('value="'.$paid->id.'" form="bulk-void-form"', false);
+
+        $this->actingAs($admin)->post(route('finance.charges.void-bulk'), [
+            'charge_ids' => [$a->id, $b->id, $paid->id, $already->id],
+            'reason' => 'Mensualidades de julio anteriores al sistema',
+        ])->assertRedirect()->assertSessionHas('success', '2 cargo(s) anulado(s).')->assertSessionHas('warning');
+
+        $this->assertNotNull($a->fresh()->voided_at);
+        $this->assertSame('Mensualidades de julio anteriores al sistema', $b->fresh()->void_reason);
+        $this->assertNull($paid->fresh()->voided_at);
+        $this->assertSame(2, AuditLog::query()->where('action', 'finance.charge.void')->count());
+        $summary = AuditLog::query()->where('action', 'finance.charges.void_bulk')->firstOrFail();
+        $this->assertSame([$a->id, $b->id], $summary->payload['voided']);
+    }
+
+    public function test_bulk_void_requires_reason_and_campus_access(): void
+    {
+        $charge = $this->charge('Mensualidad', '2026-07-05');
+        $other = Campus::create(['name' => 'Picacho', 'code' => 'PIC', 'status' => 'active']);
+        $outsider = User::factory()->create(['role' => 'admin', 'campus_id' => $other->id, 'is_master' => false]);
+
+        $this->actingAs($this->master())->post(route('finance.charges.void-bulk'), ['charge_ids' => [$charge->id], 'reason' => ''])
+            ->assertSessionHasErrors('reason');
+        $this->actingAs($outsider)->post(route('finance.charges.void-bulk'), ['charge_ids' => [$charge->id], 'reason' => 'x'])
+            ->assertSessionHas('warning');
+        $this->assertNull($charge->fresh()->voided_at);
+    }
 }

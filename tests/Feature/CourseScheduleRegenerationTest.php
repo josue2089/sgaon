@@ -74,7 +74,10 @@ class CourseScheduleRegenerationTest extends TestCase
         $schedule = ScheduleTemplate::query()->findOrFail($course->schedule_template_id);
         $schedule->update(['starts_at' => '14:30:00']);
 
-        $response = $this->actingAs($admin)->put(route('courses.update', $course), $this->coursePayload($course));
+        // #444: la clase más corta agrega una sesión al final; primero se muestra la vista previa y se confirma.
+        $this->actingAs($admin)->put(route('courses.update', $course), $this->coursePayload($course))
+            ->assertSessionHas('calendarPreview');
+        $response = $this->actingAs($admin)->put(route('courses.update', $course), $this->coursePayload($course) + ['calendar_confirmed' => '1']);
 
         $response->assertRedirect(route('courses.show', $course));
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\ScopesCampusAccess;
 use App\Models\AcademicLevel;
 use App\Models\Campus;
+use App\Models\ClassSession;
 use App\Models\Course;
 use App\Models\CourseLevel;
 use App\Models\Enrollment;
@@ -14,14 +15,16 @@ use App\Models\ProgramLevel;
 use App\Models\ScheduleTemplate;
 use App\Models\Student;
 use App\Models\Teacher;
-use App\Support\AuditTrail;
-use App\Support\CoursePlanner;
 use App\Services\EnrollmentBillingService;
 use App\Services\HolidayCalendarSync;
+use App\Support\AuditTrail;
+use App\Support\CourseCalendarPreview;
+use App\Support\CoursePlanner;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -101,7 +104,7 @@ class CourseController extends Controller
             : collect();
 
         $completedSessionsByGroup = $managedGroupIds->isNotEmpty()
-            ? \App\Models\ClassSession::query()
+            ? ClassSession::query()
                 ->whereIn('group_id', $managedGroupIds)
                 ->whereHas('attendanceRecords')
                 ->selectRaw('group_id, COUNT(*) as completed_sessions')
@@ -110,7 +113,7 @@ class CourseController extends Controller
             : collect();
 
         $plannedSessionsByGroup = $managedGroupIds->isNotEmpty()
-            ? \App\Models\ClassSession::query()
+            ? ClassSession::query()
                 ->whereIn('group_id', $managedGroupIds)
                 ->selectRaw('group_id, COUNT(*) as planned_sessions')
                 ->groupBy('group_id')
@@ -166,7 +169,7 @@ class CourseController extends Controller
 
     public function create(): View
     {
-        return view('courses.create', $this->formData(new Course()));
+        return view('courses.create', $this->formData(new Course));
     }
 
     public function store(Request $request): RedirectResponse
@@ -259,7 +262,7 @@ class CourseController extends Controller
 
         $session = CoursePlanner::addExtraSession(
             $course->loadMissing(['scheduleTemplate', 'managedGroup']),
-            \Illuminate\Support\Carbon::parse($data['session_date']),
+            Carbon::parse($data['session_date']),
             $data['starts_at'] ?? null,
             $data['ends_at'] ?? null,
         );
@@ -318,6 +321,33 @@ class CourseController extends Controller
 
         if (($writableCampusId = $this->writableCampusId($data['campus_id'] ?? null)) !== null) {
             $data['campus_id'] = $writableCampusId;
+        }
+
+        // #444: si el cambio mueve clases ya creadas, primero se muestra la vista previa; si se perderían clases con asistencia, no se aplica.
+        if ($course->managed_group_id && CourseCalendarPreview::snapshot((int) $course->managed_group_id)->isNotEmpty()) {
+            $preview = CourseCalendarPreview::simulate($course, function (Course $copy) use ($data) {
+                $snapshot = $this->calendarSnapshot($copy);
+                $copy->update($data);
+                $copy->load(['teacher', 'period', 'scheduleTemplate', 'managedGroup.sessions.attendanceRecords']);
+
+                return CoursePlanner::sync($copy, $this->calendarFieldsChanged($snapshot, $copy));
+            });
+
+            if ($preview['lost']->isNotEmpty()) {
+                return back()->withInput()->withErrors([
+                    'start_date' => 'No se aplicó el cambio: se perderían '.$preview['lost']->count().' clase(s) con asistencia ('.CourseCalendarPreview::formatDates($preview['lost']).'). Elige otra fecha u horario, o mueve esas clases desde Asistencia.',
+                ]);
+            }
+
+            if ($preview['changed'] && ! $request->boolean('calendar_confirmed')) {
+                return back()->withInput()->with('calendarPreview', [
+                    'rows' => $preview['rows'],
+                    'before_count' => $preview['before']->count(),
+                    'after_count' => $preview['after']->count(),
+                    'start_after' => $preview['start_after'],
+                    'end_after' => $preview['end_after'],
+                ]);
+            }
         }
 
         $calendarSnapshot = $this->calendarSnapshot($course);
