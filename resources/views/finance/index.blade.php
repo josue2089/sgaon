@@ -102,10 +102,21 @@
         <h2 class="section-title section-title-sm">{{ $showVoided ? 'Cargos anulados' : 'Cuentas por cobrar' }}</h2>
         <div class="entity-sub">{{ $charges->total() }} cargo(s)</div>
     </div>
+    @php $bulkVoid = ! $showVoided && auth()->user()?->hasPermission('finance.manage'); @endphp
+    @if($bulkVoid)
+        {{-- #444: anular varios cargos con un solo motivo. Las casillas están fuera del form y se asocian con form="bulk-void-form". --}}
+        <form method="POST" action="{{ route('finance.charges.void-bulk') }}" id="bulk-void-form" class="bulk-void-bar" data-bulk-form
+              data-confirm-title="Anular cargos seleccionados" data-confirm="Los cargos seleccionados dejarán de contar en el saldo de cada alumno. Los que tengan pagos aplicados no se anulan. La acción queda registrada." data-confirm-reason="Motivo de la anulación" data-confirm-ok="Anular cargos" data-confirm-danger>
+            @csrf
+            <span class="table-sub"><strong data-bulk-count>0</strong> seleccionado(s)</span>
+            <button class="btn btn-danger" type="submit" data-bulk-submit disabled>Anular seleccionados</button>
+            @error('charge_ids')<div class="form-error">{{ $message }}</div>@enderror
+        </form>
+    @endif
     <div class="table-wrap">
     <table>
         <thead>
-        <tr><th>Alumno</th><th>Curso</th><th>Grupo</th><th>Período</th><th>Concepto</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Mora</th><th>Estado</th><th></th></tr>
+        <tr>@if($bulkVoid)<th class="bulk-col"><input type="checkbox" data-bulk-all="bulk-void-form" aria-label="Seleccionar todos los cargos de esta página"></th>@endif<th>Alumno</th><th>Curso</th><th>Grupo</th><th>Período</th><th>Concepto</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Mora</th><th>Estado</th><th></th></tr>
         </thead>
         <tbody>
         @forelse($charges as $charge)
@@ -117,6 +128,13 @@
                 $balance = \App\Support\FinanceReconcile::outstandingForCharge($charge);
             @endphp
             <tr>
+                @if($bulkVoid)
+                    <td class="bulk-col">
+                        @if(! $charge->voided_at && $paidTotal <= 0)
+                            <input type="checkbox" name="charge_ids[]" value="{{ $charge->id }}" form="bulk-void-form" data-bulk-item aria-label="Seleccionar {{ $charge->concept }} de {{ $charge->student->full_name ?? 'alumno' }}">
+                        @endif
+                    </td>
+                @endif
                 <td><a href="{{ route('finance.students.history', $charge->student) }}">{{ $charge->student->full_name ?? '' }}</a></td>
                 <td>{{ $charge->course->name ?? 'Sin curso' }}</td>
                 <td>{{ $charge->group->name ?? 'Sin grupo' }}</td>
@@ -137,7 +155,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="11">
+                <td colspan="{{ $bulkVoid ? 12 : 11 }}">
                     <div class="empty-state-inline">No hay cargos para el contexto seleccionado.</div>
                 </td>
             </tr>

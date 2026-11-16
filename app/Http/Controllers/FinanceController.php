@@ -451,6 +451,54 @@ class FinanceController extends Controller
         return back()->with('success', 'Cargo anulado. Ya no suma al saldo del alumno.');
     }
 
+    /**
+     * #444: anula varios cargos de una vez con el mismo motivo. Cada cargo pasa por ChargeVoidService (y su auditoría);
+     * los que tienen pagos o ya estaban anulados se omiten y se informan.
+     */
+    public function voidChargesBulk(Request $request, ChargeVoidService $voidService): RedirectResponse
+    {
+        $data = $request->validate([
+            'charge_ids' => ['required', 'array', 'min:1', 'max:200'],
+            'charge_ids.*' => ['integer', 'distinct'],
+            'reason' => ['required', 'string', 'max:500'],
+        ], [
+            'charge_ids.required' => 'Selecciona al menos un cargo.',
+            'charge_ids.max' => 'Se pueden anular hasta 200 cargos por vez.',
+            'reason.required' => 'Indica el motivo de la anulación.',
+        ]);
+
+        $charges = Charge::query()->whereIn('id', $data['charge_ids'])->get();
+        $voided = [];
+        $skipped = [];
+        foreach ($charges as $charge) {
+            if (! CampusScope::userCanAccessCampus($request->user(), (int) $charge->campus_id)) {
+                $skipped[] = $charge->id;
+
+                continue;
+            }
+            try {
+                $voidService->void($charge, $request->user(), $data['reason'], $request);
+                $voided[] = $charge->id;
+            } catch (ValidationException) {
+                $skipped[] = $charge->id;
+            }
+        }
+        $skipped = array_merge($skipped, array_values(array_diff(array_map('intval', $data['charge_ids']), $charges->pluck('id')->all())));
+
+        AuditTrail::log($request, 'finance.charges.void_bulk', null, [
+            'reason' => $data['reason'],
+            'voided' => $voided,
+            'skipped' => $skipped,
+        ]);
+
+        $message = count($voided).' cargo(s) anulado(s).';
+        if ($skipped !== []) {
+            return back()->with('success', $message)->with('warning', count($skipped).' cargo(s) no se anularon porque tienen pagos aplicados, ya estaban anulados o no son de tu sede.');
+        }
+
+        return back()->with('success', $message);
+    }
+
     public function voidPayment(Request $request, Payment $payment, PaymentVoidService $voidService): RedirectResponse
     {
         if (! CampusScope::userCanAccessCampus($request->user(), (int) $payment->campus_id)) {

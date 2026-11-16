@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\AuditLog;
-use App\Models\ClassSession;
 use App\Models\Course;
+use App\Support\CourseCalendarPreview;
 use App\Support\CoursePlanner;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
@@ -36,15 +36,15 @@ class SetCourseStartDate extends Command
 
         $this->line("Curso #{$course->id}: {$course->name}");
         $this->line('Inicio actual: '.$course->start_date?->format('d/m/Y').' · fin: '.$course->end_date?->format('d/m/Y'));
-        $before = $this->snapshot($course);
+        $before = CourseCalendarPreview::snapshot((int) $course->managed_group_id);
 
         DB::beginTransaction();
         try {
             $course->update(['start_date' => $newDate->toDateString()]);
             $course = CoursePlanner::sync($course->fresh(['teacher', 'period', 'scheduleTemplate', 'managedGroup.sessions.attendanceRecords']), true);
-            $after = $this->snapshot($course);
+            $after = CourseCalendarPreview::snapshot((int) $course->managed_group_id);
 
-            $lostAttendance = $before->filter(fn ($row) => $row['attendance'] > 0)->keys()->diff($after->keys());
+            $lostAttendance = CourseCalendarPreview::compare($before, $after)['lost'];
             if ($lostAttendance->isNotEmpty()) {
                 throw new \RuntimeException('Se perderían clases con asistencia: '.$lostAttendance->implode(', '));
             }
@@ -75,19 +75,6 @@ class SetCourseStartDate extends Command
 
             return self::FAILURE;
         }
-    }
-
-    /** @return \Illuminate\Support\Collection<string, array{id:int, attendance:int}> fecha => datos, por sesión del grupo. */
-    private function snapshot(Course $course)
-    {
-        return ClassSession::query()
-            ->where('group_id', $course->managed_group_id)
-            ->withCount('attendanceRecords')
-            ->orderBy('session_date')
-            ->get()
-            ->mapWithKeys(fn (ClassSession $session) => [
-                $session->session_date->toDateString() => ['id' => $session->id, 'attendance' => (int) $session->attendance_records_count],
-            ]);
     }
 
     private function compare($before, $after): array

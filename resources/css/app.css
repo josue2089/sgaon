@@ -4647,3 +4647,31 @@ fieldset {
 .makeup-teacher-session .table-wrap {
     margin-top: 8px;
 }
+
+/* #444: barra de anulación en lote y vista previa del calendario. */
+.bulk-void-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0 1.2rem 0.75rem;
+}
+
+.bulk-col {
+    width: 2.25rem;
+    text-align: center;
+}
+
+.bulk-col input {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.calendar-preview-table {
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.calendar-preview-same td {
+    color: var(--muted);
+}

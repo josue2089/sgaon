@@ -43,6 +43,7 @@ use App\Http\Controllers\StudentSearchController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\TeacherAccessController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\TeacherMakeupController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
@@ -186,6 +187,7 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
             Route::get('/settings/exchange-rates', [ExchangeRateSettingsController::class, 'index'])->name('settings.exchange-rates.index');
             Route::post('/settings/exchange-rates/sync', [ExchangeRateSettingsController::class, 'sync'])->middleware('throttle:6,1')->name('settings.exchange-rates.sync');
             Route::post('/settings/exchange-rates/manual', [ExchangeRateSettingsController::class, 'storeManual'])->name('settings.exchange-rates.manual');
+            Route::post('/finance/charges/void-bulk', [FinanceController::class, 'voidChargesBulk'])->name('finance.charges.void-bulk');
             Route::post('/finance/charges/{charge}/void', [FinanceController::class, 'voidCharge'])->name('finance.charges.void');
             Route::post('/finance/payments', [FinanceController::class, 'storePayment'])->name('finance.payments.store');
             Route::post('/finance/payments/{payment}/void', [FinanceController::class, 'voidPayment'])->name('finance.payments.void');
@@ -218,8 +220,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
 
     // Mis recuperativas del profesor. #446
     Route::middleware(['role:teacher', 'permission:attendance.manage'])->group(function () {
-        Route::get('/my-makeups', [\App\Http\Controllers\TeacherMakeupController::class, 'index'])->name('teacher.makeups.index');
-        Route::patch('/my-makeups/bookings/{booking}', [\App\Http\Controllers\TeacherMakeupController::class, 'updateBooking'])->name('teacher.makeups.bookings.update');
+        Route::get('/my-makeups', [TeacherMakeupController::class, 'index'])->name('teacher.makeups.index');
+        Route::patch('/my-makeups/bookings/{booking}', [TeacherMakeupController::class, 'updateBooking'])->name('teacher.makeups.bookings.update');
     });
 
     Route::middleware(['role:admin,teacher', 'permission:grades.manage'])->group(function () {

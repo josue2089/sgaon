@@ -8,7 +8,6 @@ use App\Models\Campus;
 use App\Models\ClassSession;
 use App\Models\Course;
 use App\Models\Enrollment;
-use App\Models\Group;
 use App\Models\Period;
 use App\Models\Program;
 use App\Models\ProgramLevel;
@@ -59,6 +58,45 @@ class CourseUpdateWithAttendanceTest extends TestCase
         $response = $this->actingAs($admin)->put(route('courses.update', $course), $payload);
 
         $response->assertSessionHasErrors('start_date');
+    }
+
+    public function test_calendar_change_shows_preview_before_applying(): void
+    {
+        [$admin, $course] = $this->courseWithAttendance();
+        $originalStart = $course->start_date->toDateString();
+        $newStart = $course->start_date->copy()->subWeek()->toDateString();
+        $payload = $this->coursePayload($course, ['start_date' => $newStart]);
+
+        $response = $this->actingAs($admin)->from(route('courses.edit', $course))->put(route('courses.update', $course), $payload);
+        $response->assertRedirect(route('courses.edit', $course));
+        $response->assertSessionHas('calendarPreview');
+        $response->assertSessionHasNoErrors();
+        $this->assertSame($originalStart, $course->fresh()->start_date->toDateString(), 'La vista previa no guarda nada.');
+        $this->assertSame(1, ClassSession::query()->where('group_id', $course->managed_group_id)->count());
+
+        $preview = session('calendarPreview');
+        $this->assertSame(1, $preview['before_count']);
+        $this->assertGreaterThan(1, $preview['after_count']);
+        $this->assertSame($newStart, $preview['start_after']);
+
+        $this->actingAs($admin)->withSession(['calendarPreview' => $preview, '_old_input' => $payload])
+            ->get(route('courses.edit', $course))
+            ->assertOk()->assertSee('Vista previa del calendario')->assertSee('Aplicar cambio')->assertSee('data-open-on-load', false);
+
+        $this->actingAs($admin)->put(route('courses.update', $course), $payload + ['calendar_confirmed' => '1'])
+            ->assertRedirect(route('courses.show', $course));
+        $this->assertSame($newStart, $course->fresh()->start_date->toDateString());
+        $this->assertGreaterThan(1, ClassSession::query()->where('group_id', $course->managed_group_id)->count());
+    }
+
+    public function test_confirmation_does_not_bypass_attendance_guard(): void
+    {
+        [$admin, $course, , $enrollment] = $this->courseWithAttendance();
+        $payload = $this->coursePayload($course, ['start_date' => $course->start_date->copy()->addWeek()->toDateString(), 'calendar_confirmed' => '1']);
+
+        $this->actingAs($admin)->put(route('courses.update', $course), $payload)->assertSessionHasErrors('start_date');
+        $this->assertSame(1, AttendanceRecord::query()->where('enrollment_id', $enrollment->id)->count());
+        $this->assertSame(1, ClassSession::query()->where('group_id', $course->managed_group_id)->count());
     }
 
     private function courseWithAttendance(): array
