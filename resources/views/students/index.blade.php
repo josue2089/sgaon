@@ -6,7 +6,7 @@
         <p class="page-subtitle">Gestiona todos los estudiantes</p>
     </div>
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-        @if(auth()->user()?->isMasterAdmin() && \Illuminate\Support\Facades\Route::has('students.export'))
+        @if(\Illuminate\Support\Facades\Route::has('students.export'))
             <a class="btn secondary" href="{{ route('students.export', request()->query()) }}">Exportar CSV</a>
         @endif
         @if(\Illuminate\Support\Facades\Route::has('students.import'))
@@ -65,7 +65,29 @@
                 @endforeach
             </select>
         @endif
+        {{-- #450: programa, curso y período de la inscripción activa. --}}
+        <select name="program_id" aria-label="Programa">
+            <option value="">Todos los programas</option>
+            @foreach($programs as $program)
+                <option value="{{ $program->id }}" @selected($filters['program_id'] === (string) $program->id)>{{ $program->name }}</option>
+            @endforeach
+        </select>
+        <select name="course_id" aria-label="Curso">
+            <option value="">Todos los cursos</option>
+            @foreach($courses as $course)
+                <option value="{{ $course->id }}" @selected($filters['course_id'] === (string) $course->id)>{{ $course->name }}</option>
+            @endforeach
+        </select>
+        <select name="period_id" aria-label="Período">
+            <option value="">Todos los períodos</option>
+            @foreach($periods->unique('code') as $period)
+                <option value="{{ $period->id }}" @selected($filters['period_id'] === (string) $period->id)>{{ $period->code }}</option>
+            @endforeach
+        </select>
         <button class="btn secondary" type="submit">Filtros</button>
+        @if(collect($filters)->except('enrollment')->filter(fn ($value) => $value !== '')->isNotEmpty())
+            <a class="btn secondary" href="{{ route('students.index') }}">Quitar filtros</a>
+        @endif
     </div>
 </form>
 
@@ -73,10 +95,29 @@
     <div class="card empty-state">No hay alumnos para los filtros seleccionados.</div>
 @else
     <div class="card table-card">
+        {{-- #450: acciones sobre los alumnos marcados. Las casillas se asocian con form="students-bulk-form". --}}
+        <form method="POST" action="{{ route('students.bulk') }}" id="students-bulk-form" class="bulk-void-bar students-bulk-bar" data-bulk-form>
+            @csrf
+            <span class="table-sub"><strong data-bulk-count>0</strong> seleccionado(s)</span>
+            <button class="btn secondary" type="submit" formaction="{{ route('students.export') }}" formmethod="GET" data-bulk-submit disabled>Exportar selección</button>
+            <button class="btn secondary" type="submit" name="action" value="reminder" data-bulk-submit disabled
+                    onclick="return confirm('Se enviará por correo, al alumno y a sus representantes, el recordatorio de cada cuota vencida o que vence en los próximos 7 días. ¿Enviar?')">Enviar recordatorio de pago</button>
+            <span class="students-bulk-historical">
+                <select name="historical_status" aria-label="Estado al pasar a histórico">
+                    <option value="inactive">Inactivo</option>
+                    <option value="graduated">Graduado</option>
+                    <option value="withdrawn">Retirado</option>
+                </select>
+                <button class="btn secondary" type="submit" name="action" value="historical" data-bulk-submit disabled
+                        onclick="return confirm('Los alumnos marcados dejarán de aparecer en el listado de activos. ¿Pasarlos a histórico?')">Pasar a histórico</button>
+            </span>
+            @error('ids')<div class="form-error">{{ $message }}</div>@enderror
+        </form>
         <div class="table-wrap">
             <table class="data-table">
                 <thead>
                 <tr>
+                    <th class="bulk-col"><input type="checkbox" data-bulk-all="students-bulk-form" aria-label="Seleccionar todos los alumnos de esta página"></th>
                     <th>Alumno</th>
                     <th>Email</th>
                     <th>Sede</th>
@@ -101,6 +142,7 @@
                         };
                     @endphp
                     <tr>
+                        <td class="bulk-col"><input type="checkbox" name="ids[]" value="{{ $student->id }}" form="students-bulk-form" data-bulk-item aria-label="Seleccionar a {{ $student->full_name }}"></td>
                         <td>
                             <div class="table-user">
                                 <span class="table-avatar">

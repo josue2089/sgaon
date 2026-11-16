@@ -6,38 +6,45 @@ use App\Http\Controllers\Concerns\ScopesCampusAccess;
 use App\Models\AcademicLevel;
 use App\Models\AttendanceRecord;
 use App\Models\AuditLog;
-use App\Models\AuthorizedContact;
 use App\Models\Campus;
 use App\Models\Charge;
+use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\GradeEntry;
-use App\Models\Program;
-use App\Models\Representative;
-use App\Models\StudentAttachment;
-use App\Models\Student;
-use App\Support\AuditTrail;
-use App\Support\DocumentNumber;
-use App\Support\ExtracurricularSheet;
-use App\Support\StudentLogbook;
-use App\Support\CampusScope;
-use App\Support\FinanceReconcile;
+use App\Models\Group;
 use App\Models\PaymentMethod;
+use App\Models\Period;
+use App\Models\Program;
+use App\Models\ProgramLevel;
+use App\Models\Representative;
+use App\Models\Student;
+use App\Models\StudentAttachment;
 use App\Services\Bcv\ExchangeRateService;
 use App\Services\ChargeRegistrationService;
 use App\Services\PaymentRegistrationService;
+use App\Services\PortalAccessService;
+use App\Support\AuditTrail;
+use App\Support\CampusScope;
+use App\Support\DocumentNumber;
+use App\Support\ExtracurricularSheet;
+use App\Support\FinanceReconcile;
 use App\Support\PaymentCurrencyConverter;
+use App\Support\PaymentReminder;
 use App\Support\PersonName;
 use App\Support\PrivateFiles;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\StudentLogbook;
 use App\Support\StudentSearch;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentController extends Controller
 {
@@ -126,15 +133,15 @@ class StudentController extends Controller
             'levels' => $levels,
             'campuses' => $campuses,
             'canFilterByCampus' => $canFilterByCampus,
+            'programs' => Program::query()->where('status', 'active')->orderBy('name')->get(['id', 'name']),
+            'courses' => $this->applyCampusScope(Course::query())->where('status', 'active')->orderBy('name')->get(['id', 'name', 'campus_id']),
+            'periods' => $this->applyCampusScope(Period::query())->orderByDesc('id')->get(['id', 'code', 'campus_id']),
         ]);
     }
 
+    /** Exporta el listado filtrado (o la selección). Cada admin exporta solo sus sedes. #450 */
     public function export(Request $request): StreamedResponse
     {
-        if (! $request->user()?->isMasterAdmin()) {
-            abort(403);
-        }
-
         $students = $this->filteredStudentsQuery($request)
             ->with(['campus', 'registrationProgram'])
             ->orderBy('campus_id')
@@ -190,7 +197,7 @@ class StudentController extends Controller
         $programs = Program::query()->where('status', 'active')->orderBy('name');
 
         return view('students.create', [
-            'student' => new Student(),
+            'student' => new Student,
             'campuses' => $campuses->get(),
             'programs' => $programs->get(),
         ]);
@@ -202,7 +209,7 @@ class StudentController extends Controller
 
         $data = $this->detailData($student);
         $data['enrollableGroups'] = $this->enrollableGroups($student);
-        $data['portalAccess'] = app(\App\Services\PortalAccessService::class)->summaryFor($student);
+        $data['portalAccess'] = app(PortalAccessService::class)->summaryFor($student);
         if ($request->user()?->hasPermission('finance.manage')) {
             $data = array_merge($data, $this->paymentFormData($student));
         }
@@ -211,9 +218,9 @@ class StudentController extends Controller
     }
 
     /** Grupos activos de la sede del alumno donde todavía no está inscrito (modal "Inscribir en curso"). */
-    private function enrollableGroups(Student $student): \Illuminate\Support\Collection
+    private function enrollableGroups(Student $student): Collection
     {
-        return \App\Models\Group::query()
+        return Group::query()
             ->with(['course.teacher', 'course.period'])
             ->withCount(['enrollments as active_enrollments_count' => fn ($query) => $query->where('status', 'active')])
             ->where('campus_id', $student->campus_id)
@@ -307,7 +314,7 @@ class StudentController extends Controller
 
         $userId = (int) ($request->user()?->id ?? 0);
         $signature = md5(($data['first_name'] ?? '').'|'.($data['last_name'] ?? '').'|'.($data['document_id'] ?? '').'|'.($data['campus_id'] ?? ''));
-        $lock = \Illuminate\Support\Facades\Cache::lock("student.create.{$userId}.{$signature}", 10);
+        $lock = Cache::lock("student.create.{$userId}.{$signature}", 10);
 
         if (! $lock->get()) {
             return redirect()->route('students.index')->with('info', 'Este alumno se está creando; verifica en el listado.');
@@ -322,9 +329,10 @@ class StudentController extends Controller
             optional($lock)->release();
         }
 
+        // #450: la ficha abre directamente el modal de inscripción.
         return redirect()
-            ->route('students.show', $student)
-            ->with('success', 'Alumno creado. Ahora inscríbelo en un curso con el botón "Inscribir en curso".');
+            ->route('students.show', ['student' => $student, 'enroll' => 1])
+            ->with('success', 'Alumno creado. Elige el curso para inscribirlo.');
     }
 
     public function edit(Student $student): View
@@ -543,7 +551,7 @@ class StudentController extends Controller
                 ? (($currentCourseLevel->sort_order ?? $currentCourseLevel->scale_position).'/'.($currentCourseLevel->program_total ?? $currentCourseLevel->scale_total))
                 : 'N/D',
             'current_level_name' => $currentCourseLevel?->name ?? 'Sin nivel asignado',
-            'current_level_cefr' => $currentCourseLevel instanceof \App\Models\ProgramLevel ? $currentCourseLevel->cefrSummary() : null,
+            'current_level_cefr' => $currentCourseLevel instanceof ProgramLevel ? $currentCourseLevel->cefrSummary() : null,
             'next_level_name' => $nextCourseLevel?->name ?? 'N/D',
             'completion_date' => $currentCourse?->end_date,
             'reminder_date' => ($currentCourse?->end_date && $currentCourseLevel)
@@ -805,6 +813,7 @@ class StudentController extends Controller
                 if ($contact->exists) {
                     $contact->delete();
                 }
+
                 continue;
             }
 
@@ -835,6 +844,10 @@ class StudentController extends Controller
             'payment_status' => (string) $request->query('payment_status', ''),
             'enrollment' => (string) $request->query('enrollment', ''),
             'campus_id' => (string) $request->query('campus_id', ''),
+            // #450
+            'program_id' => (string) $request->query('program_id', ''),
+            'course_id' => (string) $request->query('course_id', ''),
+            'period_id' => (string) $request->query('period_id', ''),
         ];
     }
 
@@ -848,9 +861,11 @@ class StudentController extends Controller
             StudentSearch::applyTerm($query, $filters['q']);
         }
 
+        $selectedIds = collect((array) $request->input('ids', []))->map(fn ($id) => (int) $id)->filter()->unique()->values();
+
         if ($filters['status'] !== '') {
             $query->where('status', $filters['status']);
-        } else {
+        } elseif ($selectedIds->isEmpty()) {
             $query->where('status', 'active');
         }
 
@@ -883,6 +898,25 @@ class StudentController extends Controller
             $query->where('campus_id', (int) $filters['campus_id']);
         }
 
+        // #450: programa, curso y período de una inscripción activa.
+        $courseFilters = array_filter([
+            'program_id' => (int) $filters['program_id'],
+            'id' => (int) $filters['course_id'],
+        ]);
+        $periodIds = $filters['period_id'] !== '' ? Period::sameCodeIds((int) $filters['period_id']) : null;
+        if ($courseFilters !== [] || $periodIds !== null) {
+            $query->whereHas('enrollments', fn (Builder $enrollment) => $enrollment
+                ->where('status', 'active')
+                ->whereHas('group.course', fn (Builder $course) => $course
+                    ->where($courseFilters)
+                    ->when($periodIds !== null, fn (Builder $byPeriod) => $byPeriod->whereIn('period_id', $periodIds))));
+        }
+
+        // Selección de casillas (exportar selección).
+        if ($selectedIds->isNotEmpty()) {
+            $query->whereIn('id', $selectedIds->all());
+        }
+
         return $query;
     }
 
@@ -895,6 +929,62 @@ class StudentController extends Controller
             'graduated' => 'Graduado',
             default => $status,
         };
+    }
+
+    /**
+     * #450: acciones sobre los alumnos marcados en el listado. Solo alcanza a alumnos de las sedes del usuario.
+     */
+    public function bulk(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:200'],
+            'ids.*' => ['integer'],
+            'action' => ['required', 'in:historical,reminder'],
+            'historical_status' => ['required_if:action,historical', 'nullable', 'in:inactive,graduated,withdrawn'],
+        ], [
+            'ids.required' => 'Selecciona al menos un alumno.',
+            'historical_status.required_if' => 'Elige el estado con el que pasan a histórico.',
+        ]);
+
+        $students = $this->applyCampusScope(Student::query())->whereIn('id', $data['ids'])->get();
+        $outside = count(array_unique($data['ids'])) - $students->count();
+
+        if ($data['action'] === 'historical') {
+            $moved = $students->where('status', 'active');
+            foreach ($moved as $student) {
+                $student->update(['status' => $data['historical_status']]);
+                AuditTrail::log($request, 'students.move_to_historical', $student, ['previous_status' => 'active', 'new_status' => $data['historical_status'], 'bulk' => true]);
+            }
+            $message = $moved->count().' alumno(s) pasaron a histórico.';
+            $skipped = $students->count() - $moved->count() + $outside;
+        } else {
+            $sent = 0;
+            $noEmail = 0;
+            $nothing = 0;
+            foreach ($students as $student) {
+                $result = PaymentReminder::sendForStudent($student);
+                $sent += $result['sent'];
+                $noEmail += $result['no_email'];
+                if ($result['sent'] === 0 && $result['no_email'] === 0) {
+                    $nothing++;
+                }
+            }
+            AuditTrail::log($request, 'students.bulk_payment_reminder', null, ['student_ids' => $students->pluck('id')->all(), 'sent' => $sent]);
+            $message = "{$sent} recordatorio(s) de pago enviado(s).";
+            $skipped = $outside;
+            if ($nothing > 0 || $noEmail > 0) {
+                $notes = array_filter([
+                    $nothing > 0 ? "{$nothing} alumno(s) sin cuotas vencidas o por vencer en 7 días (o ya avisados hoy)" : null,
+                    $noEmail > 0 ? "{$noEmail} cuota(s) sin correo de alumno ni representante" : null,
+                ]);
+
+                return back()->with('success', $message)->with('info', implode('; ', $notes).'.');
+            }
+        }
+
+        return $skipped > 0
+            ? back()->with('success', $message)->with('warning', "{$skipped} alumno(s) no se tocaron (ya estaban en histórico o no son de tu sede).")
+            : back()->with('success', $message);
     }
 
     public function moveToHistorical(Request $request, Student $student): RedirectResponse

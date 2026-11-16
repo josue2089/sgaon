@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ScopesCampusAccess;
 use App\Models\Enrollment;
 use App\Models\Group;
 use App\Models\Student;
-use App\Support\RenewalEnrollmentEligibility;
-use App\Support\AuditTrail;
-use App\Support\StudentSearch;
 use App\Services\EnrollmentBillingService;
+use App\Support\AuditTrail;
+use App\Support\RenewalEnrollmentEligibility;
+use App\Support\StudentSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ use Illuminate\View\View;
 
 class EnrollmentController extends Controller
 {
-    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
+    use ScopesCampusAccess;
 
     public function index(Request $request): View
     {
@@ -128,12 +129,14 @@ class EnrollmentController extends Controller
             $data,
         );
         AuditTrail::log($request, 'enrollment.upsert', $enrollment, $data);
-        app(EnrollmentBillingService::class)->createTuitionCharge($enrollment, $request);
+        $firstCharge = app(EnrollmentBillingService::class)->createTuitionCharge($enrollment, $request);
 
         if ($request->input('return_to') === 'student') {
+            // #450: si se generó la primera cuota, la ficha ofrece registrar su pago en el acto.
             return redirect()
                 ->to(route('students.show', $student).'#academico')
-                ->with('success', 'Inscrito en '.($group->course?->name ?? $group->name).'.');
+                ->with('success', 'Inscrito en '.($group->course?->name ?? $group->name).'.')
+                ->with('offer_first_payment', $firstCharge && ! $firstCharge->voided_at && $request->user()?->hasPermission('finance.manage') ? $firstCharge->id : null);
         }
 
         return redirect()->route('enrollments.index')->with('success', 'Inscripción guardada.');

@@ -20,4 +20,16 @@ class Period extends Model
     {
         return $this->belongsTo(Campus::class);
     }
+
+    /**
+     * Ids de los períodos con el mismo código que el dado (cada sede tiene el suyo, p. ej. 2026-3). #450
+     *
+     * @return list<int>
+     */
+    public static function sameCodeIds(int $periodId): array
+    {
+        $code = static::query()->whereKey($periodId)->value('code');
+
+        return $code === null ? [0] : static::query()->where('code', $code)->pluck('id')->map(fn ($id) => (int) $id)->all();
+    }
 }

@@ -140,7 +140,7 @@ class UnifiedEnrollmentTest extends TestCase
         ])->assertSessionHasNoErrors();
 
         $created = Student::query()->where('first_name', 'Nueva')->firstOrFail();
-        $response->assertRedirect(route('students.show', $created))
-            ->assertSessionHas('success', fn ($message) => str_contains($message, 'inscríbelo en un curso'));
+        $response->assertRedirect(route('students.show', ['student' => $created, 'enroll' => 1]))
+            ->assertSessionHas('success', fn ($message) => str_contains($message, 'Elige el curso para inscribirlo'));
     }
 }

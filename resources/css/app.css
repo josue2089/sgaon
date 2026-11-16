@@ -4803,3 +4803,38 @@ fieldset {
 .calendar-preview-same td {
     color: var(--muted);
 }
+
+/* #450 */
+.students-bulk-bar {
+    padding-top: 0.75rem;
+}
+
+.students-bulk-historical {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.students-bulk-historical select {
+    width: auto;
+}
+
+.first-payment-offer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.fi-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    white-space: nowrap;
+}
+
+.fi-check input {
+    width: auto;
+}

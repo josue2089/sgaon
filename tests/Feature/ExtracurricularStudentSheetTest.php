@@ -62,7 +62,7 @@ class ExtracurricularStudentSheetTest extends TestCase
                 'extracurricular_objectives' => 'Coordinación y ritmo',
                 'payment_condition' => '10 cuotas de 35 USD',
             ]))
-            ->assertRedirect(route('students.show', Student::query()->where('first_name', 'Sofía')->value('id')));
+            ->assertRedirect(route('students.show', ['student' => Student::query()->where('first_name', 'Sofía')->value('id'), 'enroll' => 1]));
 
         $student = Student::query()->where('first_name', 'Sofía')->firstOrFail();
         $this->assertSame('4to grado', $student->school_grade);

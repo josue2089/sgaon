@@ -83,9 +83,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::post('/students/historical/import/preview', [HistoricalStudentController::class, 'importPreview'])->name('students.historical.import.preview');
         Route::post('/students/historical/import', [HistoricalStudentController::class, 'importStore'])->name('students.historical.import.store');
         Route::post('/students/historical/{student}/activate', [HistoricalStudentController::class, 'activate'])->name('students.historical.activate');
-        Route::get('/students/export', [StudentController::class, 'export'])
-            ->middleware('master.admin')
-            ->name('students.export');
+        Route::get('/students/export', [StudentController::class, 'export'])->name('students.export');
+        Route::post('/students/bulk', [StudentController::class, 'bulk'])->name('students.bulk');
         Route::post('/students/{student}/move-to-historical', [StudentController::class, 'moveToHistorical'])->name('students.move-to-historical');
         Route::resource('students', StudentController::class)->except('show');
         Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');

@@ -92,6 +92,21 @@ class CourseController extends Controller
             });
         }
 
+        // #450: profesor, período, programa y "termina pronto" (fin dentro de los próximos 14 días).
+        $teacherFilter = (string) $request->query('teacher_id', '');
+        $periodFilter = (string) $request->query('period_id', '');
+        $programFilter = (string) $request->query('program_id', '');
+        $endingSoon = $request->boolean('ending_soon');
+        $query
+            ->when($teacherFilter !== '', fn (Builder $builder) => $builder->where('teacher_id', (int) $teacherFilter))
+            ->when($periodFilter !== '', fn (Builder $builder) => $builder->whereIn('period_id', Period::sameCodeIds((int) $periodFilter)))
+            ->when($programFilter !== '', fn (Builder $builder) => $builder->where('program_id', (int) $programFilter))
+            ->when($endingSoon, fn (Builder $builder) => $builder
+                ->whereNotNull('end_date')
+                ->whereDate('end_date', '>=', now()->toDateString())
+                ->whereDate('end_date', '<=', now()->addDays(14)->toDateString())
+                ->reorder('end_date'));
+
         $courses = $query->paginate(20)->withQueryString();
 
         $managedGroupIds = $courses->getCollection()->pluck('managed_group_id')->filter()->values();
@@ -158,7 +173,13 @@ class CourseController extends Controller
                 'q' => $q,
                 'status' => $statusFilter,
                 'level' => $levelFilter,
+                'teacher_id' => $teacherFilter,
+                'period_id' => $periodFilter,
+                'program_id' => $programFilter,
+                'ending_soon' => $endingSoon,
             ],
+            'teachers' => Teacher::query()->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))->where('status', 'active')->orderBy('first_name')->get(['id', 'first_name', 'last_name']),
+            'periods' => Period::query()->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))->orderByDesc('id')->get(['id', 'code']),
             'levels' => AcademicLevel::query()
                 ->tap(fn ($builder) => $this->applyCampusScope($builder, 'campus_id'))
                 ->orderBy('sort_order')
