@@ -1,18 +1,22 @@
+{{-- Historial de un registro (y, en la ficha del alumno, de sus cargos, pagos, inscripciones y recuperativas). #451 --}}
 <div class="card">
-    <h3 class="section-title section-title-sm">Auditoría reciente</h3>
+    <h3 class="section-title section-title-sm">Historial</h3>
     @if(($auditLogs ?? collect())->count() === 0)
-        <div class="empty-state-inline">Sin movimientos auditados para este registro.</div>
+        <div class="empty-state-inline">Sin movimientos registrados.</div>
     @else
-        <div class="stack-sm">
+        <ol class="audit-timeline">
             @foreach($auditLogs as $log)
-                <div style="padding:0.7rem 0.9rem;border:2px solid var(--line);border-radius:14px;">
-                    <div style="display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap;">
-                        <strong>{{ $log->action }}</strong>
-                        <span class="entity-sub">{{ $log->created_at?->format('Y-m-d H:i') }}</span>
+                <li class="audit-timeline-item">
+                    <div class="audit-timeline-head">
+                        <strong>{{ \App\Support\AuditLabel::action($log->action) }}</strong>
+                        <span class="entity-sub">{{ $log->created_at?->format('d/m/Y H:i') }}</span>
                     </div>
-                    <div class="entity-sub">Usuario: {{ $log->user->name ?? 'Sistema' }}</div>
-                </div>
+                    <div class="entity-sub">
+                        {{ \App\Support\AuditLabel::entity($log->auditable_type, $log->auditable_id) }} · {{ $log->user->name ?? 'Sistema' }}
+                    </div>
+                    @include('partials.ui.audit-changes', ['log' => $log])
+                </li>
             @endforeach
-        </div>
+        </ol>
     @endif
 </div>

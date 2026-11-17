@@ -12,6 +12,8 @@ use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\GradeEntry;
 use App\Models\Group;
+use App\Models\MakeupRequest;
+use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\Period;
 use App\Models\Program;
@@ -352,13 +354,7 @@ class StudentController extends Controller
             'student' => $student->load(['representatives', 'authorizedContacts']),
             'campuses' => $campuses->get(),
             'programs' => $programs,
-            'auditLogs' => AuditLog::query()
-                ->with('user')
-                ->where('auditable_type', Student::class)
-                ->where('auditable_id', $student->id)
-                ->latest()
-                ->limit(12)
-                ->get(),
+            'auditLogs' => $this->studentAuditLogs($student),
         ]);
     }
 
@@ -595,13 +591,7 @@ class StudentController extends Controller
                 ->limit(15)
                 ->get(),
             'chargeHistory' => $student->charges->take(15),
-            'auditLogs' => AuditLog::query()
-                ->with('user')
-                ->where('auditable_type', Student::class)
-                ->where('auditable_id', $student->id)
-                ->latest()
-                ->limit(12)
-                ->get(),
+            'auditLogs' => $this->studentAuditLogs($student),
         ];
     }
 
@@ -994,6 +984,35 @@ class StudentController extends Controller
         return $skipped > 0
             ? back()->with('success', $message)->with('warning', "{$skipped} alumno(s) no se tocaron (ya estaban en histórico o no son de tu sede).")
             : back()->with('success', $message);
+    }
+
+    /**
+     * Historial completo del alumno (#451): su ficha más sus cargos, pagos, inscripciones, recuperativas y documentos.
+     *
+     * @return Collection<int, AuditLog>
+     */
+    private function studentAuditLogs(Student $student, int $limit = 40): Collection
+    {
+        $related = [
+            Student::class => [$student->id],
+            Charge::class => Charge::query()->where('student_id', $student->id)->pluck('id')->all(),
+            Payment::class => Payment::query()->where('student_id', $student->id)->pluck('id')->all(),
+            Enrollment::class => Enrollment::query()->where('student_id', $student->id)->pluck('id')->all(),
+            MakeupRequest::class => MakeupRequest::query()->where('student_id', $student->id)->pluck('id')->all(),
+            StudentAttachment::class => StudentAttachment::query()->where('student_id', $student->id)->pluck('id')->all(),
+        ];
+
+        return AuditLog::query()
+            ->with('user')
+            ->where(function ($query) use ($related) {
+                foreach (array_filter($related) as $type => $ids) {
+                    $query->orWhere(fn ($byType) => $byType->where('auditable_type', $type)->whereIn('auditable_id', $ids));
+                }
+            })
+            ->latest()
+            ->latest('id')
+            ->limit($limit)
+            ->get();
     }
 
     public function moveToHistorical(Request $request, Student $student): RedirectResponse
