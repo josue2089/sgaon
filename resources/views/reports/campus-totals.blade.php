@@ -14,16 +14,16 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Sede</th>
-                    <th>Código</th>
-                    <th>Alumnos activos</th>
-                    <th>Alumnos totales</th>
-                    <th>Grupos activos</th>
-                    <th>Grupos totales</th>
-                    <th>Docentes</th>
-                    <th>Cursos</th>
-                    <th>Inscripciones activas</th>
-                    <th></th>
+                    <th scope="col">Sede</th>
+                    <th scope="col">Código</th>
+                    <th scope="col">Alumnos activos</th>
+                    <th scope="col">Alumnos totales</th>
+                    <th scope="col">Grupos activos</th>
+                    <th scope="col">Grupos totales</th>
+                    <th scope="col">Docentes</th>
+                    <th scope="col">Cursos</th>
+                    <th scope="col">Inscripciones activas</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -59,7 +59,7 @@
                         <th>{{ $rows->sum('teachers_total') }}</th>
                         <th>{{ $rows->sum('courses_total') }}</th>
                         <th>{{ $rows->sum('enrollments_active') }}</th>
-                        <th></th>
+                        <td></td>
                     </tr>
                 </tfoot>
             @endif

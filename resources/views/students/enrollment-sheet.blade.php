@@ -7,7 +7,7 @@
     </div>
     <div class="form-actions">
         <a class="btn secondary" href="{{ route('students.enrollment-sheet.pdf', $student) }}">Descargar PDF</a>
-        <button class="btn secondary" type="button" onclick="window.print()">Imprimir</button>
+        <button class="btn secondary" type="button" data-print>Imprimir</button>
         <a class="btn secondary" href="{{ route('students.show', $student) }}">Volver</a>
     </div>
 </div>

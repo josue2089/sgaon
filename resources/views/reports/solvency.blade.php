@@ -50,13 +50,13 @@
         <table class="data-table">
             <thead>
             <tr>
-                <th>Sede</th>
-                <th>Tipo</th>
-                <th>Alumnos activos</th>
-                <th>Al día</th>
-                <th>Con deuda</th>
-                <th>Mora &gt; 30 días</th>
-                <th>Deuda</th>
+                <th scope="col">Sede</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Alumnos activos</th>
+                <th scope="col">Al día</th>
+                <th scope="col">Con deuda</th>
+                <th scope="col">Mora &gt; 30 días</th>
+                <th scope="col">Deuda</th>
             </tr>
             </thead>
             <tbody>
@@ -108,7 +108,7 @@
     <div class="table-wrap">
         <table class="data-table">
             <thead>
-            <tr><th>Alumno</th><th>Sede / tipo</th><th>Curso</th><th>Representante</th><th>Deuda</th><th>Mora</th><th></th></tr>
+            <tr><th scope="col">Alumno</th><th scope="col">Sede / tipo</th><th scope="col">Curso</th><th scope="col">Representante</th><th scope="col">Deuda</th><th scope="col">Mora</th><th scope="col"><span class="sr-only">Acciones</span></th></tr>
             </thead>
             <tbody>
             @forelse($list as $row)

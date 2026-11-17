@@ -192,7 +192,7 @@
 }
 
 .value-ok {
-    color: #16a34a;
+    color: var(--ok);
 }
 
 .value-danger {

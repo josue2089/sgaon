@@ -182,20 +182,20 @@
                 @endif
                 <div class="grid-3">
                     <div>
-                        <label>Programa ejecutado / tema visto</label>
-                        <input type="text" name="topic" value="{{ old('topic', $selectedSession->topic ?? '') }}" placeholder="Ej. Verbo to be">
+                        <label for="attendance-topic">Programa ejecutado / tema visto</label>
+                        <input id="attendance-topic" type="text" name="topic" value="{{ old('topic', $selectedSession->topic ?? '') }}" placeholder="Ej. Verbo to be">
                     </div>
                     <div>
-                        <label>Avance del programa</label>
-                        <select name="program_status">
+                        <label for="attendance-program-status">Avance del programa</label>
+                        <select id="attendance-program-status" name="program_status">
                             <option value="">Sin indicar</option>
                             <option value="on_track" @selected(old('program_status', $selectedSession->program_status ?? '') === 'on_track')>Al día</option>
                             <option value="delayed" @selected(old('program_status', $selectedSession->program_status ?? '') === 'delayed')>Con retraso</option>
                         </select>
                     </div>
                     <div>
-                        <label>Observación</label>
-                        <input type="text" name="program_notes" value="{{ old('program_notes', $selectedSession->program_notes ?? '') }}" placeholder="Observación del avance">
+                        <label for="attendance-program-notes">Observación</label>
+                        <input id="attendance-program-notes" type="text" name="program_notes" value="{{ old('program_notes', $selectedSession->program_notes ?? '') }}" placeholder="Observación del avance">
                     </div>
                 </div>
             </div>
@@ -230,12 +230,12 @@
                 <table class="attendance-sheet">
                     <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Alumno</th>
-                        <th>Anterior</th>
-                        <th>Marcación rápida</th>
-                        <th>Estado</th>
-                        <th>Nota</th>
+                        <th scope="col">#</th>
+                        <th scope="col">Alumno</th>
+                        <th scope="col">Anterior</th>
+                        <th scope="col">Marcación rápida</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Nota</th>
                     </tr>
                     </thead>
                     <tbody>

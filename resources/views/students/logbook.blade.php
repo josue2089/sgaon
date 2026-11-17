@@ -22,7 +22,7 @@
 <div class="card table-card">
     <div class="table-wrap">
         <table class="data-table">
-            <thead><tr><th>#</th><th>Fecha</th><th>Unidad / actividad</th><th>Tipo</th><th>Asistencia</th></tr></thead>
+            <thead><tr><th scope="col">#</th><th scope="col">Fecha</th><th scope="col">Unidad / actividad</th><th scope="col">Tipo</th><th scope="col">Asistencia</th></tr></thead>
             <tbody>
             @forelse($sessions as $session)
                 <tr>
@@ -49,7 +49,7 @@
         <h2 class="section-title section-title-sm">Recuperativas</h2>
         <div class="table-wrap">
             <table class="data-table">
-                <thead><tr><th>Contenido</th><th>Fecha</th><th>Profesor</th></tr></thead>
+                <thead><tr><th scope="col">Contenido</th><th scope="col">Fecha</th><th scope="col">Profesor</th></tr></thead>
                 <tbody>
                 @foreach($makeups as $row)
                     <tr><td>{{ $row['content'] }}</td><td>{{ $row['date']?->format('d/m/Y') ?? 'N/D' }}</td><td>{{ $row['teacher'] ?? 'N/D' }}</td></tr>

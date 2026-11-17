@@ -32,13 +32,13 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Escala</th>
-                    <th>Nombre</th>
-                    <th>Etapa</th>
-                    <th>CEFR</th>
-                    <th>Recordatorio</th>
-                    <th>Estado</th>
-                    <th></th>
+                    <th scope="col">Escala</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Etapa</th>
+                    <th scope="col">CEFR</th>
+                    <th scope="col">Recordatorio</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

@@ -7,7 +7,6 @@ use App\Models\Campus;
 use App\Models\ClassSession;
 use App\Models\Course;
 use App\Models\Enrollment;
-use App\Models\Group;
 use App\Models\Period;
 use App\Models\Program;
 use App\Models\ProgramLevel;
@@ -57,15 +56,16 @@ class MasterAdminCourseDeleteTest extends TestCase
 
     public function test_master_admin_sees_delete_modal_on_course_index(): void
     {
-        $master = $this->createMasterAdmin();
+        // #453: la confirmación usa el diálogo común (data-confirm) en el formulario de cada fila.
+        [$master, $course] = $this->courseFixture();
 
         $response = $this->actingAs($master)->get(route('courses.index'));
 
         $response->assertOk();
-        $response->assertSee('Eliminar');
+        $response->assertSee('action="'.route('courses.destroy', $course).'"', false);
         $response->assertSee('Eliminar permanentemente');
         $response->assertSee('Eliminar curso');
-        $response->assertSee('se eliminan del sistema');
+        $response->assertSee('Los alumnos no se eliminan');
     }
 
     private function courseFixture(): array

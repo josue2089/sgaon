@@ -1,15 +1,15 @@
 <div class="grid-2">
     <div>
-        <label>Número de clase</label>
-        <input type="number" name="class_number" min="1" max="999" value="{{ old('class_number', $lesson->class_number ?? 1) }}" required>
+        <label for="lesson-class-number">Número de clase</label>
+        <input id="lesson-class-number" type="number" name="class_number" min="1" max="999" value="{{ old('class_number', $lesson->class_number ?? 1) }}" required>
     </div>
     <div>
-        <label>Orden</label>
-        <input type="number" name="sort_order" min="1" max="999" value="{{ old('sort_order', $lesson->sort_order ?? 1) }}" required>
+        <label for="lesson-sort-order">Orden</label>
+        <input id="lesson-sort-order" type="number" name="sort_order" min="1" max="999" value="{{ old('sort_order', $lesson->sort_order ?? 1) }}" required>
     </div>
     <div>
-        <label>Unidad / módulo</label>
-        <input name="unit" value="{{ old('unit', $lesson->unit ?? '') }}">
+        <label for="lesson-unit">Unidad / módulo</label>
+        <input id="lesson-unit" name="unit" value="{{ old('unit', $lesson->unit ?? '') }}">
     </div>
     <div>
         <label for="lesson-type">Tipo de clase</label>
@@ -21,20 +21,20 @@
         </select>
     </div>
     <div class="col-span-full">
-        <label>Actividades de la clase</label>
+        <label id="lesson-activities-label">Actividades de la clase</label>
         @php($selectedTags = old('activity_tags', $lesson->activity_tags ?? []))
-        <div class="checkbox-grid">
+        <div class="checkbox-grid" role="group" aria-labelledby="lesson-activities-label">
             @foreach(\App\Support\LessonTemplates::TAGS as $value => $label)
                 <label class="checkbox-inline"><input type="checkbox" name="activity_tags[]" value="{{ $value }}" @checked(in_array($value, $selectedTags, true))> {{ $label }}</label>
             @endforeach
         </div>
     </div>
     <div class="col-span-full">
-        <label>Contenido</label>
-        <textarea name="content" required>{{ old('content', $lesson->content ?? '') }}</textarea>
+        <label for="lesson-content">Contenido</label>
+        <textarea id="lesson-content" name="content" required>{{ old('content', $lesson->content ?? '') }}</textarea>
     </div>
     <div class="col-span-full">
-        <label>Nota</label>
-        <textarea name="notes">{{ old('notes', $lesson->notes ?? '') }}</textarea>
+        <label for="lesson-notes">Nota</label>
+        <textarea id="lesson-notes" name="notes">{{ old('notes', $lesson->notes ?? '') }}</textarea>
     </div>
 </div>

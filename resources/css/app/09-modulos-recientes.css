@@ -210,3 +210,20 @@
     gap: 0.8rem;
     flex-wrap: wrap;
 }
+
+/* #453: quien pide menos movimiento no ve animaciones ni transiciones. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* #453: formulario dentro de una celda de acciones, en línea con los enlaces. */
+.inline-form {
+    display: inline;
+}

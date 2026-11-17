@@ -1,19 +1,27 @@
+{{-- #453: cada campo con x-form.field (etiqueta ligada al control y error junto al campo). --}}
 <div class="grid-2">
-<div>
-    <label>Foto de perfil</label>
+<x-form.field label="Foto de perfil" name="profile_photo" for="teacher-photo">
     @if(!empty($teacher?->profile_photo_path))
         <div class="profile-photo-preview-wrap">
             <img class="profile-photo-preview" src="{{ \Illuminate\Support\Facades\Storage::url($teacher->profile_photo_path) }}" alt="Foto actual del profesor">
         </div>
     @endif
-    <input type="file" class="filepond" name="profile_photo" accept="image/png,image/jpeg,image/webp">
-</div>
-<div><label>Campus</label><select name="campus_id">@foreach($campuses as $campus)<option value="{{ $campus->id }}" @selected(old('campus_id',$teacher->campus_id ?? '')==$campus->id)>{{ $campus->name }}</option>@endforeach</select></div>
-<div><label>Nombre</label><input name="first_name" value="{{ old('first_name',$teacher->first_name ?? '') }}"></div>
-<div><label>Apellido</label><input name="last_name" value="{{ old('last_name',$teacher->last_name ?? '') }}"></div>
-<div><label>Documento</label><input name="document_id" value="{{ old('document_id',$teacher->document_id ?? '') }}"></div>
-<div>
-    <label>Email</label><input name="email" value="{{ old('email',$teacher->email ?? '') }}">
+    <input type="file" id="teacher-photo" class="filepond" name="profile_photo" accept="image/png,image/jpeg,image/webp">
+</x-form.field>
+<x-form.field label="Sede" name="campus_id" for="teacher-campus" required>
+    <select id="teacher-campus" name="campus_id" required>@foreach($campuses as $campus)<option value="{{ $campus->id }}" @selected(old('campus_id',$teacher->campus_id ?? '')==$campus->id)>{{ $campus->name }}</option>@endforeach</select>
+</x-form.field>
+<x-form.field label="Nombre" name="first_name" for="teacher-first-name" required>
+    <input id="teacher-first-name" name="first_name" value="{{ old('first_name',$teacher->first_name ?? '') }}" required autocomplete="given-name">
+</x-form.field>
+<x-form.field label="Apellido" name="last_name" for="teacher-last-name" required>
+    <input id="teacher-last-name" name="last_name" value="{{ old('last_name',$teacher->last_name ?? '') }}" required autocomplete="family-name">
+</x-form.field>
+<x-form.field label="Documento" name="document_id" for="teacher-document">
+    <input id="teacher-document" name="document_id" value="{{ old('document_id',$teacher->document_id ?? '') }}">
+</x-form.field>
+<x-form.field label="Email" name="email" for="teacher-email">
+    <input id="teacher-email" type="email" name="email" value="{{ old('email',$teacher->email ?? '') }}" autocomplete="email">
     @if(isset($teacher->id))
         <div class="form-hint">
             @if($teacher->user)
@@ -23,9 +31,13 @@
             @endif
         </div>
     @endif
-</div>
-<div><label>Teléfono</label><input name="phone" value="{{ old('phone',$teacher->phone ?? '') }}"></div>
-<div><label>Estado</label><select name="status">@foreach(['active','inactive'] as $status)<option value="{{ $status }}" @selected(old('status',$teacher->status ?? 'active')==$status)>{{ \App\Support\StatusLabel::label($status) }}</option>@endforeach</select></div>
+</x-form.field>
+<x-form.field label="Teléfono" name="phone" for="teacher-phone">
+    <input id="teacher-phone" type="tel" name="phone" value="{{ old('phone',$teacher->phone ?? '') }}" autocomplete="tel">
+</x-form.field>
+<x-form.field label="Estado" name="status" for="teacher-status" required>
+    <select id="teacher-status" name="status" required>@foreach(['active','inactive'] as $status)<option value="{{ $status }}" @selected(old('status',$teacher->status ?? 'active')==$status)>{{ \App\Support\StatusLabel::label($status) }}</option>@endforeach</select>
+</x-form.field>
 </div>
 
 @once

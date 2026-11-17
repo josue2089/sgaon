@@ -31,11 +31,11 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Código</th>
-                    <th>Descripción</th>
-                    <th>Campus</th>
-                    <th>Estado</th>
-                    <th></th>
+                    <th scope="col">Código</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Campus</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

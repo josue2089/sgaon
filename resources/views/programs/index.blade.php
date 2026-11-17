@@ -36,12 +36,12 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Programa</th>
-                    <th>Código</th>
-                    <th>Niveles</th>
-                    <th>Cursos</th>
-                    <th>Estatus</th>
-                    <th></th>
+                    <th scope="col">Programa</th>
+                    <th scope="col">Código</th>
+                    <th scope="col">Niveles</th>
+                    <th scope="col">Cursos</th>
+                    <th scope="col">Estatus</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

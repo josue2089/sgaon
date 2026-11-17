@@ -37,12 +37,12 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Feriado</th>
-                    <th>Tipo</th>
-                    <th>Ocurrencia</th>
-                    <th>Campus</th>
-                    <th>Estado</th>
-                    <th></th>
+                    <th scope="col">Feriado</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Ocurrencia</th>
+                    <th scope="col">Campus</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

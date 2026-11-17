@@ -101,7 +101,7 @@
             <span class="table-sub"><strong data-bulk-count>0</strong> seleccionado(s)</span>
             <button class="btn secondary" type="submit" formaction="{{ route('students.export') }}" formmethod="GET" data-bulk-submit disabled>Exportar selección</button>
             <button class="btn secondary" type="submit" name="action" value="reminder" data-bulk-submit disabled
-                    onclick="return confirm('Se enviará por correo, al alumno y a sus representantes, el recordatorio de cada cuota vencida o que vence en los próximos 7 días. ¿Enviar?')">Enviar recordatorio de pago</button>
+                    data-confirm-title="Enviar recordatorio de pago" data-confirm-ok="Enviar" data-confirm="Se enviará por correo, al alumno y a sus representantes, el recordatorio de cada cuota vencida o que vence en los próximos 7 días.">Enviar recordatorio de pago</button>
             <span class="students-bulk-historical">
                 <select name="historical_status" aria-label="Estado al pasar a histórico">
                     <option value="inactive">Inactivo</option>
@@ -109,7 +109,7 @@
                     <option value="withdrawn">Retirado</option>
                 </select>
                 <button class="btn secondary" type="submit" name="action" value="historical" data-bulk-submit disabled
-                        onclick="return confirm('Los alumnos marcados dejarán de aparecer en el listado de activos. ¿Pasarlos a histórico?')">Pasar a histórico</button>
+                        data-confirm-title="Pasar a histórico" data-confirm-ok="Pasar a histórico" data-confirm="Los alumnos marcados dejarán de aparecer en el listado de activos.">Pasar a histórico</button>
             </span>
             @error('ids')<div class="form-error">{{ $message }}</div>@enderror
         </form>
@@ -117,15 +117,15 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th class="bulk-col"><input type="checkbox" data-bulk-all="students-bulk-form" aria-label="Seleccionar todos los alumnos de esta página"></th>
-                    <th>Alumno</th>
-                    <th>Email</th>
-                    <th>Sede</th>
-                    <th>Nivel</th>
-                    <th>Asistencia</th>
-                    <th>Pago</th>
-                    <th>Estado</th>
-                    <th></th>
+                    <th class="bulk-col" scope="col"><input type="checkbox" data-bulk-all="students-bulk-form" aria-label="Seleccionar todos los alumnos de esta página"></th>
+                    <th scope="col">Alumno</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Sede</th>
+                    <th scope="col">Nivel</th>
+                    <th scope="col">Asistencia</th>
+                    <th scope="col">Pago</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -167,26 +167,19 @@
                         <td class="table-actions">
                             <a href="{{ route('students.show', $student) }}">Detalle</a>
                             @if(\Illuminate\Support\Facades\Route::has('students.move-to-historical'))
-                                <button
-                                    type="button"
-                                    class="btn-link"
-                                    data-move-historical-open
-                                    data-student-name="{{ $student->full_name }}"
-                                    data-move-url="{{ route('students.move-to-historical', $student) }}"
-                                >
+                                <button type="button" class="btn-link" data-modal-open="move-historical-modal"
+                                        data-form-action="{{ route('students.move-to-historical', $student) }}" data-fill-name="{{ $student->full_name }}">
                                     Mover a histórico
                                 </button>
                             @endif
                             @if(auth()->user()?->isMasterAdmin())
-                                <button
-                                    type="button"
-                                    class="btn-link-danger"
-                                    data-student-delete-open
-                                    data-student-name="{{ $student->full_name }}"
-                                    data-delete-url="{{ route('students.destroy', $student) }}"
-                                >
-                                    Eliminar
-                                </button>
+                                <form method="POST" action="{{ route('students.destroy', $student) }}" class="inline-form"
+                                      data-confirm-title="Eliminar alumno" data-confirm-ok="Eliminar permanentemente" data-confirm-danger
+                                      data-confirm="Vas a eliminar permanentemente a {{ $student->full_name }} y toda su información: inscripciones, asistencia, cargos, pagos, representantes vinculados y documentos. Esta acción no se puede deshacer.">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-link-danger">Eliminar</button>
+                                </form>
                             @endif
                         </td>
                     </tr>
@@ -202,144 +195,24 @@
 @endif
 
 @if(\Illuminate\Support\Facades\Route::has('students.move-to-historical'))
-    <div class="student-picker-modal confirm-modal" data-move-historical-modal hidden>
-        <div class="student-picker-backdrop" data-move-historical-close></div>
-        <div class="student-picker-dialog confirm-modal-dialog card">
-            <div class="student-picker-head">
-                <div>
-                    <h3 class="section-title">Mover a histórico</h3>
-                    <p class="page-subtitle">El alumno dejará de aparecer en el listado de activos.</p>
-                </div>
-                <button class="btn secondary" type="button" data-move-historical-close>Cerrar</button>
+    {{-- #453: modal único (x-ui.modal); cada fila fija el destino con data-form-action. --}}
+    <x-ui.modal id="move-historical-modal" title="Mover a histórico" subtitle="El alumno dejará de aparecer en el listado de activos.">
+        <form method="POST" action="#" id="move-historical-form" class="form-grid">
+            @csrf
+            <p>Alumno: <strong data-fill-name>—</strong></p>
+            <div>
+                <label for="move-historical-status">Nuevo estado</label>
+                <select id="move-historical-status" name="status" required>
+                    <option value="inactive">Inactivo</option>
+                    <option value="graduated">Graduado</option>
+                    <option value="withdrawn">Retirado</option>
+                </select>
             </div>
-            <form method="POST" action="#" data-move-historical-form>
-                @csrf
-                <div class="form-grid">
-                    <label>
-                        Nuevo estado
-                        <select name="status" required>
-                            <option value="inactive">Inactivo</option>
-                            <option value="graduated">Graduado</option>
-                            <option value="withdrawn">Retirado</option>
-                        </select>
-                    </label>
-                </div>
-                <p class="mt-4">Alumno: <strong data-move-historical-name>—</strong></p>
-                <div class="form-actions">
-                    <button class="btn secondary" type="button" data-move-historical-close>Cancelar</button>
-                    <button class="btn" type="submit">Confirmar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        (() => {
-            const modal = document.querySelector('[data-move-historical-modal]');
-            const form = document.querySelector('[data-move-historical-form]');
-            const nameNode = document.querySelector('[data-move-historical-name]');
-            const openButtons = Array.from(document.querySelectorAll('[data-move-historical-open]'));
-            const closeButtons = Array.from(document.querySelectorAll('[data-move-historical-close]'));
-
-            if (!modal || !form || !nameNode) {
-                return;
-            }
-
-            const openModal = (button) => {
-                form.action = button.dataset.moveUrl || '#';
-                nameNode.textContent = button.dataset.studentName || '—';
-                modal.hidden = false;
-                document.body.style.overflow = 'hidden';
-            };
-
-            const closeModal = () => {
-                modal.hidden = true;
-                document.body.style.overflow = '';
-            };
-
-            openButtons.forEach((button) => button.addEventListener('click', () => openModal(button)));
-            closeButtons.forEach((button) => button.addEventListener('click', closeModal));
-            modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
-            document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !modal.hidden) closeModal(); });
-        })();
-    </script>
-@endif
-
-@if(auth()->user()?->isMasterAdmin())
-    <div class="student-picker-modal confirm-modal" data-student-delete-modal hidden>
-        <div class="student-picker-backdrop" data-student-delete-close></div>
-        <div class="student-picker-dialog confirm-modal-dialog card">
-            <div class="student-picker-head">
-                <div>
-                    <h3 class="section-title">Eliminar alumno</h3>
-                    <p class="page-subtitle">Esta acción no se puede deshacer.</p>
-                </div>
-                <button class="btn secondary" type="button" data-student-delete-close>Cerrar</button>
-            </div>
-            <div class="confirm-modal-body">
-                <p>
-                    Vas a eliminar permanentemente a <strong data-student-delete-name>este alumno</strong>.
-                </p>
-                <p>
-                    Se borrará toda su información en el sistema, incluyendo inscripciones, asistencia,
-                    cargos, pagos, representantes vinculados, adjuntos y demás datos relacionados.
-                </p>
-            </div>
-            <form method="POST" action="#" data-student-delete-form>
-                @csrf
-                @method('DELETE')
-                <div class="form-actions">
-                    <button class="btn secondary" type="button" data-student-delete-close>Cancelar</button>
-                    <button class="btn btn-danger" type="submit">Eliminar permanentemente</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        (() => {
-            const modal = document.querySelector('[data-student-delete-modal]');
-            const form = document.querySelector('[data-student-delete-form]');
-            const nameNode = document.querySelector('[data-student-delete-name]');
-            const openButtons = Array.from(document.querySelectorAll('[data-student-delete-open]'));
-            const closeButtons = Array.from(document.querySelectorAll('[data-student-delete-close]'));
-
-            if (!modal || !form || !nameNode || openButtons.length === 0) {
-                return;
-            }
-
-            const openModal = (button) => {
-                form.action = button.dataset.deleteUrl || '#';
-                nameNode.textContent = button.dataset.studentName || 'este alumno';
-                modal.hidden = false;
-                document.body.style.overflow = 'hidden';
-            };
-
-            const closeModal = () => {
-                modal.hidden = true;
-                document.body.style.overflow = '';
-            };
-
-            openButtons.forEach((button) => {
-                button.addEventListener('click', () => openModal(button));
-            });
-
-            closeButtons.forEach((button) => {
-                button.addEventListener('click', closeModal);
-            });
-
-            modal.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    closeModal();
-                }
-            });
-
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && !modal.hidden) {
-                    closeModal();
-                }
-            });
-        })();
-    </script>
+        </form>
+        <x-slot:footer>
+            <button class="btn secondary" type="button" data-modal-close>Cancelar</button>
+            <button class="btn" type="submit" form="move-historical-form">Confirmar</button>
+        </x-slot:footer>
+    </x-ui.modal>
 @endif
 @endsection

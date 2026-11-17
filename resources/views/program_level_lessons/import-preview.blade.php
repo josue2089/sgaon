@@ -25,7 +25,7 @@
 <div class="card table-card">
     <div class="table-wrap">
         <table class="data-table">
-            <thead><tr><th>Clase</th><th>Unidad</th><th>Contenido</th><th>Tipo</th><th>Acción</th></tr></thead>
+            <thead><tr><th scope="col">Clase</th><th scope="col">Unidad</th><th scope="col">Contenido</th><th scope="col">Tipo</th><th scope="col">Acción</th></tr></thead>
             <tbody>
             @forelse($rows as $row)
                 <tr>

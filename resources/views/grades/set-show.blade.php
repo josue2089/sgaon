@@ -25,13 +25,13 @@
     </div>
     @error('publish')<div class="form-error">{{ $message }}</div>@enderror
     @if($set->isPublished())
-        <form method="POST" action="{{ route('grade-evaluation-sets.unpublish', $set) }}" onsubmit="return confirm('Las familias dejarán de ver esta evaluación. ¿Continuar?')">
+        <form method="POST" action="{{ route('grade-evaluation-sets.unpublish', $set) }}" data-confirm-title="Volver a borrador" data-confirm-ok="Volver a borrador" data-confirm="Las familias dejarán de ver esta evaluación.">
             @csrf
             @method('DELETE')
             <button class="btn secondary" type="submit">Volver a borrador</button>
         </form>
     @else
-        <form method="POST" action="{{ route('grade-evaluation-sets.publish', $set) }}" @if($completeCount < $roster->count()) onsubmit="return confirm('Hay alumnos sin las cinco notas. Las familias verán solo lo cargado. ¿Publicar igual?')" @endif>
+        <form method="POST" action="{{ route('grade-evaluation-sets.publish', $set) }}" @if($completeCount < $roster->count()) data-confirm-title="Publicar evaluación incompleta" data-confirm-ok="Publicar igual" data-confirm="Hay alumnos sin las cinco notas. Las familias verán solo lo cargado." @endif>
             @csrf
             <button class="btn" type="submit">Publicar a las familias</button>
         </form>

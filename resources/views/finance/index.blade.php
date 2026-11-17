@@ -116,7 +116,7 @@
     <div class="table-wrap">
     <table>
         <thead>
-        <tr>@if($bulkVoid)<th class="bulk-col"><input type="checkbox" data-bulk-all="bulk-void-form" aria-label="Seleccionar todos los cargos de esta página"></th>@endif<th>Alumno</th><th>Curso</th><th>Grupo</th><th>Período</th><th>Concepto</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Mora</th><th>Estado</th><th></th></tr>
+        <tr>@if($bulkVoid)<th class="bulk-col" scope="col"><input type="checkbox" data-bulk-all="bulk-void-form" aria-label="Seleccionar todos los cargos de esta página"></th>@endif<th scope="col">Alumno</th><th scope="col">Curso</th><th scope="col">Grupo</th><th scope="col">Período</th><th scope="col">Concepto</th><th scope="col">Monto</th><th scope="col">Pagado</th><th scope="col">Saldo</th><th scope="col">Mora</th><th scope="col">Estado</th><th scope="col"><span class="sr-only">Acciones</span></th></tr>
         </thead>
         <tbody>
         @forelse($charges as $charge)
@@ -176,7 +176,7 @@
     <div class="table-wrap">
     <table>
         <thead>
-        <tr><th>Alumno</th><th>Moneda</th><th>Monto original</th><th>Monto aplicado</th><th>Tasa</th><th>Fecha</th><th>Recibo</th><th></th></tr>
+        <tr><th scope="col">Alumno</th><th scope="col">Moneda</th><th scope="col">Monto original</th><th scope="col">Monto aplicado</th><th scope="col">Tasa</th><th scope="col">Fecha</th><th scope="col">Recibo</th><th scope="col"><span class="sr-only">Acciones</span></th></tr>
         </thead>
         <tbody>
         @forelse($payments as $payment)
@@ -278,7 +278,7 @@
                 <div class="finance-payment-request-panes">
                     <div class="finance-payment-request-pane">
                         <h4>Comprobante</h4>
-                        <button type="button" class="btn secondary finance-proof-open-btn" onclick="document.getElementById('finance-proof-dialog-{{ $paymentRequest->id }}').showModal()">
+                        <button type="button" class="btn secondary finance-proof-open-btn" data-modal-open="finance-proof-dialog-{{ $paymentRequest->id }}">
                             Ver comprobante
                         </button>
                         <div class="table-sub">{{ $paymentRequest->proof_original_name ?: 'Archivo adjunto' }}</div>
@@ -316,7 +316,7 @@
             <dialog id="finance-proof-dialog-{{ $paymentRequest->id }}" class="finance-proof-dialog">
                 <div class="finance-proof-dialog-head">
                     <h3 class="finance-proof-dialog-title">Comprobante · {{ $paymentRequest->student?->full_name ?? 'Alumno' }}</h3>
-                    <button type="button" class="charge-pay-dialog-close" onclick="document.getElementById('finance-proof-dialog-{{ $paymentRequest->id }}').close()" aria-label="Cerrar">&times;</button>
+                    <button type="button" class="charge-pay-dialog-close" data-modal-close aria-label="Cerrar">&times;</button>
                 </div>
                 <div class="finance-proof-dialog-body">
                     @if($isImage)
@@ -330,7 +330,7 @@
                 </div>
                 <div class="finance-proof-dialog-footer">
                     <a class="btn secondary" href="{{ $proofUrl }}" target="_blank" rel="noopener">Abrir en pestaña nueva</a>
-                    <button type="button" class="btn" onclick="document.getElementById('finance-proof-dialog-{{ $paymentRequest->id }}').close()">Cerrar</button>
+                    <button type="button" class="btn" data-modal-close>Cerrar</button>
                 </div>
             </dialog>
         @empty

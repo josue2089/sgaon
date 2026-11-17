@@ -46,14 +46,14 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Curso</th>
-                    <th>Nivel</th>
-                    <th>Profesor</th>
-                    <th>Período</th>
-                    <th>Fechas</th>
-                    <th>Asistencia</th>
-                    <th>Estado</th>
-                    <th><span class="sr-only">Acciones</span></th>
+                    <th scope="col">Curso</th>
+                    <th scope="col">Nivel</th>
+                    <th scope="col">Profesor</th>
+                    <th scope="col">Período</th>
+                    <th scope="col">Fechas</th>
+                    <th scope="col">Asistencia</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

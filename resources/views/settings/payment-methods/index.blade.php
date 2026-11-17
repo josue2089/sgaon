@@ -17,12 +17,12 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Moneda</th>
-                    <th>Tipo</th>
-                    <th>Etiqueta</th>
-                    <th>Cuenta</th>
-                    <th>Estado</th>
-                    <th></th>
+                    <th scope="col">Moneda</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Etiqueta</th>
+                    <th scope="col">Cuenta</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

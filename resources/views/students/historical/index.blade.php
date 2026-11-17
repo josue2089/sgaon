@@ -66,12 +66,12 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Alumno</th>
-                    <th>Sede</th>
-                    <th>Programa</th>
-                    <th>Fecha inscripción</th>
-                    <th>Estado</th>
-                    <th></th>
+                    <th scope="col">Alumno</th>
+                    <th scope="col">Sede</th>
+                    <th scope="col">Programa</th>
+                    <th scope="col">Fecha inscripción</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

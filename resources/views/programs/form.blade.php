@@ -1,15 +1,15 @@
 <div class="grid-2">
     <div>
-        <label>Nombre</label>
-        <input name="name" value="{{ old('name', $program->name ?? '') }}" required>
+        <label for="program-name">Nombre</label>
+        <input id="program-name" name="name" value="{{ old('name', $program->name ?? '') }}" required>
     </div>
     <div>
-        <label>Código</label>
-        <input name="code" value="{{ old('code', $program->code ?? '') }}" required>
+        <label for="program-code">Código</label>
+        <input id="program-code" name="code" value="{{ old('code', $program->code ?? '') }}" required>
     </div>
     <div>
-        <label>Estado</label>
-        <select name="status" required>
+        <label for="program-status">Estado</label>
+        <select id="program-status" name="status" required>
             @foreach(['active', 'inactive'] as $status)
                 <option value="{{ $status }}" @selected(old('status', $program->status ?? 'active') === $status)>{{ \App\Support\StatusLabel::label($status) }}</option>
             @endforeach
@@ -54,12 +54,12 @@
         <p class="entity-sub">Un paso por línea. El profesor lo ve como guía al pasar asistencia.</p>
     </div>
     <div class="col-span-full">
-        <label>Descripción</label>
-        <textarea name="description">{{ old('description', $program->description ?? '') }}</textarea>
+        <label for="program-description">Descripción</label>
+        <textarea id="program-description" name="description">{{ old('description', $program->description ?? '') }}</textarea>
     </div>
     <div>
-        <label>Precio base por defecto (EUR)</label>
-        <input type="number" name="base_price_eur" min="0" step="0.01" value="{{ old('base_price_eur', $program->base_price_eur ?? '') }}" placeholder="Ej. 240.00">
+        <label for="program-base-price-eur">Precio base por defecto (EUR)</label>
+        <input id="program-base-price-eur" type="number" name="base_price_eur" min="0" step="0.01" value="{{ old('base_price_eur', $program->base_price_eur ?? '') }}" placeholder="Ej. 240.00">
         <p class="entity-sub">Se usa cuando un nivel no tiene precio propio definido.</p>
     </div>
 </div>

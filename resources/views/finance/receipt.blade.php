@@ -6,7 +6,7 @@
         <p class="page-subtitle">Detalle exacto de cargos aplicados por este pago</p>
     </div>
     <div class="form-actions">
-        <button class="btn secondary" type="button" onclick="window.print()">Imprimir</button>
+        <button class="btn secondary" type="button" data-print>Imprimir</button>
         <a class="btn secondary" href="{{ route('finance.receipts.pdf', $receipt) }}">Exportar PDF</a>
         @unless($payment->voided_at)
             @php
@@ -68,12 +68,12 @@
         <table class="data-table">
             <thead>
             <tr>
-                <th>Concepto</th>
-                <th>Curso</th>
-                <th>Nivel</th>
-                <th>Grupo</th>
-                <th>Período</th>
-                <th>Monto aplicado</th>
+                <th scope="col">Concepto</th>
+                <th scope="col">Curso</th>
+                <th scope="col">Nivel</th>
+                <th scope="col">Grupo</th>
+                <th scope="col">Período</th>
+                <th scope="col">Monto aplicado</th>
             </tr>
             </thead>
             <tbody>

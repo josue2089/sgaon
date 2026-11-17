@@ -1,11 +1,12 @@
-@props(['label', 'name' => null, 'required' => false, 'hint' => null])
+@props(['label', 'name' => null, 'for' => null, 'required' => false, 'hint' => null])
 {{-- Campo de formulario: etiqueta con marca de obligatorio, el control (slot), ayuda y error junto al campo. --}}
 @php
     $errorKey = $name ? str_replace(['[', ']'], ['.', ''], $name) : null;
     $errorBag = $errors ?? view()->shared('errors') ?? new \Illuminate\Support\ViewErrorBag;
 @endphp
 <div {{ $attributes->class(['form-field', 'form-field--invalid' => $errorKey && $errorBag->has($errorKey)]) }}>
-    <label @if($name) for="{{ $attributes->get('id', $name) }}" @endif>
+    {{-- #453: "for" apunta al id del control; por defecto, el nombre del campo. --}}
+    <label @if($for || $name) for="{{ $for ?? $name }}" @endif>
         {{ $label }}@if($required)<span class="field-required" aria-hidden="true"> *</span>@endif
     </label>
     {{ $slot }}

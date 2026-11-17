@@ -62,11 +62,11 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Sede</th>
-                    <th>Alumnos activos</th>
-                    <th>Grupos activos</th>
-                    <th>Docentes</th>
-                    <th></th>
+                    <th scope="col">Sede</th>
+                    <th scope="col">Alumnos activos</th>
+                    <th scope="col">Grupos activos</th>
+                    <th scope="col">Docentes</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -161,7 +161,7 @@
                         <div class="activity-title">{{ $alert->typeLabel() }}</div>
                         <div class="entity-sub">{{ $alert->message }}</div>
                     </div>
-                    @include('partials.ui.status-badge', ['tone' => $alert->type === 'overdue' ? 'danger' : 'warn', 'text' => '!'])
+                    @include('partials.ui.status-badge', ['tone' => $alert->type === 'overdue' ? 'danger' : 'warn', 'text' => $alert->type === 'overdue' ? 'Mora' : 'Aviso'])
                 </div>
             @empty
                 <div class="empty-state-inline">Sin alertas abiertas.</div>

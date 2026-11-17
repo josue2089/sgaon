@@ -96,7 +96,7 @@
             <div><strong>Sesiones planificadas:</strong> {{ $summary['planned_sessions'] }}</div>
             <div><strong>Sesiones registradas:</strong> {{ $summary['completed_sessions'] }}</div>
             <div><strong>Asistencia promedio:</strong> {{ is_null($summary['attendance_rate']) ? 'N/D' : $summary['attendance_rate'].'%' }}</div>
-            <div><strong>Estado general:</strong> {{ $teacher->status === 'active' ? 'Operativo' : 'Inactivo' }}</div>
+            <div><strong>Estado general:</strong> {{ \App\Support\StatusLabel::label($teacher->status) }}</div>
         </div>
     </div>
 </div>
@@ -118,9 +118,9 @@
             <table class="teacher-calendar-table">
                 <thead>
                 <tr>
-                    <th>Horario</th>
+                    <th scope="col">Horario</th>
                     @foreach($weekDays as $day)
-                        <th>{{ $day['label'] }}</th>
+                        <th scope="col">{{ $day['label'] }}</th>
                     @endforeach
                 </tr>
                 </thead>
@@ -166,12 +166,12 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Fecha</th>
-                    <th>Hora</th>
-                    <th>Curso</th>
-                    <th>Nivel</th>
-                    <th>Programa</th>
-                    <th></th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Hora</th>
+                    <th scope="col">Curso</th>
+                    <th scope="col">Nivel</th>
+                    <th scope="col">Programa</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -205,14 +205,14 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Curso</th>
-                    <th>Nivel</th>
-                    <th>Período</th>
-                    <th>Horario</th>
-                    <th>Estudiantes</th>
-                    <th>Progreso</th>
-                    <th>Fechas</th>
-                    <th></th>
+                    <th scope="col">Curso</th>
+                    <th scope="col">Nivel</th>
+                    <th scope="col">Período</th>
+                    <th scope="col">Horario</th>
+                    <th scope="col">Estudiantes</th>
+                    <th scope="col">Progreso</th>
+                    <th scope="col">Fechas</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -260,12 +260,12 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Alumno</th>
-                    <th>Curso</th>
-                    <th>Email</th>
-                    <th>Estatus</th>
-                    <th>Progreso</th>
-                    <th></th>
+                    <th scope="col">Alumno</th>
+                    <th scope="col">Curso</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Estatus</th>
+                    <th scope="col">Progreso</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

@@ -21,16 +21,16 @@
     @csrf
     <div class="grid-2">
         <div>
-            <label>Clase que está viendo</label>
-            <select name="enrollment_id" required>
+            <label for="makeup-enrollment-id">Clase que está viendo</label>
+            <select id="makeup-enrollment-id" name="enrollment_id" required>
                 @foreach($enrollments as $enrollment)
                     <option value="{{ $enrollment->id }}" @selected((int) old('enrollment_id') === $enrollment->id)>{{ $enrollment->group?->course?->name ?? $enrollment->group?->name }}</option>
                 @endforeach
             </select>
         </div>
         <div>
-            <label>Clase que recupera (inasistencia)</label>
-            <select name="attendance_record_id">
+            <label for="makeup-attendance-record-id">Clase que recupera (inasistencia)</label>
+            <select id="makeup-attendance-record-id" name="attendance_record_id">
                 <option value="">Sin inasistencia registrada</option>
                 @foreach($absences as $absence)
                     <option value="{{ $absence->id }}" @selected((int) old('attendance_record_id') === $absence->id)>
@@ -41,8 +41,8 @@
             <div class="form-hint">Si eliges una inasistencia que ya tenía su recuperativa pendiente, se usa esa misma y su cargo.</div>
         </div>
         <div>
-            <label>Profesor</label>
-            <select name="teacher_id" required>
+            <label for="makeup-teacher-id">Profesor</label>
+            <select id="makeup-teacher-id" name="teacher_id" required>
                 <option value="">Seleccione</option>
                 @foreach($teachers as $teacher)
                     <option value="{{ $teacher->id }}" @selected((int) old('teacher_id') === $teacher->id)>{{ $teacher->full_name }}</option>
@@ -50,16 +50,16 @@
             </select>
         </div>
         <div>
-            <label>Fecha de la recuperativa</label>
-            <input type="date" name="session_date" value="{{ old('session_date', now()->toDateString()) }}" required>
+            <label for="makeup-session-date">Fecha de la recuperativa</label>
+            <input id="makeup-session-date" type="date" name="session_date" value="{{ old('session_date', now()->toDateString()) }}" required>
         </div>
         <div>
-            <label>Hora de inicio</label>
-            <input type="time" name="starts_at" value="{{ old('starts_at') }}" required>
+            <label for="makeup-starts-at">Hora de inicio</label>
+            <input id="makeup-starts-at" type="time" name="starts_at" value="{{ old('starts_at') }}" required>
         </div>
         <div>
-            <label>Hora de fin</label>
-            <input type="time" name="ends_at" value="{{ old('ends_at') }}" required>
+            <label for="makeup-ends-at">Hora de fin</label>
+            <input id="makeup-ends-at" type="time" name="ends_at" value="{{ old('ends_at') }}" required>
         </div>
         <div>
             <label class="checkbox-inline">
@@ -68,13 +68,13 @@
             </label>
         </div>
         <div>
-            <label>Precio (USD)</label>
-            <input type="number" name="price" min="0" step="0.01" value="{{ old('price', 10) }}" data-makeup-price required>
+            <label for="makeup-price">Precio (USD)</label>
+            <input id="makeup-price" type="number" name="price" min="0" step="0.01" value="{{ old('price', 10) }}" data-makeup-price required>
             <div class="form-hint">$10 por defecto, $5 con reposo. Se puede modificar.</div>
         </div>
         <div class="col-span-full">
-            <label>¿Pagó?</label>
-            <select name="paid" data-makeup-paid required>
+            <label for="makeup-paid">¿Pagó?</label>
+            <select id="makeup-paid" name="paid" data-makeup-paid required>
                 <option value="0" @selected(old('paid', '0') === '0')>No, el cargo queda pendiente</option>
                 <option value="1" @selected(old('paid') === '1')>Sí, registrar el pago</option>
             </select>
@@ -85,8 +85,8 @@
         <h3 class="section-title section-title-sm">Pago</h3>
         <div class="grid-2">
             <div>
-                <label>Método de pago</label>
-                <select name="payment_method_id" data-makeup-method>
+                <label for="makeup-payment-method-id">Método de pago</label>
+                <select id="makeup-payment-method-id" name="payment_method_id" data-makeup-method>
                     <option value="">Seleccione</option>
                     @foreach($paymentMethods as $method)
                         <option value="{{ $method->id }}" data-currency="{{ $method->currency }}" @selected((int) old('payment_method_id') === $method->id)>{{ $method->label }} ({{ $method->currency }})</option>
@@ -94,31 +94,31 @@
                 </select>
             </div>
             <div>
-                <label>Moneda</label>
-                <select name="currency" data-makeup-currency>
+                <label for="makeup-currency">Moneda</label>
+                <select id="makeup-currency" name="currency" data-makeup-currency>
                     @foreach(['USD', 'VES', 'EUR'] as $currency)
                         <option value="{{ $currency }}" @selected(old('currency', 'USD') === $currency)>{{ $currency }}</option>
                     @endforeach
                 </select>
             </div>
             <div>
-                <label>Monto pagado (en la moneda del pago)</label>
-                <input type="number" name="original_amount" min="0.01" step="0.01" value="{{ old('original_amount', 10) }}">
+                <label for="makeup-original-amount">Monto pagado (en la moneda del pago)</label>
+                <input id="makeup-original-amount" type="number" name="original_amount" min="0.01" step="0.01" value="{{ old('original_amount', 10) }}">
             </div>
             <div>
-                <label>Fecha de pago</label>
-                <input type="date" name="paid_at" value="{{ old('paid_at', now()->toDateString()) }}">
+                <label for="makeup-paid-at">Fecha de pago</label>
+                <input id="makeup-paid-at" type="date" name="paid_at" value="{{ old('paid_at', now()->toDateString()) }}">
             </div>
             <div class="col-span-full">
-                <label>Referencia</label>
-                <input name="reference" value="{{ old('reference') }}" placeholder="Número de referencia o comprobante">
+                <label for="makeup-reference">Referencia</label>
+                <input id="makeup-reference" name="reference" value="{{ old('reference') }}" placeholder="Número de referencia o comprobante">
             </div>
         </div>
     </fieldset>
 
     <div class="mt-4">
-        <label>Observaciones</label>
-        <textarea name="notes" placeholder="Opcional">{{ old('notes') }}</textarea>
+        <label for="makeup-notes">Observaciones</label>
+        <textarea id="makeup-notes" name="notes" placeholder="Opcional">{{ old('notes') }}</textarea>
     </div>
 
     <div class="form-actions mt-4">

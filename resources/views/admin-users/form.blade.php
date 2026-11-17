@@ -2,28 +2,28 @@
     $isEdit = isset($user) && $user->exists;
 @endphp
 <div>
-    <label>Nombre</label>
-    <input name="name" value="{{ old('name', $user->name ?? '') }}" required>
+    <label for="admin-name">Nombre</label>
+    <input id="admin-name" name="name" value="{{ old('name', $user->name ?? '') }}" required>
 </div>
 <div>
-    <label>Email</label>
-    <input type="email" name="email" value="{{ old('email', $user->email ?? '') }}" required>
+    <label for="admin-email">Email</label>
+    <input id="admin-email" type="email" name="email" value="{{ old('email', $user->email ?? '') }}" required>
 </div>
 <div>
-    <label>Teléfono</label>
-    <input name="phone" value="{{ old('phone', $user->phone ?? '') }}">
+    <label for="admin-phone">Teléfono</label>
+    <input id="admin-phone" name="phone" value="{{ old('phone', $user->phone ?? '') }}">
 </div>
 <div>
-    <label>Estado</label>
-    <select name="status">
+    <label for="admin-status">Estado</label>
+    <select id="admin-status" name="status">
         @foreach(['active' => 'Activo', 'inactive' => 'Inactivo'] as $value => $label)
             <option value="{{ $value }}" @selected(old('status', $user->status ?? 'active') === $value)>{{ $label }}</option>
         @endforeach
     </select>
 </div>
 <div>
-    <label>Alcance de sedes</label>
-    <div class="stack-sm">
+    <label id="admin-scope-label">Alcance de sedes</label>
+    <div class="stack-sm" role="radiogroup" aria-labelledby="admin-scope-label">
         <label class="student-picker-toggle">
             <input type="radio" name="access_mode" value="all" @checked(old('access_mode', $accessMode ?? 'selected') === 'all')>
             <span>Todas las sedes</span>
@@ -35,8 +35,8 @@
     </div>
 </div>
 <div>
-    <label>Sedes asignadas</label>
-    <div class="stack-sm">
+    <label id="admin-campuses-label">Sedes asignadas</label>
+    <div class="stack-sm" role="group" aria-labelledby="admin-campuses-label">
         @foreach($campuses as $campus)
             <label class="student-picker-toggle">
                 <input

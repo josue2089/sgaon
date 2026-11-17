@@ -69,16 +69,16 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Curso</th>
-                    <th>Profesor</th>
-                    <th>Horario</th>
-                    <th>Período</th>
-                    <th>Inicio</th>
-                    <th>Fin</th>
-                    <th>Estudiantes</th>
-                    <th>Sesiones</th>
-                    <th>Estado</th>
-                    <th></th>
+                    <th scope="col">Curso</th>
+                    <th scope="col">Profesor</th>
+                    <th scope="col">Horario</th>
+                    <th scope="col">Período</th>
+                    <th scope="col">Inicio</th>
+                    <th scope="col">Fin</th>
+                    <th scope="col">Estudiantes</th>
+                    <th scope="col">Sesiones</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -106,15 +106,13 @@
                             <a href="{{ route('courses.show', $course) }}">Detalle</a>
                             <a href="{{ route('courses.edit', $course) }}">Editar</a>
                             @if(auth()->user()?->isMasterAdmin())
-                                <button
-                                    type="button"
-                                    class="btn-link-danger"
-                                    data-course-delete-open
-                                    data-course-name="{{ $course->name }}"
-                                    data-delete-url="{{ route('courses.destroy', $course) }}"
-                                >
-                                    Eliminar
-                                </button>
+                                <form method="POST" action="{{ route('courses.destroy', $course) }}" class="inline-form"
+                                      data-confirm-title="Eliminar curso" data-confirm-ok="Eliminar permanentemente" data-confirm-danger
+                                      data-confirm="Vas a eliminar permanentemente el curso {{ $course->name }} con su grupo, sesiones, asistencia, inscripciones y evaluaciones. Los alumnos no se eliminan, solo su vínculo con este curso. Esta acción no se puede deshacer.">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-link-danger">Eliminar</button>
+                                </form>
                             @endif
                         </td>
                     </tr>
@@ -129,84 +127,4 @@
     <div class="card">{{ $courses->links() }}</div>
 @endif
 
-@if(auth()->user()?->isMasterAdmin())
-    <div class="student-picker-modal confirm-modal" data-course-delete-modal hidden>
-        <div class="student-picker-backdrop" data-course-delete-close></div>
-        <div class="student-picker-dialog confirm-modal-dialog card">
-            <div class="student-picker-head">
-                <div>
-                    <h3 class="section-title">Eliminar curso</h3>
-                    <p class="page-subtitle">Esta acción no se puede deshacer.</p>
-                </div>
-                <button class="btn secondary" type="button" data-course-delete-close>Cerrar</button>
-            </div>
-            <div class="confirm-modal-body">
-                <p>
-                    Vas a eliminar permanentemente el curso <strong data-course-delete-name>este curso</strong>.
-                </p>
-                <p>
-                    Se borrará toda la información relacionada: grupo operativo, sesiones, asistencia,
-                    inscripciones de ese curso, evaluaciones y demás registros vinculados.
-                </p>
-                <p>
-                    Los alumnos <strong>no</strong> se eliminan del sistema; solo se quita su vínculo con este curso.
-                </p>
-            </div>
-            <form method="POST" action="#" data-course-delete-form>
-                @csrf
-                @method('DELETE')
-                <div class="form-actions">
-                    <button class="btn secondary" type="button" data-course-delete-close>Cancelar</button>
-                    <button class="btn btn-danger" type="submit">Eliminar permanentemente</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        (() => {
-            const modal = document.querySelector('[data-course-delete-modal]');
-            const form = document.querySelector('[data-course-delete-form]');
-            const nameNode = document.querySelector('[data-course-delete-name]');
-            const openButtons = Array.from(document.querySelectorAll('[data-course-delete-open]'));
-            const closeButtons = Array.from(document.querySelectorAll('[data-course-delete-close]'));
-
-            if (!modal || !form || !nameNode || openButtons.length === 0) {
-                return;
-            }
-
-            const openModal = (button) => {
-                form.action = button.dataset.deleteUrl || '#';
-                nameNode.textContent = button.dataset.courseName || 'este curso';
-                modal.hidden = false;
-                document.body.style.overflow = 'hidden';
-            };
-
-            const closeModal = () => {
-                modal.hidden = true;
-                document.body.style.overflow = '';
-            };
-
-            openButtons.forEach((button) => {
-                button.addEventListener('click', () => openModal(button));
-            });
-
-            closeButtons.forEach((button) => {
-                button.addEventListener('click', closeModal);
-            });
-
-            modal.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    closeModal();
-                }
-            });
-
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && !modal.hidden) {
-                    closeModal();
-                }
-            });
-        })();
-    </script>
-@endif
 @endsection

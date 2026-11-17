@@ -74,12 +74,12 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Clase</th>
-                    <th>Unidad</th>
-                    <th>Tipo</th>
-                    <th>Contenido</th>
-                    <th>Orden</th>
-                    <th></th>
+                    <th scope="col">Clase</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Contenido</th>
+                    <th scope="col">Orden</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

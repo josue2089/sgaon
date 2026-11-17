@@ -1,36 +1,36 @@
 <div class="grid-2">
     <div>
-        <label>Nombre</label>
-        <input name="name" value="{{ old('name', $level->name ?? '') }}" required>
+        <label for="level-name">Nombre</label>
+        <input id="level-name" name="name" value="{{ old('name', $level->name ?? '') }}" required>
     </div>
     <div>
-        <label>Código</label>
-        <input name="code" value="{{ old('code', $level->code ?? '') }}" required>
+        <label for="level-code">Código</label>
+        <input id="level-code" name="code" value="{{ old('code', $level->code ?? '') }}" required>
     </div>
     <div>
-        <label>Orden dentro del programa</label>
-        <input type="number" name="sort_order" min="1" max="99" value="{{ old('sort_order', $level->sort_order ?? 1) }}" required>
+        <label for="level-sort-order">Orden dentro del programa</label>
+        <input id="level-sort-order" type="number" name="sort_order" min="1" max="99" value="{{ old('sort_order', $level->sort_order ?? 1) }}" required>
     </div>
     <div>
-        <label>Total del programa</label>
-        <input type="number" name="program_total" min="1" max="99" value="{{ old('program_total', $level->program_total ?? 1) }}" required>
+        <label for="level-program-total">Total del programa</label>
+        <input id="level-program-total" type="number" name="program_total" min="1" max="99" value="{{ old('program_total', $level->program_total ?? 1) }}" required>
     </div>
     <div>
-        <label>Horas académicas</label>
-        <input type="number" name="academic_hours" min="1" max="500" value="{{ old('academic_hours', $level->academic_hours ?? 40) }}" required>
+        <label for="level-academic-hours">Horas académicas</label>
+        <input id="level-academic-hours" type="number" name="academic_hours" min="1" max="500" value="{{ old('academic_hours', $level->academic_hours ?? 40) }}" required>
     </div>
     <div>
-        <label>Precio base (EUR)</label>
-        <input type="number" name="base_price_eur" min="0" step="0.01" value="{{ old('base_price_eur', $level->base_price_eur ?? '') }}" placeholder="Ej. 240.00">
+        <label for="level-base-price-eur">Precio base (EUR)</label>
+        <input id="level-base-price-eur" type="number" name="base_price_eur" min="0" step="0.01" value="{{ old('base_price_eur', $level->base_price_eur ?? '') }}" placeholder="Ej. 240.00">
         <p class="entity-sub">Opcional. Si se deja vacío, se usa el precio por defecto del programa.</p>
     </div>
     <div>
-        <label>Días antes para recordatorio</label>
-        <input type="number" name="reminder_days_before" min="0" max="90" value="{{ old('reminder_days_before', $level->reminder_days_before ?? 5) }}" required>
+        <label for="level-reminder-days-before">Días antes para recordatorio</label>
+        <input id="level-reminder-days-before" type="number" name="reminder_days_before" min="0" max="90" value="{{ old('reminder_days_before', $level->reminder_days_before ?? 5) }}" required>
     </div>
     <div>
-        <label>Estado</label>
-        <select name="status" required>
+        <label for="level-status">Estado</label>
+        <select id="level-status" name="status" required>
             @foreach(['active','inactive'] as $status)
                 <option value="{{ $status }}" @selected(old('status', $level->status ?? 'active') === $status)>{{ \App\Support\StatusLabel::label($status) }}</option>
             @endforeach
@@ -85,7 +85,7 @@
         <p class="entity-sub">Solo si continúa en otro programa (por ejemplo, Primary 6B → HS1A).</p>
     </div>
     <div class="col-span-full">
-        <label>Descripción</label>
-        <textarea name="description">{{ old('description', $level->description ?? '') }}</textarea>
+        <label for="level-description">Descripción</label>
+        <textarea id="level-description" name="description">{{ old('description', $level->description ?? '') }}</textarea>
     </div>
 </div>

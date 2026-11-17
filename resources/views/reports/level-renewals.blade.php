@@ -38,13 +38,13 @@
         <table class="data-table">
             <thead>
             <tr>
-                <th>Alumno</th>
-                <th>Mensaje</th>
-                <th>Fecha alerta</th>
-                <th>Email</th>
-                <th>Enviado</th>
-                <th>Estado</th>
-                <th></th>
+                <th scope="col">Alumno</th>
+                <th scope="col">Mensaje</th>
+                <th scope="col">Fecha alerta</th>
+                <th scope="col">Email</th>
+                <th scope="col">Enviado</th>
+                <th scope="col">Estado</th>
+                <th scope="col"><span class="sr-only">Acciones</span></th>
             </tr>
             </thead>
             <tbody>
