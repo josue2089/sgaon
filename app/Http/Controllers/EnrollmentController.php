@@ -79,6 +79,9 @@ class EnrollmentController extends Controller
             $this->applyCampusScope($groups, 'campus_id');
         }
 
+        // #452: solo el alumno preseleccionado; el resto se busca al escribir (students.search).
+        $students->whereKey((int) old('student_id', request('student_id', 0)));
+
         return view('enrollments.create', [
             'students' => $students->get(),
             'groups' => $groups->get(),

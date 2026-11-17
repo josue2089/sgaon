@@ -62,7 +62,7 @@ function initSearchableSelect(container) {
         }
     };
 
-    Array.from(select.options).forEach((option, index) => {
+    const addItem = (option, index) => {
         const item = document.createElement(select.multiple ? 'label' : 'button');
         item.type = select.multiple ? undefined : 'button';
         item.className = 'searchable-select__option';
@@ -105,7 +105,58 @@ function initSearchableSelect(container) {
 
         optionsRoot.appendChild(item);
         items.push({ option, item, index });
-    });
+    };
+
+    const buildItems = () => {
+        items.length = 0;
+        optionsRoot.replaceChildren();
+        Array.from(select.options).forEach((option, index) => addItem(option, index));
+    };
+
+    buildItems();
+
+    // #452: modo remoto. El <select> trae solo los alumnos ya elegidos; al escribir se piden
+    // coincidencias a data-remote-url (students.search) y se agregan como opciones.
+    const remoteUrl = container.dataset.remoteUrl;
+    let remoteTimer = null;
+    let remoteSeq = 0;
+    const remoteSearch = (term) => {
+        clearTimeout(remoteTimer);
+        if (!remoteUrl || term.trim().length < 2) {
+            return;
+        }
+        remoteTimer = setTimeout(async () => {
+            const seq = ++remoteSeq;
+            try {
+                const response = await fetch(`${remoteUrl}?q=${encodeURIComponent(term.trim())}`, { headers: { Accept: 'application/json' } });
+                const data = await response.json();
+                if (seq !== remoteSeq) {
+                    return;
+                }
+                Array.from(select.options).forEach((option) => {
+                    if (!option.selected && option.value !== '') {
+                        option.remove();
+                    }
+                });
+                const present = new Set(Array.from(select.options).map((option) => option.value));
+                (data.results || []).forEach((result) => {
+                    if (present.has(String(result.id))) {
+                        return;
+                    }
+                    const option = new Option(result.detail ? `${result.name} · ${result.detail}` : result.name, result.id);
+                    option.dataset.search = term.trim().toLowerCase();
+                    select.add(option);
+                });
+                buildItems();
+                updateSelectedState();
+                if (isCombo) {
+                    openCombo();
+                }
+            } catch {
+                // Sin red: queda lo que ya había.
+            }
+        }, 250);
+    };
 
     const filter = ({ studentId = '', term = '' } = {}) => {
         const normalizedTerm = (term || (isCombo ? '' : search?.value) || '').trim().toLowerCase();
@@ -144,6 +195,11 @@ function initSearchableSelect(container) {
 
         search.addEventListener('input', () => {
             openCombo();
+            if (remoteUrl) {
+                remoteSearch(search.value);
+
+                return;
+            }
             filter({ term: search.value });
         });
 
@@ -156,7 +212,7 @@ function initSearchableSelect(container) {
         select.addEventListener('change', syncComboSearchLabel);
         syncComboSearchLabel();
     } else {
-        search?.addEventListener('input', () => filter());
+        search?.addEventListener('input', () => (remoteUrl ? remoteSearch(search.value) : filter()));
     }
 
     updateSelectedState();
