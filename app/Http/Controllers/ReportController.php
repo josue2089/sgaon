@@ -19,6 +19,8 @@ use App\Models\ReportPreset;
 use App\Models\Student;
 use App\Models\SystemSetting;
 use App\Models\Teacher;
+use App\Models\User;
+use App\Support\AuditLabel;
 use App\Support\CampusScope;
 use App\Support\CsvExport;
 use App\Support\DateFormat;
@@ -161,15 +163,47 @@ class ReportController extends Controller
         ]);
     }
 
-    public function audit(): View
+    /** Auditoría legible y filtrable (#451): usuario, acción, entidad, fechas y sede de quien actuó. */
+    public function audit(Request $request): View
     {
-        $query = AuditLog::with('user')->latest();
+        $filters = $request->validate([
+            'user_id' => ['nullable', 'integer'],
+            'action' => ['nullable', 'string', 'max:80'],
+            'entity' => ['nullable', 'string', 'max:60'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after_or_equal:from'],
+            'campus_id' => ['nullable', 'integer'],
+        ]);
+
+        $query = AuditLog::with('user')->latest()->latest('id');
         if ($this->campusScoped()) {
             $query->whereHas('user', fn ($q) => $this->applyCampusScope($q));
         }
+        $query
+            ->when($filters['user_id'] ?? null, fn ($q, $userId) => $q->where('user_id', (int) $userId))
+            ->when($filters['action'] ?? null, fn ($q, $action) => str_ends_with($action, '.*')
+                ? $q->where('action', 'like', substr($action, 0, -1).'%')
+                : $q->where('action', $action))
+            ->when($filters['entity'] ?? null, fn ($q, $entity) => $q->where('auditable_type', 'App\\Models\\'.preg_replace('/[^A-Za-z]/', '', $entity)))
+            ->when($filters['from'] ?? null, fn ($q, $from) => $q->whereDate('created_at', '>=', $from))
+            ->when($filters['to'] ?? null, fn ($q, $to) => $q->whereDate('created_at', '<=', $to))
+            ->when(($filters['campus_id'] ?? null) && $this->canAccessCampus((int) $filters['campus_id']), fn ($q) => $q->whereHas('user', fn ($user) => $user
+                ->where('campus_id', (int) $filters['campus_id'])
+                ->orWhereHas('campuses', fn ($campus) => $campus->whereKey((int) $filters['campus_id']))));
+
+        $users = User::query()
+            ->whereIn('id', AuditLog::query()->select('user_id')->whereNotNull('user_id')->distinct())
+            ->when($this->campusScoped(), fn ($q) => $this->applyCampusScope($q))
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
 
         return view('reports.audit', [
             'logs' => $query->paginate(50)->withQueryString(),
+            'filters' => $filters,
+            'users' => $users,
+            'actionGroups' => collect(AuditLabel::ACTIONS)->groupBy(fn ($label, $code) => explode('.', $code)[0], true),
+            'entities' => AuditLabel::ENTITIES,
+            'campuses' => Campus::query()->tap(fn ($q) => $this->applyCampusScope($q, 'id'))->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

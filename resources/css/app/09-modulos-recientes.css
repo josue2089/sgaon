@@ -171,3 +171,42 @@
 .fi-check input {
     width: auto;
 }
+
+/* #451: auditoría legible */
+.audit-changes {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.85rem;
+}
+
+.audit-changes-field {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.audit-changes-from {
+    text-decoration: line-through;
+    color: var(--muted);
+}
+
+.audit-timeline {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.6rem;
+}
+
+.audit-timeline-item {
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+}
+
+.audit-timeline-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+}
