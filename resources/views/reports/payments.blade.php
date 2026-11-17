@@ -35,8 +35,8 @@
         <p class="entity-sub">El rango filtra los cargos por fecha de vencimiento y los pagos por fecha de pago.</p>
         <div class="grid-2">
             <div>
-                <label>Estado</label>
-                <select name="status">
+                <label for="rpay-status">Estado</label>
+                <select id="rpay-status" name="status">
                     <option value="">Todos</option>
                     <option value="pending" @selected(request('status') === 'pending')>{{ \App\Support\StatusLabel::label('pending') }}</option>
                     <option value="partial" @selected(request('status') === 'partial')>{{ \App\Support\StatusLabel::label('partial') }}</option>
@@ -45,8 +45,8 @@
                 </select>
             </div>
             <div>
-                <label>Período</label>
-                <select name="period_id">
+                <label for="rpay-period-id">Período</label>
+                <select id="rpay-period-id" name="period_id">
                     <option value="">Todos</option>
                     @foreach(($periods ?? collect()) as $period)
                         <option value="{{ $period->id }}" @selected((string) request('period_id') === (string) $period->id)>{{ $period->code }}</option>
@@ -54,8 +54,8 @@
                 </select>
             </div>
             <div>
-                <label>Tipo de cargo</label>
-                <select name="charge_type">
+                <label for="rpay-charge-type">Tipo de cargo</label>
+                <select id="rpay-charge-type" name="charge_type">
                     <option value="">Todos</option>
                     <option value="tuition" @selected(request('charge_type') === 'tuition')>Mensualidad</option>
                     <option value="materials" @selected(request('charge_type') === 'materials')>Materiales</option>
@@ -89,7 +89,7 @@
             @csrf
             <input type="hidden" name="route_name" value="reports.payments">
             <input class="max-w-[220px]" type="text" name="name" placeholder="Nombre del preset">
-            <button class="btn secondary" type="submit">Guardar preset</button>
+            <button class="btn secondary" type="submit">Guardar filtro</button>
         </form>
     </div>
     @if(($presets ?? collect())->count() > 0)
@@ -123,7 +123,7 @@
 
 <div class="card">
     <table>
-        <thead><tr><th>Alumno</th><th>Curso</th><th>Grupo</th><th>Período</th><th>Tipo</th><th>Concepto</th><th>Monto</th><th>Estado</th><th>Pagado</th><th>Saldo</th></tr></thead>
+        <thead><tr><th scope="col">Alumno</th><th scope="col">Curso</th><th scope="col">Grupo</th><th scope="col">Período</th><th scope="col">Tipo</th><th scope="col">Concepto</th><th scope="col">Monto</th><th scope="col">Estado</th><th scope="col">Pagado</th><th scope="col">Saldo</th></tr></thead>
         <tbody>
         @forelse($charges as $charge)
             @php
@@ -179,13 +179,13 @@
     <table>
         <thead>
         <tr>
-            <th>Alumno</th>
-            <th>Fecha</th>
-            <th>Moneda</th>
-            <th>Monto original</th>
-            <th>Tasa</th>
-            <th>USD aplicado</th>
-            <th>Método</th>
+            <th scope="col">Alumno</th>
+            <th scope="col">Fecha</th>
+            <th scope="col">Moneda</th>
+            <th scope="col">Monto original</th>
+            <th scope="col">Tasa</th>
+            <th scope="col">USD aplicado</th>
+            <th scope="col">Método</th>
         </tr>
         </thead>
         <tbody>

@@ -34,11 +34,11 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Días</th>
-                    <th>Horario</th>
-                    <th>Campus</th>
-                    <th>Estado</th>
-                    <th></th>
+                    <th scope="col">Días</th>
+                    <th scope="col">Horario</th>
+                    <th scope="col">Campus</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

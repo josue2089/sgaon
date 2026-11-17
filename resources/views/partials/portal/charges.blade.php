@@ -34,7 +34,7 @@
                 </div>
                 <div class="charge-pending-actions">
                     @if($canSubmitProof)
-                        <button type="button" class="btn secondary" onclick="document.getElementById('{{ $dialogId }}').showModal()">Enviar comprobante</button>
+                        <button type="button" class="btn secondary" data-modal-open="{{ $dialogId }}">Enviar comprobante</button>
                     @else
                         @include('partials.portal.charge-payment-state')
                     @endif
@@ -44,7 +44,7 @@
             <dialog id="{{ $dialogId }}" class="charge-pay-dialog">
                 <div class="charge-pay-dialog-head">
                     <h4 class="charge-pay-dialog-title">Enviar comprobante</h4>
-                    <button type="button" class="charge-pay-dialog-close" onclick="document.getElementById('{{ $dialogId }}').close()" aria-label="Cerrar">&times;</button>
+                    <button type="button" class="charge-pay-dialog-close" data-modal-close aria-label="Cerrar">&times;</button>
                 </div>
                 <p class="charge-pay-dialog-summary">{{ $charge->concept }} · <strong>{{ \App\Support\MoneyFormat::formatLedgerAmount($chargeBalance, $charge->currencyCode()) }}</strong> pendiente</p>
                 <form method="POST" action="{{ $paymentRoute($charge) }}" enctype="multipart/form-data" class="stack-xs charge-pay-form" data-guard-submit>
@@ -70,7 +70,7 @@
                         <input id="{{ $dialogId }}-notes" name="notes" placeholder="Opcional">
                     </div>
                     <div class="charge-pay-dialog-footer">
-                        <button type="button" class="btn secondary" onclick="document.getElementById('{{ $dialogId }}').close()">Cancelar</button>
+                        <button type="button" class="btn secondary" data-modal-close>Cancelar</button>
                         <button class="btn" type="submit">Enviar comprobante</button>
                     </div>
                 </form>
@@ -111,7 +111,7 @@
 <div class="grid-2">
     <div class="card table-card">
         <h4 class="section-title section-title-sm">Cargos</h4>
-        <div class="table-wrap"><table class="data-table"><thead><tr><th>Concepto</th><th>Monto</th><th>Estado</th></tr></thead><tbody>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Concepto</th><th scope="col">Monto</th><th scope="col">Estado</th></tr></thead><tbody>
         @forelse($charges as $charge)
             <tr><td>{{ $charge->concept }}</td><td>{{ \App\Support\MoneyFormat::chargeAmount($charge, $charge->isEur() ? ($bcvEurRate['rate'] ?? 0) : ($bcvRate['rate'] ?? 0)) }}</td><td>@include('partials.ui.status', ['status' => $charge->status])</td></tr>
         @empty
@@ -121,7 +121,7 @@
     </div>
     <div class="card table-card">
         <h4 class="section-title section-title-sm">Pagos y recibos</h4>
-        <div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Monto</th><th>Método</th><th>Recibo</th></tr></thead><tbody>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Fecha</th><th scope="col">Monto</th><th scope="col">Método</th><th scope="col">Recibo</th></tr></thead><tbody>
         @forelse($payments as $payment)
             <tr>
                 <td>{{ \App\Support\DateFormat::date($payment->paid_at) }}</td>

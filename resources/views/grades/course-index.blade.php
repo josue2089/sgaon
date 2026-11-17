@@ -9,7 +9,7 @@
         @if(auth()->user()?->role === 'admin')
             <a class="btn secondary" href="{{ route('courses.show', $course) }}">Volver al curso</a>
         @else
-            <a class="btn secondary" href="{{ route('dashboard') }}">Dashboard</a>
+            <a class="btn secondary" href="{{ route('dashboard') }}">Inicio</a>
         @endif
         @if($course->program?->is_extracurricular)
             <a class="btn secondary" href="{{ route('courses.observations.edit', $course) }}">Observaciones del docente</a>

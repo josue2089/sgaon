@@ -76,9 +76,9 @@
                     <table class="teacher-calendar-table teacher-calendar-table--master teacher-calendar-table--day">
                         <thead>
                         <tr>
-                            <th>Hora</th>
+                            <th scope="col">Hora</th>
                             @foreach($teachers as $teacher)
-                                <th>{{ $teacher->full_name }}</th>
+                                <th scope="col">{{ $teacher->full_name }}</th>
                             @endforeach
                         </tr>
                         </thead>
@@ -129,9 +129,9 @@
                         <table class="teacher-calendar-table teacher-calendar-table--master">
                             <thead>
                             <tr>
-                                <th>Hora</th>
+                                <th scope="col">Hora</th>
                                 @foreach($teachers as $teacher)
-                                    <th>{{ $teacher->full_name }}</th>
+                                    <th scope="col">{{ $teacher->full_name }}</th>
                                 @endforeach
                             </tr>
                             </thead>

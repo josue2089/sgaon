@@ -1,15 +1,15 @@
 <div class="grid-2">
     <div>
-        <label>Campus</label>
-        <select name="campus_id" required>
+        <label for="course-campus-id">Campus</label>
+        <select id="course-campus-id" name="campus_id" required>
             @foreach($campuses as $campus)
                 <option value="{{ $campus->id }}" @selected(old('campus_id',$course->campus_id ?? '') == $campus->id)>{{ $campus->name }}</option>
             @endforeach
         </select>
     </div>
     <div>
-        <label>Programa</label>
-        <select name="program_id" data-program-select required>
+        <label for="course-program-id">Programa</label>
+        <select id="course-program-id" name="program_id" data-program-select required>
             <option value="">Seleccione</option>
             @foreach($programs as $program)
                 <option value="{{ $program->id }}" data-extracurricular="{{ $program->is_extracurricular ? 1 : 0 }}" @selected(old('program_id',$course->program_id ?? '') == $program->id)>{{ $program->name }}{{ $program->is_extracurricular ? ' (extracurricular)' : '' }}</option>
@@ -17,8 +17,8 @@
         </select>
     </div>
     <div>
-        <label>Nivel del programa</label>
-        <select name="program_level_id" data-program-level-select required disabled>
+        <label for="course-program-level-id">Nivel del programa</label>
+        <select id="course-program-level-id" name="program_level_id" data-program-level-select required disabled>
             <option value="">Seleccione</option>
             @foreach($programLevels as $programLevel)
                 <option
@@ -37,17 +37,17 @@
         @endif
     </div>
     <div>
-        <label>Nombre estructurado</label>
-        <input name="name" data-course-name-input value="{{ old('name',$course->display_name ?? $course->name ?? '') }}" readonly>
+        <label for="course-name">Nombre estructurado</label>
+        <input id="course-name" name="name" data-course-name-input value="{{ old('name',$course->display_name ?? $course->name ?? '') }}" readonly>
         <div class="form-hint">Se genera automáticamente con nivel, horario y profesor.</div>
     </div>
     <div>
-        <label>Código</label>
-        <input name="code" value="{{ old('code',$course->code ?? '') }}" placeholder="Ej. B2-MAR-2026">
+        <label for="course-code">Código</label>
+        <input id="course-code" name="code" value="{{ old('code',$course->code ?? '') }}" placeholder="Ej. B2-MAR-2026">
     </div>
     <div>
-        <label>Profesor asignado</label>
-        <select name="teacher_id" data-course-teacher-select required>
+        <label for="course-teacher-id">Profesor asignado</label>
+        <select id="course-teacher-id" name="teacher_id" data-course-teacher-select required>
             <option value="">Seleccione</option>
             @foreach($teachers as $teacher)
                 <option value="{{ $teacher->id }}" data-teacher-last-name="{{ $teacher->last_name ?: $teacher->full_name }}" @selected((string) old('teacher_id',$course->teacher_id ?? '') === (string) $teacher->id)>{{ $teacher->full_name }}</option>
@@ -55,8 +55,8 @@
         </select>
     </div>
     <div>
-        <label>Período</label>
-        <select name="period_id" required>
+        <label for="course-period-id">Período</label>
+        <select id="course-period-id" name="period_id" required>
             <option value="">Seleccione</option>
             @foreach($periods as $period)
                 <option value="{{ $period->id }}" @selected((string) old('period_id',$course->period_id ?? '') === (string) $period->id)>{{ $period->code }}</option>
@@ -64,8 +64,8 @@
         </select>
     </div>
     <div>
-        <label>Horario asignado</label>
-        <select name="schedule_template_id" data-course-schedule-select required>
+        <label for="course-schedule-template-id">Horario asignado</label>
+        <select id="course-schedule-template-id" name="schedule_template_id" data-course-schedule-select required>
             <option value="">Seleccione</option>
             @foreach($schedules as $schedule)
                 <option value="{{ $schedule->id }}" data-schedule-compact-label="{{ $schedule->compact_label }}" @selected((string) old('schedule_template_id',$course->schedule_template_id ?? '') === (string) $schedule->id)>{{ $schedule->display_label }}</option>
@@ -73,18 +73,18 @@
         </select>
     </div>
     <div>
-        <label>Fecha de inicio</label>
-        <input type="date" name="start_date" value="{{ old('start_date',isset($course->start_date) ? $course->start_date?->format('Y-m-d') : '') }}" required>
+        <label for="course-start-date">Fecha de inicio</label>
+        <input id="course-start-date" type="date" name="start_date" value="{{ old('start_date',isset($course->start_date) ? $course->start_date?->format('Y-m-d') : '') }}" required>
     </div>
     @php($courseIsExtracurricular = (bool) optional($programs->firstWhere('id', (int) old('program_id', $course->program_id ?? 0)))->is_extracurricular)
     <div data-course-hours-field @if($courseIsExtracurricular) hidden @endif>
-        <label>Duración del curso</label>
-        <input type="number" name="academic_hours" data-academic-hours-input min="1" max="500" value="{{ old('academic_hours',$course->academic_hours ?? '') }}" placeholder="Ej. 40" @disabled($courseIsExtracurricular) @required(! $courseIsExtracurricular)>
+        <label for="course-academic-hours">Duración del curso</label>
+        <input id="course-academic-hours" type="number" name="academic_hours" data-academic-hours-input min="1" max="500" value="{{ old('academic_hours',$course->academic_hours ?? '') }}" placeholder="Ej. 40" @disabled($courseIsExtracurricular) @required(! $courseIsExtracurricular)>
         <div class="form-hint">Se calcula con hora académica de 45 minutos.</div>
     </div>
     <div data-course-end-date-field @if(! $courseIsExtracurricular) hidden @endif>
-        <label>Fecha de fin (fin del año escolar)</label>
-        <input type="date" name="end_date" value="{{ old('end_date', isset($course->end_date) && $courseIsExtracurricular ? $course->end_date?->format('Y-m-d') : '') }}" @disabled(! $courseIsExtracurricular) @required($courseIsExtracurricular)>
+        <label for="course-end-date">Fecha de fin (fin del año escolar)</label>
+        <input id="course-end-date" type="date" name="end_date" value="{{ old('end_date', isset($course->end_date) && $courseIsExtracurricular ? $course->end_date?->format('Y-m-d') : '') }}" @disabled(! $courseIsExtracurricular) @required($courseIsExtracurricular)>
         <div class="form-hint">Curso extracurricular: se generan todas las clases del horario hasta esta fecha, sin límite.</div>
     </div>
     <script>
@@ -109,16 +109,16 @@
         });
     </script>
     <div>
-        <label>Estado</label>
-        <select name="status" required>
+        <label for="course-status">Estado</label>
+        <select id="course-status" name="status" required>
             @foreach(['active','inactive'] as $status)
                 <option value="{{ $status }}" @selected(old('status',$course->status ?? 'active') === $status)>{{ \App\Support\StatusLabel::label($status) }}</option>
             @endforeach
         </select>
     </div>
     <div class="col-span-full">
-        <label>Descripción</label>
-        <textarea name="description" placeholder="Descripción breve del curso">{{ old('description',$course->description ?? '') }}</textarea>
+        <label for="course-description">Descripción</label>
+        <textarea id="course-description" name="description" placeholder="Descripción breve del curso">{{ old('description',$course->description ?? '') }}</textarea>
     </div>
     <div class="col-span-full">
         @include('partials.ui.student-select', ['students' => $students, 'name' => 'student_ids[]', 'id' => 'course-initial-students', 'fieldLabel' => 'Estudiantes iniciales', 'multiple' => true, 'remote' => true, 'selected' => old('student_ids', $selectedStudentIds ?? [])])

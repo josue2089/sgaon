@@ -21,7 +21,7 @@
     @endif
     @unless($lockStudent)
         <div class="searchable-select searchable-select--combo" data-searchable-select data-searchable-combo>
-            <label>Alumno</label>
+            <label for="{{ $formId }}-student-search">Alumno</label>
             <input type="text" id="{{ $formId }}-student-search" class="searchable-select__search" placeholder="Buscar alumno por nombre, cédula o representante..." autocomplete="off">
             <select name="student_id" id="{{ $formId }}-student-select" class="searchable-select__list">
                 <option value="" data-search="">Derivar por inscripción</option>
@@ -36,7 +36,7 @@
         </div>
     @endunless
     <div class="searchable-select" data-searchable-select>
-        <label>Inscripción / curso</label>
+        <label for="{{ $formId }}-enrollment-search">Inscripción / curso</label>
         <input type="text" id="{{ $formId }}-enrollment-search" class="searchable-select__search" placeholder="Buscar inscripción por alumno, cédula, representante, curso o grupo">
         <select name="enrollment_id" id="{{ $formId }}-enrollment-select" class="searchable-select__list">
             <option value="">Sin vínculo académico</option>
@@ -51,12 +51,12 @@
         </select>
     </div>
     <div>
-        <label>Concepto</label>
-        <input name="concept" value="{{ old('concept') }}" required>
+        <label for="{{ $formId }}-concept">Concepto</label>
+        <input id="{{ $formId }}-concept" name="concept" value="{{ old('concept') }}" required>
     </div>
     <div>
-        <label>Tipo de cargo</label>
-        <select name="charge_type">
+        <label for="{{ $formId }}-charge-type">Tipo de cargo</label>
+        <select id="{{ $formId }}-charge-type" name="charge_type">
             <option value="">Sin clasificar</option>
             @foreach(['tuition' => 'Mensualidad', 'materials' => 'Materiales', 'registration' => 'Inscripción', 'makeup' => 'Recuperación', 'other' => 'Otro'] as $value => $label)
                 <option value="{{ $value }}" @selected(old('charge_type') === $value)>{{ $label }}</option>
@@ -64,27 +64,27 @@
         </select>
     </div>
     <div>
-        <label>Periodo de cobro</label>
-        <input name="billing_period_label" value="{{ old('billing_period_label') }}" placeholder="Ej. 2026-Q2">
+        <label for="{{ $formId }}-billing-period-label">Periodo de cobro</label>
+        <input id="{{ $formId }}-billing-period-label" name="billing_period_label" value="{{ old('billing_period_label') }}" placeholder="Ej. 2026-Q2">
     </div>
     <div>
-        <label>Monto</label>
-        <input type="number" step="0.01" min="0" name="amount" value="{{ old('amount') }}" required>
+        <label for="{{ $formId }}-amount">Monto</label>
+        <input id="{{ $formId }}-amount" type="number" step="0.01" min="0" name="amount" value="{{ old('amount') }}" required>
     </div>
     <div>
-        <label>Moneda</label>
-        <select name="currency">
+        <label for="{{ $formId }}-currency">Moneda</label>
+        <select id="{{ $formId }}-currency" name="currency">
             <option value="USD" @selected(old('currency', 'USD') === 'USD')>USD</option>
             <option value="EUR" @selected(old('currency') === 'EUR')>EUR</option>
         </select>
     </div>
     <div>
-        <label>Vencimiento</label>
-        <input type="date" name="due_date" value="{{ old('due_date') }}">
+        <label for="{{ $formId }}-due-date">Vencimiento</label>
+        <input id="{{ $formId }}-due-date" type="date" name="due_date" value="{{ old('due_date') }}">
     </div>
     <div>
-        <label>Estado</label>
-        <select name="status">
+        <label for="{{ $formId }}-status">Estado</label>
+        <select id="{{ $formId }}-status" name="status">
             @foreach(['pending','partial','overdue'] as $status)
                 <option value="{{ $status }}" @selected(old('status', 'pending') === $status)>{{ \App\Support\StatusLabel::label($status) }}</option>
             @endforeach

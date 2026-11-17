@@ -158,7 +158,8 @@ label:has(+ :is(input, select, textarea)[required])::after {
     color: var(--danger);
 }
 
-label:has(+ :is(input, select, textarea)[required])::after {
+/* #453: si la etiqueta ya trae la marca (x-form.field required), no se duplica. */
+label:not(:has(.field-required)):has(+ :is(input, select, textarea)[required])::after {
     content: ' *';
 }
 

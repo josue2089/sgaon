@@ -34,24 +34,24 @@
 
 <form class="fi-filter-bar card" method="GET" action="{{ route('finance.summary') }}">
     <div>
-        <label>Desde</label>
-        <input type="date" name="start_date" value="{{ $filters['start_date'] }}">
+        <label for="summary-start-date">Desde</label>
+        <input id="summary-start-date" type="date" name="start_date" value="{{ $filters['start_date'] }}">
     </div>
     <div>
-        <label>Hasta</label>
-        <input type="date" name="end_date" value="{{ $filters['end_date'] }}">
+        <label for="summary-end-date">Hasta</label>
+        <input id="summary-end-date" type="date" name="end_date" value="{{ $filters['end_date'] }}">
     </div>
     <div>
-        <label>Moneda</label>
-        <select name="currency">
+        <label for="summary-currency">Moneda</label>
+        <select id="summary-currency" name="currency">
             <option value="EUR" @selected($filters['currency'] === 'EUR')>EUR</option>
             <option value="USD" @selected($filters['currency'] === 'USD')>USD</option>
         </select>
     </div>
     @if(!empty($showCampusFilter))
         <div>
-            <label>Sede</label>
-            <select name="campus_id">
+            <label for="summary-campus-id">Sede</label>
+            <select id="summary-campus-id" name="campus_id">
                 <option value="">Todas las sedes</option>
                 @foreach($campuses as $campus)
                     <option value="{{ $campus->id }}" @selected($filters['campus_id'] === (string) $campus->id)>{{ $campus->name }}</option>
@@ -84,10 +84,10 @@
     <table>
         <thead>
         <tr>
-            <th>Reporte</th>
-            <th>CSV</th>
-            <th>Excel</th>
-            <th>PDF</th>
+            <th scope="col">Reporte</th>
+            <th scope="col">CSV</th>
+            <th scope="col">Excel</th>
+            <th scope="col">PDF</th>
         </tr>
         </thead>
         <tbody>
@@ -117,7 +117,7 @@
     <h3 class="section-title section-title-sm">Proyección de cobros por fecha de vencimiento</h3>
     <table>
         <thead>
-        <tr><th>Período</th><th>Saldo pendiente</th><th>Equivalente Bs</th></tr>
+        <tr><th scope="col">Período</th><th scope="col">Saldo pendiente</th><th scope="col">Equivalente Bs</th></tr>
         </thead>
         <tbody>
         @forelse($summary['projection'] as $row)

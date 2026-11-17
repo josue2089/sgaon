@@ -47,13 +47,13 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Profesor</th>
-                    <th>Contacto</th>
-                    <th>Campus</th>
-                    <th>Cursos</th>
-                    <th>Estudiantes</th>
-                    <th>Estatus</th>
-                    <th></th>
+                    <th scope="col">Profesor</th>
+                    <th scope="col">Contacto</th>
+                    <th scope="col">Campus</th>
+                    <th scope="col">Cursos</th>
+                    <th scope="col">Estudiantes</th>
+                    <th scope="col">Estatus</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

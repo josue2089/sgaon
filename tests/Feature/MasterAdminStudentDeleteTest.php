@@ -52,7 +52,7 @@ class MasterAdminStudentDeleteTest extends TestCase
         $response->assertOk();
         $response->assertSee('Eliminar');
         $response->assertSee('Eliminar permanentemente');
-        $response->assertSee('Se borrará toda su información en el sistema');
+        $response->assertSee('Esta acción no se puede deshacer'); // #453: diálogo común de confirmación
     }
 
     private function createMasterAdmin(): User

@@ -16,11 +16,11 @@
                 <table class="data-table">
                     <thead>
                     <tr>
-                        <th>Fecha</th>
-                        <th>Monto</th>
-                        <th>Método</th>
-                        <th>Recibo</th>
-                        <th></th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Monto</th>
+                        <th scope="col">Método</th>
+                        <th scope="col">Recibo</th>
+                        <th scope="col"><span class="sr-only">Acciones</span></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -57,12 +57,12 @@
                 <table class="data-table">
                     <thead>
                     <tr>
-                        <th>Concepto</th>
-                        <th>Curso</th>
-                        <th>Monto</th>
-                        <th>Saldo</th>
-                        <th>Estado</th>
-                        <th></th>
+                        <th scope="col">Concepto</th>
+                        <th scope="col">Curso</th>
+                        <th scope="col">Monto</th>
+                        <th scope="col">Saldo</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col"><span class="sr-only">Acciones</span></th>
                     </tr>
                     </thead>
                     <tbody>

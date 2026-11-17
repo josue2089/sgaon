@@ -40,13 +40,13 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Sede</th>
-                    <th>Código</th>
-                    <th class="amount">Alumnos únicos activos</th>
-                    <th class="amount">Inscripciones activas</th>
-                    <th class="amount">Tarifa mensual</th>
-                    <th class="amount">Proyección mensual</th>
-                    <th class="amount">Proyección anual</th>
+                    <th scope="col">Sede</th>
+                    <th scope="col">Código</th>
+                    <th class="amount" scope="col">Alumnos únicos activos</th>
+                    <th class="amount" scope="col">Inscripciones activas</th>
+                    <th class="amount" scope="col">Tarifa mensual</th>
+                    <th class="amount" scope="col">Proyección mensual</th>
+                    <th class="amount" scope="col">Proyección anual</th>
                 </tr>
             </thead>
             <tbody>

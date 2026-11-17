@@ -23,7 +23,7 @@
     @endif
     @unless($lockStudent)
         <div class="searchable-select searchable-select--combo" data-searchable-select data-searchable-combo>
-            <label>Alumno</label>
+            <label for="{{ $formId }}-student-search">Alumno</label>
             <input type="text" id="{{ $formId }}-student-search" class="searchable-select__search" placeholder="Buscar alumno por nombre, cédula o representante..." autocomplete="off">
             <select name="student_id" id="{{ $formId }}-student-select" class="searchable-select__list" required>
                 @foreach($students as $studentOption)
@@ -37,7 +37,7 @@
         </div>
     @endunless
     <div class="searchable-select" data-searchable-select>
-        <label>Cargos a aplicar</label>
+        <label for="{{ $formId }}-charge-search">Cargos a aplicar</label>
         <input type="text" id="{{ $formId }}-charge-search" class="searchable-select__search" placeholder="Buscar cargo por concepto, curso o período">
         <select name="charge_ids[]" id="{{ $formId }}-charge-select" class="searchable-select__list" multiple>
             @foreach($charges as $charge)
@@ -67,13 +67,13 @@
         ])
     </div>
     <div>
-        <label>Nueva fecha de vencimiento del saldo</label>
-        <input type="date" name="balance_due_date" value="{{ old('balance_due_date') }}">
+        <label for="{{ $formId }}-balance-due-date">Nueva fecha de vencimiento del saldo</label>
+        <input id="{{ $formId }}-balance-due-date" type="date" name="balance_due_date" value="{{ old('balance_due_date') }}">
         <div class="form-hint">Opcional. Úsala cuando el pago deje saldo pendiente.</div>
     </div>
     <div>
-        <label>Fecha</label>
-        <input type="date" name="paid_at" value="{{ old('paid_at', now()->toDateString()) }}">
+        <label for="{{ $formId }}-paid-at">Fecha</label>
+        <input id="{{ $formId }}-paid-at" type="date" name="paid_at" value="{{ old('paid_at', now()->toDateString()) }}">
     </div>
     <div>
         <label for="{{ $formId }}-reference">Referencia</label>

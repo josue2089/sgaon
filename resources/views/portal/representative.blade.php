@@ -76,7 +76,7 @@
                     <h4 class="section-title section-title-sm">Resumen financiero</h4>
                     <div class="table-wrap">
                         <table class="data-table">
-                            <thead><tr><th>Cargo</th><th>Vence</th><th>Pendiente</th></tr></thead>
+                            <thead><tr><th scope="col">Cargo</th><th scope="col">Vence</th><th scope="col">Pendiente</th></tr></thead>
                             <tbody>
                                 @forelse($pendingCharges as $charge)
                                     <tr>
@@ -112,7 +112,7 @@
                     <h4 class="section-title section-title-sm">Inscripciones</h4>
                     <div class="table-wrap">
                         <table class="data-table">
-                            <thead><tr><th>Curso</th><th>Grupo</th><th>Estado</th><th>Bitácora</th></tr></thead>
+                            <thead><tr><th scope="col">Curso</th><th scope="col">Grupo</th><th scope="col">Estado</th><th scope="col">Bitácora</th></tr></thead>
                             <tbody>
                                 @foreach($student->enrollments as $enrollment)
                                     <tr>

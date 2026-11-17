@@ -39,7 +39,7 @@ class StatusLabelTest extends TestCase
         $this->actingAs($admin)->get(route('finance.index'))
             ->assertOk()
             ->assertSee('<span class="badge-pill badge-danger">Vencido</span>', false)
-            ->assertSee('<th>Estado</th>', false)
+            ->assertSee('<th scope="col">Estado</th>', false)
             ->assertDontSee('>overdue<', false);
 
         $this->actingAs($admin)->get(route('students.show', $student))
@@ -50,7 +50,7 @@ class StatusLabelTest extends TestCase
 
         $this->actingAs($admin)->get(route('students.create'))
             ->assertOk()
-            ->assertSee('<label>Estado</label>', false)
+            ->assertSee('<label for="student-status">', false)
             ->assertSee('>Graduado</option>', false)
             ->assertDontSee('>withdrawn</option>', false);
 

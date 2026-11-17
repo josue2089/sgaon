@@ -25,11 +25,11 @@
                     <div class="makeup-student-pane">
                         <h4>Pago / Reposo</h4>
                         @if(in_array($makeupRequest->status, ['pending_payment', 'rejected'], true))
-                            <button type="button" class="btn secondary" onclick="document.getElementById('{{ $dialogId }}').showModal()">Enviar comprobante</button>
+                            <button type="button" class="btn secondary" data-modal-open="{{ $dialogId }}">Enviar comprobante</button>
                             <dialog id="{{ $dialogId }}" class="charge-pay-dialog">
                                 <div class="charge-pay-dialog-head">
                                     <h4 class="charge-pay-dialog-title">Comprobante de la recuperativa</h4>
-                                    <button type="button" class="charge-pay-dialog-close" onclick="document.getElementById('{{ $dialogId }}').close()" aria-label="Cerrar">&times;</button>
+                                    <button type="button" class="charge-pay-dialog-close" data-modal-close aria-label="Cerrar">&times;</button>
                                 </div>
                                 <p class="charge-pay-dialog-summary">{{ $course?->name ?? 'Recuperativa' }} · <strong>{{ \App\Support\MoneyFormat::usd($makeupRequest->price) }}</strong></p>
                                 <form method="POST" action="{{ $paymentRoute($makeupRequest) }}" enctype="multipart/form-data" class="stack-xs charge-pay-form" data-guard-submit>
@@ -48,7 +48,7 @@
                                         <input id="{{ $dialogId }}-notes" name="payment_notes" placeholder="Opcional">
                                     </div>
                                     <div class="charge-pay-dialog-footer">
-                                        <button type="button" class="btn secondary" onclick="document.getElementById('{{ $dialogId }}').close()">Cancelar</button>
+                                        <button type="button" class="btn secondary" data-modal-close>Cancelar</button>
                                         <button class="btn" type="submit">Enviar comprobante</button>
                                     </div>
                                 </form>

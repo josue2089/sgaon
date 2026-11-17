@@ -26,12 +26,12 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Nombre</th>
-                    <th>Código</th>
-                    <th>Campus</th>
-                    <th>Orden</th>
-                    <th>Descripción</th>
-                    <th></th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Código</th>
+                    <th scope="col">Campus</th>
+                    <th scope="col">Orden</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

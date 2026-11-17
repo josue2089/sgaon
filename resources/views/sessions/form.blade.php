@@ -1,9 +1,9 @@
 <div class="grid-2">
-<div><label>Grupo</label><select name="group_id">@foreach($groups as $group)<option value="{{ $group->id }}" @selected(old('group_id',$session->group_id ?? '')==$group->id)>{{ $group->name }} - {{ $group->course->name ?? '' }}</option>@endforeach</select></div>
-<div><label>Fecha</label><input type="date" name="session_date" value="{{ old('session_date',isset($session->session_date)?$session->session_date?->format('Y-m-d'):'') }}"></div>
-<div><label>Inicio</label><input type="time" name="starts_at" value="{{ substr((string) old('starts_at',$session->starts_at ?? ''), 0, 5) }}"></div>
-<div><label>Fin</label><input type="time" name="ends_at" value="{{ substr((string) old('ends_at',$session->ends_at ?? ''), 0, 5) }}"></div>
-<div><label>Tema</label><input name="topic" value="{{ old('topic',$session->topic ?? '') }}"></div>
-<div><label>Avance del programa</label><select name="program_status"><option value="">Sin indicar</option><option value="on_track" @selected(old('program_status',$session->program_status ?? '')==='on_track')>Al día</option><option value="delayed" @selected(old('program_status',$session->program_status ?? '')==='delayed')>Con retraso</option></select></div>
-<div class="col-span-full"><label>Observación del programa</label><textarea name="program_notes">{{ old('program_notes',$session->program_notes ?? '') }}</textarea></div>
+<x-form.field label="Grupo" name="group_id" for="session-group-id"><select id="session-group-id" name="group_id">@foreach($groups as $group)<option value="{{ $group->id }}" @selected(old('group_id',$session->group_id ?? '')==$group->id)>{{ $group->name }} - {{ $group->course->name ?? '' }}</option>@endforeach</select></x-form.field>
+<x-form.field label="Fecha" name="session_date" for="session-session-date"><input id="session-session-date" type="date" name="session_date" value="{{ old('session_date',isset($session->session_date)?$session->session_date?->format('Y-m-d'):'') }}"></x-form.field>
+<x-form.field label="Inicio" name="starts_at" for="session-starts-at"><input id="session-starts-at" type="time" name="starts_at" value="{{ substr((string) old('starts_at',$session->starts_at ?? ''), 0, 5) }}"></x-form.field>
+<x-form.field label="Fin" name="ends_at" for="session-ends-at"><input id="session-ends-at" type="time" name="ends_at" value="{{ substr((string) old('ends_at',$session->ends_at ?? ''), 0, 5) }}"></x-form.field>
+<x-form.field label="Tema" name="topic" for="session-topic"><input id="session-topic" name="topic" value="{{ old('topic',$session->topic ?? '') }}"></x-form.field>
+<x-form.field label="Avance del programa" name="program_status" for="session-program-status"><select id="session-program-status" name="program_status"><option value="">Sin indicar</option><option value="on_track" @selected(old('program_status',$session->program_status ?? '')==='on_track')>Al día</option><option value="delayed" @selected(old('program_status',$session->program_status ?? '')==='delayed')>Con retraso</option></select></x-form.field>
+<x-form.field label="Observación del programa" name="program_notes" for="session-program-notes" class="col-span-full"><textarea id="session-program-notes" name="program_notes">{{ old('program_notes',$session->program_notes ?? '') }}</textarea></x-form.field>
 </div>

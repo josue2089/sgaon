@@ -11,8 +11,9 @@
     --muted: #64748b;
     --brand: #0a1e5e;
     --brand-soft: #1d337f;
-    --ok: #16a34a;
-    --warn: #d97706;
+    /* #453: tonos con contraste AA (≥ 4.5:1) también como color de texto sobre blanco. */
+    --ok: #15803d;
+    --warn: #b45309;
     --danger: #dc2626;
     --focus: #2563eb;
     --icon-xs: 0.78rem;

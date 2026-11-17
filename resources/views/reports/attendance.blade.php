@@ -10,11 +10,11 @@
 @include('partials.layout.reports-tabs')
     <form method="GET" action="{{ route('reports.attendance') }}">
         <div class="grid-2">
-            <div><label>Desde</label><input type="date" name="from" value="{{ request('from') }}"></div>
-            <div><label>Hasta</label><input type="date" name="to" value="{{ request('to') }}"></div>
+            <x-form.field label="Desde" name="from" for="ratt-from"><input id="ratt-from" type="date" name="from" value="{{ request('from') }}"></x-form.field>
+            <x-form.field label="Hasta" name="to" for="ratt-to"><input id="ratt-to" type="date" name="to" value="{{ request('to') }}"></x-form.field>
             <div>
-                <label>Grupo</label>
-                <select name="group_id">
+                <label for="ratt-group-id">Grupo</label>
+                <select id="ratt-group-id" name="group_id">
                     <option value="">Todos</option>
                     @foreach($groups as $group)
                         <option value="{{ $group->id }}" @selected((int) request('group_id') === (int) $group->id)>{{ $group->name }}</option>
@@ -39,7 +39,7 @@
             @csrf
             <input type="hidden" name="route_name" value="reports.attendance">
             <input class="max-w-[220px]" type="text" name="name" placeholder="Nombre del preset">
-            <button class="btn secondary" type="submit">Guardar preset</button>
+            <button class="btn secondary" type="submit">Guardar filtro</button>
         </form>
     </div>
     @if(($presets ?? collect())->count() > 0)
@@ -72,7 +72,7 @@
 </div>
 <div class="card">
     <table>
-        <thead><tr><th>Fecha</th><th>Grupo</th><th>Alumno</th><th>Estado</th><th>Comentario</th></tr></thead>
+        <thead><tr><th scope="col">Fecha</th><th scope="col">Grupo</th><th scope="col">Alumno</th><th scope="col">Estado</th><th scope="col">Comentario</th></tr></thead>
         <tbody>
         @forelse($records as $record)
             <tr>

@@ -9,7 +9,7 @@
     @if(($makeupHistory ?? collect())->isNotEmpty())
         <div class="table-wrap">
             <table class="data-table">
-                <thead><tr><th>Clase perdida</th><th>Recuperativa</th><th>Profesor</th><th>Estado</th><th>Cargo</th></tr></thead>
+                <thead><tr><th scope="col">Clase perdida</th><th scope="col">Recuperativa</th><th scope="col">Profesor</th><th scope="col">Estado</th><th scope="col">Cargo</th></tr></thead>
                 <tbody>
                 @foreach($makeupHistory as $makeup)
                     @php($makeupSession = $makeup->booking?->makeupSession)

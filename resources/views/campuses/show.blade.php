@@ -67,7 +67,7 @@
     @if($programPrices->isNotEmpty())
         <div class="table-wrap">
             <table class="data-table">
-                <thead><tr><th>Programa</th><th>Precio mensual</th><th></th></tr></thead>
+                <thead><tr><th scope="col">Programa</th><th scope="col">Precio mensual</th><th scope="col"><span class="sr-only">Acciones</span></th></tr></thead>
                 <tbody>
                 @foreach($programPrices as $price)
                     <tr>

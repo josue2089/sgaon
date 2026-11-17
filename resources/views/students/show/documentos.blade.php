@@ -23,12 +23,12 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Título</th>
-                    <th>Categoría</th>
-                    <th>Archivo</th>
-                    <th>Tamaño</th>
-                    <th>Fecha</th>
-                    <th></th>
+                    <th scope="col">Título</th>
+                    <th scope="col">Categoría</th>
+                    <th scope="col">Archivo</th>
+                    <th scope="col">Tamaño</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

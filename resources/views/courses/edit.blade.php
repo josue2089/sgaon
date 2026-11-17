@@ -16,7 +16,7 @@
         </p>
         <div class="table-wrap calendar-preview-table">
             <table class="data-table">
-                <thead><tr><th>#</th><th>Antes</th><th>Después</th></tr></thead>
+                <thead><tr><th scope="col">#</th><th scope="col">Antes</th><th scope="col">Después</th></tr></thead>
                 <tbody>
                 @foreach($preview['rows'] as $i => $row)
                     <tr @class(['calendar-preview-same' => $row['before'] === $row['after']])>

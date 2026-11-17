@@ -59,13 +59,13 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Fila</th>
-                    <th>Alumno</th>
-                    <th>Nivel</th>
-                    <th>Programa</th>
-                    <th>Estado</th>
-                    <th>Acción</th>
-                    <th>Resultado</th>
+                    <th scope="col">Fila</th>
+                    <th scope="col">Alumno</th>
+                    <th scope="col">Nivel</th>
+                    <th scope="col">Programa</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Acción</th>
+                    <th scope="col">Resultado</th>
                 </tr>
                 </thead>
                 <tbody>

@@ -94,12 +94,12 @@
                     @enderror
                 </div>
 
-                <div class="student-picker-modal" data-picker-modal hidden>
+                <div class="student-picker-modal" data-picker-modal hidden role="dialog" aria-modal="true" aria-labelledby="course-picker-title">
                     <div class="student-picker-backdrop" data-picker-close></div>
                     <div class="student-picker-dialog card">
                         <div class="student-picker-head">
                             <div>
-                                <h3 class="section-title">Seleccionar estudiantes</h3>
+                                <h3 class="section-title" id="course-picker-title">Seleccionar estudiantes</h3>
                                 <p class="page-subtitle">Solo se muestran alumnos activos del campus del curso que aún no están inscritos.</p>
                             </div>
                             <button class="btn secondary" type="button" data-picker-close>Cerrar</button>
@@ -107,7 +107,7 @@
 
                         @if($availableStudents->count() > 0)
                             <div class="student-picker-toolbar">
-                                <input type="text" placeholder="Buscar por nombre, email, cédula o representante" data-picker-search>
+                                <input type="text" placeholder="Buscar por nombre, email, cédula o representante" aria-label="Buscar alumno" data-picker-search>
                                 <label class="student-picker-toggle">
                                     <input type="checkbox" data-picker-toggle-all>
                                     <span>Seleccionar visibles</span>
@@ -118,11 +118,11 @@
                                 <table class="data-table">
                                     <thead>
                                     <tr>
-                                        <th></th>
-                                        <th>Alumno</th>
-                                        <th>Email</th>
-                                        <th>Nivel actual</th>
-                                        <th>Estatus</th>
+                                        <th scope="col"><span class="sr-only">Seleccionar</span></th>
+                                        <th scope="col">Alumno</th>
+                                        <th scope="col">Email</th>
+                                        <th scope="col">Nivel actual</th>
+                                        <th scope="col">Estatus</th>
                                     </tr>
                                     </thead>
                                     <tbody data-picker-rows>
@@ -138,6 +138,7 @@
                                                     name="student_ids[]"
                                                     value="{{ $student->id }}"
                                                     data-picker-checkbox
+                                                    aria-label="Seleccionar a {{ $student->full_name }}"
                                                     @checked(in_array($student->id, old('student_ids', [])))
                                                 >
                                             </td>
@@ -190,11 +191,11 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Alumno</th>
-                    <th>Email</th>
-                    <th>Estatus</th>
-                    <th>Progreso</th>
-                    <th></th>
+                    <th scope="col">Alumno</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Estatus</th>
+                    <th scope="col">Progreso</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -249,14 +250,14 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>#</th>
-                    <th>Fecha</th>
-                    <th>Horario</th>
-                    <th>Programa planificado</th>
-                    <th>Programa ejecutado</th>
-                    <th>Estado programa</th>
-                    <th>Observación</th>
-                    <th>Asistencia</th>
+                    <th scope="col">#</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Horario</th>
+                    <th scope="col">Programa planificado</th>
+                    <th scope="col">Programa ejecutado</th>
+                    <th scope="col">Estado programa</th>
+                    <th scope="col">Observación</th>
+                    <th scope="col">Asistencia</th>
                 </tr>
                 </thead>
                 <tbody>

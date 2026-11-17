@@ -58,7 +58,7 @@
     <div class="table-wrap">
         <table class="data-table">
             <thead>
-            <tr><th>Fecha</th><th>Horario</th><th>Profesor</th><th>Programa</th><th>Nivel</th><th>Cupos</th><th>Estado</th><th></th></tr>
+            <tr><th scope="col">Fecha</th><th scope="col">Horario</th><th scope="col">Profesor</th><th scope="col">Programa</th><th scope="col">Nivel</th><th scope="col">Cupos</th><th scope="col">Estado</th><th scope="col"><span class="sr-only">Acciones</span></th></tr>
             </thead>
             <tbody>
             @forelse($makeupSessions as $session)

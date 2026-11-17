@@ -1,6 +1,6 @@
 @php($representative = $student->representatives->first())
 <div class="header">
-    <table class="brand">
+    <table class="brand" role="presentation">
         <tr>
             <td class="brand-logo">
                 @if(!empty($logoDataUri))
@@ -15,7 +15,7 @@
     </table>
 </div>
 
-<table class="grid">
+<table class="grid" role="presentation">
     <tr>
         <td>
             <div class="card">
@@ -60,13 +60,13 @@
 <table>
     <thead>
         <tr>
-            <th>#</th>
-            <th>Nombre</th>
-            <th>Cédula</th>
-            <th>Parentesco</th>
-            <th>Teléfonos</th>
-            <th>Trabajo</th>
-            <th>Dirección</th>
+            <th scope="col">#</th>
+            <th scope="col">Nombre</th>
+            <th scope="col">Cédula</th>
+            <th scope="col">Parentesco</th>
+            <th scope="col">Teléfonos</th>
+            <th scope="col">Trabajo</th>
+            <th scope="col">Dirección</th>
         </tr>
     </thead>
     <tbody>
@@ -86,7 +86,7 @@
     </tbody>
 </table>
 
-<table class="grid">
+<table class="grid" role="presentation">
     <tr>
         <td>
             <div class="card">

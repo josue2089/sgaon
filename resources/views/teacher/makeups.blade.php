@@ -21,7 +21,7 @@
                     <div class="table-sub">{{ $session->program?->name ?? 'Programa N/D' }}{{ $session->programLevel ? ' · '.$session->programLevel->name : '' }} · {{ $session->bookings->count() }}/{{ $session->capacity }} reservados</div>
                     <div class="table-wrap">
                         <table class="data-table">
-                            <thead><tr><th>Alumno</th><th>Clase que recupera</th><th>Estado</th><th>Asistencia</th></tr></thead>
+                            <thead><tr><th scope="col">Alumno</th><th scope="col">Clase que recupera</th><th scope="col">Estado</th><th scope="col">Asistencia</th></tr></thead>
                             <tbody>
                             @forelse($session->bookings as $booking)
                                 @php($missed = $booking->makeupRequest?->missedSession)

@@ -51,15 +51,15 @@
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Orden</th>
-                    <th>Nivel</th>
-                    <th>Código</th>
-                    <th>CEFR / GSE</th>
-                    <th>Horas</th>
-                    <th>Clases base</th>
-                    <th>Cursos</th>
-                    <th>Estatus</th>
-                    <th></th>
+                    <th scope="col">Orden</th>
+                    <th scope="col">Nivel</th>
+                    <th scope="col">Código</th>
+                    <th scope="col">CEFR / GSE</th>
+                    <th scope="col">Horas</th>
+                    <th scope="col">Clases base</th>
+                    <th scope="col">Cursos</th>
+                    <th scope="col">Estatus</th>
+                    <th scope="col"><span class="sr-only">Acciones</span></th>
                 </tr>
                 </thead>
                 <tbody>

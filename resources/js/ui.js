@@ -2,11 +2,23 @@
 
 // --- Modales x-ui.modal -------------------------------------------------------
 document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-print]')) {
+        window.print();
+        return;
+    }
     const opener = event.target.closest('[data-modal-open]');
     if (opener) {
         const dialog = document.getElementById(opener.dataset.modalOpen);
         if (dialog && opener.dataset.pickIntent) {
             dialog.dataset.intent = opener.dataset.pickIntent;
+        }
+        // #453: un mismo modal sirve para varias filas: data-form-action fija el destino y data-fill-name el nombre mostrado.
+        if (dialog && opener.dataset.formAction) {
+            const target = dialog.querySelector('form');
+            if (target) target.action = opener.dataset.formAction;
+        }
+        if (dialog && opener.dataset.fillName !== undefined) {
+            dialog.querySelectorAll('[data-fill-name]').forEach((node) => { node.textContent = opener.dataset.fillName; });
         }
         dialog?.showModal();
         dialog?.querySelector('[data-student-search-input]')?.focus();
@@ -41,7 +53,9 @@ if (confirmDialog) {
 
     document.addEventListener('submit', (event) => {
         const form = event.target;
-        if (!(form instanceof HTMLFormElement) || !form.dataset.confirm) {
+        // #453: la confirmación puede venir del botón que envía (varios botones, distinto mensaje) o del formulario.
+        const source = event.submitter?.dataset.confirm ? event.submitter : form;
+        if (!(form instanceof HTMLFormElement) || !source.dataset.confirm) {
             return;
         }
         if (form.dataset.confirmed === '1') {
@@ -53,16 +67,16 @@ if (confirmDialog) {
         event.stopPropagation();
         pending = { form, submitter: event.submitter };
 
-        const needsReason = form.dataset.confirmReason !== undefined;
-        title.textContent = form.dataset.confirmTitle || 'Confirmar';
-        message.textContent = form.dataset.confirm;
+        const needsReason = source.dataset.confirmReason !== undefined;
+        title.textContent = source.dataset.confirmTitle || 'Confirmar';
+        message.textContent = source.dataset.confirm;
         reasonWrap.hidden = !needsReason;
-        reasonLabel.textContent = form.dataset.confirmReason || 'Motivo';
+        reasonLabel.textContent = source.dataset.confirmReason || 'Motivo';
         reasonInput.value = '';
         reasonInput.required = needsReason;
         reasonError.hidden = true;
-        okButton.textContent = form.dataset.confirmOk || 'Confirmar';
-        okButton.classList.toggle('btn-danger', form.dataset.confirmDanger !== undefined);
+        okButton.textContent = source.dataset.confirmOk || 'Confirmar';
+        okButton.classList.toggle('btn-danger', source.dataset.confirmDanger !== undefined);
         confirmDialog.showModal();
         (needsReason ? reasonInput : okButton).focus();
     }, true);
