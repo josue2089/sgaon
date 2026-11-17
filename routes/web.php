@@ -132,6 +132,8 @@ Route::middleware(['auth', 'campus.access'])->group(function () {
         Route::resource('sessions', ClassSessionController::class)->except('show');
         Route::get('/makeups', [MakeupRecoveryController::class, 'index'])->name('makeups.index');
         Route::post('/makeups/sessions', [MakeupRecoveryController::class, 'storeSession'])->name('makeups.sessions.store');
+        Route::put('/makeups/sessions/{makeupSession}', [MakeupRecoveryController::class, 'updateSession'])->name('makeups.sessions.update');
+        Route::post('/makeups/sessions/{makeupSession}/cancel', [MakeupRecoveryController::class, 'cancelSession'])->name('makeups.sessions.cancel');
         Route::patch('/makeups/requests/{makeupRequest}', [MakeupRecoveryController::class, 'reviewRequest'])->name('makeups.requests.review');
         Route::patch('/makeups/bookings/{booking}', [MakeupRecoveryController::class, 'updateBooking'])->name('makeups.bookings.update');
         // Feriados: el master gestiona todo; el admin de sede, los días sin clase de su sede.

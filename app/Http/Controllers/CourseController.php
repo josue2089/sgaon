@@ -463,6 +463,10 @@ class CourseController extends Controller
             $this->applyCampusScope($students, 'campus_id');
         }
 
+        // #452: el selector de alumnos solo trae los ya elegidos; el resto se busca al escribir (students.search).
+        $enrolledIds = $course->managedGroup?->enrollments?->pluck('student_id')->all() ?? [];
+        $preselectedIds = array_values(array_unique(array_map('intval', array_merge((array) old('student_ids', []), $enrolledIds))));
+
         return [
             'course' => $course,
             'campuses' => $campuses->get(),
@@ -471,8 +475,8 @@ class CourseController extends Controller
             'teachers' => $teachers->get(),
             'periods' => $periods->get(),
             'schedules' => $schedules->get(),
-            'students' => $students->get(),
-            'selectedStudentIds' => $course->managedGroup?->enrollments?->pluck('student_id')->all() ?? [],
+            'students' => $students->whereIn('id', $preselectedIds ?: [0])->get(),
+            'selectedStudentIds' => $enrolledIds,
         ];
     }
 

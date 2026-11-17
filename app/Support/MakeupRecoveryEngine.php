@@ -6,6 +6,7 @@ use App\Mail\MakeupRecoveryApprovedMail;
 use App\Mail\MakeupRecoveryBookedMail;
 use App\Mail\MakeupRecoveryCreatedMail;
 use App\Mail\MakeupRecoveryRejectedMail;
+use App\Mail\MakeupSessionChangedMail;
 use App\Models\Alert;
 use App\Models\AttendanceRecord;
 use App\Models\Charge;
@@ -444,6 +445,57 @@ class MakeupRecoveryEngine
         self::syncSessionStatus($booking->makeupSession?->fresh()->loadCount('activeBookings'));
     }
 
+    /**
+     * #452: cancela un bloque. Cada reserva activa se cancela (la solicitud vuelve a "por reservar") y se avisa por correo.
+     * Devuelve cuántas reservas se liberaron.
+     */
+    public static function cancelSession(MakeupSession $session, ?string $reason = null): int
+    {
+        $before = [
+            'date' => $session->session_date?->toDateString(),
+            'starts_at' => substr((string) $session->starts_at, 0, 5),
+            'ends_at' => substr((string) $session->ends_at, 0, 5),
+        ];
+        $bookings = $session->bookings()->where('status', 'reserved')->with('makeupRequest.student.representatives')->get();
+
+        $session->update([
+            'status' => 'cancelled',
+            'notes' => trim(($session->notes ? $session->notes."\n" : '').'Cancelado'.($reason ? ': '.$reason : '')),
+        ]);
+
+        foreach ($bookings as $booking) {
+            self::updateBookingStatus($booking, 'cancelled', 'Bloque cancelado'.($reason ? ': '.$reason : ''));
+            if ($booking->makeupRequest) {
+                self::sendSessionChangeMail($booking->makeupRequest->fresh(['student.representatives', 'booking.makeupSession.teacher']), 'cancelled', $before);
+            }
+        }
+
+        return $bookings->count();
+    }
+
+    /** #452: avisa a quienes tienen reservado el bloque que cambió de fecha u hora. Devuelve a cuántos se avisó. */
+    public static function notifySessionChange(MakeupSession $session, string $change, array $before): int
+    {
+        $requests = MakeupRequest::query()
+            ->whereHas('booking', fn ($booking) => $booking->where('makeup_session_id', $session->id)->where('status', 'reserved'))
+            ->with(['student.representatives', 'booking.makeupSession.teacher'])
+            ->get();
+
+        foreach ($requests as $request) {
+            self::sendSessionChangeMail($request, $change, $before);
+        }
+
+        return $requests->count();
+    }
+
+    private static function sendSessionChangeMail(MakeupRequest $request, string $change, array $before): void
+    {
+        $recipients = self::notificationRecipients($request);
+        if ($recipients->isNotEmpty()) {
+            Mail::to($recipients->all())->send(new MakeupSessionChangedMail($request, $change, $before));
+        }
+    }
+
     public static function syncSessionStatus(?MakeupSession $session): void
     {
         if (! $session) {
@@ -560,7 +612,7 @@ class MakeupRecoveryEngine
         $request->forceFill(['booking_emailed_at' => now()])->save();
     }
 
-    private static function notificationRecipients(MakeupRequest $request)
+    public static function notificationRecipients(MakeupRequest $request)
     {
         $request->loadMissing(['student.representatives']);
 

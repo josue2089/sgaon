@@ -121,7 +121,7 @@
         <textarea name="description" placeholder="Descripción breve del curso">{{ old('description',$course->description ?? '') }}</textarea>
     </div>
     <div class="col-span-full">
-        @include('partials.ui.student-select', ['students' => $students, 'name' => 'student_ids[]', 'id' => 'course-initial-students', 'fieldLabel' => 'Estudiantes iniciales', 'multiple' => true, 'selected' => old('student_ids', $selectedStudentIds ?? [])])
+        @include('partials.ui.student-select', ['students' => $students, 'name' => 'student_ids[]', 'id' => 'course-initial-students', 'fieldLabel' => 'Estudiantes iniciales', 'multiple' => true, 'remote' => true, 'selected' => old('student_ids', $selectedStudentIds ?? [])])
         <div class="form-hint">Al guardar, el sistema generará el calendario y agregará estos estudiantes al curso.</div>
         @include('partials.finance.skip-tuition')
     </div>
