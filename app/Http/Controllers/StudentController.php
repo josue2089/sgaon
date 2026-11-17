@@ -40,6 +40,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -147,7 +148,8 @@ class StudentController extends Controller
             ->orderBy('campus_id')
             ->orderBy('last_name')
             ->orderBy('first_name')
-            ->get();
+            ->orderBy('id') // desempate: lazy() lee por páginas y necesita un orden estable
+            ->lazy(500); // #454: se lee por bloques mientras se escribe el CSV.
 
         $filename = 'alumnos_'.now()->format('Y-m-d_His').'.csv';
 
@@ -321,10 +323,15 @@ class StudentController extends Controller
         }
 
         try {
-            $student = Student::create($data);
-            $this->syncRepresentative($student, $request->input('representative', []));
-            $this->syncAuthorizedContacts($student, $request->input('authorized_contacts', []));
-            AuditTrail::log($request, 'student.create', $student, $data);
+            // #454: alumno, representante y contactos se guardan juntos.
+            $student = DB::transaction(function () use ($request, $data) {
+                $student = Student::create($data);
+                $this->syncRepresentative($student, $request->input('representative', []));
+                $this->syncAuthorizedContacts($student, $request->input('authorized_contacts', []));
+                AuditTrail::log($request, 'student.create', $student, $data);
+
+                return $student;
+            });
         } finally {
             optional($lock)->release();
         }
@@ -370,10 +377,12 @@ class StudentController extends Controller
             $data['profile_photo_path'] = $request->file('profile_photo')->store('profiles/students', 'public');
         }
 
-        $student->update($data);
-        $this->syncRepresentative($student, $request->input('representative', []));
-        $this->syncAuthorizedContacts($student, $request->input('authorized_contacts', []));
-        AuditTrail::log($request, 'student.update', $student, $data);
+        DB::transaction(function () use ($request, $student, $data) {
+            $student->update($data);
+            $this->syncRepresentative($student, $request->input('representative', []));
+            $this->syncAuthorizedContacts($student, $request->input('authorized_contacts', []));
+            AuditTrail::log($request, 'student.update', $student, $data);
+        });
 
         return redirect()->route('students.show', $student)->with('success', 'Alumno actualizado.');
     }

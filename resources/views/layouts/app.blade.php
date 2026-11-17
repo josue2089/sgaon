@@ -12,9 +12,10 @@
 @php
     $currentRoute = request()->route()?->getName();
     $user = auth()->user();
-    $alertsQuery = \App\Support\AlertVisibility::openFor($user);
-    $openAlertsCount = (clone $alertsQuery)->count();
-    $openAlerts = (clone $alertsQuery)->latest()->take(5)->get();
+    // #454: una sola lectura por petición, guardada 60 s por usuario.
+    $alertsSummary = \App\Support\AlertVisibility::summaryFor($user);
+    $openAlertsCount = $alertsSummary['count'];
+    $openAlerts = $alertsSummary['latest']->take(5);
     $hasRoute = static fn (string $name): bool => \Illuminate\Support\Facades\Route::has($name);
 @endphp
 <div class="fi-shell">

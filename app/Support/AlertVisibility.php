@@ -7,6 +7,8 @@ use App\Models\Enrollment;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Qué alertas abiertas ve cada rol en la campana y en el inicio. #439
@@ -34,5 +36,37 @@ final class AlertVisibility
         }
 
         return $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * Resumen de alertas abiertas para la campana y el inicio: total y las 8 más recientes. #454
+     * Se calcula una vez por petición y se guarda 60 segundos por usuario.
+     *
+     * @return array{count: int, latest: Collection<int, Alert>}
+     */
+    public static function summaryFor(?User $user): array
+    {
+        if (! $user) {
+            return ['count' => 0, 'latest' => collect()];
+        }
+
+        self::$memo ??= new \WeakMap;
+
+        return self::$memo[$user] ??= Cache::remember(
+            'alerts-summary:'.$user->id,
+            60,
+            fn () => [
+                'count' => self::openFor($user)->count(),
+                'latest' => self::openFor($user)->latest()->take(8)->get(),
+            ],
+        );
+    }
+
+    /** @var \WeakMap<User, array>|null */
+    private static ?\WeakMap $memo = null;
+
+    public static function flush(): void
+    {
+        self::$memo = null;
     }
 }

@@ -1,0 +1,173 @@
+/* Finanzas (#246) */
+.finance-filters .fi-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.finance-filters .fi-filter-bar > select,
+.finance-filters .fi-filter-bar > input {
+    width: auto;
+    min-width: 11rem;
+    flex: 1 1 11rem;
+}
+
+#finance-pick-student .fi-search {
+    width: 100%;
+}
+
+#finance-pick-student .fi-search input[type='search'] {
+    background: #f1f5fb;
+    border-color: var(--line);
+    color: var(--text);
+}
+
+#finance-pick-student .fi-search input[type='search']::placeholder,
+#finance-pick-student .fi-search-icon {
+    color: var(--muted);
+}
+
+#finance-pick-student .fi-search-results {
+    position: static;
+    width: 100%;
+    margin-top: 0.5rem;
+    box-shadow: none;
+}
+
+@media (max-width: 640px) {
+    .soft-kpi-grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.6rem;
+    }
+
+    .soft-kpi-grid-4 > * {
+        min-width: 0;
+        padding: 0.75rem !important;
+    }
+}
+
+/* Configuración agrupada (#247) */
+.fi-menu-heading,
+.fi-drawer-subheading {
+    padding: 0.55rem 0.7rem 0.2rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.fi-menu-heading:not(:first-child) {
+    margin-top: 0.25rem;
+    border-top: 1px solid #e7edf7;
+}
+
+.fi-drawer-subheading {
+    padding-left: 2.4rem;
+}
+
+.fi-menu-panel-nav {
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+}
+
+.fi-nav .fi-menu-panel-nav {
+    width: 250px;
+}
+
+/* #470: casillas de actividades en el formulario de clase base */
+.checkbox-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+}
+
+/* #470: estructura de la clase en Asistencia */
+.attendance-framework {
+    margin: 0.75rem 0;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--border, #dbe3f0);
+    border-radius: 10px;
+}
+
+.attendance-framework ol {
+    margin: 0.4rem 0 0;
+    padding-left: 1.25rem;
+    list-style: decimal;
+}
+
+/* Mis recuperativas del profesor. #446 */
+.makeup-teacher-session {
+    padding: 12px 0;
+    border-top: 1px solid var(--border, #e5e7eb);
+}
+.makeup-teacher-session:first-of-type {
+    border-top: 0;
+}
+.makeup-teacher-session .table-wrap {
+    margin-top: 8px;
+}
+
+/* #444: barra de anulación en lote y vista previa del calendario. */
+.bulk-void-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0 1.2rem 0.75rem;
+}
+
+.bulk-col {
+    width: 2.25rem;
+    text-align: center;
+}
+
+.bulk-col input {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.calendar-preview-table {
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.calendar-preview-same td {
+    color: var(--muted);
+}
+
+/* #450 */
+.students-bulk-bar {
+    padding-top: 0.75rem;
+}
+
+.students-bulk-historical {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.students-bulk-historical select {
+    width: auto;
+}
+
+.first-payment-offer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.fi-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    white-space: nowrap;
+}
+
+.fi-check input {
+    width: auto;
+}

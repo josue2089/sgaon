@@ -10,6 +10,19 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 class CampusScope
 {
     /**
+     * Sedes ya calculadas por usuario durante la petición en curso (#454: se repetía ~20 veces por página).
+     * Se vacía al terminar cada petición (AppServiceProvider) y con flush().
+     *
+     * @var \WeakMap<User, array<int>>|null
+     */
+    private static ?\WeakMap $memo = null;
+
+    public static function flush(): void
+    {
+        self::$memo = null;
+    }
+
+    /**
      * @return null All campuses (no filter)
      * @return array<int> Specific campus IDs; empty = no access
      */
@@ -18,6 +31,15 @@ class CampusScope
         if (! $user || $user->canAccessAllCampuses()) {
             return null;
         }
+
+        self::$memo ??= new \WeakMap;
+
+        return self::$memo[$user] ??= self::resolveCampusIds($user);
+    }
+
+    /** @return array<int> */
+    private static function resolveCampusIds(User $user): array
+    {
 
         $pivotIds = $user->relationLoaded('campuses')
             ? $user->campuses->pluck('id')->map(fn ($id) => (int) $id)->all()

@@ -10,13 +10,20 @@ use App\Models\ProgramLevelLesson;
 use App\Models\ScheduleTemplate;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CoursePlanner
 {
     public const ACADEMIC_HOUR_MINUTES = 45;
 
+    /** Grupo operativo y calendario del curso, todo o nada (#454). */
     public static function sync(Course $course, bool $regenerateSessions = true): Course
+    {
+        return DB::transaction(fn () => self::syncWithinTransaction($course, $regenerateSessions));
+    }
+
+    private static function syncWithinTransaction(Course $course, bool $regenerateSessions): Course
     {
         if (! $course->hasCalendarSource()) {
             if ($regenerateSessions) {
@@ -91,7 +98,7 @@ class CoursePlanner
     {
         $group = $course->managedGroup
             ?: Group::where('course_id', $course->id)->orderBy('id')->first()
-            ?: new Group();
+            ?: new Group;
 
         $group->fill([
             'campus_id' => $course->campus_id,

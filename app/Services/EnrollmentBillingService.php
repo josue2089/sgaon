@@ -3,13 +3,17 @@
 namespace App\Services;
 
 use App\Mail\ChargePendingMail;
+use App\Mail\ChargeScheduleMail;
 use App\Models\Charge;
 use App\Models\Enrollment;
 use App\Support\AlertEngine;
 use App\Support\AuditTrail;
+use App\Support\FinanceReconcile;
 use App\Support\TuitionPriceResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -92,9 +96,15 @@ class EnrollmentBillingService
      * Crea las cuotas faltantes de una inscripción extracurricular, desde su primer mes hasta el mes de fin
      * del curso, y envía un solo correo con el calendario. Idempotente.
      *
-     * @return \Illuminate\Support\Collection<int, Charge>
+     * @return Collection<int, Charge>
      */
-    public function createAllMonthlyCharges(Enrollment $enrollment, ?Request $request = null): \Illuminate\Support\Collection
+    public function createAllMonthlyCharges(Enrollment $enrollment, ?Request $request = null): Collection
+    {
+        // #454: todas las cuotas o ninguna.
+        return DB::transaction(fn () => $this->createAllMonthlyChargesWithinTransaction($enrollment, $request));
+    }
+
+    private function createAllMonthlyChargesWithinTransaction(Enrollment $enrollment, ?Request $request): Collection
     {
         $enrollment->loadMissing(['group.course.programLevel.program', 'group.course.program', 'student.representatives']);
         $course = $enrollment->group?->course;
@@ -133,7 +143,7 @@ class EnrollmentBillingService
             ->whereDate('due_date', '>', now()->toDateString())
             ->get()
             ->each(function (Charge $charge) use ($reason, &$voided): void {
-                if (\App\Support\FinanceReconcile::paidTotalForCharge($charge) > 0) {
+                if (FinanceReconcile::paidTotalForCharge($charge) > 0) {
                     return;
                 }
                 $charge->update([
@@ -249,9 +259,9 @@ class EnrollmentBillingService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Charge>  $charges
+     * @param  Collection<int, Charge>  $charges
      */
-    private function emailChargeScheduleIfPossible(Enrollment $enrollment, \Illuminate\Support\Collection $charges): void
+    private function emailChargeScheduleIfPossible(Enrollment $enrollment, Collection $charges): void
     {
         $student = $enrollment->student;
         $recipients = collect([
@@ -268,7 +278,7 @@ class EnrollmentBillingService
             return;
         }
 
-        Mail::to($recipients->all())->send(new \App\Mail\ChargeScheduleMail($enrollment, $charges->sortBy('due_date')->values()));
+        Mail::to($recipients->all())->send(new ChargeScheduleMail($enrollment, $charges->sortBy('due_date')->values()));
     }
 
     private function emailChargePendingIfPossible(Charge $charge): void

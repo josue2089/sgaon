@@ -6,9 +6,11 @@ use App\Models\Campus;
 use App\Models\User;
 use App\Services\AdminUserProvisioner;
 use App\Support\AuditTrail;
+use App\Support\CampusScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AdminUserController extends Controller
@@ -116,6 +118,8 @@ class AdminUserController extends Controller
         ]);
 
         $user->campuses()->detach();
+
+        CampusScope::flush();
         $user->roles()->detach();
         $user->delete();
 
@@ -157,7 +161,7 @@ class AdminUserController extends Controller
         ]);
 
         if ($data['access_mode'] === 'selected' && empty($data['campus_ids'])) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'campus_ids' => 'Selecciona al menos una sede.',
             ]);
         }
