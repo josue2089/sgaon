@@ -26,6 +26,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -206,10 +207,15 @@ class CourseController extends Controller
             $data['campus_id'] = $writableCampusId;
         }
 
-        $course = Course::create($data);
-        $course->load(['teacher', 'period', 'scheduleTemplate', 'managedGroup']);
-        $course = CoursePlanner::sync($course);
-        $this->addStudentsToCourse($course, $studentIds);
+        // #454: curso, calendario e inscripciones iniciales, todo o nada.
+        $course = DB::transaction(function () use ($data, $studentIds) {
+            $course = Course::create($data);
+            $course->load(['teacher', 'period', 'scheduleTemplate', 'managedGroup']);
+            $course = CoursePlanner::sync($course);
+            $this->addStudentsToCourse($course, $studentIds);
+
+            return $course;
+        });
 
         return redirect()->route('courses.show', $course)->with('success', 'Curso creado y planificado.');
     }
@@ -374,11 +380,15 @@ class CourseController extends Controller
         $calendarSnapshot = $this->calendarSnapshot($course);
         $previousLevelId = (int) $course->program_level_id;
 
-        $course->update($data);
-        AuditTrail::log($request, 'course.update', $course, $course->getChanges());
-        $course->load(['teacher', 'period', 'scheduleTemplate', 'managedGroup.sessions.attendanceRecords']);
-        $course = CoursePlanner::sync($course, $this->calendarFieldsChanged($calendarSnapshot, $course));
-        $this->addStudentsToCourse($course, $studentIds);
+        $course = DB::transaction(function () use ($request, $course, $data, $calendarSnapshot, $studentIds) {
+            $course->update($data);
+            AuditTrail::log($request, 'course.update', $course, $course->getChanges());
+            $course->load(['teacher', 'period', 'scheduleTemplate', 'managedGroup.sessions.attendanceRecords']);
+            $course = CoursePlanner::sync($course, $this->calendarFieldsChanged($calendarSnapshot, $course));
+            $this->addStudentsToCourse($course, $studentIds);
+
+            return $course;
+        });
 
         $redirect = redirect()->route('courses.show', $course)->with('success', 'Curso actualizado.');
         if ($previousLevelId && $previousLevelId !== (int) $course->program_level_id && $course->enrollments()->exists()) {

@@ -493,23 +493,28 @@ class TeacherController extends Controller
         }
 
         $previousEmail = $teacher->email;
-        $teacher->update($data);
-        AuditTrail::log($request, 'teacher.update', $teacher, $data);
+        // #454: ficha del profesor y correo de su usuario se guardan juntos.
+        $message = DB::transaction(function () use ($request, $teacher, $data, $previousEmail) {
+            $teacher->update($data);
+            AuditTrail::log($request, 'teacher.update', $teacher, $data);
 
-        // Si cambia el email del profesor, su usuario de acceso cambia con él y conserva sus cursos.
-        $message = 'Profesor actualizado.';
-        $newEmail = trim((string) ($data['email'] ?? ''));
-        $accessUser = $teacher->user;
-        if ($accessUser && $accessUser->role === User::ROLE_TEACHER && $newEmail !== '' && strcasecmp($newEmail, (string) $previousEmail) !== 0) {
-            $taken = User::query()->whereRaw('LOWER(email) = ?', [strtolower($newEmail)])->whereKeyNot($accessUser->id)->exists();
-            if ($taken) {
-                $message .= ' Ojo: el email '.$newEmail.' ya pertenece a otro usuario, así que el acceso del profesor sigue con '.$accessUser->email.'.';
-            } else {
-                $accessUser->update(['email' => $newEmail]);
-                AuditTrail::log($request, 'teacher.user_email_synced', $teacher, ['user_id' => $accessUser->id, 'email' => $newEmail]);
-                $message .= ' Ahora ingresa con '.$newEmail.'.';
+            // Si cambia el email del profesor, su usuario de acceso cambia con él y conserva sus cursos.
+            $message = 'Profesor actualizado.';
+            $newEmail = trim((string) ($data['email'] ?? ''));
+            $accessUser = $teacher->user;
+            if ($accessUser && $accessUser->role === User::ROLE_TEACHER && $newEmail !== '' && strcasecmp($newEmail, (string) $previousEmail) !== 0) {
+                $taken = User::query()->whereRaw('LOWER(email) = ?', [strtolower($newEmail)])->whereKeyNot($accessUser->id)->exists();
+                if ($taken) {
+                    $message .= ' Ojo: el email '.$newEmail.' ya pertenece a otro usuario, así que el acceso del profesor sigue con '.$accessUser->email.'.';
+                } else {
+                    $accessUser->update(['email' => $newEmail]);
+                    AuditTrail::log($request, 'teacher.user_email_synced', $teacher, ['user_id' => $accessUser->id, 'email' => $newEmail]);
+                    $message .= ' Ahora ingresa con '.$newEmail.'.';
+                }
             }
-        }
+
+            return $message;
+        });
 
         return redirect()->route('teachers.index')->with('success', $message);
     }

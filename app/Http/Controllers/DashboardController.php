@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AttendanceRecord;
+use App\Models\Campus;
 use App\Models\Charge;
 use App\Models\ClassSession;
 use App\Models\Course;
@@ -11,10 +12,12 @@ use App\Models\Group;
 use App\Models\Payment;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Support\AlertVisibility;
 use App\Support\CampusScope;
+use App\Support\TodayInbox;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -39,7 +42,6 @@ class DashboardController extends Controller
         $coursesQuery = CampusScope::apply(Course::query(), $user);
         $groupsQuery = CampusScope::apply(Group::query(), $user);
         $chargesQuery = CampusScope::apply(Charge::where('status', '!=', 'paid'), $user);
-        $alertsQuery = \App\Support\AlertVisibility::openFor($user);
         $attendanceQuery = AttendanceRecord::query();
         $paymentsQuery = CampusScope::apply(Payment::query()->whereNull('voided_at'), $user);
         $monthChargesQuery = CampusScope::apply(
@@ -100,6 +102,7 @@ class DashboardController extends Controller
                 ->pluck('total', 'group_id');
         $todaySessions = $todaySessions->map(function ($session) use ($enrollmentsByGroup) {
             $session->students_count = (int) ($enrollmentsByGroup[$session->group_id] ?? 0);
+
             return $session;
         });
 
@@ -199,7 +202,7 @@ class DashboardController extends Controller
 
         $campusBreakdown = collect();
         if ($user?->canAccessAllCampuses() && ! $teacher) {
-            $campusBreakdown = \App\Models\Campus::query()
+            $campusBreakdown = Campus::query()
                 ->withCount([
                     'students as students_active_count' => fn ($q) => $q->where('status', 'active'),
                     'groups as groups_active_count' => fn ($q) => $q->where('status', 'active'),
@@ -210,15 +213,15 @@ class DashboardController extends Controller
         }
 
         return view('dashboard', [
-            'inbox' => \App\Support\TodayInbox::for($user, $teacher),
+            'inbox' => TodayInbox::cachedFor($user, $teacher),
             'campusBreakdown' => $campusBreakdown,
             'studentsCount' => $studentsQuery->count(),
             'teachersCount' => $teachersQuery->count(),
             'coursesCount' => $coursesQuery->count(),
             'groupsCount' => $groupsQuery->count(),
             'pendingCharges' => $chargesQuery->sum('amount'),
-            'openAlerts' => $alertsQuery->latest()->take(8)->get(),
-            'openAlertsCount' => $alertsQuery->count(),
+            'openAlerts' => ($alertsSummary = AlertVisibility::summaryFor($user))['latest'],
+            'openAlertsCount' => $alertsSummary['count'],
             'attendanceRate' => $attendanceRate,
             'paymentsRate' => $paymentsRate,
             'paymentsMonthAmount' => $paymentsMonthAmount,

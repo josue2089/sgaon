@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Support\AlertVisibility;
+use App\Support\CampusScope;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +22,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // #454: las sedes del usuario se calculan una vez por petición; al terminar se olvidan.
+        $this->app->terminating(function () {
+            CampusScope::flush();
+            AlertVisibility::flush();
+        });
+
         // Evita fechas con el año mal escrito (p. ej. 0026 en vez de 2026). Año mínimo por defecto 2020; sane_date:1900 para nacimientos.
         Validator::extend('sane_date', function (string $attribute, mixed $value, array $parameters): bool {
             if (blank($value)) {

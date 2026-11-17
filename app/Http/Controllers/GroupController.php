@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ScopesCampusAccess;
+use App\Models\AuditLog;
 use App\Models\Campus;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Period;
 use App\Models\ScheduleTemplate;
 use App\Models\Teacher;
-use App\Models\AuditLog;
 use App\Support\AuditTrail;
+use App\Support\CampusScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +21,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GroupController extends Controller
 {
-    use \App\Http\Controllers\Concerns\ScopesCampusAccess;
+    use ScopesCampusAccess;
 
     private function groupPeriods(): array
     {
@@ -46,15 +48,14 @@ class GroupController extends Controller
         return config('academic.group_statuses', ['active', 'inactive']);
     }
 
-
     public function index(Request $request): View|StreamedResponse
     {
         $user = $request->user();
         $query = Group::with(['campus', 'course', 'teacher'])->withCount('enrollments')->latest();
-        \App\Support\CampusScope::apply($query, $user);
+        CampusScope::apply($query, $user);
 
         $campusFilter = (string) $request->query('campus_id', '');
-        if ($campusFilter !== '' && \App\Support\CampusScope::userCanAccessCampus($user, (int) $campusFilter)) {
+        if ($campusFilter !== '' && CampusScope::userCanAccessCampus($user, (int) $campusFilter)) {
             $query->where('campus_id', (int) $campusFilter);
         }
 
@@ -105,7 +106,7 @@ class GroupController extends Controller
             return response()->streamDownload(function () use ($query): void {
                 $out = fopen('php://output', 'w');
                 fputcsv($out, ['group', 'course', 'teacher', 'status', 'period', 'schedule', 'capacity', 'enrollments']);
-                foreach ($query->get() as $group) {
+                foreach ($query->orderBy('groups.id')->lazy(500) as $group) {
                     fputcsv($out, [
                         $group->name,
                         $group->course->name ?? '',
@@ -122,7 +123,7 @@ class GroupController extends Controller
         }
 
         $campusesQuery = Campus::query()->orderBy('name');
-        $allowedIds = \App\Support\CampusScope::allowedCampusIds($user);
+        $allowedIds = CampusScope::allowedCampusIds($user);
         if (is_array($allowedIds)) {
             $campusesQuery->whereIn('id', $allowedIds ?: [0]);
         }

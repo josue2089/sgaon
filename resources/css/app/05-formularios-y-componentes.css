@@ -1,0 +1,180 @@
+/* Spinner + estado deshabilitado para forms al enviar (evita doble submit) */
+.spinner {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: sgaon-spin 0.7s linear infinite;
+    vertical-align: -0.15em;
+    margin-right: 0.4em;
+}
+
+@keyframes sgaon-spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn[aria-busy="true"] {
+    opacity: 0.7;
+    cursor: progress;
+    pointer-events: none;
+}
+
+.portal-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 14px 0 16px;
+}
+
+.portal-tab {
+    border: 1px solid #d8e1f0;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f3563;
+    cursor: pointer;
+}
+
+.portal-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    margin-left: 6px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    background: #eef3ff;
+    color: #1b3f9d;
+}
+
+.portal-tab.is-active {
+    background: #1b3f9d;
+    border-color: #1b3f9d;
+    color: #fff;
+}
+
+.portal-tab.is-active .portal-tab-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.portal-tab-panel {
+    display: none;
+}
+
+.portal-tab-panel.is-active {
+    display: block;
+}
+
+@media (max-width: 980px) {
+    .portal-tabs {
+        position: sticky;
+        top: 56px;
+        z-index: 12;
+        background: #f8fafb;
+        padding: 8px 0;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .portal-tabs .portal-tab {
+        white-space: nowrap;
+    }
+}
+
+/* Componentes compartidos (#240): modal, campo de formulario y errores junto al campo */
+.ui-modal {
+    margin: auto;
+    width: min(560px, calc(100vw - 2rem));
+    max-height: calc(100vh - 3rem);
+    padding: 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 24px 60px rgba(7, 18, 53, 0.25);
+}
+
+.ui-modal--md {
+    width: min(760px, calc(100vw - 2rem));
+}
+
+.ui-modal--lg {
+    width: min(980px, calc(100vw - 2rem));
+}
+
+.ui-modal::backdrop {
+    background: rgba(7, 18, 53, 0.52);
+    backdrop-filter: blur(3px);
+}
+
+.ui-modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+}
+
+.ui-modal-x {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.ui-modal-body {
+    display: grid;
+    gap: 0.75rem;
+    line-height: 1.5;
+}
+
+.ui-modal-body p {
+    margin: 0;
+}
+
+.ui-modal-foot {
+    margin-top: 1.1rem;
+    justify-content: flex-end;
+}
+
+.form-field {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.field-required,
+label:has(+ :is(input, select, textarea)[required])::after {
+    color: var(--danger);
+}
+
+label:has(+ :is(input, select, textarea)[required])::after {
+    content: ' *';
+}
+
+.field-error {
+    margin-top: 0.3rem;
+    color: var(--danger);
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.ui-modal .btn.btn-danger {
+    background: linear-gradient(90deg, #dc2626, #b91c1c);
+    color: #fff;
+}
+
+[aria-invalid='true'],
+.form-field--invalid :is(input, select, textarea) {
+    border-color: var(--danger) !important;
+}

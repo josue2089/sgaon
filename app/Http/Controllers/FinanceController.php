@@ -101,7 +101,7 @@ class FinanceController extends Controller
                 'Alumno', 'Cédula del alumno', 'Representante', 'Cédula del representante', 'Teléfono del representante',
                 'Concepto', 'Moneda', 'Monto', 'Pagado', 'Saldo', 'Vence', 'Días de atraso', 'Estado',
             ], function () use ($chargesQuery) {
-                foreach ($chargesQuery->whereIn('status', ['pending', 'partial', 'overdue'])->get() as $charge) {
+                foreach ($chargesQuery->whereIn('status', ['pending', 'partial', 'overdue'])->orderBy('charges.id')->lazy(500) as $charge) {
                     $representative = $charge->student?->representatives->first();
                     yield [
                         $charge->student->full_name ?? '',

@@ -7,10 +7,13 @@ use App\Models\ChargePaymentRequest;
 use App\Models\ClassSession;
 use App\Models\Enrollment;
 use App\Models\ExchangeRate;
+use App\Models\MakeupBooking;
 use App\Models\MakeupRequest;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -22,6 +25,16 @@ class TodayInbox
     /**
      * @return array<int, array{key: string, label: string, hint: string, count: int, url: string, action: string, tone: string}>
      */
+    /**
+     * La bandeja del inicio, guardada 60 segundos por usuario (#454). Los correos diarios usan for() sin caché.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function cachedFor(User $user, ?Teacher $teacher = null): array
+    {
+        return Cache::remember('today-inbox:'.$user->id, 60, fn () => self::for($user, $teacher));
+    }
+
     public static function for(User $user, ?Teacher $teacher = null): array
     {
         $today = now()->toDateString();
@@ -117,9 +130,9 @@ class TodayInbox
     }
 
     /** Reservas activas en las recuperativas del profesor entre hoy y 7 días. #446 */
-    public static function teacherMakeupBookings(?Teacher $teacher): \Illuminate\Database\Eloquent\Builder
+    public static function teacherMakeupBookings(?Teacher $teacher): Builder
     {
-        return \App\Models\MakeupBooking::query()
+        return MakeupBooking::query()
             ->where('status', 'reserved')
             ->whereHas('makeupSession', fn ($session) => $session
                 ->where('teacher_id', $teacher?->id ?? -1)

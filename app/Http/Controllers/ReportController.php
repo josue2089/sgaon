@@ -24,6 +24,7 @@ use App\Support\CsvExport;
 use App\Support\DateFormat;
 use App\Support\FinanceReconcile;
 use App\Support\PrivateFiles;
+use App\Support\SolvencyReport;
 use App\Support\StatusLabel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,7 +56,7 @@ class ReportController extends Controller
         }
 
         if ($request->query('export') === 'csv') {
-            return $this->attendanceCsv($query->latest()->get());
+            return $this->attendanceCsv($query->latest()->orderByDesc('attendance_records.id')->lazy(500));
         }
 
         return view('reports.attendance', [
@@ -123,7 +124,7 @@ class ReportController extends Controller
         }
 
         if ($request->query('export') === 'csv') {
-            return $this->paymentsCsv($query->get());
+            return $this->paymentsCsv($query->orderByDesc('charges.id')->lazy(500));
         }
 
         if ($request->query('export') === 'payments_detail_csv') {
@@ -233,7 +234,7 @@ class ReportController extends Controller
         ]);
         $user = $request->user();
         $campusId = ! empty($filters['campus_id']) && CampusScope::userCanAccessCampus($user, (int) $filters['campus_id']) ? (int) $filters['campus_id'] : null;
-        $report = \App\Support\SolvencyReport::build($user, $campusId, $filters['month'] ?? null);
+        $report = SolvencyReport::build($user, $campusId, $filters['month'] ?? null);
 
         $bucket = $filters['bucket'] ?? null;
         $category = $filters['category'] ?? null;
@@ -247,7 +248,7 @@ class ReportController extends Controller
             ->when($bucket === 'active', fn ($rows) => $rows->where('active', true))
             ->when(! $bucket, fn ($rows) => $rows->where('owes', true))
             ->values();
-        $categories = \App\Support\SolvencyReport::CATEGORIES;
+        $categories = SolvencyReport::CATEGORIES;
         $stamp = now()->format('Y-m-d');
 
         if ($request->query('export') === 'summary_csv') {
@@ -259,13 +260,13 @@ class ReportController extends Controller
                 $report['totals']['amounts']['USD'] ?? 0.0, $report['totals']['amounts']['EUR'] ?? 0.0,
             ]);
 
-            return \App\Support\CsvExport::download('solvencia-resumen-'.$stamp.'.csv',
+            return CsvExport::download('solvencia-resumen-'.$stamp.'.csv',
                 ['Sede', 'Tipo', 'Alumnos activos', 'Al día', 'Con deuda', 'Con deuda sin inscripción activa', 'Mora > 30 días', 'Deuda USD', 'Deuda EUR'],
                 $lines->all());
         }
 
         if ($request->query('export') === 'list_csv') {
-            return \App\Support\CsvExport::download('solvencia-alumnos-'.$stamp.'.csv',
+            return CsvExport::download('solvencia-alumnos-'.$stamp.'.csv',
                 ['Sede', 'Tipo', 'Alumno', 'Cédula', 'Curso', 'Inscripción activa', 'Representante', 'Teléfono', 'Deuda USD', 'Deuda EUR', 'Días de mora', 'Cargos pendientes'],
                 $list->map(fn ($row) => [
                     $row['campus_name'], $categories[$row['category']], $row['student']->full_name, $row['student']->document_id,
@@ -505,7 +506,8 @@ class ReportController extends Controller
         return PrivateFiles::download($export->file_path);
     }
 
-    private function attendanceCsv($records): StreamedResponse
+    /** @param  iterable<AttendanceRecord>  $records  LazyCollection: se lee por bloques mientras se escribe (#454). */
+    private function attendanceCsv(iterable $records): StreamedResponse
     {
         return CsvExport::download('asistencia-'.now()->format('Y-m-d').'.csv', ['Fecha', 'Grupo', 'Alumno', 'Cédula', 'Estado', 'Notas'], function () use ($records) {
             foreach ($records as $record) {
@@ -548,7 +550,8 @@ class ReportController extends Controller
         });
     }
 
-    private function paymentsCsv($charges): StreamedResponse
+    /** @param  iterable<Charge>  $charges  LazyCollection: se lee por bloques mientras se escribe (#454). */
+    private function paymentsCsv(iterable $charges): StreamedResponse
     {
         return CsvExport::download('cuentas-por-cobrar-'.now()->format('Y-m-d').'.csv', [
             'Alumno', 'Cédula del alumno', 'Representante', 'Teléfono del representante', 'Curso', 'Grupo', 'Período',
